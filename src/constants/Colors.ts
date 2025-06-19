@@ -25,8 +25,8 @@ const Colors = {
   },
   buttonBackground: '#2F3193',
   buttonText: 'white',
-  secondaryColor: '#F36E20',
-  primeColor:'#2F3193'
+  primeColor: '#F36E20',
+  secondaryColor:'#2F3193'
 };
 
 export default Colors;

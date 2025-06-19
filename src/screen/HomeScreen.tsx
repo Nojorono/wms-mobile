@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import { StyleSheet, ScrollView, Text, TouchableOpacity, View, Image} from "react-native";
 import {useAuthStore} from "../store/useAuthStore";
 import Ionicons from '@react-native-vector-icons/ionicons';
-import GlobalStyles from "../../../../../../Personal/Project/BoilerPlateReactNative/src/util/GlobalStyles";
+import GlobalStyles from "../util/GlobalStyles.ts";
 import Colors from "../constants/Colors";
 import StatusCard from "../components/NameCard";
 import MenuGrid from "../components/MenuGrid";

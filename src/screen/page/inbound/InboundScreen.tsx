@@ -40,15 +40,6 @@ function InboundScreen() {
         stickyHeaderIndices={[2]}
       >
         <View style={styles.menuCard}>
-          {/*<StatusCard*/}
-          {/*  title="JAT/2025/12/04.0001"*/}
-          {/*  description="16/02/2024"*/}
-          {/*  endDate="16/02/2025"*/}
-          {/*  status="Active"*/}
-          {/*  statusColor="#E5FFF2"*/}
-          {/*  route="Luar Kota"*/}
-          {/*/>*/}
-
           <View style={styles.activitiesHeader}>
             <Text style={styles.activitiesHeaderText}>List Inbound PO</Text>
           </View>

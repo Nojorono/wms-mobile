@@ -4,10 +4,14 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Colors from "../../constants/Colors";
 import HomeStackNavigator, { HomeStackParamList } from "./HomeNavigator";
 import Ionicons from '@react-native-vector-icons/ionicons';
+import InboundStackNavigator from './InboundNavigator.tsx';
 
 // Define the param list for MainTab
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList>;
+  Inbound: NavigatorScreenParams<HomeStackParamList>;
+  Outbond: NavigatorScreenParams<HomeStackParamList>;
+  Inventory: NavigatorScreenParams<HomeStackParamList>;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -32,9 +36,9 @@ const MainNavigator = () => (
 
           // Assign correct icon based on the route name
           if (route.name === 'Home') iconName = 'home-outline';
-          else if (route.name === 'Dashboard') iconName = 'grid-outline';
-          else if (route.name === 'Profile') iconName = 'person-outline';
-          else if (route.name === 'Utilize') iconName = 'settings-outline';
+          else if (route.name === 'Inbound') iconName = 'grid-outline';
+          else if (route.name === 'Outbond') iconName = 'person-outline';
+          else if (route.name === 'Inventory') iconName = 'settings-outline';
 
           // Return the Ionicons component with the correct icon
           return <Ionicons name={iconName} size={22} color={color} />;
@@ -58,6 +62,27 @@ const MainNavigator = () => (
   >
     <Tab.Screen
       name="Home"
+      component={HomeStackNavigator}
+      options={{
+        headerShown: false,
+      }}
+    />
+    <Tab.Screen
+      name="Inbound"
+      component={InboundStackNavigator}
+      options={{
+        headerShown: false,
+      }}
+    />
+    <Tab.Screen
+      name="Outbond"
+      component={HomeStackNavigator}
+      options={{
+        headerShown: false,
+      }}
+    />
+    <Tab.Screen
+      name="Inventory"
       component={HomeStackNavigator}
       options={{
         headerShown: false,

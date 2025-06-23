@@ -5,6 +5,7 @@ import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
 import StatusCard from '../../../components/NameCard';
 import MenuGrid from '../../../components/MenuGrid';
+import InboundList from '../../../components/InboundList.tsx';
 
 function InboundScreen() {
   const styles = GlobalStyles();
@@ -40,32 +41,24 @@ function InboundScreen() {
         stickyHeaderIndices={[2]}
       >
         <View style={styles.menuCard}>
-          <View style={styles.activitiesHeader}>
+          <View style={[styles.activitiesHeader,{borderBottomWidth: 2, borderBottomColor: '#ccc'}]}>
             <Text style={styles.activitiesHeaderText}>List Inbound PO</Text>
           </View>
-          <StatusCard
+          <InboundList
+            onClick={()=>console.log('Clicked PO/2025/12/04.0001')}
             title="PO/2025/12/04.0001"
-            description="16/02/2024"
-            endDate="16/02/2025"
             status="Active"
             statusColor="#E5FFF2"
-            route="Luar Kota"
           />
-          <StatusCard
+          <InboundList
             title="PO/2025/12/04.0002"
-            description="16/02/2024"
-            endDate="16/02/2025"
             status="Active"
             statusColor="#E5FFF2"
-            route="Luar Kota"
           />
-          <StatusCard
+          <InboundList
             title="PO/2025/12/04.0003"
-            description="16/02/2024"
-            endDate="16/02/2025"
             status="Active"
             statusColor="#E5FFF2"
-            route="Luar Kota"
           />
           {/*<MenuGrid items={menus} />*/}
         </View>

@@ -15,7 +15,6 @@ import Colors from '../../../constants/Colors';
 import { RouteProp } from '@react-navigation/native';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
 import { Picker } from '@react-native-picker/picker';
-import colors from '../../../constants/Colors';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundDetail'>;
@@ -41,7 +40,6 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
 
   // Validate input fields before submit
   const handleSubmit = () => {
-
     // Check if all pallet inputs are valid
     for (let i = 0; i < pallets.length; i++) {
       if (!pallets[i].palletNumber || !pallets[i].qty) {
@@ -58,8 +56,6 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   const handleAddPallet = () => {
     setPallets([...pallets, { palletNumber: '', qty: '' }]);
   };
-
-
 
   const handlePalletChange = (
     index: number,
@@ -82,10 +78,11 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
         >
           <Text style={styles.profileText}>{item.title || 'Undefined'}</Text>
           <View style={style.row}>
-            <Ionicons size={26} color={'#fff'} name={'car-outline'}/>
-            <Text style={[styles.profileText,{marginLeft:10}]}>{vehicle.title || 'Undefined'}</Text>
+            <Ionicons size={26} color={'#fff'} name={'car-outline'} />
+            <Text style={[styles.profileText, { marginLeft: 10 }]}>
+              {vehicle.title || 'Undefined'}
+            </Text>
           </View>
-
         </View>
       </View>
       <ScrollView
@@ -118,7 +115,7 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
               <Picker
                 selectedValue={status}
                 style={style.input}
-                onValueChange={(itemValue) => setStatus(itemValue)}
+                onValueChange={itemValue => setStatus(itemValue)}
               >
                 <Picker.Item label="Stock Type" value="" />
                 <Picker.Item label="Available" value="Available" />
@@ -128,77 +125,100 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
             </View>
 
             {/* SKU, QTY, Outstanding */}
-            <View style={style.row}>
-              <View style={style.col}>
-                <Text style={style.label}>SKU</Text>
-                <Text style={style.label}>SKU0092</Text>
-              </View>
-              <View style={style.col}>
-                <Text style={style.label}>QTY</Text>
-                <Text style={style.label}>100</Text>
-              </View>
-              <View style={style.col}>
-                <Text style={style.label}>Outstanding</Text>
-                <Text style={style.label}>0</Text>
-              </View>
-              <TouchableOpacity
-                style={style.addButton}
-                onPress={handleAddPallet}
-              >
-                <Text style={{ fontSize:15, color:'#fff' }}>+</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={{borderWidth:1, marginBottom:14, borderColor:'#666'}}/>
-
-            {/* Pallet Input Rows */}
-            {pallets.length > 0 && pallets.map((pallet, index) => (
-              <View key={index} style={style.row}>
+            <View style={{borderWidth:1, borderColor: '#666', borderRadius: 8,paddingHorizontal:15 ,paddingTop:8}}>
+              <View style={style.row}>
                 <View style={style.col}>
-                  {index === 0 && <Text style={style.label}>Pallet Number</Text>}
-                  <TextInput
-                    style={style.input}
-                    value={pallet.palletNumber}
-                    onChangeText={(text) =>
-                      handlePalletChange(index, 'palletNumber', text)
-                    }
-                    placeholder="Enter Pallet Number"
-                  />
+                  <Text style={style.label}>SKU</Text>
+                  <Text style={style.label}>SKU0092</Text>
                 </View>
                 <View style={style.col}>
-                  {index === 0 && <Text style={style.label}>Qty</Text>}
-                  <TextInput
-                    style={style.input}
-                    value={pallet.qty}
-                    onChangeText={(text) =>
-                      handlePalletChange(index, 'qty', text)
-                    }
-                    placeholder="Enter Quantity"
-                    keyboardType="numeric"
-                  />
+                  <Text style={style.label}>QTY</Text>
+                  <Text style={style.label}>100</Text>
                 </View>
                 <View style={style.col}>
-                  {index === 0 && <Text style={style.label}>Action</Text>}
-                  <View style={[style.row, {}]}>
-                    <TouchableOpacity
-                      style={style.addButton}
-                      onPress={() => Alert.alert('Scan Pallet', 'Scan functionality not implemented yet')}
-                    >
-                      <Ionicons style={{fontSize:25, color:'#fff'}} name={'scan-circle-outline'}/>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={style.removeButton}
-                      onPress={() => handleRemovePallet(index)}
-                    >
-                      <Text style={style.removeButtonText}>−</Text>
-                    </TouchableOpacity>
+                  <Text style={style.label}>Outstanding</Text>
+                  <Text style={style.label}>0</Text>
+                </View>
+                <TouchableOpacity
+                  style={style.addButton}
+                  onPress={handleAddPallet}
+                >
+                  <Text style={{ fontSize: 15, color: '#fff' }}>+</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View
+                style={{
+                  borderWidth: 1,
+                  marginBottom: 14,
+                  borderColor: '#666',
+                }}
+              />
+
+              {/* Pallet Input Rows */}
+              {pallets.length > 0 &&
+                pallets.map((pallet, index) => (
+                  <View key={index} style={style.row}>
+                    <View style={style.col}>
+                      {index === 0 && (
+                        <Text style={style.label}>Pallet Number</Text>
+                      )}
+                      <TextInput
+                        style={style.input}
+                        value={pallet.palletNumber}
+                        onChangeText={text =>
+                          handlePalletChange(index, 'palletNumber', text)
+                        }
+                        placeholder="Enter Pallet Number"
+                      />
+                    </View>
+                    <View style={style.col}>
+                      {index === 0 && <Text style={style.label}>Qty</Text>}
+                      <TextInput
+                        style={style.input}
+                        value={pallet.qty}
+                        onChangeText={text =>
+                          handlePalletChange(index, 'qty', text)
+                        }
+                        placeholder="Enter Quantity"
+                        keyboardType="numeric"
+                      />
+                    </View>
+                    <View style={style.col}>
+                      {index === 0 && <Text style={style.label}>Action</Text>}
+                      <View style={{ flexDirection: 'row', alignItems: 'center',  marginBottom: 15, }}>
+                        <TouchableOpacity
+                          style={style.addButton}
+                          onPress={() =>
+                            Alert.alert(
+                              'Scan Pallet',
+                              'Scan functionality not implemented yet',
+                            )
+                          }
+                        >
+                          <Ionicons
+                            style={{ fontSize: 25, color: '#fff' }}
+                            name={'scan-circle-outline'}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={style.removeButton}
+                          onPress={() => handleRemovePallet(index)}
+                        >
+                          <Text style={style.removeButtonText}>−</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </View>
-            ))}
+                ))}
+            </View>
             <View style={style.buttons}>
               <Button title="Clear" onPress={() => {}} color="#d9534f" />
-              <Button title="Save" onPress={handleSubmit} color={Colors.primeColor} />
+              <Button
+                title="Save"
+                onPress={handleSubmit}
+                color={Colors.primeColor}
+              />
             </View>
           </View>
         </View>
@@ -285,7 +305,7 @@ const style = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     width: 40,
-    height:50,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -295,7 +315,8 @@ const style = StyleSheet.create({
   },
   removeButton: {
     width: 40,
-    height:50,
+    height: 50,
+    marginHorizontal:6,
     backgroundColor: '#e74c3c',
     paddingVertical: 12,
     borderRadius: 8,

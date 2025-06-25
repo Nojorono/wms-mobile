@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  Button,
+  Button, Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +16,11 @@ import { RouteProp } from '@react-navigation/native';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission, useCodeScanner,
+} from 'react-native-vision-camera';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundDetail'>;
 type FormActivityProps = {
@@ -30,8 +35,44 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   const [status, setStatus] = useState('');
   const [pallets, setPallets] = useState([{ palletNumber: '', qty: '' }]);
   const [sku, setSku] = useState('');
-  const [qty, setQty] = useState('');
+  const [qty, setQty] = useState('')
+  const [activeCameraIndex, setActiveCameraIndex] = useState(null);
+  const [activeBagIndex, setActiveBagIndex] = useState(null);
+  const [openCam, setOpenCam] = useState(false);
+  const { hasPermission, requestPermission } = useCameraPermission();
+  const device = useCameraDevice('back');
 
+  const permission = async () => {
+    try {
+      await requestPermission();
+      if (!hasPermission) {
+        Alert.alert(
+          'Permission required',
+          'Please grant permission to access the camera.',
+        );
+        return;
+      }
+    } catch (error) {
+      console.error('[Background Fetch] Task scheduling failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    permission();
+  }, []);
+
+  const codeScanner = useCodeScanner({
+    codeTypes: ['qr', 'ean-13','code-128'],
+    onCodeScanned: (codes) => {
+      if (codes.length === 0) {
+        Alert.alert('No codes found', 'Please try scanning again.');
+        return;
+      }else{
+        setPallets([{ palletNumber: codes[0].value ?? '', qty: '' }]);
+        setOpenCam(false)
+      }
+    }
+  })
   const handleRemovePallet = (index: any) => {
     if (index < 1) return;
     const updatedPallets = pallets.filter((_, i) => i !== index);
@@ -70,6 +111,37 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
       <View style={styles.headerHome}>
+        <Modal
+          visible={openCam}
+          onDismiss={() => setOpenCam(false)}
+          transparent
+        >
+          <View style={style.cameraContainer}>
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: 30,
+                right: 30,
+                zIndex: 10,
+                backgroundColor: '#fff',
+                borderRadius: 20,
+                padding: 8,
+                elevation: 3,
+              }}
+              onPress={() => setOpenCam(false)}
+            >
+              <Ionicons name="close" size={28} color="#333" />
+            </TouchableOpacity>
+            {device && (
+              <Camera
+                device={device}
+                isActive={openCam}
+                style={[style.camera, { alignSelf: 'center' }]}
+                codeScanner={codeScanner}
+              />
+            )}
+          </View>
+        </Modal>
         <View
           style={{
             paddingTop: 15,
@@ -125,7 +197,15 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
             </View>
 
             {/* SKU, QTY, Outstanding */}
-            <View style={{borderWidth:1, borderColor: '#666', borderRadius: 8,paddingHorizontal:15 ,paddingTop:8}}>
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: '#666',
+                borderRadius: 8,
+                paddingHorizontal: 15,
+                paddingTop: 8,
+              }}
+            >
               <View style={style.row}>
                 <View style={style.col}>
                   <Text style={style.label}>SKU</Text>
@@ -186,15 +266,16 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
                     </View>
                     <View style={style.col}>
                       {index === 0 && <Text style={style.label}>Action</Text>}
-                      <View style={{ flexDirection: 'row', alignItems: 'center',  marginBottom: 15, }}>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          marginBottom: 15,
+                        }}
+                      >
                         <TouchableOpacity
                           style={style.addButton}
-                          onPress={() =>
-                            Alert.alert(
-                              'Scan Pallet',
-                              'Scan functionality not implemented yet',
-                            )
-                          }
+                          onPress={() => setOpenCam(true)}
                         >
                           <Ionicons
                             style={{ fontSize: 25, color: '#fff' }}
@@ -316,7 +397,7 @@ const style = StyleSheet.create({
   removeButton: {
     width: 40,
     height: 50,
-    marginHorizontal:6,
+    marginHorizontal: 6,
     backgroundColor: '#e74c3c',
     paddingVertical: 12,
     borderRadius: 8,
@@ -331,5 +412,23 @@ const style = StyleSheet.create({
     marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  camera: {
+    width: 500,
+    height: 500,
+    borderColor: 'black',
+    borderWidth: 1,
+  },
+  cameraContainer: {
+    backgroundColor: 'white',
+    padding: 80,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 type InboundListProps = {
   title: string;
@@ -17,8 +18,11 @@ const InboundList: React.FC<InboundListProps> = ({
   return (
     <View style={styles.card} {...(onClick ? { onTouchEnd: onClick } : {})}>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>{title}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+          <Ionicons name={'bluetooth'}/>
+          <Text style={styles.title}>{title}</Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: statusColor, alignSelf: 'flex-start' }]}>
           <Text style={styles.statusText}>{status}</Text>
         </View>
       </View>
@@ -54,7 +58,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    flex: 1,
   },
   statusBadge: {
     borderRadius: 10,

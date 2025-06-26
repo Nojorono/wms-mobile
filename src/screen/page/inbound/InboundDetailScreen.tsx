@@ -36,7 +36,7 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   const [pallets, setPallets] = useState([{ palletNumber: '', qty: '' }]);
   const [sku, setSku] = useState('');
   const [qty, setQty] = useState('')
-  const [activeCameraIndex, setActiveCameraIndex] = useState(null);
+  const [activeCameraIndex, setActiveCameraIndex] = useState<number | null>(null);
   const [activeBagIndex, setActiveBagIndex] = useState(null);
   const [openCam, setOpenCam] = useState(false);
   const { hasPermission, requestPermission } = useCameraPermission();
@@ -68,11 +68,20 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
         Alert.alert('No codes found', 'Please try scanning again.');
         return;
       }else{
-        setPallets([{ palletNumber: codes[0].value ?? '', qty: '' }]);
-        setOpenCam(false)
+        setPallets(prevPallets => {
+          const updated = [...prevPallets];
+          if (activeCameraIndex !== null && updated[activeCameraIndex]) {
+            updated[activeCameraIndex].palletNumber = codes[0].value ?? '';
+          } else {
+            updated[0].palletNumber = codes[0].value ?? '';
+          }
+          return updated;
+        });
+        setOpenCam(false);
+        setActiveCameraIndex(null);
       }
     }
-  })
+  });
   const handleRemovePallet = (index: any) => {
     if (index < 1) return;
     const updatedPallets = pallets.filter((_, i) => i !== index);
@@ -275,7 +284,10 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
                       >
                         <TouchableOpacity
                           style={style.addButton}
-                          onPress={() => setOpenCam(true)}
+                          onPress={() => {
+                            setActiveCameraIndex(index);
+                            setOpenCam(true);
+                          }}
                         >
                           <Ionicons
                             style={{ fontSize: 25, color: '#fff' }}

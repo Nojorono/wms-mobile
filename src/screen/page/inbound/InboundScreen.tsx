@@ -3,12 +3,9 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuthStore } from '../../../store/useAuthStore';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
-import StatusCard from '../../../components/NameCard';
-import MenuGrid from '../../../components/MenuGrid';
 import InboundList from '../../../components/InboundList.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { AuthStackParamList } from '../../navigation/AuthNavigator.tsx';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
 
 

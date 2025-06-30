@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { Picker } from '@react-native-picker/picker';
 import {
     Modal,
     ScrollView,
@@ -74,8 +75,42 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
 
     }, [reset]);
 
-    const renderTextField = useCallback(
-        (field:any) => (
+        const renderTextField = useCallback(
+            (field: any) => {
+                if (field.name === 'vehicleType') {
+                    return (
+                        <Controller
+                            key={field.name}
+                            control={control}
+                            name={field.name}
+                            rules={{ required: field.rule }}
+                            render={({ field: { value, onChange } }) => (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                                    <Text style={{ marginRight: 8, width: 90 }}>{field.label}</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <View style={[style.input, { padding: 0, justifyContent: 'center' }]}>
+                                            <Picker
+                                                selectedValue={value}
+                                                onValueChange={itemValue => onChange(itemValue)}
+                                                style={{ width: '100%' }}
+                                            >
+                                                <Picker.Item label="Select Type" value="" />
+                                                {[
+                                                    { id: 1, label: 'Box' },
+                                                    { id: 2, label: 'Winger' },
+                                                    { id: 3, label: 'Mega Box' },
+                                                ].map(option => (
+                                                    <Picker.Item key={option.id} label={option.label} value={option.id} />
+                                                ))}
+                                            </Picker>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+                        />
+                    );
+                }
+                return (
             <Controller
                 key={field.name}
                 control={control}
@@ -93,7 +128,8 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
                     </View>
                 )}
             />
-        ),
+                );
+            },
         [control]
     );
 
@@ -172,8 +208,6 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
                 <View style={style.modalContainer}>
                     <View style={style.modalContent}>
                         <Text style={style.modalTitle}>Add Vehicle Details</Text>
-                        {/*{VEHICLE_FIELDS.map(renderTextField)}*/}
-                        {/*{DATE_FIELDS.map(renderDateField)}*/}
                         {VEHICLE_FIELDS.map(field => (
                             <View key={field.name} style={{ width: '100%' }}>
                                 {renderTextField(field)}
@@ -215,12 +249,13 @@ const style = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        paddingHorizontal: 20, // Add horizontal padding for larger modals
     },
     modalContent: {
-        backgroundColor: 'white',
-        width: '80%',
+      backgroundColor:'#fff',
+        width: '100%',
         padding: 20,
-        borderRadius: 10,
+        borderRadius: 20,
         alignItems: 'center',
     },
     modalTitle: {

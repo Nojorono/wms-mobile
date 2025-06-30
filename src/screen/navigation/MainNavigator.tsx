@@ -27,7 +27,7 @@ const MainNavigator = () => (
       const routeName = getFocusedRouteNameFromRoute(route) ?? '';
 
       // Determine if tab bar should be hidden
-      const hideTabBar = routeName === 'RequestScreen' || routeName === 'PrepareScreen';
+      const hideTabBar = routeName === 'InboundVehicle' || routeName === 'InboundDetail';
 
       return {
         tabBarIcon: ({ color, size }) => {

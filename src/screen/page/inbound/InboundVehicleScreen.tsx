@@ -1,13 +1,14 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
@@ -18,6 +19,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import DatePicker from 'react-native-date-picker';
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useForm, Controller } from 'react-hook-form';
+import ConstantService from '../../../service/constantService.ts';
+import useConstantStore from '../../../store/useConstantStore.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundVehicle'>;
 type FormActivityProps = {
@@ -47,6 +50,7 @@ const VehicleListData = [
 function InboundVehicleScreen({ route }: FormActivityProps) {
     const styles = GlobalStyles();
     const { item } = route.params;
+    const {vehicle} = useConstantStore();
     const navigation = useNavigation<NavigationProp>();
     const { control, handleSubmit, formState: { errors }, reset } = useForm();
 
@@ -74,6 +78,10 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
         }
 
     }, [reset]);
+
+  useEffect(() => {
+    ConstantService.getVehicleType()
+  }, []);
 
         const renderTextField = useCallback(
             (field: any) => {

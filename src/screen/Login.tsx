@@ -27,7 +27,7 @@ import CustomButton from "../../src/components/CustomButton";
 const {width, height} = Dimensions.get('window');
 
 type FormData = {
-    employee_id: string; password: string;
+    username: string; password: string;
 };
 
 type NavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
@@ -42,7 +42,7 @@ export default function LoginScreen() {
     } = useForm<FormData>();
 
     const [passwordVisible, setPasswordVisible] = useState(false);
-    const [email, setEmail] = useState('farid.rafi@limamail.net');
+    const [username, setUsername] = useState('superadmin');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const [deviceId, setDeviceId] = useState('');
@@ -55,7 +55,7 @@ export default function LoginScreen() {
         try {
           const ip = 'network-dw-1234';
           const id = 'sdsd';
-          const savedEmail = await AsyncStorage.getItem('rememberedEmail');
+          const savedUsername = await AsyncStorage.getItem('rememberedEmail');
           const savedPassword = await AsyncStorage.getItem(
             'rememberedPassword',
           );
@@ -65,8 +65,8 @@ export default function LoginScreen() {
           setDeviceId(id);
 
           if (savedRemember === 'true') {
-            setEmail(savedEmail || '');
-            setValue('employee_id', savedEmail || '');
+            setUsername(savedUsername || '');
+            setValue('username', savedUsername || '');
             setPassword(savedPassword || '');
             setValue('password', savedPassword || '');
             setRememberMe(true);
@@ -83,24 +83,24 @@ export default function LoginScreen() {
     }, []);
 
     const handleLogin = async (data: FormData) => {
-        const {employee_id, password} = data;
-        if (!employee_id || !password) return;
+        const {username, password} = data;
+        if (!username || !password) return;
 
         try {
             showLoadingDialog('Loading...');
-            const res = await AuthServices.login(email, password, ipAddress, deviceId, platform);
-            console.log(res)
+            const res = await AuthServices.login(username, password,);
+            console.log('Login response:', res);
 
-            if (res.statusCode === 200) {
+            if (res.success) {
                 if (rememberMe) {
-                    await AsyncStorage.setItem('rememberedEmail', employee_id);
+                    await AsyncStorage.setItem('rememberedEmail', username);
                     await AsyncStorage.setItem('rememberedPassword', password);
                     await AsyncStorage.setItem('rememberMe', 'true');
                 } else {
                     await AsyncStorage.multiRemove(['rememberedEmail', 'rememberedPassword', 'rememberMe',]);
                 }
 
-                setToken(res.data.accessToken);
+                setToken(res.data.token);
                 setUser(res.data.user);
                 setAuthenticated(true);
 
@@ -123,16 +123,16 @@ export default function LoginScreen() {
             <Text style={styles.label}>NIK</Text>
             <Controller
                 control={control}
-                name="employee_id"
-                defaultValue={email}
+                name="username"
+                defaultValue={username}
                 render={({field: {onChange, onBlur, value}}) => (
                     <TextInput
-                        style={[styles.input, errors.employee_id && styles.errorInput]}
+                        style={[styles.input, errors.username && styles.errorInput]}
                         placeholder="NIK"
                         onBlur={onBlur}
                         onChangeText={text => {
                             onChange(text);
-                            setEmail(text);
+                            setUsername(text);
                         }}
                         keyboardType="default"
                         autoCapitalize="none"

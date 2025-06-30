@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuthStore } from '../../../store/useAuthStore';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
@@ -7,6 +7,8 @@ import InboundList from '../../../components/InboundList.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
+import ConstantService from '../../../service/constantService.ts';
+import useConstantStore from '../../../store/useConstantStore.ts';
 
 
 type NavigationProp = StackNavigationProp<InboundParamList,'InboundMain'>;
@@ -14,7 +16,37 @@ type NavigationProp = StackNavigationProp<InboundParamList,'InboundMain'>;
 function InboundScreen() {
   const styles = GlobalStyles();
   const navigation = useNavigation<NavigationProp>();
-  const { user } = useAuthStore();
+  const {setVehicle} = useConstantStore();
+  const fetchConstants = async () => {
+    try {
+      try {
+        const getVehicleType = await ConstantService.getVehicleType();
+        console.log('getVehicleType', getVehicleType);
+        setVehicle(getVehicleType.data);
+      } catch (err) {
+        console.error('Error fetching vehicle types:', err);
+        throw new Error('Failed to fetch vehicle types');
+      }
+    } catch (error) {
+      console.error('Error fetching constants:', error);
+      Alert.alert(
+        'Error',
+        'Failed to fetch data. Please check your connection and try again.',
+        [{text: 'OK'}]
+      );
+    }
+  }
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await fetchConstants();
+      } catch (error) {
+        console.error('Initialization error:', error);
+      }
+    };
+    initialize();
+  })
 
   const inboundListData = [
     {

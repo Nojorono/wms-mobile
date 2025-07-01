@@ -21,6 +21,7 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { useForm, Controller } from 'react-hook-form';
 import ConstantService from '../../../service/constantService.ts';
 import useConstantStore from '../../../store/useConstantStore.ts';
+import InboundServices from '../../../service/inboundServices.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundVehicle'>;
 type FormActivityProps = {
@@ -53,6 +54,7 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
     const {vehicle} = useConstantStore();
     const navigation = useNavigation<NavigationProp>();
     const { control, handleSubmit, formState: { errors }, reset } = useForm();
+    const [transporter, setTransporter] = useState<any>();
 
     const [modalVisible, setModalVisible] = useState(false);
     const [date, setDate] = useState(new Date());
@@ -80,8 +82,17 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
     }, [reset]);
 
   useEffect(() => {
-    ConstantService.getVehicleType()
-    console.log("data yang dibawa",item)
+    const initialize = async () => {
+      try {
+        ConstantService.getVehicleType()
+        const dataTransporter = await InboundServices.getTransporterList(item.inbound_plan_id);
+        setTransporter(dataTransporter);
+        console.log("data transporter",dataTransporter)
+      } catch (error) {
+        console.error('Initialization error:', error);
+      }
+    };
+    initialize();
   }, []);
 
         const renderTextField = useCallback(
@@ -197,12 +208,12 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    {memoizedVehicleList.map(vehicle => (
+                    {transporter?.data.map((vehicle:any) => (
                         <VehicleList
                             key={vehicle.id}
                             onClick={() => navigation.navigate('InboundDetail', { item, vehicle })}
-                            title={vehicle.title}
-                            type={vehicle.type}
+                            title={vehicle.transporter_code_number}
+                            type={vehicle.vehicle.vehicle_type}
                             statusColor="#E5FFF2"
                         />
                     ))}

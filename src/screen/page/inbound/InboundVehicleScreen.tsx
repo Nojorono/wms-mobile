@@ -81,6 +81,7 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
 
   useEffect(() => {
     ConstantService.getVehicleType()
+    console.log("data yang dibawa",item)
   }, []);
 
         const renderTextField = useCallback(
@@ -103,12 +104,8 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
                                                 style={{ width: '100%' }}
                                             >
                                                 <Picker.Item label="Select Type" value="" />
-                                                {[
-                                                    { id: 1, label: 'Box' },
-                                                    { id: 2, label: 'Winger' },
-                                                    { id: 3, label: 'Mega Box' },
-                                                ].map(option => (
-                                                    <Picker.Item key={option.id} label={option.label} value={option.id} />
+                                                {vehicle?.map((option: { id: string; vehicle_type: string }) => (
+                                                    <Picker.Item key={option.id} label={option.vehicle_type} value={option.id} />
                                                 ))}
                                             </Picker>
                                         </View>

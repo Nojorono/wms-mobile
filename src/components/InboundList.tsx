@@ -8,6 +8,9 @@ type InboundListProps = {
   status: string;
   statusColor?: string;
   onClick?: () => void;
+  role?: string;
+  client_name?: string;
+  task_type?: string;
 };
 
 const InboundList: React.FC<InboundListProps> = ({
@@ -15,6 +18,9 @@ const InboundList: React.FC<InboundListProps> = ({
   status,
   statusColor = '#E5FFF2',
   onClick,
+  role,
+  client_name ='',
+  task_type=''
 }) => {
   return (
     <View style={styles.card} {...(onClick ? { onTouchEnd: onClick } : {})}>
@@ -23,6 +29,9 @@ const InboundList: React.FC<InboundListProps> = ({
           <Ionicons style={{marginRight:10}} size={25} color={Colors.secondaryColor} name={'logo-dropbox'}/>
           <View style={{ flexDirection: 'column', flex: 1 ,padding:6}}>
             <Text style={styles.title}>{title}</Text>
+            {role && <Text style={styles.role}>{role}</Text>}
+            <Text style={styles.role}>{client_name}</Text>
+            <Text style={styles.role}>{task_type}</Text>
             <View style={[styles.statusBadge, {marginTop:10, backgroundColor: statusColor, alignSelf: 'flex-start' }]}>
               <Text style={styles.statusText}>{status}</Text>
             </View>
@@ -68,6 +77,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+    marginLeft: 10,
+  },
+  role: {
+    fontSize: 14,
+    color: '#999',
+    marginLeft: 10,
   },
   statusBadge: {
     borderRadius: 10,

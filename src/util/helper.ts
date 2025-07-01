@@ -1,21 +1,14 @@
-import { StackActions, NavigationProp } from '@react-navigation/native';
-import { MainTabParamList } from '../screen/navigation/MainNavigator';
-import {useDialogStore} from "../store/useGlobalDialog";
 
+export const getRoleForUser = (userId:any, inboundPlan:any) => {
+  // Check if user is the checker_leader
+  if (inboundPlan.checker_leader.id === userId) {
+    return 'checker_leader';
+  }
 
-function isValidStackRoute(route: string): route is keyof MainTabParamList {
-    return ['Home'].includes(route);
-}
+  // Check if user is one of the checkers
+  if (inboundPlan.checkers.some((checker:any) => checker.id === userId)) {
+    return 'checker';
+  }
 
-export function navigateToStack(
-    navigation: NavigationProp<any>,
-    stack: string,
-    screenParams: any
-) {
-    if (isValidStackRoute(stack)) {
-        navigation.navigate(stack, { screen: screenParams });
-    } else {
-        console.log("Invalid stack:", stack);
-        useDialogStore.getState().showDialog('error', 'Terjadi kesalahan, menu tidak ditemukan!');
-    }
-}
+  return '';
+};

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ConstantState {
     vehicle: any[];
-    setVehicle: (brands: any[]) => void;
+    setVehicle: (vehicle: any[]) => void;
     getVehicle: () => void;
     clearConstants: () => void;
 }
@@ -19,7 +19,7 @@ const useConstantStore = create<ConstantState>((set) => ({
         set({ vehicle: storedVehicle ? JSON.parse(storedVehicle) : [] });
     },
     clearConstants: async () => {
-        await AsyncStorage.removeItem('brands');
+        await AsyncStorage.removeItem('vehicle');
         set({ vehicle: []});
     },
 }));

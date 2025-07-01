@@ -12,7 +12,6 @@ class ConstantService {
       throw new Error('Get vehicle failed: ' + error.message);
     }
   }
-
 }
 
 export default ConstantService;

@@ -123,6 +123,7 @@ const GlobalStyles = () => {
             marginBottom: 16,
         },
         activitiesHeaderText: {
+            textAlign: 'center',
             color: 'black',
             fontSize: 20,
             fontWeight: '600',

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  Button, Modal,
+  Button,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,8 +20,10 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import {
   Camera,
   useCameraDevice,
-  useCameraPermission, useCodeScanner,
+  useCameraPermission,
+  useCodeScanner,
 } from 'react-native-vision-camera';
+import InboundServices from '../../../service/inboundServices.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundDetail'>;
 type FormActivityProps = {
@@ -31,13 +34,14 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const { item, vehicle } = route.params;
-
+  const [detailInbound, setDetailInbound] = useState<any>();
   const [status, setStatus] = useState('');
-  const [pallets, setPallets] = useState([{ palletNumber: '', qty: '' }]);
-  const [sku, setSku] = useState('');
-  const [qty, setQty] = useState('')
-  const [activeCameraIndex, setActiveCameraIndex] = useState<number | null>(null);
-  const [activeBagIndex, setActiveBagIndex] = useState(null);
+  const [pallets, setPallets] = useState<
+    Record<string, { palletNumber: string; qty: string }[]>
+  >({});
+  const [activeCameraIndex, setActiveCameraIndex] = useState<number | null>(
+    null,
+  );
   const [openCam, setOpenCam] = useState(false);
   const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
@@ -59,62 +63,100 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
 
   useEffect(() => {
     permission();
+    const initialize = async () => {
+      try {
+        const response = await InboundServices.getInboundDetail(
+          item.inbound_plan_id,
+        );
+        setDetailInbound(response.data.items);
+      } catch (error) {
+        console.error('Initialization error:', error);
+      }
+    };
+    // initialize();
   }, []);
 
   const codeScanner = useCodeScanner({
-    codeTypes: ['qr', 'ean-13','code-128'],
-    onCodeScanned: (codes) => {
+    codeTypes: ['qr', 'ean-13', 'code-128'],
+    onCodeScanned: codes => {
       if (codes.length === 0) {
         Alert.alert('No codes found', 'Please try scanning again.');
         return;
-      }else{
+      } else {
         setPallets(prevPallets => {
-          const updated = [...prevPallets];
-          if (activeCameraIndex !== null && updated[activeCameraIndex]) {
-            updated[activeCameraIndex].palletNumber = codes[0].value ?? '';
-          } else {
-            updated[0].palletNumber = codes[0].value ?? '';
+          const updatedPallets = { ...prevPallets };
+          const sku = detailInbound?.[activeCameraIndex || 0]?.item?.sku; // Ensure we're updating the right SKU
+          if (sku) {
+            const palletIndex = activeCameraIndex ?? 0;
+            updatedPallets[sku] = updatedPallets[sku] || [];
+            updatedPallets[sku][palletIndex] = {
+              palletNumber: codes[0].value ?? '',
+              qty: '',
+            };
           }
-          return updated;
+          return updatedPallets;
         });
         setOpenCam(false);
         setActiveCameraIndex(null);
       }
-    }
+    },
   });
-  const handleRemovePallet = (index: any) => {
-    if (index < 1) return;
-    const updatedPallets = pallets.filter((_, i) => i !== index);
-    setPallets(updatedPallets);
-  };
 
-  // Validate input fields before submit
-  const handleSubmit = () => {
-    // Check if all pallet inputs are valid
-    for (let i = 0; i < pallets.length; i++) {
-      if (!pallets[i].palletNumber || !pallets[i].qty) {
-        Alert.alert('Validation', 'All pallet fields must be filled!');
-        return;
+  const handleRemovePallet = (index: number, sku: string) => {
+    setPallets(prevPallets => {
+      const updatedPallets = { ...prevPallets };
+      if (updatedPallets[sku]?.length > 1) {
+        updatedPallets[sku].splice(index, 1);
       }
-    }
-
-    // Handle submission logic here
-    Alert.alert('Success', 'Form submitted successfully!');
-    // Reset form or handle the next steps
+      return updatedPallets;
+    });
   };
 
-  const handleAddPallet = () => {
-    setPallets([...pallets, { palletNumber: '', qty: '' }]);
+  // Add pallet at specific index for a specific SKU
+  const handleAddPallet = (index: number, sku: string) => {
+    setPallets(prevPallets => {
+      const updatedPallets = { ...prevPallets };
+      updatedPallets[sku] = updatedPallets[sku] || [];
+      updatedPallets[sku].splice(index + 1, 0, { palletNumber: '', qty: '' });
+      return updatedPallets;
+    });
   };
 
   const handlePalletChange = (
     index: number,
     field: 'palletNumber' | 'qty',
     value: string,
+    sku: string,
   ) => {
-    const updatedPallets = [...pallets];
-    updatedPallets[index][field] = value;
-    setPallets(updatedPallets);
+    setPallets(prevPallets => {
+      const updatedPallets = { ...prevPallets };
+      if (updatedPallets[sku] && updatedPallets[sku][index]) {
+        updatedPallets[sku][index][field] = value;
+      }
+      return updatedPallets;
+    });
+  };
+
+  const handleSubmit = () => {
+    const collectedData = [];
+
+    for (const sku in pallets) {
+      for (let i = 0; i < pallets[sku].length; i++) {
+        const pallet = pallets[sku][i];
+        if (!pallet.palletNumber || !pallet.qty) {
+          Alert.alert('Validation', 'All pallet fields must be filled!');
+          return;
+        }
+        collectedData.push({
+          sku,
+          palletNumber: pallet.palletNumber,
+          qty: pallet.qty,
+        });
+      }
+    }
+
+    console.log('Collected Data:', collectedData);
+    Alert.alert('Success', 'Form submitted successfully!');
   };
 
   return (
@@ -151,21 +193,23 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
             )}
           </View>
         </Modal>
-        <View
-          style={{
-            paddingTop: 15,
-            alignItems: 'center',
-          }}
-        >
+        <View style={{ paddingTop: 15, alignItems: 'center' }}>
           <Text style={styles.profileText}>{item.title || 'Undefined'}</Text>
+          <View style={style.row}>
+            <Ionicons size={22} color={'#fff'} name={'person-circle'} />
+            <Text style={[styles.profileText]}>
+              {vehicle.transporter_name || 'Undefined'}
+            </Text>
+          </View>
           <View style={style.row}>
             <Ionicons size={26} color={'#fff'} name={'car-outline'} />
             <Text style={[styles.profileText, { marginLeft: 10 }]}>
-              {vehicle.title || 'Undefined'}
+              {vehicle.transporter_code_number || 'Undefined'}
             </Text>
           </View>
         </View>
       </View>
+
       <ScrollView
         contentContainerStyle={styles.menuContainer}
         stickyHeaderIndices={[2]}
@@ -191,120 +235,136 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
             </View>
           </View>
           <View style={style.container}>
-            {/* Dropdown (Status) */}
             <View style={style.formGroup}>
-              <Picker
-                selectedValue={status}
-                style={style.input}
-                onValueChange={itemValue => setStatus(itemValue)}
-              >
-                <Picker.Item label="Stock Type" value="" />
-                <Picker.Item label="Available" value="Available" />
-                <Picker.Item label="Waiting" value="Waiting" />
-                <Picker.Item label="Not Available" value="Not Available" />
-              </Picker>
+              {/*<Picker*/}
+              {/*  selectedValue={status}*/}
+              {/*  style={style.input}*/}
+              {/*  onValueChange={itemValue => setStatus(itemValue)}*/}
+              {/*>*/}
+              {/*  <Picker.Item label="Stock Type" value="" />*/}
+              {/*  <Picker.Item label="Available" value="Available" />*/}
+              {/*  <Picker.Item label="Waiting" value="Waiting" />*/}
+              {/*  <Picker.Item label="Not Available" value="Not Available" />*/}
+              {/*</Picker>*/}
             </View>
 
-            {/* SKU, QTY, Outstanding */}
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: '#666',
-                borderRadius: 8,
-                paddingHorizontal: 15,
-                paddingTop: 8,
-              }}
-            >
-              <View style={style.row}>
-                <View style={style.col}>
-                  <Text style={style.label}>SKU</Text>
-                  <Text style={style.label}>SKU0092</Text>
-                </View>
-                <View style={style.col}>
-                  <Text style={style.label}>QTY</Text>
-                  <Text style={style.label}>100</Text>
-                </View>
-                <View style={style.col}>
-                  <Text style={style.label}>Outstanding</Text>
-                  <Text style={style.label}>0</Text>
-                </View>
-                <TouchableOpacity
-                  style={style.addButton}
-                  onPress={handleAddPallet}
-                >
-                  <Text style={{ fontSize: 15, color: '#fff' }}>+</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View
-                style={{
-                  borderWidth: 1,
-                  marginBottom: 14,
-                  borderColor: '#666',
-                }}
-              />
-
-              {/* Pallet Input Rows */}
-              {pallets.length > 0 &&
-                pallets.map((pallet, index) => (
-                  <View key={index} style={style.row}>
-                    <View style={style.col}>
-                      {index === 0 && (
-                        <Text style={style.label}>Pallet Number</Text>
-                      )}
-                      <TextInput
-                        style={style.input}
-                        value={pallet.palletNumber}
-                        onChangeText={text =>
-                          handlePalletChange(index, 'palletNumber', text)
-                        }
-                        placeholder="Enter Pallet Number"
-                      />
-                    </View>
-                    <View style={style.col}>
-                      {index === 0 && <Text style={style.label}>Qty</Text>}
-                      <TextInput
-                        style={style.input}
-                        value={pallet.qty}
-                        onChangeText={text =>
-                          handlePalletChange(index, 'qty', text)
-                        }
-                        placeholder="Enter Quantity"
-                        keyboardType="numeric"
-                      />
-                    </View>
-                    <View style={style.col}>
-                      {index === 0 && <Text style={style.label}>Action</Text>}
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginBottom: 15,
-                        }}
-                      >
-                        <TouchableOpacity
-                          style={style.addButton}
-                          onPress={() => {
-                            setActiveCameraIndex(index);
-                            setOpenCam(true);
-                          }}
-                        >
-                          <Ionicons
-                            style={{ fontSize: 25, color: '#fff' }}
-                            name={'scan-circle-outline'}
-                          />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={style.removeButton}
-                          onPress={() => handleRemovePallet(index)}
-                        >
-                          <Text style={style.removeButtonText}>−</Text>
-                        </TouchableOpacity>
+            {/* Map over inbound items */}
+            {Array.isArray(detailInbound) &&
+              detailInbound.map((detail: any, detailIdx: any) => {
+                const sku = detail.item.sku;
+                // Ensure at least one pallet item exists for this SKU
+                if (!pallets[sku] || pallets[sku].length === 0) {
+                  pallets[sku] = [{ palletNumber: '', qty: '' }];
+                }
+                return (
+                  <View
+                    key={detail.id}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#666',
+                      borderRadius: 8,
+                      paddingHorizontal: 15,
+                      paddingTop: 8,
+                      marginBottom: 20,
+                    }}
+                  >
+                    <View style={style.row}>
+                      <View style={style.col}>
+                        <Text style={style.label}>SKU</Text>
+                        <Text style={style.label}>{sku}</Text>
                       </View>
+                      <View style={style.col}>
+                        <Text style={style.label}>QTY</Text>
+                        <Text style={style.label}>{detail.qty_plan}</Text>
+                      </View>
+                      <View style={style.col}>
+                        <Text style={style.label}>Outstanding</Text>
+                        <Text style={style.label}>0</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={style.addButton}
+                        onPress={() => handleAddPallet(detailIdx, sku)}
+                      >
+                        <Text style={{ fontSize: 15, color: '#fff' }}>+</Text>
+                      </TouchableOpacity>
                     </View>
+
+                    <View
+                      style={{
+                        borderWidth: 1,
+                        marginBottom: 14,
+                        borderColor: '#666',
+                      }}
+                    />
+                    {/* Pallet Input Rows */}
+                    {pallets[sku].map((pallet, index) => (
+                      <View key={index} style={style.row}>
+                        <View style={style.col}>
+                          {index === 0 && (
+                            <Text style={style.label}>Pallet Number</Text>
+                          )}
+                          <TextInput
+                            style={style.input}
+                            value={pallet.palletNumber}
+                            onChangeText={text =>
+                              handlePalletChange(
+                                index,
+                                'palletNumber',
+                                text,
+                                sku,
+                              )
+                            }
+                            placeholder="Enter Pallet Number"
+                          />
+                        </View>
+                        <View style={style.col}>
+                          {index === 0 && <Text style={style.label}>Qty</Text>}
+                          <TextInput
+                            style={style.input}
+                            value={pallet.qty}
+                            onChangeText={text =>
+                              handlePalletChange(index, 'qty', text, sku)
+                            }
+                            placeholder="Enter Quantity"
+                            keyboardType="numeric"
+                          />
+                        </View>
+                        <View style={style.col}>
+                          {index === 0 && (
+                            <Text style={style.label}>Action</Text>
+                          )}
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              marginBottom: 15,
+                            }}
+                          >
+                            <TouchableOpacity
+                              style={style.addButton}
+                              onPress={() => {
+                                setActiveCameraIndex(index);
+                                setOpenCam(true);
+                              }}
+                            >
+                              <Ionicons
+                                style={{ fontSize: 25, color: '#fff' }}
+                                name={'scan-circle-outline'}
+                              />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={style.removeButton}
+                              onPress={() => handleRemovePallet(index, sku)}
+                            >
+                              <Text style={style.removeButtonText}>−</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    ))}
                   </View>
-                ))}
-            </View>
+                );
+              })}
             <View style={style.buttons}>
               <Button title="Clear" onPress={() => {}} color="#d9534f" />
               <Button
@@ -387,7 +447,6 @@ const style = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
     alignItems: 'center',
   },
   col: {

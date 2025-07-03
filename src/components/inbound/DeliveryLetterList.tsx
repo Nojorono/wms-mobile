@@ -1,68 +1,50 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Colors from '../constants/Colors.ts';
- import Ionicons from '@react-native-vector-icons/ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-// import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import Colors from '../../constants/Colors.ts';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
-type VehicleListProps = {
+type DeliveryLetterListProps = {
   title: string;
   type: string;
-  statusColor?: string;
-  onClickInbound?: () => void;
-  onClickVehicle?: () => void;
+  onClick?: () => void;
 };
 
-const VehicleList: React.FC<VehicleListProps> = ({
-  title,
-  type,
-  statusColor = '#E5FFF2',
-  onClickInbound,
-  onClickVehicle,
-}) => {
+const DeliveryLetterList: React.FC<DeliveryLetterListProps> = ({
+                                                   title,
+                                                   type,
+                                                   onClick
+                                                 }) => {
   return (
     <View style={styles.card} >
       <View style={styles.titleRow}>
         <View style={styles.titleTypeContainer}>
           <View style={styles.iconCircle}>
-            <Ionicons name="car" size={24} color={Colors.secondaryColor} />
-            {/*<MaterialCommunityIcons name="home" size={24} color={Colors.secondaryColor} />*/}
+            <Ionicons name="logo-dropbox" size={24} color={Colors.secondaryColor} />
           </View>
           <View>
-          <Text style={styles.title}>{title} </Text>
-          <Text style={styles.statusText}>{type}</Text>
-        </View>
-        </View>
-        <View style={styles.buttonGroup}>
-            <Text
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Detail Vehicle"
-            style={styles.actionButton}
-              onPress={() => {
-                onClickVehicle && onClickVehicle();
-              }}
-            >
-              Detail Vehicle
-            </Text>
-            <Text
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Detail Inbound"
-            style={[styles.actionButton, { backgroundColor: Colors.primeColor }]}
-              onPress={() => {
-                  onClickInbound && onClickInbound();
-              }}
-            >
-              Detail Inbound
-            </Text>
+            <Text style={styles.title}>{title} </Text>
+            <Text style={styles.statusText}>{type}</Text>
           </View>
         </View>
+        <View style={styles.buttonGroup}>
+          <Text
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Detail"
+            style={[styles.actionButton, { backgroundColor: Colors.primeColor }]}
+            onPress={() => {
+              onClick && onClick();
+            }}
+          >
+            Detail
+          </Text>
+        </View>
       </View>
+    </View>
   );
 };
 
-export default VehicleList;
+export default DeliveryLetterList;
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',

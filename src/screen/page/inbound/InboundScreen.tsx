@@ -3,7 +3,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuthStore } from '../../../store/useAuthStore';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
-import InboundList from '../../../components/InboundList.tsx';
+import InboundList from '../../../components/inbound/InboundList.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
@@ -131,7 +131,7 @@ function InboundScreen() {
               status={item.status}
               statusColor={item.statusColor}
               role={item.role}
-              onClick={()=>{navigation.navigate('InboundVehicle', { item })}}
+              onClick={()=>{navigation.navigate('InboundDeliveryLetter', { item })}}
             />
           ))}
         </View>

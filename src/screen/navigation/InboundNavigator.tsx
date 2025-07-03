@@ -5,13 +5,17 @@ import React from 'react';
 import InboundScreen from '../page/inbound/InboundScreen.tsx';
 import InboundVehicleScreen from '../page/inbound/InboundVehicleScreen.tsx';
 import InboundDetailScreen from '../page/inbound/InboundDetailScreen.tsx';
+import DeliveryLetterScreen from '../page/inbound/DeliveryLetterScreen.tsx';
+import DeliveryLetterDetailScreen from '../page/inbound/DeliveryLetterDetailScreen.tsx';
 
 
 
 export type InboundParamList = {
   InboundMain: undefined;
-  InboundVehicle:{ item: any };
-  InboundDetail:{ item: any, vehicle: any };
+  InboundDeliveryLetter: { item: any };
+  InboundDeliveryLetterDetail: { item: any, surjal:any };
+  InboundVehicle: { item: any };
+  InboundDetail: { item: any; vehicle: any };
 };
 
 const InboundStack = createStackNavigator<InboundParamList>();
@@ -58,6 +62,28 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="InboundDetail"
       component={InboundDetailScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="InboundDeliveryLetter"
+      component={DeliveryLetterScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="InboundDeliveryLetterDetail"
+      component={DeliveryLetterDetailScreen}
       options={{
         headerShown: true,
         headerTintColor: '#fff',

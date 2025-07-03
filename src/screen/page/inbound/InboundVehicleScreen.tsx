@@ -13,7 +13,7 @@ import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
-import VehicleList from '../../../components/VehicleList.tsx';
+import VehicleList from '../../../components/inbound/VehicleList.tsx';
 import { StackNavigationProp } from '@react-navigation/stack';
 import DatePicker from 'react-native-date-picker';
 import Ionicons from '@react-native-vector-icons/ionicons';

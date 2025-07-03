@@ -131,7 +131,7 @@ function InboundScreen() {
               status={item.status}
               statusColor={item.statusColor}
               role={item.role}
-              onClick={()=>{navigation.navigate('InboundDeliveryLetter', { item })}}
+              onClick={()=>{navigation.navigate('InboundVehicle', { item })}}
             />
           ))}
         </View>

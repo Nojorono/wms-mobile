@@ -5,13 +5,14 @@ import React from 'react';
 import InboundScreen from '../page/inbound/InboundScreen.tsx';
 import InboundVehicleScreen from '../page/inbound/InboundVehicleScreen.tsx';
 import InboundDetailScreen from '../page/inbound/InboundDetailScreen.tsx';
+import InboundDeliveryOrder from '../page/inbound/InboundDeliveryOrder.tsx';
 
 
 
 export type InboundParamList = {
   InboundMain: undefined;
   InboundDeliveryLetter: { item: any };
-  InboundDeliveryLetterDetail: { item: any, surjal:any };
+  InboundDeliveryOrder: { item: any, vehicle:any };
   InboundVehicle: { item: any };
   InboundDetail: { item: any; vehicle: any };
 };
@@ -49,6 +50,17 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="InboundVehicle"
       component={InboundVehicleScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="InboundDeliveryOrder"
+      component={InboundDeliveryOrder}
       options={{
         headerShown: true,
         headerTintColor: '#fff',

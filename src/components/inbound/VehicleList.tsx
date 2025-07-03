@@ -52,7 +52,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
                   onClickInbound && onClickInbound();
               }}
             >
-              Detail Inbound
+              Surat Jalan
             </Text>
           </View>
         </View>

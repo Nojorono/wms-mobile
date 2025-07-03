@@ -356,11 +356,11 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
               </TouchableOpacity>
             </View>
           </View>
-          {transporter?.data.map((vehicle: any) => (
+          {transporter?.data.map((vehicle: any,index :number) => (
             <VehicleList
               key={vehicle.id}
               onClickInbound={() =>
-                navigation.navigate('InboundDetail', { item, vehicle })
+                navigation.navigate('InboundDeliveryOrder', { item, vehicle })
               }
               onClickVehicle={() => {
                 setModalVisible(true);

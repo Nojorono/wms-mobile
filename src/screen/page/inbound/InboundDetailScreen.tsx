@@ -67,6 +67,7 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
     permission();
     const initialize = async () => {
       try {
+        console.log('Initializing Inbound Detail Screen...',vehicle);
         showLoadingDialog("Loading...")
         const response = await InboundServices.getInboundDetail(
           item.inbound_plan_id,

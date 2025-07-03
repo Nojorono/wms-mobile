@@ -24,6 +24,7 @@ import {
   useCodeScanner,
 } from 'react-native-vision-camera';
 import InboundServices from '../../../service/inboundServices.ts';
+import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundDetail'>;
 type FormActivityProps = {
@@ -45,6 +46,7 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   const [openCam, setOpenCam] = useState(false);
   const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
   const permission = async () => {
     try {
@@ -65,15 +67,19 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
     permission();
     const initialize = async () => {
       try {
+        showLoadingDialog("Loading...")
         const response = await InboundServices.getInboundDetail(
           item.inbound_plan_id,
         );
         setDetailInbound(response.data.items);
       } catch (error) {
         console.error('Initialization error:', error);
+        hideLoadingDialog()
+      }finally {
+        hideLoadingDialog()
       }
     };
-    // initialize();
+    initialize();
   }, []);
 
   const codeScanner = useCodeScanner({
@@ -139,7 +145,6 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
 
   const handleSubmit = () => {
     const collectedData = [];
-
     for (const sku in pallets) {
       for (let i = 0; i < pallets[sku].length; i++) {
         const pallet = pallets[sku][i];

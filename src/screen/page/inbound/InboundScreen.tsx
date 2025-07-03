@@ -12,6 +12,7 @@ import useConstantStore from '../../../store/useConstantStore.ts';
 import InboundServices from '../../../service/inboundServices.ts';
 import useInboundStore from '../../../store/useInboundStore.ts';
 import { inboundListData } from '../../../dummy/inboundData';
+import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 
 
 type NavigationProp = StackNavigationProp<InboundParamList,'InboundMain'>;
@@ -22,19 +23,24 @@ function InboundScreen() {
   const navigation = useNavigation<NavigationProp>();
   const {setVehicle} = useConstantStore();
   const {setInbound,inbound} = useInboundStore();
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
   const fetchInbound = async () => {
     try {
+      showLoadingDialog("Loading List Inbound Planning")
      const inboundList = await InboundServices.getInboundList(user?.id ?? '');
      setInbound(inboundList)
       console.log("inbound List",inbound)
     } catch (error) {
+      hideLoadingDialog()
       console.error('Error fetching inbound data:', error);
       Alert.alert(
         'Error',
         'Failed to fetch inbound data. Please check your connection and try again.',
         [{ text: 'OK' }]
       );
+    }finally {
+      hideLoadingDialog()
     }
   }
 

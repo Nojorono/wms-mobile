@@ -22,6 +22,8 @@ import ConstantService from '../../../service/constantService.ts';
 import useConstantStore from '../../../store/useConstantStore.ts';
 import InboundServices from '../../../service/inboundServices.ts';
 import { useAuthStore } from '../../../store/useAuthStore.ts';
+import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
+import { initialize } from 'react-native-gesture-handler/lib/typescript/init';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundVehicle'>;
 type FormActivityProps = {
@@ -97,12 +99,30 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
     reset,
   } = useForm();
   const [transporter, setTransporter] = useState<any>();
-
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const [modalVisible, setModalVisible] = useState(false);
   const [date, setDate] = useState(new Date());
+  const [canUpdate, setCanUpdate] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState<{
     [key: string]: boolean;
   }>({});
+
+  const initialize = async () => {
+    try {
+      showLoadingDialog("Loading...")
+      ConstantService.getVehicleType();
+      const dataTransporter = await InboundServices.getTransporterList(
+        item.inbound_plan_id,
+      );
+      setTransporter(dataTransporter);
+      console.log("data transporter",transporter);
+    } catch (error) {
+      console.error('Initialization error:', error);
+      hideLoadingDialog()
+    }finally {
+      hideLoadingDialog();
+    }
+  };
 
   const toggleModal = () => {
     setModalVisible(v => {
@@ -115,7 +135,7 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
           vehicle_id: '',
           transporter_seal_number: '',
           arrival_time: '',
-          trasporter_phone: '',
+          transporter_phone: '',
           unloading_start_time: '',
           unloading_end_time: '',
           departure_time: '',
@@ -130,16 +150,16 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
   const onSubmit = useCallback(
     (data: any) => {
       try {
+        showLoadingDialog("Submitting...");
         data = {
           ...data,
           inbound_plan_id: item.inbound_plan_id,
           organization_id: item.inbound_plan.organization_id,
-          // transporter_phone: '08213213',
           created_by: user?.firstName + ' ' + user?.lastName,
         };
-        console.log('Submitted JSON:', JSON.stringify(data));
         InboundServices.inboundTransporter(data)
           .then(response => {
+            initialize()
             console.log('Form submitted successfully:', response);
           })
           .catch(error => {
@@ -151,26 +171,22 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
         setOpenDatePicker({});
       } catch (error) {
         console.error('Error submitting form:', error);
+        hideLoadingDialog();
         return;
       } finally {
+        hideLoadingDialog();
         setModalVisible(false);
       }
     },
     [reset],
   );
 
+  const updateVehicle = useCallback(
+    (data: any) => {
+
+    },[reset])
+
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        ConstantService.getVehicleType();
-        const dataTransporter = await InboundServices.getTransporterList(
-          item.inbound_plan_id,
-        );
-        setTransporter(dataTransporter);
-      } catch (error) {
-        console.error('Initialization error:', error);
-      }
-    };
     initialize();
   }, []);
 
@@ -402,7 +418,15 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
             <View style={style.modalButtons}>
               <TouchableOpacity
                 style={style.modalButton}
-                onPress={handleSubmit(onSubmit)}
+                onPress={handleSubmit(data => {
+                  // Check if the form is in "add" mode (fields are empty) or "edit" mode (fields are filled)
+                  const isEdit = !!data.transporter_code_number; // or use another unique field
+                  if (isEdit) {
+                    updateVehicle(data);
+                  } else {
+                    onSubmit(data);
+                  }
+                })}
               >
                 <Text style={style.modalButtonText}>Submit</Text>
               </TouchableOpacity>

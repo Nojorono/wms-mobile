@@ -59,7 +59,7 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
         return;
       }
     } catch (error) {
-      console.error('[Background Fetch] Task scheduling failed:', error);
+      console.error('Permission Error:', error);
     }
   };
 
@@ -219,6 +219,7 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
       <ScrollView
         contentContainerStyle={styles.menuContainer}
         stickyHeaderIndices={[2]}
+        style={styles.scrollViewContent}
       >
         <View style={styles.menuCard}>
           <View

@@ -1,11 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Picker } from '@react-native-picker/picker';
+import React, { useEffect, useState } from 'react';
 import {
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -13,17 +10,11 @@ import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
-import VehicleList from '../../../components/inbound/VehicleList.tsx';
 import { StackNavigationProp } from '@react-navigation/stack';
-import DatePicker from 'react-native-date-picker';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { Controller, useForm } from 'react-hook-form';
-import ConstantService from '../../../service/constantService.ts';
-import useConstantStore from '../../../store/useConstantStore.ts';
-import InboundServices from '../../../service/inboundServices.ts';
+import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../../store/useAuthStore.ts';
 import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
-import { initialize } from 'react-native-gesture-handler/lib/typescript/init';
 import DeliveryLetterList from '../../../components/inbound/DeliveryLetterList.tsx';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundDeliveryOrder'>;
@@ -34,7 +25,7 @@ type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
 
 function DeliveryOrderScreen({ route }: FormActivityProps) {
   const styles = GlobalStyles();
-  const { item ,vehicle} = route.params;
+  const { item, vehicle } = route.params;
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
   const {
@@ -53,32 +44,44 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
 
   const initialize = async () => {
     try {
-      showLoadingDialog("Loading...")
-      // tambahan buat add surat jalan
-
+      showLoadingDialog('Loading...');
+      // additional logic for adding delivery order
     } catch (error) {
       console.error('Initialization error:', error);
-      hideLoadingDialog()
-    }finally {
+      hideLoadingDialog();
+    } finally {
       hideLoadingDialog();
     }
   };
 
   useEffect(() => {
-    console.log('PERCUMA',vehicle)
+    console.log('PERCUMA', vehicle);
     initialize();
   }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
       <View style={styles.headerHome}>
-        <View style={styles.profileSection}>
+        <View style={[styles.profileSection, { alignItems: 'center' }]}>
           <Text style={styles.profileText}>{item.title || 'Undefined'}</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Ionicons size={26} color={'#fff'} name={'car-outline'} />
+            <Text style={[styles.profileText, { marginLeft: 10 }]}>
+              {vehicle.transporter_code_number || 'Undefined'}
+            </Text>
+          </View>
         </View>
       </View>
       <ScrollView
         contentContainerStyle={styles.menuContainer}
         stickyHeaderIndices={[2]}
+        style={styles.scrollViewContent}
       >
         <View style={styles.menuCard}>
           <View
@@ -96,16 +99,25 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
               }}
             >
               <Text style={styles.activitiesHeaderText}>List Surat Jalan</Text>
-              <TouchableOpacity onPress={()=>{}}>
-                <Text style={{ fontSize: 24, color: Colors.secondaryColor }}>
-
-                </Text>
+              <TouchableOpacity onPress={() => {}}>
+                <Text style={{ fontSize: 24, color: Colors.secondaryColor }}></Text>
               </TouchableOpacity>
             </View>
           </View>
-          <DeliveryLetterList title={'SUR-JAL-01'} type={'onprogress'} onClick={()=> {navigation.navigate("InboundDetail",{ item, vehicle })}}/>
-          <DeliveryLetterList title={'SUR-JAL-02'} type={'onprogress'}/>
-          <DeliveryLetterList title={'SUR-JAL-03'} type={'onprogress'}/>
+          <DeliveryLetterList
+            title={'SUR-JAL-01'}
+            type={'onprogress'}
+            onClick={() => {
+              navigation.navigate('InboundDetail', { item, vehicle });
+            }}
+          />
+          {Array.from({ length: 100 }, (_, i) => (
+            <DeliveryLetterList
+              key={i}
+              title={`SUR-JAL-${(i + 1).toString().padStart(2, '0')}`}
+              type={'onprogress'}
+            />
+          ))}
         </View>
       </ScrollView>
     </View>

@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View, RefreshControl } from 'react-native';
 import { useAuthStore } from '../../../store/useAuthStore';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
@@ -18,6 +18,7 @@ import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 type NavigationProp = StackNavigationProp<InboundParamList,'InboundMain'>;
 
 function InboundScreen() {
+  const [refreshing, setRefreshing] = useState(false);
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
@@ -27,6 +28,7 @@ function InboundScreen() {
 
   const fetchInbound = async () => {
     try {
+      setRefreshing(true);
       showLoadingDialog("Loading List Inbound Planning")
      const inboundList = await InboundServices.getInboundList(user?.id ?? '');
      setInbound(inboundList)
@@ -41,6 +43,7 @@ function InboundScreen() {
       );
     }finally {
       hideLoadingDialog()
+      setRefreshing(false);
     }
   }
 
@@ -112,6 +115,14 @@ function InboundScreen() {
       <ScrollView
         contentContainerStyle={styles.menuContainer}
         stickyHeaderIndices={[2]}
+        style={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={fetchInbound}
+            colors={[Colors.primeColor]}
+          />
+        }
       >
         <View style={styles.menuCard}>
           <View

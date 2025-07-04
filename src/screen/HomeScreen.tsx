@@ -26,7 +26,7 @@ function HomeScreen() {
                 </View>
             </View>
             {/* Main Scrollable Content */}
-            <ScrollView contentContainerStyle={styles.menuContainer} stickyHeaderIndices={[2]}>
+            <ScrollView contentContainerStyle={styles.menuContainer} style={styles.scrollViewContent} stickyHeaderIndices={[2]} >
                 <View style={styles.menuCard}>
                     <View style={styles.activitiesHeader}>
                         <Text style={styles.activitiesHeaderText}>Dahboard</Text>

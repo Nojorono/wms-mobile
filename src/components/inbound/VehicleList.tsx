@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Colors from '../../constants/Colors.ts';
- import Ionicons from '@react-native-vector-icons/ionicons';
+ import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
 type VehicleListProps = {
   title: string;
@@ -23,7 +23,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
       <View style={styles.titleRow}>
         <View style={styles.titleTypeContainer}>
           <View style={styles.iconCircle}>
-            <Ionicons name="car" size={24} color={Colors.secondaryColor} />
+            <Ionicons name="truck-moving" size={24} color={Colors.secondaryColor} />
             {/*<MaterialCommunityIcons name="home" size={24} color={Colors.secondaryColor} />*/}
           </View>
           <View>

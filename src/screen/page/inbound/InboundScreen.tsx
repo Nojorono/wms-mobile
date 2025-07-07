@@ -137,8 +137,8 @@ function InboundScreen() {
             <InboundList
               key={item.id}
               title={item.title}
-              client_name={item.client_name}
-              task_type={item.task_type}
+              // client_name={item.client_name}
+              // task_type={item.task_type}
               status={item.status}
               statusColor={item.statusColor}
               role={item.role}

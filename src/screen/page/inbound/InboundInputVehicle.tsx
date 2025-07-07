@@ -72,12 +72,21 @@ function InboundInputVehicle({ route }: FormActivityProps) {
               control={control}
               rules={{ required: 'Plat Number is required' }}
               render={({ field: { value, onChange } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Plat Number"
-                  value={value}
-                  onChangeText={onChange}
-                />
+                  <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        width: '100%',
+                      }}
+                  >
+                    <Text style={{ marginRight: 8, width: 90 }}>Plat Number</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Plat Number"
+                        value={value}
+                        onChangeText={onChange}
+                    />
+                  </View>
               )}
             />
             {errors.transporter_code_number && (
@@ -89,12 +98,21 @@ function InboundInputVehicle({ route }: FormActivityProps) {
               control={control}
               rules={{ required: 'Driver Name is required' }}
               render={({ field: { value, onChange } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Driver Name"
-                  value={value}
-                  onChangeText={onChange}
-                />
+                  <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        width: '100%',
+                      }}
+                  >
+                    <Text style={{ marginRight: 8, width: 90 }}>Driver Name</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Driver Name"
+                        value={value}
+                        onChangeText={onChange}
+                    />
+                  </View>
               )}
             />
             {errors.transporter_name && (
@@ -106,12 +124,22 @@ function InboundInputVehicle({ route }: FormActivityProps) {
               control={control}
               rules={{ required: 'Driver Phone is required' }}
               render={({ field: { value, onChange } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Phone Number"
-                  value={value}
-                  onChangeText={onChange}
-                />
+                  <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        width: '100%',
+                      }}
+                  >
+                    <Text style={{ marginRight: 8, width: 90 }}>Phone Number</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Phone Number"
+                        value={value}
+                        onChangeText={onChange}
+                    />
+                  </View>
+
               )}
             />
             {errors.transporter_phone && (
@@ -123,33 +151,43 @@ function InboundInputVehicle({ route }: FormActivityProps) {
               control={control}
               rules={{ required: 'Vehicle Type is required' }}
               render={({ field: { value, onChange } }) => (
-                <View
-                  style={[
-                    styles.input,
-                    { padding: 0, justifyContent: 'center' },
-                  ]}
-                >
-                  <Picker
-                    selectedValue={value ?? ''}
-                    onValueChange={itemValue => {
-                      onChange(itemValue);
-                      console.log('Selected vehicle_id:', itemValue);
-                    }}
-                    style={{ width: '100%' }}
+                  <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        width: '100%',
+                      }}
                   >
-                    <Picker.Item label="Select Type" value="" />
-                    {Array.isArray(vehicle) &&
-                      vehicle.map(
-                        (option: { id: string; vehicle_type: string }) => (
-                          <Picker.Item
-                            key={option.id}
-                            label={option.vehicle_type ?? ''}
-                            value={option.id}
-                          />
-                        ),
-                      )}
-                  </Picker>
-                </View>
+                    <Text style={{ marginRight: 8, width: 90 }}>Vehicle Type</Text>
+                    <View
+                        style={[
+                          styles.input,
+                          { padding: 0, justifyContent: 'center' },
+                        ]}
+                    >
+                      <Picker
+                          selectedValue={value ?? ''}
+                          onValueChange={itemValue => {
+                            onChange(itemValue);
+                            console.log('Selected vehicle_id:', itemValue);
+                          }}
+                          style={{ width: '100%' }}
+                      >
+                        <Picker.Item label="Select Type" value="" />
+                        {Array.isArray(vehicle) &&
+                            vehicle.map(
+                                (option: { id: string; vehicle_type: string }) => (
+                                    <Picker.Item
+                                        key={option.id}
+                                        label={option.vehicle_type ?? ''}
+                                        value={option.id}
+                                    />
+                                ),
+                            )}
+                      </Picker>
+                    </View>
+                  </View>
+
               )}
             />
             {errors.vehicle_id && (
@@ -161,12 +199,22 @@ function InboundInputVehicle({ route }: FormActivityProps) {
               control={control}
               rules={{ required: 'Seal Number is required' }}
               render={({ field: { value, onChange } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Seal Number"
-                  value={value}
-                  onChangeText={onChange}
-                />
+                  <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        width: '100%',
+                      }}
+                  >
+                    <Text style={{ marginRight: 8, width: 90 }}>Seal Number</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Seal Number"
+                        value={value}
+                        onChangeText={onChange}
+                    />
+                  </View>
+
               )}
             />
             {errors.transporter_seal_number && (
@@ -219,10 +267,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   input: {
-    width: '100%',
     height: 40,
     borderColor: '#ccc',
     borderWidth: 1,
+    flex:1,
     marginBottom: 10,
     paddingLeft: 8,
     borderRadius: 5,

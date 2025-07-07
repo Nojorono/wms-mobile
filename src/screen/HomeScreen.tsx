@@ -1,13 +1,15 @@
 import React, {useState} from 'react';
 import { StyleSheet, ScrollView, Text, TouchableOpacity, View, Image} from "react-native";
 import {useAuthStore} from "../store/useAuthStore";
-import Ionicons from '@react-native-vector-icons/ionicons';
+// import Ionicons from '@react-native-vector-icons/ionicons';
+
 import GlobalStyles from "../util/GlobalStyles.ts";
 import Colors from "../constants/Colors";
 import StatusCard from "../components/NameCard";
 import MenuGrid from "../components/MenuGrid";
 import {useDialogStore} from "../store/useGlobalDialog";
 import {useLoadingDialogStore} from "../store/useLoadingStore";
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
 function HomeScreen() {
     const styles = GlobalStyles();
@@ -33,24 +35,24 @@ function HomeScreen() {
                     </View>
                     <View style={stylez.rowWithMargin}>
                         <View style={[stylez.cardx, stylez.flexOne, stylez.marginRight8]}>
-                            <Ionicons name="arrow-down-circle" size={32} color={Colors.primeColor} />
+                            <Ionicons name="arrow-down" size={32} color={Colors.primeColor} />
                             <Text style={stylez.titlex}>Inbound</Text>
                             <Text style={stylez.inboundText}>5</Text>
                         </View>
                         <View style={[stylez.cardx, stylez.flexOne, stylez.marginLeft8]}>
-                            <Ionicons name="arrow-up-circle" size={32} color={Colors.secondaryColor} />
+                            <Ionicons name="arrow-up" size={32} color={Colors.secondaryColor} />
                             <Text style={stylez.titlex}>Outbound</Text>
                             <Text style={stylez.outboundText}>9</Text>
                         </View>
                     </View>
                     <View style={stylez.row}>
                         <View style={[stylez.cardx, stylez.flexOne, stylez.marginRight8]}>
-                            <Ionicons name="person-add" size={32} color={Colors.primeColor} />
+                            <Ionicons name="user-plus" size={32} color={Colors.primeColor} />
                             <Text style={stylez.titlex}>Assign</Text>
                             <Text style={stylez.inboundText}>8</Text>
                         </View>
                         <View style={[stylez.cardx, stylez.flexOne, stylez.marginLeft8]}>
-                            <Ionicons name="person-remove" size={32} color={Colors.secondaryColor} />
+                            <Ionicons name="user-minus" size={32} color={Colors.secondaryColor} />
                             <Text style={stylez.titlex}>Not Assign</Text>
                             <Text style={stylez.outboundText}>6</Text>
                         </View>

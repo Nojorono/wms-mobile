@@ -60,6 +60,7 @@ function InboundVehicleScreen( { route }: FormActivityProps ) {
           refreshing={refreshing}
           onRefresh={initialize}
           colors={[Colors.primeColor]}
+
         />
       }>
         <View style={styles.menuCard}>

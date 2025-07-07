@@ -2,7 +2,7 @@ import {createStackNavigator} from "@react-navigation/stack";
 import HomeScreen from "../HomeScreen";
 import Colors from "../../constants/Colors";
 import {Image, View} from "react-native";
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import React from "react";
 
 
@@ -33,7 +33,7 @@ const HomeStackNavigator = () => (
                 }}>
                     <Image source={require('../../assets/images/icon-white-nna.png')}
                            style={{width: 100, height: 22, resizeMode: 'contain'}}/>
-                    <Ionicons name="notifications-outline" size={24} color="#fff" style={{marginRight: 15}}/>
+                    <Ionicons name="kaaba" size={24} color="#fff" style={{marginRight: 15}}/>
                 </View>
             ),
         }}/>

@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import Colors from "../constants/Colors";
 
 type MenuCardProps = {
@@ -15,7 +15,7 @@ const MenuCard: React.FC<MenuCardProps> = ({ iconName, title, onPress }) => (
             <Image source={require('../assets/icons/persiapan.png')} style={styles.icon} />
             <Text style={styles.title}>{title}</Text>
         </View>
-        <Ionicons name="chevron-forward-outline" size={20} color={Colors.secondaryColor} />
+        <Ionicons name="chevron-right" size={20} color={Colors.secondaryColor} />
     </TouchableOpacity>
 );
 

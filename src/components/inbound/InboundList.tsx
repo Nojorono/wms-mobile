@@ -1,11 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import Colors from '../../constants/Colors.ts';
 
 type InboundListProps = {
   title: string;
-  status: string;
+  status?: string;
   statusColor?: string;
   onClick?: () => void;
   role?: string;
@@ -26,21 +26,36 @@ const InboundList: React.FC<InboundListProps> = ({
     <View style={styles.card} {...(onClick ? { onTouchEnd: onClick } : {})}>
       <View style={styles.titleRow}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          <Ionicons style={{marginRight:10}} size={25} color={Colors.secondaryColor} name={'logo-dropbox'}/>
-          <View style={{ flexDirection: 'column', flex: 1 ,padding:6}}>
+          <Ionicons
+            style={{ marginRight: 10 }}
+            size={25}
+            color={Colors.secondaryColor}
+            name={'boxes'}
+          />
+          <View style={{ flexDirection: 'column', flex: 1, padding: 6 }}>
             <Text style={styles.title}>{title}</Text>
             {role && <Text style={styles.role}>{role}</Text>}
-            <Text style={styles.role}>{client_name}</Text>
-            <Text style={styles.role}>{task_type}</Text>
-            <View style={[styles.statusBadge, {marginTop:10, backgroundColor: statusColor, alignSelf: 'flex-start' }]}>
-              <Text style={styles.statusText}>{status}</Text>
-            </View>
+            {client_name && <Text style={styles.role}>{client_name}</Text>}
+            {task_type && <Text style={styles.role}>{task_type}</Text>}
+            {status && (
+              <View
+                style={[
+                  styles.statusBadge,
+                  {
+                    marginTop: 10,
+                    backgroundColor: statusColor,
+                    alignSelf: 'flex-start',
+                  },
+                ]}
+              >
+                <Text style={styles.statusText}>{status}</Text>
+              </View>
+            )}
           </View>
-
         </View>
 
         <Ionicons
-          name="chevron-forward-outline"
+          name="chevron-right"
           size={20}
           color={Colors.secondaryColor}
         />
@@ -74,14 +89,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 16,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#333',
     marginLeft: 10,
   },
   role: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 24,
+    color: 'black',
     marginLeft: 10,
   },
   statusBadge: {

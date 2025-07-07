@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Colors from '../../constants/Colors.ts';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
 type DeliveryLetterListProps = {
   title: string;
@@ -19,7 +19,7 @@ const DeliveryLetterList: React.FC<DeliveryLetterListProps> = ({
       <View style={styles.titleRow}>
         <View style={styles.titleTypeContainer}>
           <View style={styles.iconCircle}>
-            <Ionicons name="logo-dropbox" size={24} color={Colors.secondaryColor} />
+            <Ionicons name="box" size={24} color={Colors.secondaryColor} />
           </View>
           <View>
             <Text style={styles.title}>{title} </Text>

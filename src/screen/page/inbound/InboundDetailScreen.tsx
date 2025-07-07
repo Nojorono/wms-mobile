@@ -16,7 +16,7 @@ import Colors from '../../../constants/Colors';
 import { RouteProp } from '@react-navigation/native';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
 import { Picker } from '@react-native-picker/picker';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import {
   Camera,
   useCameraDevice,
@@ -90,6 +90,7 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
         Alert.alert('No codes found', 'Please try scanning again.');
         return;
       } else {
+        console.log('Code Scanning:', codes);
         setPallets(prevPallets => {
           const updatedPallets = { ...prevPallets };
           const sku = detailInbound?.[activeCameraIndex || 0]?.item?.sku; // Ensure we're updating the right SKU
@@ -187,28 +188,47 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
               }}
               onPress={() => setOpenCam(false)}
             >
-              <Ionicons name="close" size={28} color="#333" />
+              <Ionicons name="window-close" size={28} color="#333" />
             </TouchableOpacity>
             {device && (
+              <View style={{ position: 'relative', alignSelf: 'center' }}>
               <Camera
                 device={device}
                 isActive={openCam}
                 style={[style.camera, { alignSelf: 'center' }]}
                 codeScanner={codeScanner}
               />
+                {/* Rectangle overlay in the center */}
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 250,
+                    height: 250,
+                    marginTop: -120,
+                    borderWidth: 3,
+                    borderColor: Colors.secondaryColor,
+                    borderRadius: 16,
+                    backgroundColor: 'rgba(0,0,0,0.0)',
+                    zIndex: 20,
+                  }}
+                  pointerEvents="none"
+                />
+              </View>
             )}
           </View>
         </Modal>
         <View style={{ paddingTop: 15, alignItems: 'center' }}>
           <Text style={styles.profileText}>{item.title || 'Undefined'}</Text>
+          {/*<View style={style.row}>*/}
+          {/*  <Ionicons size={22} color={'#fff'} name={'user-circle'} />*/}
+          {/*  <Text style={[styles.profileText]}>*/}
+          {/*    {vehicle.transporter_name || 'Undefined'}*/}
+          {/*  </Text>*/}
+          {/*</View>*/}
           <View style={style.row}>
-            <Ionicons size={22} color={'#fff'} name={'person-circle'} />
-            <Text style={[styles.profileText]}>
-              {vehicle.transporter_name || 'Undefined'}
-            </Text>
-          </View>
-          <View style={style.row}>
-            <Ionicons size={26} color={'#fff'} name={'car-outline'} />
+            <Ionicons size={26} color={'#fff'} name={'truck'} />
             <Text style={[styles.profileText, { marginLeft: 10 }]}>
               {vehicle.transporter_code_number || 'Undefined'}
             </Text>
@@ -356,7 +376,7 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
                             >
                               <Ionicons
                                 style={{ fontSize: 25, color: '#fff' }}
-                                name={'scan-circle-outline'}
+                                name={'barcode'}
                               />
                             </TouchableOpacity>
                             <TouchableOpacity

@@ -111,13 +111,6 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
               navigation.navigate('InboundDetail', { item, vehicle });
             }}
           />
-          {Array.from({ length: 100 }, (_, i) => (
-            <DeliveryLetterList
-              key={i}
-              title={`SUR-JAL-${(i + 1).toString().padStart(2, '0')}`}
-              type={'onprogress'}
-            />
-          ))}
         </View>
       </ScrollView>
     </View>

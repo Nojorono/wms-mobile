@@ -7,15 +7,17 @@ type DeliveryLetterListProps = {
   title: string;
   type: string;
   onClick?: () => void;
+  onProcess?: () => void;
 };
 
 const DeliveryLetterList: React.FC<DeliveryLetterListProps> = ({
-                                                   title,
-                                                   type,
-                                                   onClick
-                                                 }) => {
+  title,
+  type,
+  onClick,
+  onProcess,
+}) => {
   return (
-    <View style={styles.card} >
+    <View style={styles.card}>
       <View style={styles.titleRow}>
         <View style={styles.titleTypeContainer}>
           <View style={styles.iconCircle}>
@@ -31,12 +33,29 @@ const DeliveryLetterList: React.FC<DeliveryLetterListProps> = ({
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Detail"
-            style={[styles.actionButton, { backgroundColor: Colors.primeColor }]}
+            style={[
+              styles.actionButton,
+              {width:120, backgroundColor: Colors.primeColor },
+            ]}
             onPress={() => {
               onClick && onClick();
             }}
           >
             Detail
+          </Text>
+          <Text
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Process"
+            style={[
+              styles.actionButton,
+              { width:120 ,backgroundColor: Colors.secondaryColor },
+            ]}
+            onPress={() => {
+              onProcess && onProcess();
+            }}
+          >
+            Process
           </Text>
         </View>
       </View>

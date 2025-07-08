@@ -36,7 +36,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Detail Vehicle"
-            style={styles.actionButton}
+            style={[styles.actionButton, {width:100}]}
               onPress={() => {
                 onClickVehicle && onClickVehicle();
               }}
@@ -47,7 +47,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Detail Inbound"
-            style={[styles.actionButton, { backgroundColor: Colors.primeColor }]}
+            style={[styles.actionButton, {width:100, backgroundColor: Colors.primeColor }]}
               onPress={() => {
                   onClickInbound && onClickInbound();
               }}

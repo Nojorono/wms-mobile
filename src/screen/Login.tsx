@@ -117,10 +117,12 @@ export default function LoginScreen() {
     return (<KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{flex: 1}}>
+
         <ScrollView
             contentContainerStyle={styles.container}
             keyboardShouldPersistTaps="handled">
-            <Text style={styles.label}>NIK</Text>
+            <Image style={{width:150, height:80, marginBottom:50}} source={require("../assets/images/nna.png")}/>
+            <Text style={styles.label}>Username</Text>
             <Controller
                 control={control}
                 name="username"

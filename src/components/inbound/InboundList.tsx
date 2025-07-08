@@ -1,11 +1,16 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
+import Colors from '../../constants/Colors.ts';
 
 type InboundListProps = {
   title: string;
-  status: string;
+  status?: string;
   statusColor?: string;
   onClick?: () => void;
+  role?: string;
+  client_name?: string;
+  task_type?: string;
 };
 
 const InboundList: React.FC<InboundListProps> = ({
@@ -13,14 +18,47 @@ const InboundList: React.FC<InboundListProps> = ({
   status,
   statusColor = '#E5FFF2',
   onClick,
+  role,
+  client_name ='',
+  task_type=''
 }) => {
   return (
     <View style={styles.card} {...(onClick ? { onTouchEnd: onClick } : {})}>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>{title}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Text style={styles.statusText}>{status}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+          <Ionicons
+            style={{ marginRight: 10 }}
+            size={25}
+            color={Colors.secondaryColor}
+            name={'boxes'}
+          />
+          <View style={{ flexDirection: 'column', flex: 1, padding: 6 }}>
+            <Text style={styles.title}>{title}</Text>
+            {role && <Text style={styles.role}>{role}</Text>}
+            {client_name && <Text style={styles.role}>{client_name}</Text>}
+            {task_type && <Text style={styles.role}>{task_type}</Text>}
+            {status && (
+              <View
+                style={[
+                  styles.statusBadge,
+                  {
+                    marginTop: 10,
+                    backgroundColor: statusColor,
+                    alignSelf: 'flex-start',
+                  },
+                ]}
+              >
+                <Text style={styles.statusText}>{status}</Text>
+              </View>
+            )}
+          </View>
         </View>
+
+        <Ionicons
+          name="chevron-right"
+          size={20}
+          color={Colors.secondaryColor}
+        />
       </View>
     </View>
   );
@@ -51,10 +89,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 16,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#333',
-    flex: 1,
+    marginLeft: 10,
+  },
+  role: {
+    fontSize: 24,
+    color: 'black',
+    marginLeft: 10,
   },
   statusBadge: {
     borderRadius: 10,

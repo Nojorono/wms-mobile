@@ -5,13 +5,17 @@ import React from 'react';
 import InboundScreen from '../page/inbound/InboundScreen.tsx';
 import InboundVehicleScreen from '../page/inbound/InboundVehicleScreen.tsx';
 import InboundDetailScreen from '../page/inbound/InboundDetailScreen.tsx';
+import InboundDeliveryOrder from '../page/inbound/InboundDeliveryOrder.tsx';
+import InboundInputVehicle from '../page/inbound/InboundInputVehicle.tsx';
 
 
 
 export type InboundParamList = {
   InboundMain: undefined;
-  InboundVehicle:{ item: any };
-  InboundDetail:{ item: any, vehicle: any };
+  InboundDeliveryOrder: { item: any, vehicle:any };
+  InboundInputVehicle:{ item:any, mode:any, initialValues:any };
+  InboundVehicle: { item: any };
+  InboundDetail: { item: any; vehicle: any };
 };
 
 const InboundStack = createStackNavigator<InboundParamList>();
@@ -56,8 +60,30 @@ const InboundStackNavigator = () => (
       }}
     />
     <InboundStack.Screen
+      name="InboundDeliveryOrder"
+      component={InboundDeliveryOrder}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
       name="InboundDetail"
       component={InboundDetailScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="InboundInputVehicle"
+      component={InboundInputVehicle}
       options={{
         headerShown: true,
         headerTintColor: '#fff',

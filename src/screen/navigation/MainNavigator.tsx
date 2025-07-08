@@ -3,7 +3,7 @@ import { getFocusedRouteNameFromRoute, NavigatorScreenParams } from "@react-navi
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Colors from "../../constants/Colors";
 import HomeStackNavigator, { HomeStackParamList } from "./HomeNavigator";
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import InboundStackNavigator from './InboundNavigator.tsx';
 
 // Define the param list for MainTab
@@ -17,7 +17,7 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Define a union type for allowed icon names
-type IconNames = 'home-outline' | 'grid-outline' | 'person-outline' | 'settings-outline' | 'alert-circle';
+type IconNames = 'american-sign-language-interpreting' | 'home' | 'inventory' | 'user' | 'cog' | 'arrow-up' | 'arrow-down' | 'person-outline' | 'settings-outline' | 'alert-circle';
 
 const MainNavigator = () => (
   <Tab.Navigator
@@ -27,18 +27,17 @@ const MainNavigator = () => (
       const routeName = getFocusedRouteNameFromRoute(route) ?? '';
 
       // Determine if tab bar should be hidden
-      const hideTabBar = routeName === 'RequestScreen' || routeName === 'PrepareScreen';
+      const hideTabBar = routeName === 'InboundVehicle' || routeName === 'InboundDetail' || routeName === 'InboundInputVehicle' || routeName === 'InboundDeliveryOrder';
 
       return {
         tabBarIcon: ({ color, size }) => {
           // Specify the iconName as one of the valid icon names in the IconNames type
           let iconName: IconNames = 'alert-circle'; // Default value
 
-          // Assign correct icon based on the route name
-          if (route.name === 'Home') iconName = 'home-outline';
-          else if (route.name === 'Inbound') iconName = 'grid-outline';
-          else if (route.name === 'Outbond') iconName = 'person-outline';
-          else if (route.name === 'Inventory') iconName = 'settings-outline';
+          if (route.name === 'Home') iconName = 'home';
+          else if (route.name === 'Inbound') iconName = 'arrow-down';
+          else if (route.name === 'Outbond') iconName = 'arrow-up';
+          else if (route.name === 'Inventory') iconName = 'american-sign-language-interpreting';
 
           // Return the Ionicons component with the correct icon
           return <Ionicons name={iconName} size={22} color={color} />;

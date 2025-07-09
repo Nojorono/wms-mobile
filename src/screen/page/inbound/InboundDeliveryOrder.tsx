@@ -98,9 +98,20 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
                 width: '100%',
               }}
             >
-              <Text style={styles.activitiesHeaderText}>List Surat Jalan</Text>
-              <TouchableOpacity onPress={() => {}}>
-                <Text style={{ fontSize: 24, color: Colors.secondaryColor }}></Text>
+              <TouchableOpacity
+                onPress={() => {
+                  // Navigate to the new screen with empty values
+                  navigation.navigate('InboundInputDO', {
+                    item: item,
+                    mode: 'add', // Use this to indicate the form is for adding
+                    initialValues: {
+                      transporter_code_number: '',
+                      transporter_name: '',
+                    },
+                  });
+                }}
+              >
+                <Text style={{ fontSize: 24 }}>+</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -108,6 +119,23 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
             title={'SUR-JAL-01'}
             type={'onprogress'}
             onClick={() => {
+              navigation.navigate('InboundInputVehicle', {
+                item:item,
+                mode: 'edit',
+                initialValues: {
+                  transporter_code_number: vehicle.transporter_code_number,
+                  transporter_name: vehicle.transporter_name,
+                  vehicle_id: vehicle.vehicle.id,
+                  transporter_phone: vehicle.transporter_phone,
+                  transporter_seal_number: vehicle.transporter_seal_number,
+                  arrival_time: vehicle.arrival_time,
+                  unloading_start_time: vehicle.unloading_start_time,
+                  unloading_end_time: vehicle.unloading_end_time,
+                  departure_time: vehicle.departure_time,
+                },
+              });
+            }}
+            onProcess={() => {
               navigation.navigate('InboundDetail', { item, vehicle });
             }}
           />

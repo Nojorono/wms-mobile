@@ -13,10 +13,7 @@ import Colors from '../../../constants/Colors';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
 import { StackNavigationProp } from '@react-navigation/stack';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
-import { Picker } from '@react-native-picker/picker';
 import useConstantStore from '../../../store/useConstantStore.ts';
-import Ionicons from 'react-native-vector-icons/FontAwesome5';
-import DatePicker from 'react-native-date-picker';
 import { useAuthStore } from '../../../store/useAuthStore.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundInputDO'>;
@@ -52,8 +49,8 @@ function InboundInputDO({ route }: FormActivityProps) {
     if (mode === 'add') {
       data = {
         ...data,
-        arrival_time : new Date(data.arrival_time).toISOString(),
-        departure_time : new Date(data.departure_time).toISOString(),
+        arrival_time: new Date(data.arrival_time).toISOString(),
+        departure_time: new Date(data.departure_time).toISOString(),
         inbound_plan_id: item.inbound_plan_id,
         organization_id: item.inbound_plan.organization_id,
         created_by: user?.firstName + ' ' + user?.lastName,
@@ -65,8 +62,8 @@ function InboundInputDO({ route }: FormActivityProps) {
       // Update existing vehicle
       data = {
         ...data,
-        arrival_time : new Date(data.arrival_time).toISOString(),
-        departure_time : new Date(data.departure_time).toISOString(),
+        arrival_time: new Date(data.arrival_time).toISOString(),
+        departure_time: new Date(data.departure_time).toISOString(),
         unloading_start: new Date(data.unloading_start).toISOString(),
         unloading_end: new Date(data.unloading_end).toISOString(),
         inbound_plan_id: item.inbound_plan_id,
@@ -91,7 +88,7 @@ function InboundInputDO({ route }: FormActivityProps) {
       >
         <View style={stylex.menuCard}>
           <Text style={styles.title}>
-            {mode === 'add' ? 'Add Vehicle' : 'Edit Vehicle'}
+            {mode === 'add' ? 'Add Surat Jalan' : 'Edit Surat Jalan'}
           </Text>
           <View style={styles.formContainer}>
             <Controller
@@ -99,8 +96,10 @@ function InboundInputDO({ route }: FormActivityProps) {
               control={control}
               rules={{
                 required: 'At least one item is required',
-                validate: (value) =>
-                  Array.isArray(value) && value.length > 0 ? true : 'At least one item is required',
+                validate: value =>
+                  Array.isArray(value) && value.length > 0
+                    ? true
+                    : 'At least one item is required',
               }}
               defaultValue={[
                 {
@@ -113,52 +112,99 @@ function InboundInputDO({ route }: FormActivityProps) {
               render={({ field: { value, onChange } }) => (
                 <View>
                   {value.map((item: any, idx: number) => (
-                    <View key={idx} style={{ marginBottom: 16, borderWidth: 1, borderColor: '#eee', padding: 8, borderRadius: 5 }}>
-                      <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Item {idx + 1}</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Inbound Delivery Order ID"
-                        value={item.inbound_delivery_order_id}
-                        onChangeText={(text) => {
-                          const updated = [...value];
-                          updated[idx].inbound_delivery_order_id = text;
-                          onChange(updated);
-                  }}
-                      />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Item ID"
-                        value={item.item_id}
-                        onChangeText={(text) => {
-                          const updated = [...value];
-                          updated[idx].item_id = text;
-                          onChange(updated);
+                    <View
+                      key={idx}
+                      style={{
+                        marginBottom: 16,
+                        borderWidth: 2,
+                        borderColor: '#eee',
+                        padding: 8,
+                        borderRadius: 5,
+                      }}
+                    >
+                      <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>
+                        Surat Jalan {idx + 1}
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          width: '100%',
                         }}
-                      />
-                  <TextInput
-                    style={styles.input}
-                        placeholder="Qty Plan"
-                        keyboardType="numeric"
-                        value={item.qty_plan?.toString() || ''}
-                        onChangeText={(text) => {
-                          const updated = [...value];
-                          updated[idx].qty_plan = Number(text);
-                          onChange(updated);
+                      >
+                        <Text style={{ marginRight: 8, width: 90 }}>
+                          No. Surat Jalan
+                        </Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Input Nomer Surat Jalan"
+                          value={item.inbound_delivery_order_id}
+                          onChangeText={text => {
+                            const updated = [...value];
+                            updated[idx].inbound_delivery_order_id = text;
+                            onChange(updated);
+                          }}
+                        />
+                      </View>
+
+                      {/*<TextInput*/}
+                      {/*  style={styles.input}*/}
+                      {/*  placeholder="Item ID"*/}
+                      {/*  value={item.item_id}*/}
+                      {/*  onChangeText={(text) => {*/}
+                      {/*    const updated = [...value];*/}
+                      {/*    updated[idx].item_id = text;*/}
+                      {/*    onChange(updated);*/}
+                      {/*  }}*/}
+                      {/*/>*/}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          width: '100%',
                         }}
-            />
-                  <TextInput
-                    style={styles.input}
-                        placeholder="UOM"
-                        value={item.uom}
-                        onChangeText={(text) => {
-                          const updated = [...value];
-                          updated[idx].uom = text;
-                          onChange(updated);
+                      >
+                        <Text style={{ marginRight: 8, width: 90 }}>
+                          Qty
+                        </Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Input Qty"
+                          keyboardType="numeric"
+                          value={item.qty_plan?.toString() || ''}
+                          onChangeText={text => {
+                            const updated = [...value];
+                            updated[idx].qty_plan = Number(text);
+                            onChange(updated);
+                          }}
+                        />
+                      </View>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          width: '100%',
                         }}
-                  />
+                      >
+                        <Text style={{ marginRight: 8, width: 90 }}>
+                          UOM
+                        </Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="UOM"
+                          value={item.uom}
+                          onChangeText={text => {
+                            const updated = [...value];
+                            updated[idx].uom = text;
+                            onChange(updated);
+                          }}
+                        />
+                      </View>
                       <TouchableOpacity
                         onPress={() => {
-                          const updated = value.filter((_: any, i: number) => i !== idx);
+                          const updated = value.filter(
+                            (_: any, i: number) => i !== idx,
+                          );
                           onChange(updated);
                         }}
                         style={{ marginTop: 8, alignSelf: 'flex-end' }}
@@ -179,16 +225,20 @@ function InboundInputDO({ route }: FormActivityProps) {
                         },
                       ]);
                     }}
-                    style={{ marginBottom: 16, backgroundColor: Colors.primeColor, padding: 8, borderRadius: 5, alignItems: 'center' }}
+                    style={{
+                      marginBottom: 16,
+                      backgroundColor: Colors.primeColor,
+                      padding: 8,
+                      borderRadius: 5,
+                      alignItems: 'center',
+                    }}
                   >
                     <Text style={{ color: '#fff' }}>Add Item</Text>
                   </TouchableOpacity>
                 </View>
               )}
             />
-            {errors.items && (
-              <Text style={styles.errorText}>error</Text>
-            )}
+            {errors.items && <Text style={styles.errorText}>error</Text>}
             <TouchableOpacity
               onPress={handleSubmit(onSubmit)}
               style={styles.submitButton}

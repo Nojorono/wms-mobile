@@ -98,6 +98,7 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
                 width: '100%',
               }}
             >
+              <Text style={{ fontSize: 22, fontWeight:'bold' }}>List Surat Jalan</Text>
               <TouchableOpacity
                 onPress={() => {
                   // Navigate to the new screen with empty values
@@ -119,7 +120,7 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
             title={'SUR-JAL-01'}
             type={'onprogress'}
             onClick={() => {
-              navigation.navigate('InboundInputVehicle', {
+              navigation.navigate('InboundInputDO', {
                 item:item,
                 mode: 'edit',
                 initialValues: {

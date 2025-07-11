@@ -7,11 +7,13 @@ import InboundVehicleScreen from '../page/inbound/InboundVehicleScreen.tsx';
 import InboundDetailScreen from '../page/inbound/InboundDetailScreen.tsx';
 import InboundDeliveryOrder from '../page/inbound/InboundDeliveryOrder.tsx';
 import InboundInputVehicle from '../page/inbound/InboundInputVehicle.tsx';
+import InboundInputDO from '../page/inbound/InboundInputDO.tsx';
 
 
 
 export type InboundParamList = {
   InboundMain: undefined;
+  InboundInputDO: { item:any, mode:any, initialValues:any };
   InboundDeliveryOrder: { item: any, vehicle:any };
   InboundInputVehicle:{ item:any, mode:any, initialValues:any };
   InboundVehicle: { item: any };
@@ -84,6 +86,17 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="InboundInputVehicle"
       component={InboundInputVehicle}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="InboundInputDO"
+      component={InboundInputDO}
       options={{
         headerShown: true,
         headerTintColor: '#fff',

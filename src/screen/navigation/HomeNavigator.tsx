@@ -9,7 +9,7 @@ import React from "react";
 export type HomeStackParamList = {
     HomeMain: undefined;
     PrepareScreen: undefined;
-    RequestScreen: undefined;
+    PutAway: undefined;
 };
 
 const HomeStack = createStackNavigator<HomeStackParamList>();

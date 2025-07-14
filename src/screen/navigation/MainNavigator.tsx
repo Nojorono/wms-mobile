@@ -5,13 +5,15 @@ import Colors from "../../constants/Colors";
 import HomeStackNavigator, { HomeStackParamList } from "./HomeNavigator";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import InboundStackNavigator from './InboundNavigator.tsx';
+import PutAwayNavigator from "./PutAwayNavigator.tsx";
+import OutboundNavigator from './OutboundNavigator.tsx';
 
 // Define the param list for MainTab
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList>;
   Inbound: NavigatorScreenParams<HomeStackParamList>;
   Outbond: NavigatorScreenParams<HomeStackParamList>;
-  Inventory: NavigatorScreenParams<HomeStackParamList>;
+  PutAway: NavigatorScreenParams<HomeStackParamList>;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -37,7 +39,7 @@ const MainNavigator = () => (
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Inbound') iconName = 'arrow-down';
           else if (route.name === 'Outbond') iconName = 'arrow-up';
-          else if (route.name === 'Inventory') iconName = 'american-sign-language-interpreting';
+          else if (route.name === 'PutAway') iconName = 'american-sign-language-interpreting';
 
           // Return the Ionicons component with the correct icon
           return <Ionicons name={iconName} size={22} color={color} />;
@@ -75,14 +77,14 @@ const MainNavigator = () => (
     />
     <Tab.Screen
       name="Outbond"
-      component={HomeStackNavigator}
+      component={OutboundNavigator}
       options={{
         headerShown: false,
       }}
     />
     <Tab.Screen
-      name="Inventory"
-      component={HomeStackNavigator}
+      name="PutAway"
+      component={PutAwayNavigator}
       options={{
         headerShown: false,
       }}

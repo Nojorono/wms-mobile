@@ -3,21 +3,20 @@ import Colors from '../../constants/Colors';
 import { Image, View } from 'react-native';
 import React from 'react';
 import PutAwayScreen from '../page/putaway/PutAwayScreen.tsx';
-import OutboundScreen from '../page/outbound/OutboundScreen.tsx';
 
 
 
-export type OutboundParamList = {
-  OutboundMain: undefined;
+export type PutAwayParamList = {
+  PutAwayMain: undefined;
 };
 
-const OutboundStack = createStackNavigator<OutboundParamList>();
+const PutAwayStack = createStackNavigator<PutAwayParamList>();
 
-const OutboundStackNavigator = () => (
-  <OutboundStack.Navigator initialRouteName="OutboundMain">
-    <OutboundStack.Screen
-      name="OutboundMain"
-      component={OutboundScreen}
+const InboundStackNavigator = () => (
+  <PutAwayStack.Navigator initialRouteName="PutAwayMain">
+    <PutAwayStack.Screen
+      name="PutAwayMain"
+      component={PutAwayScreen}
       options={{
         headerShown: true,
         headerStyle: {
@@ -52,7 +51,7 @@ const OutboundStackNavigator = () => (
     {/*    },*/}
     {/*  }}*/}
     {/*/>*/}
-  </OutboundStack.Navigator>
+  </PutAwayStack.Navigator>
 );
 
-export default OutboundStackNavigator;
+export default InboundStackNavigator;

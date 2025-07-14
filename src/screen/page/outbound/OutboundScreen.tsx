@@ -4,37 +4,29 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
 import InboundList from '../../../components/inbound/InboundList.tsx';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import useConstantStore from '../../../store/useConstantStore.ts';
 import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
-import { PutAwayParamList } from '../../navigation/PutAwayNavigator.tsx';
-import usePutAwayStore from '../../../store/usePutAwayStore.ts';
-import PutAwayService from '../../../service/putAwayService.ts';
+import useOutboundStore from '../../../store/useOutboundStore.ts';
+import OutboundService from '../../../service/outboundService.ts';
 
-
-type NavigationProp = StackNavigationProp<PutAwayParamList,'PutAwayMain'>;
-
-function PutAwayScreen() {
+function OutboundScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const styles = GlobalStyles();
   const { user } = useAuthStore();
-  const {setPutAway,putAway} = usePutAwayStore();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
-
-  const fetchPutAway = async () => {
+    const {setOutbound,outbound} = useOutboundStore();
+  const fetchOutbound = async () => {
     try {
       setRefreshing(true);
-      showLoadingDialog("Loading List PutAway Planning")
-     const putAwayList = await PutAwayService.getPutAwayList(user?.id ?? '');
-     setPutAway(putAwayList)
-      console.log("putaway List",putAway)
+      showLoadingDialog("Loading List Outbound Planning")
+     const outboundList = await OutboundService.getOutboundList(user?.id ?? '');
+     setOutbound(outboundList)
+      console.log("outbound List",outboundList)
     } catch (error) {
       hideLoadingDialog()
-      console.error('Error fetching putAway data:', error);
+      console.error('Error fetching outbound data:', error);
       Alert.alert(
         'Error',
-        'Failed to fetch putaway data. Please check your connection and try again.',
+        'Failed to fetch outbound data. Please check your connection and try again.',
         [{ text: 'OK' }]
       );
     }finally {
@@ -46,7 +38,7 @@ function PutAwayScreen() {
   useEffect(() => {
     const initialize = async () => {
       try {
-        await fetchPutAway()
+        await fetchOutbound()
       } catch (error) {
         console.error('Initialization error:', error);
       }
@@ -73,7 +65,7 @@ function PutAwayScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={fetchPutAway}
+            onRefresh={fetchOutbound}
             colors={[Colors.primeColor]}
           />
         }
@@ -87,7 +79,7 @@ function PutAwayScreen() {
           >
             <Text style={styles.activitiesHeaderText}>List Inbound Planning</Text>
           </View>
-          {putAway?.data.map((item:any )=> (
+          {outbound?.data.map((item:any )=> (
             <InboundList
               key={item.id}
               title={item.title}
@@ -105,4 +97,4 @@ function PutAwayScreen() {
   );
 }
 
-export default PutAwayScreen;
+export default OutboundScreen;

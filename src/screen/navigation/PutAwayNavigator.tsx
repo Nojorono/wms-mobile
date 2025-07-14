@@ -2,12 +2,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../constants/Colors';
 import { Image, View } from 'react-native';
 import React from 'react';
-import InboundScreen from '../page/inbound/InboundScreen.tsx';
-import InboundVehicleScreen from '../page/inbound/InboundVehicleScreen.tsx';
-import InboundDetailScreen from '../page/inbound/InboundDetailScreen.tsx';
-import InboundDeliveryOrder from '../page/inbound/InboundDeliveryOrder.tsx';
-import InboundInputVehicle from '../page/inbound/InboundInputVehicle.tsx';
-import InboundInputDO from '../page/inbound/InboundInputDO.tsx';
 import PutAwayScreen from '../page/putaway/PutAwayScreen.tsx';
 
 

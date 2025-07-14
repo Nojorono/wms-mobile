@@ -6,6 +6,7 @@ import HomeStackNavigator, { HomeStackParamList } from "./HomeNavigator";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import InboundStackNavigator from './InboundNavigator.tsx';
 import PutAwayNavigator from "./PutAwayNavigator.tsx";
+import OutboundNavigator from './OutboundNavigator.tsx';
 
 // Define the param list for MainTab
 export type MainTabParamList = {
@@ -76,7 +77,7 @@ const MainNavigator = () => (
     />
     <Tab.Screen
       name="Outbond"
-      component={HomeStackNavigator}
+      component={OutboundNavigator}
       options={{
         headerShown: false,
       }}

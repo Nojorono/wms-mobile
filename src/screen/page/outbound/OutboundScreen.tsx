@@ -7,11 +7,19 @@ import InboundList from '../../../components/inbound/InboundList.tsx';
 import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 import useOutboundStore from '../../../store/useOutboundStore.ts';
 import OutboundService from '../../../service/outboundService.ts';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
+import { OutboundParamList } from '../../navigation/OutboundNavigator.tsx';
+
+
+type NavigationProp = StackNavigationProp<OutboundParamList,'OutboundMain'>;
 
 function OutboundScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const styles = GlobalStyles();
   const { user } = useAuthStore();
+  const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const {setOutbound,outbound} = useOutboundStore();
   const fetchOutbound = async () => {
@@ -35,6 +43,28 @@ function OutboundScreen() {
     }
   }
 
+  const OutboundListDataWithRole = outbound?.data?.map((item: any) => {
+    const userId = user?.id;
+    let role = '';
+    if (item.checker_leader?.id === userId && item.checkers?.some((checker: any) => checker.id === userId)) {
+      role = 'Checker and Leader';
+    } else if (item.checker_leader?.id === userId) {
+      role = 'Leader';
+    } else if (item.checkers?.some((checker: any) => checker.id === userId)) {
+      role = 'Checker';
+    }
+    return {
+      id: item.id,
+      title: item.inbound_plan?.inbound_planning_no,
+      status: item.inbound_plan?.plan_status,
+      statusColor: '', // Set as needed
+      role,
+      client_name: item.inbound_plan?.client_name || '',
+      task_type: item.inbound_plan?.task_type || '',
+      ...item,
+    };
+  });
+
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -51,7 +81,7 @@ function OutboundScreen() {
       {/* Header */}
       <View style={styles.headerHome}>
         <View style={styles.profileSection}>
-          <Text style={styles.profileText}>Hi! Handsome</Text>
+          <Text style={styles.profileText}>Hi! {user?.firstName}</Text>
           <Text style={styles.profileSubtext}>
             Selamat beraktifitas, jaga selalu kesehatan rumah tanggamu
           </Text>
@@ -77,9 +107,11 @@ function OutboundScreen() {
               { borderBottomWidth: 2, borderBottomColor: '#ccc' },
             ]}
           >
-            <Text style={styles.activitiesHeaderText}>List Inbound Planning</Text>
+            <Text style={styles.activitiesHeaderText}>
+              List Outbound Planning
+            </Text>
           </View>
-          {outbound?.data.map((item:any )=> (
+          {OutboundListDataWithRole?.map((item: any) => (
             <InboundList
               key={item.id}
               title={item.title}
@@ -88,7 +120,9 @@ function OutboundScreen() {
               status={item.status}
               statusColor={item.statusColor}
               role={item.role}
-              // onClick={()=>{navigation.navigate('InboundVehicle', { item })}}
+              onClick={() => {
+                navigation.navigate('OutboundAssign', { item });
+              }}
             />
           ))}
         </View>

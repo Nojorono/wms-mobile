@@ -2,13 +2,14 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../constants/Colors';
 import { Image, View } from 'react-native';
 import React from 'react';
-import PutAwayScreen from '../page/putaway/PutAwayScreen.tsx';
 import OutboundScreen from '../page/outbound/OutboundScreen.tsx';
+import OutboundAssignScreen from '../page/outbound/OutboundAssignScreen.tsx';
 
 
 
 export type OutboundParamList = {
   OutboundMain: undefined;
+  OutboundAssign: { item:any };
 };
 
 const OutboundStack = createStackNavigator<OutboundParamList>();
@@ -41,17 +42,17 @@ const OutboundStackNavigator = () => (
         ),
       }}
     />
-    {/*<InboundStack.Screen*/}
-    {/*  name="InboundVehicle"*/}
-    {/*  component={InboundVehicleScreen}*/}
-    {/*  options={{*/}
-    {/*    headerShown: true,*/}
-    {/*    headerTintColor: '#fff',*/}
-    {/*    headerStyle: {*/}
-    {/*      backgroundColor: Colors.secondaryColor,*/}
-    {/*    },*/}
-    {/*  }}*/}
-    {/*/>*/}
+    <OutboundStack.Screen
+      name="OutboundAssign"
+      component={OutboundAssignScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
   </OutboundStack.Navigator>
 );
 

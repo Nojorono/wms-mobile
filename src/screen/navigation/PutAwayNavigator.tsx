@@ -8,6 +8,7 @@ import PutAwayScreen from '../page/putaway/PutAwayScreen.tsx';
 
 export type PutAwayParamList = {
   PutAwayMain: undefined;
+  PutAwayAssign: { item: any; };
 };
 
 const PutAwayStack = createStackNavigator<PutAwayParamList>();

@@ -85,7 +85,7 @@ function PutAwayScreen() {
               { borderBottomWidth: 2, borderBottomColor: '#ccc' },
             ]}
           >
-            <Text style={styles.activitiesHeaderText}>List Inbound Planning</Text>
+            <Text style={styles.activitiesHeaderText}>List Put Away</Text>
           </View>
           {putAway?.data.map((item:any )=> (
             <InboundList

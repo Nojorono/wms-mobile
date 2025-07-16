@@ -13,32 +13,20 @@ export type PutAwayParamList = {
 
 const PutAwayStack = createStackNavigator<PutAwayParamList>();
 
-const InboundStackNavigator = () => (
+const PutAwayStackNavigator = () => (
   <PutAwayStack.Navigator initialRouteName="PutAwayMain">
     <PutAwayStack.Screen
       name="PutAwayMain"
       component={PutAwayScreen}
       options={{
         headerShown: true,
+        headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
           elevation: 0, // Remove shadow on Android
           shadowOpacity: 0, // Remove shadow on iOS
           borderBottomWidth: 0, // Remove any border
         },
-        headerTitle: () => (
-          <View
-            style={{
-              width: '100%',
-              alignItems: 'center',
-            }}
-          >
-            <Image
-              source={require('../../assets/images/icon-white-nna.png')}
-              style={{ width: 100, height: 22, resizeMode: 'contain' }}
-            />
-          </View>
-        ),
       }}
     />
     {/*<InboundStack.Screen*/}
@@ -55,4 +43,4 @@ const InboundStackNavigator = () => (
   </PutAwayStack.Navigator>
 );
 
-export default InboundStackNavigator;
+export default PutAwayStackNavigator;

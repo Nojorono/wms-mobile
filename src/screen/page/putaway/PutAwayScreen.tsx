@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View, RefreshControl } from 'react-native';
-import { useAuthStore } from '../../../store/useAuthStore';
+import { useAuthStore } from '../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
-import Colors from '../../../constants/Colors';
+import Colors from '../../../constants/Colors.ts';
 import InboundList from '../../../components/inbound/InboundList.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -59,7 +59,7 @@ function PutAwayScreen() {
       {/* Header */}
       <View style={styles.headerHome}>
         <View style={styles.profileSection}>
-          <Text style={styles.profileText}>Hi! Handsome</Text>
+          <Text style={styles.profileText}>Hi! {user?.firstName}</Text>
           <Text style={styles.profileSubtext}>
             Selamat beraktifitas, jaga selalu kesehatan rumah tanggamu
           </Text>
@@ -87,7 +87,7 @@ function PutAwayScreen() {
           >
             <Text style={styles.activitiesHeaderText}>List Put Away</Text>
           </View>
-          {putAway?.data.map((item:any )=> (
+          {putAway?.data.map((item: any) => (
             <InboundList
               key={item.id}
               title={item.title}

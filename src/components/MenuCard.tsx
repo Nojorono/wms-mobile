@@ -4,12 +4,12 @@ import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import Colors from "../constants/Colors";
 
 type MenuCardProps = {
-    iconName: any;
+
     title: string;
     onPress?: () => void;
 };
 
-const MenuCard: React.FC<MenuCardProps> = ({ iconName, title, onPress }) => (
+const MenuCard: React.FC<MenuCardProps> = ({  title, onPress }) => (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.left}>
             <Image source={require('../assets/icons/persiapan.png')} style={styles.icon} />

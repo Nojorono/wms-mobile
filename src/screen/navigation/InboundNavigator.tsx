@@ -8,10 +8,14 @@ import InboundDetailScreen from '../page/inbound/InboundDetailScreen.tsx';
 import InboundDeliveryOrder from '../page/inbound/InboundDeliveryOrder.tsx';
 import InboundInputVehicle from '../page/inbound/InboundInputVehicle.tsx';
 import InboundInputDO from '../page/inbound/InboundInputDO.tsx';
+import InboundIndex from '../page/Inbound.tsx';
+import PutAwayNavigator from './PutAwayNavigator.tsx';
 
 
 
 export type InboundParamList = {
+  InboundIndex: undefined;
+  PutAwayNavigator: undefined;
   InboundMain: undefined;
   InboundInputDO: { item:any, mode:any, initialValues:any };
   InboundDeliveryOrder: { item: any, vehicle:any };
@@ -23,10 +27,10 @@ export type InboundParamList = {
 const InboundStack = createStackNavigator<InboundParamList>();
 
 const InboundStackNavigator = () => (
-  <InboundStack.Navigator initialRouteName="InboundMain">
+  <InboundStack.Navigator initialRouteName="InboundIndex">
     <InboundStack.Screen
-      name="InboundMain"
-      component={InboundScreen}
+      name="InboundIndex"
+      component={InboundIndex}
       options={{
         headerShown: true,
         headerStyle: {
@@ -48,6 +52,28 @@ const InboundStackNavigator = () => (
             />
           </View>
         ),
+      }}
+    />
+    <InboundStack.Screen
+      name="InboundMain"
+      component={InboundScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="PutAwayNavigator"
+      component={PutAwayNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
       }}
     />
     <InboundStack.Screen

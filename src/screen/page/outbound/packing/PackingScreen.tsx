@@ -1,44 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View, RefreshControl } from 'react-native';
-import { useAuthStore } from '../../../store/useAuthStore';
-import GlobalStyles from '../../../util/GlobalStyles.ts';
-import Colors from '../../../constants/Colors';
-import InboundList from '../../../components/inbound/InboundList.tsx';
+import { Alert, ScrollView, Text, View, RefreshControl } from 'react-native';
+import { useAuthStore } from '../../../../store/useAuthStore';
+import GlobalStyles from '../../../../util/GlobalStyles.ts';
+import Colors from '../../../../constants/Colors';
+import InboundList from '../../../../components/inbound/InboundList.tsx';
+import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
+import useOutboundStore from '../../../../store/useOutboundStore.ts';
+import OutboundService from '../../../../service/outboundService.ts';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
-import ConstantService from '../../../service/constantService.ts';
-import useConstantStore from '../../../store/useConstantStore.ts';
-import InboundServices from '../../../service/inboundServices.ts';
-import useInboundStore from '../../../store/useInboundStore.ts';
-import { inboundListData } from '../../../dummy/inboundData';
-import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
+import { OutboundParamList } from '../../../navigation/OutboundNavigator.tsx';
 
 
-type NavigationProp = StackNavigationProp<InboundParamList,'InboundMain'>;
+type NavigationProp = StackNavigationProp<OutboundParamList,'OutboundMain'>;
 
-function InboundScreen() {
+function PackingScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
-  const {setVehicle} = useConstantStore();
-  const {setInbound,inbound} = useInboundStore();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
-
-  const fetchInbound = async () => {
+  const {setOutbound,outbound} = useOutboundStore();
+  const fetchOutbound = async () => {
     try {
       setRefreshing(true);
-      showLoadingDialog("Loading List Inbound Planning")
-     const inboundList = await InboundServices.getInboundList(user?.id ?? '');
-     setInbound(inboundList)
-      console.log("inbound List",inbound)
+      showLoadingDialog("Loading List Outbound Planning")
+      const outboundList = await OutboundService.getOutboundList(user?.id ?? '');
+      setOutbound(outboundList)
+      console.log("outbound List",outboundList)
     } catch (error) {
       hideLoadingDialog()
-      console.error('Error fetching inbound data:', error);
+      console.error('Error fetching outbound data:', error);
       Alert.alert(
         'Error',
-        'Failed to fetch inbound data. Please check your connection and try again.',
+        'Failed to fetch outbound data. Please check your connection and try again.',
         [{ text: 'OK' }]
       );
     }finally {
@@ -47,26 +42,7 @@ function InboundScreen() {
     }
   }
 
-  const fetchConstants = async () => {
-    try {
-      try {
-        const getVehicleType = await ConstantService.getVehicleType();
-        setVehicle(getVehicleType.data);
-      } catch (err) {
-        console.error('Error fetching vehicle types:', err);
-        throw new Error('Failed to fetch vehicle types');
-      }
-    } catch (error) {
-      console.error('Error fetching constants:', error);
-      Alert.alert(
-        'Error',
-        'Failed to fetch data. Please check your connection and try again.',
-        [{text: 'OK'}]
-      );
-    }
-  }
-
-  const inboundListDataWithRole = inbound?.data?.map((item: any) => {
+  const OutboundListDataWithRole = outbound?.data?.map((item: any) => {
     const userId = user?.id;
     let role = '';
     if (item.checker_leader?.id === userId && item.checkers?.some((checker: any) => checker.id === userId)) {
@@ -91,8 +67,7 @@ function InboundScreen() {
   useEffect(() => {
     const initialize = async () => {
       try {
-        await fetchConstants();
-        await fetchInbound()
+        await fetchOutbound()
       } catch (error) {
         console.error('Initialization error:', error);
       }
@@ -119,7 +94,7 @@ function InboundScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={fetchInbound}
+            onRefresh={fetchOutbound}
             colors={[Colors.primeColor]}
           />
         }
@@ -131,9 +106,11 @@ function InboundScreen() {
               { borderBottomWidth: 2, borderBottomColor: '#ccc' },
             ]}
           >
-            <Text style={styles.activitiesHeaderText}>List Inbound Planning</Text>
+            <Text style={styles.activitiesHeaderText}>
+              List Outbound Planning
+            </Text>
           </View>
-          {inboundListDataWithRole?.map((item:any )=> (
+          {OutboundListDataWithRole?.map((item: any) => (
             <InboundList
               key={item.id}
               title={item.title}
@@ -142,7 +119,9 @@ function InboundScreen() {
               status={item.status}
               statusColor={item.statusColor}
               role={item.role}
-              onClick={()=>{navigation.navigate('InboundVehicle', { item })}}
+              onClick={() => {
+                navigation.navigate('OutboundAssign', { item });
+              }}
             />
           ))}
         </View>
@@ -151,4 +130,4 @@ function InboundScreen() {
   );
 }
 
-export default InboundScreen;
+export default PackingScreen;

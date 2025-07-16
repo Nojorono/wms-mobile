@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View, RefreshControl } from 'react-native';
+import { Alert, ScrollView, Text, View, RefreshControl } from 'react-native';
 import { useAuthStore } from '../../../store/useAuthStore';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import Colors from '../../../constants/Colors';
@@ -9,7 +9,6 @@ import useOutboundStore from '../../../store/useOutboundStore.ts';
 import OutboundService from '../../../service/outboundService.ts';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
 import { OutboundParamList } from '../../navigation/OutboundNavigator.tsx';
 
 

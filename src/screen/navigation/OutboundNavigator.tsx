@@ -4,10 +4,12 @@ import { Image, View } from 'react-native';
 import React from 'react';
 import OutboundScreen from '../page/outbound/OutboundScreen.tsx';
 import OutboundAssignScreen from '../page/outbound/OutboundAssignScreen.tsx';
+import OutboundIndex from '../page/Outbound.tsx';
 
 
 
 export type OutboundParamList = {
+  OutboundIndex: undefined;
   OutboundMain: undefined;
   OutboundAssign: { item:any };
 };
@@ -15,10 +17,10 @@ export type OutboundParamList = {
 const OutboundStack = createStackNavigator<OutboundParamList>();
 
 const OutboundStackNavigator = () => (
-  <OutboundStack.Navigator initialRouteName="OutboundMain">
+  <OutboundStack.Navigator initialRouteName="OutboundIndex">
     <OutboundStack.Screen
-      name="OutboundMain"
-      component={OutboundScreen}
+      name="OutboundIndex"
+      component={OutboundIndex}
       options={{
         headerShown: true,
         headerStyle: {
@@ -40,6 +42,17 @@ const OutboundStackNavigator = () => (
             />
           </View>
         ),
+      }}
+    />
+    <OutboundStack.Screen
+      name="OutboundMain"
+      component={OutboundScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
       }}
     />
     <OutboundStack.Screen

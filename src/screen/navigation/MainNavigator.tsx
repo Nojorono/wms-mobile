@@ -13,7 +13,7 @@ export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList>;
   Inbound: NavigatorScreenParams<HomeStackParamList>;
   Outbond: NavigatorScreenParams<HomeStackParamList>;
-  PutAway: NavigatorScreenParams<HomeStackParamList>;
+  inventory: NavigatorScreenParams<HomeStackParamList>;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -39,7 +39,7 @@ const MainNavigator = () => (
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Inbound') iconName = 'arrow-down';
           else if (route.name === 'Outbond') iconName = 'arrow-up';
-          else if (route.name === 'PutAway') iconName = 'american-sign-language-interpreting';
+          else if (route.name === 'inventory') iconName = 'american-sign-language-interpreting';
 
           // Return the Ionicons component with the correct icon
           return <Ionicons name={iconName} size={22} color={color} />;
@@ -83,8 +83,8 @@ const MainNavigator = () => (
       }}
     />
     <Tab.Screen
-      name="PutAway"
-      component={PutAwayNavigator}
+      name="inventory"
+      component={HomeStackNavigator}
       options={{
         headerShown: false,
       }}

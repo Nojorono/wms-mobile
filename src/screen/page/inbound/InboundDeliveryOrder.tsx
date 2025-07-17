@@ -55,7 +55,6 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
   };
 
   useEffect(() => {
-    console.log('PERCUMA', vehicle);
     initialize();
   }, []);
 
@@ -106,8 +105,9 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
                     item: item,
                     mode: 'add', // Use this to indicate the form is for adding
                     initialValues: {
-                      transporter_code_number: '',
-                      transporter_name: '',
+                      inbound_plan_id: "string",
+                      inbound_transporter_id: "string",
+                      number_delivery_order: "string",
                     },
                   });
                 }}

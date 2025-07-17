@@ -53,8 +53,8 @@ function InboundInputVehicle({ route }: FormActivityProps) {
     if (mode === 'add') {
       data = {
         ...data,
-        arrival_time : new Date(data.arrival_time).toISOString(),
-        departure_time : new Date(data.departure_time).toISOString(),
+        arrival_time: new Date(data.arrival_time).toISOString(),
+        derpature_time: new Date(data.derpature_time).toISOString(),
         inbound_plan_id: item.inbound_plan_id,
         organization_id: item.inbound_plan.organization_id,
         created_by: user?.firstName + ' ' + user?.lastName,
@@ -66,10 +66,6 @@ function InboundInputVehicle({ route }: FormActivityProps) {
       // Update existing vehicle
       data = {
         ...data,
-        arrival_time : new Date(data.arrival_time).toISOString(),
-        departure_time : new Date(data.departure_time).toISOString(),
-        unloading_start: new Date(data.unloading_start).toISOString(),
-        unloading_end: new Date(data.unloading_end).toISOString(),
         inbound_plan_id: item.inbound_plan_id,
         organization_id: item.inbound_plan.organization_id,
         created_by: user?.firstName + ' ' + user?.lastName,

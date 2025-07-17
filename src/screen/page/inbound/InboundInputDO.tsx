@@ -46,6 +46,7 @@ function InboundInputDO({ route }: FormActivityProps) {
 
   const onSubmit = (data: any) => {
     // Handle form submission (e.g., send data to backend)
+    console.log("woy"+JSON.stringify(data));
     if (mode === 'add') {
       data = {
         ...data,
@@ -57,7 +58,7 @@ function InboundInputDO({ route }: FormActivityProps) {
       };
 
       // Add new vehicle
-      console.log('Adding vehicle:', data);
+      console.log('Adding DO:', data);
     } else {
       // Update existing vehicle
       data = {
@@ -70,7 +71,7 @@ function InboundInputDO({ route }: FormActivityProps) {
         organization_id: item.inbound_plan.organization_id,
         created_by: user?.firstName + ' ' + user?.lastName,
       };
-      console.log('Editing vehicle:', data);
+      console.log('Editing DO:', data);
     }
     // navigation.goBack();
   };
@@ -164,9 +165,7 @@ function InboundInputDO({ route }: FormActivityProps) {
                           width: '100%',
                         }}
                       >
-                        <Text style={{ marginRight: 8, width: 90 }}>
-                          Qty
-                        </Text>
+                        <Text style={{ marginRight: 8, width: 90 }}>Qty</Text>
                         <TextInput
                           style={styles.input}
                           placeholder="Input Qty"
@@ -186,9 +185,7 @@ function InboundInputDO({ route }: FormActivityProps) {
                           width: '100%',
                         }}
                       >
-                        <Text style={{ marginRight: 8, width: 90 }}>
-                          UOM
-                        </Text>
+                        <Text style={{ marginRight: 8, width: 90 }}>UOM</Text>
                         <TextInput
                           style={styles.input}
                           placeholder="UOM"

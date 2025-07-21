@@ -36,7 +36,6 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   const { user } = useAuthStore();
   const { item, vehicle } = route.params;
   const [detailInbound, setDetailInbound] = useState<any>();
-  const [status, setStatus] = useState('');
   const [pallets, setPallets] = useState<
     Record<string, { palletNumber: string; qty: string }[]>
   >({});

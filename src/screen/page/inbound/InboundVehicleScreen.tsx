@@ -21,7 +21,6 @@ type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
 function InboundVehicleScreen( { route }: FormActivityProps ) {
   const styles = GlobalStyles();
   const { item } = route.params;
-  const { user } = useAuthStore();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const navigation = useNavigation<NavigationProp>();
   const [refreshing, setRefreshing] = useState(false);
@@ -98,12 +97,12 @@ function InboundVehicleScreen( { route }: FormActivityProps ) {
               type={vehicle.vehicle.vehicle_type}
               statusColor="#E5FFF2"
               onClickInbound={() =>
-                navigation.navigate('InboundDeliveryOrder', { item, vehicle })
+                navigation.navigate('InboundDeliveryOrder', { item: { ...item, inbound_transporter_id: vehicle.id }, vehicle })
               }
               onClickVehicle={() => {
                 // When clicking a vehicle, navigate to the form pre-filled with data
                 navigation.navigate('InboundInputVehicle', {
-                  item:item,
+                  item: { ...item, inbound_transporter_id: vehicle.id },
                   mode: 'edit',
                   initialValues: {
                     transporter_code_number: vehicle.transporter_code_number,

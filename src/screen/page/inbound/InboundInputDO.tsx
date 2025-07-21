@@ -15,6 +15,9 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import useConstantStore from '../../../store/useConstantStore.ts';
 import { useAuthStore } from '../../../store/useAuthStore.ts';
+import { Picker } from '@react-native-picker/picker';
+import inboundServices from '../../../service/inboundServices.ts';
+import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundInputDO'>;
 type FormActivityProps = {
@@ -25,55 +28,80 @@ type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
 function InboundInputDO({ route }: FormActivityProps) {
   const navigation = useNavigation<NavigationProp>();
   const stylex = GlobalStyles();
-  const { vehicle } = useConstantStore();
-  const [openDatePicker, setOpenDatePicker] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const { items, uom } = useConstantStore();
+  const [openDatePicker, setOpenDatePicker] = useState<{ [key: string]: boolean }>({});
 
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm();
-  const { item, mode, initialValues } = route.params;
+  } = useForm({
+    defaultValues: {
+      number_delivery_order: '',
+      items: [
+        {
+          item_id: '',
+          qty_plan: 0,
+          uom: '',
+        },
+      ],
+    },
+  });
+  const { item, mode = 'add', initialValues } = route.params; // Default to 'add' if mode is undefined
   const { user } = useAuthStore();
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
   // Reset form with initial values on component mount
   useEffect(() => {
     reset(initialValues);
   }, [initialValues, reset]);
 
-  const onSubmit = (data: any) => {
-    // Handle form submission (e.g., send data to backend)
-    console.log("woy"+JSON.stringify(data));
+  const onSubmit = async (data: any) => {
+    console.log(data);
     if (mode === 'add') {
       data = {
         ...data,
-        arrival_time: new Date(data.arrival_time).toISOString(),
-        departure_time: new Date(data.departure_time).toISOString(),
         inbound_plan_id: item.inbound_plan_id,
-        organization_id: item.inbound_plan.organization_id,
-        created_by: user?.firstName + ' ' + user?.lastName,
+        inbound_transporter_id: item.inbound_transporter_id,
+        number_delivery_order: data.number_delivery_order,
+        created_by: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim(),
+        updated_by: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim(),
       };
-
-      // Add new vehicle
       console.log('Adding DO:', data);
+      try {
+        showLoadingDialog('Submitting Delivery Order...');
+        await inboundServices.postInboundDeliveryOrder(data);
+        navigation.goBack();
+      } catch (error) {
+        console.error(error);
+        hideLoadingDialog();
+      } finally {
+        hideLoadingDialog();
+      }
     } else {
-      // Update existing vehicle
+      // Update existing vehicle logic
+      const { inbound_delivery_order_id, ...restData } = data;
       data = {
-        ...data,
-        arrival_time: new Date(data.arrival_time).toISOString(),
-        departure_time: new Date(data.departure_time).toISOString(),
-        unloading_start: new Date(data.unloading_start).toISOString(),
-        unloading_end: new Date(data.unloading_end).toISOString(),
+        ...restData,
         inbound_plan_id: item.inbound_plan_id,
-        organization_id: item.inbound_plan.organization_id,
-        created_by: user?.firstName + ' ' + user?.lastName,
+        inbound_transporter_id: item.inbound_transporter_id,
+        number_delivery_order: data.number_delivery_order,
+        created_by: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim(),
+        updated_by: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim(),
       };
       console.log('Editing DO:', data);
+      try {
+        showLoadingDialog('Submitting Delivery Order...');
+        await inboundServices.updateInboundDeliveryOrder(inbound_delivery_order_id,data);
+        navigation.goBack();
+      } catch (error) {
+        console.error(error);
+        hideLoadingDialog();
+      } finally {
+        hideLoadingDialog();
+      }
     }
-    // navigation.goBack();
   };
 
   return (
@@ -92,24 +120,34 @@ function InboundInputDO({ route }: FormActivityProps) {
             {mode === 'add' ? 'Add Surat Jalan' : 'Edit Surat Jalan'}
           </Text>
           <View style={styles.formContainer}>
+            {/* Nomor Surat Jalan (input only once) */}
+            <Controller
+              name="number_delivery_order"
+              control={control}
+              rules={{
+                required: 'Nomor Surat Jalan is required',
+              }}
+              render={({ field: { value, onChange } }) => (
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={{ marginBottom: 8 }}>No. Surat Jalan</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Input Nomor Surat Jalan"
+                    value={value?.toString() || ''}
+                    onChangeText={onChange}
+                  />
+                </View>
+              )}
+            />
+            {/* Items (SKU, Qty, UOM can be added multiple times) */}
             <Controller
               name="items"
               control={control}
               rules={{
                 required: 'At least one item is required',
-                validate: value =>
-                  Array.isArray(value) && value.length > 0
-                    ? true
-                    : 'At least one item is required',
+                validate: value => (Array.isArray(value) && value.length > 0 ? true : 'At least one item is required'),
               }}
-              defaultValue={[
-                {
-                  inbound_delivery_order_id: '',
-                  item_id: '',
-                  qty_plan: 0,
-                  uom: '',
-                },
-              ]}
+              // removed defaultValue from Controller, handled in useForm
               render={({ field: { value, onChange } }) => (
                 <View>
                   {value.map((item: any, idx: number) => (
@@ -124,8 +162,10 @@ function InboundInputDO({ route }: FormActivityProps) {
                       }}
                     >
                       <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>
-                        Surat Jalan {idx + 1}
+                        SKU {idx + 1}
                       </Text>
+
+                      {/* SKU Selection */}
                       <View
                         style={{
                           flexDirection: 'row',
@@ -133,31 +173,33 @@ function InboundInputDO({ route }: FormActivityProps) {
                           width: '100%',
                         }}
                       >
-                        <Text style={{ marginRight: 8, width: 90 }}>
-                          No. Surat Jalan
-                        </Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="Input Nomer Surat Jalan"
-                          value={item.inbound_delivery_order_id}
-                          onChangeText={text => {
-                            const updated = [...value];
-                            updated[idx].inbound_delivery_order_id = text;
-                            onChange(updated);
-                          }}
-                        />
+                        <Text style={{ marginRight: 8, width: 90 }}>SKU</Text>
+                        <View
+                          style={[styles.input, { padding: 0, justifyContent: 'center' }]}
+                        >
+                          <Picker
+                            selectedValue={item.item_id || ''}
+                            onValueChange={itemValue => {
+                              const updated = [...value];
+                              updated[idx].item_id = itemValue;
+                              onChange(updated);
+                            }}
+                            style={{ width: '100%' }}
+                          >
+                            <Picker.Item label="Select SKU" value="" />
+                            {Array.isArray(items) &&
+                              items.map(option => (
+                                <Picker.Item
+                                  key={option.id}
+                                  label={option.sku || ''}
+                                  value={option.id}
+                                />
+                              ))}
+                          </Picker>
+                        </View>
                       </View>
 
-                      {/*<TextInput*/}
-                      {/*  style={styles.input}*/}
-                      {/*  placeholder="Item ID"*/}
-                      {/*  value={item.item_id}*/}
-                      {/*  onChangeText={(text) => {*/}
-                      {/*    const updated = [...value];*/}
-                      {/*    updated[idx].item_id = text;*/}
-                      {/*    onChange(updated);*/}
-                      {/*  }}*/}
-                      {/*/>*/}
+                      {/* Qty Input */}
                       <View
                         style={{
                           flexDirection: 'row',
@@ -178,6 +220,8 @@ function InboundInputDO({ route }: FormActivityProps) {
                           }}
                         />
                       </View>
+
+                      {/* UOM Selection */}
                       <View
                         style={{
                           flexDirection: 'row',
@@ -186,22 +230,35 @@ function InboundInputDO({ route }: FormActivityProps) {
                         }}
                       >
                         <Text style={{ marginRight: 8, width: 90 }}>UOM</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="UOM"
-                          value={item.uom}
-                          onChangeText={text => {
-                            const updated = [...value];
-                            updated[idx].uom = text;
-                            onChange(updated);
-                          }}
-                        />
+                        <View
+                          style={[styles.input, { padding: 0, justifyContent: 'center' }]}
+                        >
+                          <Picker
+                            selectedValue={item.uom || ''}
+                            onValueChange={itemValue => {
+                              const updated = [...value];
+                              updated[idx].uom = itemValue;
+                              onChange(updated);
+                            }}
+                            style={{ width: '100%' }}
+                          >
+                            <Picker.Item label="Select UOM" value="" />
+                            {Array.isArray(uom) &&
+                              uom.map(option => (
+                                <Picker.Item
+                                  key={option.id}
+                                  label={option.name || ''}
+                                  value={option.id}
+                                />
+                              ))}
+                          </Picker>
+                        </View>
                       </View>
+
+                      {/* Remove Item Button */}
                       <TouchableOpacity
                         onPress={() => {
-                          const updated = value.filter(
-                            (_: any, i: number) => i !== idx,
-                          );
+                          const updated = value.filter((_: any, i: number) => i !== idx);
                           onChange(updated);
                         }}
                         style={{ marginTop: 8, alignSelf: 'flex-end' }}
@@ -210,12 +267,12 @@ function InboundInputDO({ route }: FormActivityProps) {
                       </TouchableOpacity>
                     </View>
                   ))}
+                  {/* Add Item Button */}
                   <TouchableOpacity
                     onPress={() => {
                       onChange([
                         ...value,
                         {
-                          inbound_delivery_order_id: '',
                           item_id: '',
                           qty_plan: 0,
                           uom: '',
@@ -235,7 +292,11 @@ function InboundInputDO({ route }: FormActivityProps) {
                 </View>
               )}
             />
-            {errors.items && <Text style={styles.errorText}>error</Text>}
+            {errors.items && (
+              <>
+                <Text style={styles.errorText}>Error: Please complete all fields</Text>
+              </>
+            )}
             <TouchableOpacity
               onPress={handleSubmit(onSubmit)}
               style={styles.submitButton}

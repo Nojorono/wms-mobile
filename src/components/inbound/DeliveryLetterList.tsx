@@ -25,7 +25,7 @@ const DeliveryLetterList: React.FC<DeliveryLetterListProps> = ({
           </View>
           <View>
             <Text style={styles.title}>{title} </Text>
-            <Text style={styles.statusText}>{type}</Text>
+            <Text style={styles.statusText}>Total SKU : {type}</Text>
           </View>
         </View>
         <View style={styles.buttonGroup}>

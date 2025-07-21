@@ -11,7 +11,6 @@ import ConstantService from '../../../service/constantService.ts';
 import useConstantStore from '../../../store/useConstantStore.ts';
 import InboundServices from '../../../service/inboundServices.ts';
 import useInboundStore from '../../../store/useInboundStore.ts';
-import { inboundListData } from '../../../dummy/inboundData';
 import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 
 
@@ -22,7 +21,7 @@ function InboundScreen() {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
-  const {setVehicle} = useConstantStore();
+  const {setVehicle, setItems , setUom} = useConstantStore();
   const {setInbound,inbound} = useInboundStore();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
@@ -52,6 +51,14 @@ function InboundScreen() {
       try {
         const getVehicleType = await ConstantService.getVehicleType();
         setVehicle(getVehicleType.data);
+
+        const getItemsConstant = await ConstantService.getItems();
+        setItems(getItemsConstant.data);
+
+        const getUom = await ConstantService.getUom();
+        setUom(getUom.data);
+
+
       } catch (err) {
         console.error('Error fetching vehicle types:', err);
         throw new Error('Failed to fetch vehicle types');

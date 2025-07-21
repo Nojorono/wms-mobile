@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +17,7 @@ import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../../store/useAuthStore.ts';
 import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 import DeliveryLetterList from '../../../components/inbound/DeliveryLetterList.tsx';
+import InboundServices from '../../../service/inboundServices.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundDeliveryOrder'>;
 type FormActivityProps = {
@@ -34,28 +36,30 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
     formState: { errors },
     reset,
   } = useForm();
-  const [transporter, setTransporter] = useState<any>();
+  const [deliveryOrder, setDeliveryOrder] = useState<any>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const [openDatePicker, setOpenDatePicker] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const [refreshing, setRefreshing] = useState(false);
 
   const initialize = async () => {
     try {
+      setRefreshing(true);
       showLoadingDialog('Loading...');
-      // additional logic for adding delivery order
+      const dataDo = await InboundServices.getInboundDeliveryOrder(
+        item.inbound_plan_id,
+      );
+      setDeliveryOrder(dataDo);
     } catch (error) {
-      console.error('Initialization error:', error);
       hideLoadingDialog();
+      console.error('Initialization error:', error);
     } finally {
+      setRefreshing(false);
       hideLoadingDialog();
     }
   };
 
   useEffect(() => {
     initialize();
+    console.log(item);
   }, []);
 
   return (
@@ -81,6 +85,13 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
         contentContainerStyle={styles.menuContainer}
         stickyHeaderIndices={[2]}
         style={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={initialize}
+            colors={[Colors.primeColor]}
+          />
+        }
       >
         <View style={styles.menuCard}>
           <View
@@ -97,7 +108,9 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
                 width: '100%',
               }}
             >
-              <Text style={{ fontSize: 22, fontWeight:'bold' }}>List Surat Jalan</Text>
+              <Text style={{ fontSize: 22, fontWeight: 'bold' }}>
+                List Surat Jalan
+              </Text>
               <TouchableOpacity
                 onPress={() => {
                   // Navigate to the new screen with empty values
@@ -105,9 +118,9 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
                     item: item,
                     mode: 'add', // Use this to indicate the form is for adding
                     initialValues: {
-                      inbound_plan_id: "string",
-                      inbound_transporter_id: "string",
-                      number_delivery_order: "string",
+                      inbound_plan_id: '',
+                      inbound_transporter_id: '',
+                      number_delivery_order: '',
                     },
                   });
                 }}
@@ -116,30 +129,28 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
               </TouchableOpacity>
             </View>
           </View>
-          <DeliveryLetterList
-            title={'SUR-JAL-01'}
-            type={'onprogress'}
-            onClick={() => {
-              navigation.navigate('InboundInputDO', {
-                item:item,
-                mode: 'edit',
-                initialValues: {
-                  transporter_code_number: vehicle.transporter_code_number,
-                  transporter_name: vehicle.transporter_name,
-                  vehicle_id: vehicle.vehicle.id,
-                  transporter_phone: vehicle.transporter_phone,
-                  transporter_seal_number: vehicle.transporter_seal_number,
-                  arrival_time: vehicle.arrival_time,
-                  unloading_start_time: vehicle.unloading_start_time,
-                  unloading_end_time: vehicle.unloading_end_time,
-                  departure_time: vehicle.departure_time,
-                },
-              });
-            }}
-            onProcess={() => {
-              navigation.navigate('InboundDetail', { item, vehicle });
-            }}
-          />
+          {deliveryOrder?.data?.map((doItem: any) => (
+            <DeliveryLetterList
+              title={doItem.number_delivery_order}
+              type={doItem.items.length || ''}
+              onClick={() => {
+                navigation.navigate('InboundInputDO', {
+                  item: item,
+                  mode: 'edit',
+                  initialValues: {
+                    inbound_delivery_order_id: doItem.id,
+                    inbound_plan_id: doItem.inbound_plan_id,
+                    inbound_transporter_id:  doItem.inbound_transporter_id,
+                    number_delivery_order: doItem.number_delivery_order,
+                    items: doItem.items, // pass the items array
+                  },
+                });
+              }}
+              onProcess={() => {
+                navigation.navigate('InboundDetail', { item, vehicle });
+              }}
+            />
+          ))}
         </View>
       </ScrollView>
     </View>

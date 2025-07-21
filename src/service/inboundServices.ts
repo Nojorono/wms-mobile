@@ -24,7 +24,6 @@ class InboundServices {
   static async inboundTransporter(data:any): Promise<any> {
     try {
       const response = await axiosInstance.post('inbound-transporter',data);
-
       return response.data;
     } catch (error: any) {
       console.error('get transporter list failed:', error);
@@ -53,6 +52,38 @@ class InboundServices {
       throw error.response;
     }
   }
+
+  static async getInboundDeliveryOrder(idInboundPlan:any): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/inbound-delivery-order/'+idInboundPlan);
+
+      return response.data;
+    } catch (error: any) {
+      console.error('get inbound delivery order failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async postInboundDeliveryOrder(data:any): Promise<any> {
+    try {
+      const response = await axiosInstance.post('/inbound-delivery-order',data);
+      return response.data;
+    } catch (error: any) {
+      console.error('get transporter list failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async updateInboundDeliveryOrder(idDeliveryOrder:any,data:any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch('/inbound-delivery-order/'+idDeliveryOrder,data);
+      return response.data;
+    } catch (error: any) {
+      console.error('get transporter list failed:', error);
+      throw error.response;
+    }
+  }
+
 }
 
 export default InboundServices;

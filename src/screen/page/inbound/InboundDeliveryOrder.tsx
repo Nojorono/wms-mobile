@@ -131,6 +131,7 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
           </View>
           {deliveryOrder?.data?.map((doItem: any) => (
             <DeliveryLetterList
+              key={doItem.id}
               title={doItem.number_delivery_order}
               type={doItem.items.length || ''}
               onClick={() => {

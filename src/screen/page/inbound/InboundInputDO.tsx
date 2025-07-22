@@ -90,9 +90,10 @@ function InboundInputDO({ route }: FormActivityProps) {
         created_by: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim(),
         updated_by: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim(),
       };
-      console.log('Editing DO:', data);
+      // console.log("id",inbound_delivery_order_id );
+      // console.log('Editing DO:', data);
       try {
-        showLoadingDialog('Submitting Delivery Order...');
+        showLoadingDialog('Updating Delivery Order...');
         await inboundServices.updateInboundDeliveryOrder(inbound_delivery_order_id,data);
         navigation.goBack();
       } catch (error) {
@@ -150,7 +151,10 @@ function InboundInputDO({ route }: FormActivityProps) {
               // removed defaultValue from Controller, handled in useForm
               render={({ field: { value, onChange } }) => (
                 <View>
-                  {value.map((item: any, idx: number) => (
+                  {value.map((item: any, idx: number) => {
+                    console.log("Selected UOM ID:", item.uom);
+                    console.log("Available UOM Options:", uom);
+                    return(
                     <View
                       key={idx}
                       style={{
@@ -234,10 +238,10 @@ function InboundInputDO({ route }: FormActivityProps) {
                           style={[styles.input, { padding: 0, justifyContent: 'center' }]}
                         >
                           <Picker
-                            selectedValue={item.uom || ''}
+                            selectedValue={item.uom?.toString() || ''}  // Convert item.uom to string for consistency
                             onValueChange={itemValue => {
                               const updated = [...value];
-                              updated[idx].uom = itemValue;
+                              updated[idx].uom = itemValue;  // itemValue is now a string, no need for number conversion
                               onChange(updated);
                             }}
                             style={{ width: '100%' }}
@@ -248,7 +252,7 @@ function InboundInputDO({ route }: FormActivityProps) {
                                 <Picker.Item
                                   key={option.id}
                                   label={option.name || ''}
-                                  value={option.id}
+                                  value={option.id.toString()}  // Ensure value is a string
                                 />
                               ))}
                           </Picker>
@@ -266,7 +270,7 @@ function InboundInputDO({ route }: FormActivityProps) {
                         <Text style={{ color: 'red' }}>Remove</Text>
                       </TouchableOpacity>
                     </View>
-                  ))}
+                  )})}
                   {/* Add Item Button */}
                   <TouchableOpacity
                     onPress={() => {

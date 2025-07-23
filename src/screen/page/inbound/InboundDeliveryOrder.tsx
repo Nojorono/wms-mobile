@@ -31,8 +31,6 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
   const {
-    control,
-    handleSubmit,
     formState: { errors },
     reset,
   } = useForm();
@@ -148,7 +146,7 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
                 });
               }}
               onProcess={() => {
-                navigation.navigate('InboundDetail', { item, vehicle });
+                navigation.navigate('InboundDetail', { item, vehicle, doItem });
               }}
             />
           ))}

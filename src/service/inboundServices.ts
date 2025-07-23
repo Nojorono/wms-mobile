@@ -21,9 +21,19 @@ class InboundServices {
     }
   }
 
-  static async inboundTransporter(data:any): Promise<any> {
+  static async postInboundTransporter(data:any): Promise<any> {
     try {
       const response = await axiosInstance.post('inbound-transporter',data);
+      return response.data;
+    } catch (error: any) {
+      console.error('get transporter list failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async updateInboundTransporter(idTransporter:any,data:any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch('inbound-transporter/'+idTransporter,data);
       return response.data;
     } catch (error: any) {
       console.error('get transporter list failed:', error);
@@ -55,7 +65,7 @@ class InboundServices {
 
   static async getInboundDeliveryOrder(idInboundPlan:any): Promise<any> {
     try {
-      const response = await axiosInstance.get('/inbound-delivery-order/'+idInboundPlan);
+      const response = await axiosInstance.get('inbound-delivery-order/'+idInboundPlan);
 
       return response.data;
     } catch (error: any) {
@@ -66,7 +76,7 @@ class InboundServices {
 
   static async postInboundDeliveryOrder(data:any): Promise<any> {
     try {
-      const response = await axiosInstance.post('/inbound-delivery-order',data);
+      const response = await axiosInstance.post('inbound-delivery-order',data);
       return response.data;
     } catch (error: any) {
       console.error('get transporter list failed:', error);
@@ -76,7 +86,7 @@ class InboundServices {
 
   static async updateInboundDeliveryOrder(idDeliveryOrder:any,data:any): Promise<any> {
     try {
-      const response = await axiosInstance.patch('/inbound-delivery-order/'+idDeliveryOrder,data);
+      const response = await axiosInstance.patch('inbound-delivery-order/'+idDeliveryOrder,data);
       return response.data;
     } catch (error: any) {
       console.error('get transporter list failed:', error);

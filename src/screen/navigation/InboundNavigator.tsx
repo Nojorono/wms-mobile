@@ -21,7 +21,7 @@ export type InboundParamList = {
   InboundDeliveryOrder: { item: any, vehicle:any };
   InboundInputVehicle:{ item:any, mode:any, initialValues:any };
   InboundVehicle: { item: any };
-  InboundDetail: { item: any; vehicle: any };
+  InboundDetail: { item: any; vehicle: any, doItem: any };
 };
 
 const InboundStack = createStackNavigator<InboundParamList>();

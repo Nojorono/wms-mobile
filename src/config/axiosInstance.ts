@@ -10,6 +10,8 @@ const axiosInstance = axios.create({
     timeout: 10000,
 });
 
+
+
 // You can add interceptors here if needed
 axiosInstance.interceptors.request.use(
     async (config) => {

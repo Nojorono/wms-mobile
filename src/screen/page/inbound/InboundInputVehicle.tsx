@@ -1,4 +1,3 @@
-// InboundInputVehicle.tsx
 import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
@@ -19,6 +18,8 @@ import useConstantStore from '../../../store/useConstantStore.ts';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import DatePicker from 'react-native-date-picker';
 import { useAuthStore } from '../../../store/useAuthStore.ts';
+import inboundServices from '../../../service/inboundServices.ts';
+import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundInputVehicle'>;
 type FormActivityProps = {
@@ -30,9 +31,8 @@ function InboundInputVehicle({ route }: FormActivityProps) {
   const navigation = useNavigation<NavigationProp>();
   const stylex = GlobalStyles();
   const { vehicle } = useConstantStore();
-  const [openDatePicker, setOpenDatePicker] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const [openDatePicker, setOpenDatePicker] = useState<{ [key: string]: boolean }>({});
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
   const {
     control,
@@ -40,35 +40,60 @@ function InboundInputVehicle({ route }: FormActivityProps) {
     reset,
     formState: { errors },
   } = useForm();
-  const { item, mode, initialValues } = route.params;
+  const { item, mode = 'add', initialValues } = route.params; // Default to 'add' if mode is undefined
   const { user } = useAuthStore();
 
   // Reset form with initial values on component mount
   useEffect(() => {
-    reset(initialValues);
+    const defaultValues = {
+      transporter_code_number: '',
+      transporter_name: '',
+      transporter_phone: '',
+      transporter_seal_number: '',
+      arrival_time: new Date().toISOString(),
+      departure_time: new Date().toISOString(),
+      unloading_start_time: '',
+      unloading_end_time: '',
+      vehicle_id: '',
+      ...initialValues, // Ensure initialValues are passed in for any pre-existing data
+    };
+
+    reset(defaultValues);
   }, [initialValues, reset]);
 
-  const onSubmit = (data: any) => {
-    // Handle form submission (e.g., send data to backend)
+  const onSubmit = async (data: any) => {
     if (mode === 'add') {
-      data = {
-        ...data,
+      const { unloading_start_time, unloading_end_time, ...vehicleData } = data;
+
+      // Add the required fields to the data object
+      const updatedData = {
+        ...vehicleData,
         arrival_time: new Date(data.arrival_time).toISOString(),
-        derpature_time: new Date(data.derpature_time).toISOString(),
+        departure_time: new Date(data.departure_time).toISOString(),
         inbound_plan_id: item.inbound_plan_id,
         organization_id: item.inbound_plan.organization_id,
-        created_by: user?.firstName + ' ' + user?.lastName,
+        created_by: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`,
       };
 
       // Add new vehicle
-      console.log('Adding vehicle:', data);
+      console.log('Adding vehicle:', updatedData);
+      try {
+        showLoadingDialog('Submitting Delivery Order...');
+        await inboundServices.postInboundTransporter(updatedData);
+        navigation.goBack();
+      } catch (error) {
+        console.error(error);
+        hideLoadingDialog();
+      } finally {
+        hideLoadingDialog();
+      }
     } else {
       // Update existing vehicle
       data = {
         ...data,
         inbound_plan_id: item.inbound_plan_id,
         organization_id: item.inbound_plan.organization_id,
-        created_by: user?.firstName + ' ' + user?.lastName,
+        created_by: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`,
       };
       console.log('Editing vehicle:', data);
     }
@@ -82,27 +107,17 @@ function InboundInputVehicle({ route }: FormActivityProps) {
           <Text style={stylex.profileText}>{item.title || 'Undefined'}</Text>
         </View>
       </View>
-      <ScrollView
-        contentContainerStyle={stylex.menuContainer}
-        style={stylex.scrollViewContent}
-      >
+      <ScrollView contentContainerStyle={stylex.menuContainer} style={stylex.scrollViewContent}>
         <View style={stylex.menuCard}>
-          <Text style={styles.title}>
-            {mode === 'add' ? 'Add Vehicle' : 'Edit Vehicle'}
-          </Text>
+          <Text style={styles.title}>{mode === 'add' ? 'Add Vehicle' : 'Edit Vehicle'}</Text>
           <View style={styles.formContainer}>
+            {/* Plat Number */}
             <Controller
               name="transporter_code_number"
               control={control}
               rules={{ required: 'Plat Number is required' }}
               render={({ field: { value, onChange } }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}
-                >
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
                   <Text style={{ marginRight: 8, width: 90 }}>Plat Number</Text>
                   <TextInput
                     style={styles.input}
@@ -113,22 +128,15 @@ function InboundInputVehicle({ route }: FormActivityProps) {
                 </View>
               )}
             />
-            {errors.transporter_code_number && (
-              <Text style={styles.errorText}>{'error'}</Text>
-            )}
+            {errors.transporter_code_number && <Text style={styles.errorText}>Error: Plat Number is required</Text>}
 
+            {/* Driver Name */}
             <Controller
               name="transporter_name"
               control={control}
               rules={{ required: 'Driver Name is required' }}
               render={({ field: { value, onChange } }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}
-                >
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
                   <Text style={{ marginRight: 8, width: 90 }}>Driver Name</Text>
                   <TextInput
                     style={styles.input}
@@ -139,61 +147,39 @@ function InboundInputVehicle({ route }: FormActivityProps) {
                 </View>
               )}
             />
-            {errors.transporter_name && (
-              <Text style={styles.errorText}>{'Error'}</Text>
-            )}
+            {errors.transporter_name && <Text style={styles.errorText}>Error: Driver Name is required</Text>}
 
+            {/* Phone Number */}
             <Controller
               name="transporter_phone"
               control={control}
-              rules={{ required: 'Driver Phone is required' }}
+              rules={{ required: 'Phone Number is required' }}
               render={({ field: { value, onChange } }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}
-                >
-                  <Text style={{ marginRight: 8, width: 90 }}>
-                    Phone Number
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                  <Text style={{ marginRight: 8, width: 90 }}>Phone Number</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="Phone Number"
                     value={value}
+                    keyboardType="numeric"
                     onChangeText={onChange}
                   />
                 </View>
               )}
             />
-            {errors.transporter_phone && (
-              <Text style={styles.errorText}>{'Error'}</Text>
-            )}
+            {errors.transporter_phone && <Text style={styles.errorText}>Error: Phone Number is required</Text>}
 
+            {/* Vehicle Type */}
             <Controller
               name="vehicle_id"
               control={control}
               rules={{ required: 'Vehicle Type is required' }}
               render={({ field: { value, onChange } }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}
-                >
-                  <Text style={{ marginRight: 8, width: 90 }}>
-                    Vehicle Type
-                  </Text>
-                  <View
-                    style={[
-                      styles.input,
-                      { padding: 0, justifyContent: 'center' },
-                    ]}
-                  >
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                  <Text style={{ marginRight: 8, width: 90 }}>Vehicle Type</Text>
+                  <View style={[styles.input, { padding: 0, justifyContent: 'center' }]}>
                     <Picker
-                      selectedValue={value ?? ''}
+                      selectedValue={value || ''}
                       onValueChange={itemValue => {
                         onChange(itemValue);
                         console.log('Selected vehicle_id:', itemValue);
@@ -201,37 +187,23 @@ function InboundInputVehicle({ route }: FormActivityProps) {
                       style={{ width: '100%' }}
                     >
                       <Picker.Item label="Select Type" value="" />
-                      {Array.isArray(vehicle) &&
-                        vehicle.map(
-                          (option: { id: string; vehicle_type: string }) => (
-                            <Picker.Item
-                              key={option.id}
-                              label={option.vehicle_type ?? ''}
-                              value={option.id}
-                            />
-                          ),
-                        )}
+                      {vehicle.map(option => (
+                        <Picker.Item key={option.id} label={option.vehicle_type} value={option.id} />
+                      ))}
                     </Picker>
                   </View>
                 </View>
               )}
             />
-            {errors.vehicle_id && (
-              <Text style={styles.errorText}>{'Error'}</Text>
-            )}
+            {errors.vehicle_id && <Text style={styles.errorText}>Error: Vehicle Type is required</Text>}
 
+            {/* Seal Number */}
             <Controller
               name="transporter_seal_number"
               control={control}
               rules={{ required: 'Seal Number is required' }}
               render={({ field: { value, onChange } }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}
-                >
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
                   <Text style={{ marginRight: 8, width: 90 }}>Seal Number</Text>
                   <TextInput
                     style={styles.input}
@@ -242,25 +214,16 @@ function InboundInputVehicle({ route }: FormActivityProps) {
                 </View>
               )}
             />
-            {errors.transporter_seal_number && (
-              <Text style={styles.errorText}>{'Error'}</Text>
-            )}
+            {errors.transporter_seal_number && <Text style={styles.errorText}>Error: Seal Number is required</Text>}
 
+            {/* Arrival Time */}
             <Controller
               name="arrival_time"
               control={control}
               rules={{ required: 'Arrival Time is required' }}
               render={({ field: { value, onChange, name } }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}
-                >
-                  <Text style={{ marginRight: 8, width: 120 }}>
-                    Arrival Time
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                  <Text style={{ marginRight: 8, width: 120 }}>Arrival Time</Text>
                   <TextInput
                     style={[styles.input, { flex: 1, marginRight: 8 }]}
                     placeholder="Arrival Time"
@@ -272,53 +235,35 @@ function InboundInputVehicle({ route }: FormActivityProps) {
                     color={Colors.secondaryColor}
                     name={'calendar'}
                     onPress={() =>
-                      setOpenDatePicker((prev: any) => ({
-                        ...prev,
-                        [name]: true,
-                      }))
+                      setOpenDatePicker(prev => ({ ...prev, [name]: true }))
                     }
                     style={{ marginLeft: 4 }}
                   />
                   <DatePicker
                     modal
-                    open={!!openDatePicker?.[name]}
+                    open={openDatePicker?.[name]}
                     date={value ? new Date(value) : new Date()}
                     onConfirm={d => {
-                      setOpenDatePicker((prev: any) => ({
-                        ...prev,
-                        [name]: false,
-                      }));
+                      setOpenDatePicker(prev => ({ ...prev, [name]: false }));
                       onChange(d);
                     }}
                     onCancel={() =>
-                      setOpenDatePicker((prev: any) => ({
-                        ...prev,
-                        [name]: false,
-                      }))
+                      setOpenDatePicker(prev => ({ ...prev, [name]: false }))
                     }
                   />
                 </View>
               )}
             />
-            {errors.arrival_time && (
-              <Text style={styles.errorText}>{'Error'}</Text>
-            )}
+            {errors.arrival_time && <Text style={styles.errorText}>Error: Arrival Time is required</Text>}
 
+            {/* Departure Time */}
             <Controller
               name="departure_time"
               control={control}
               rules={{ required: 'Departure Time is required' }}
               render={({ field: { value, onChange, name } }) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}
-                >
-                  <Text style={{ marginRight: 8, width: 120 }}>
-                    Departure Time
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                  <Text style={{ marginRight: 8, width: 120 }}>Departure Time</Text>
                   <TextInput
                     style={[styles.input, { flex: 1, marginRight: 8 }]}
                     placeholder="Departure Time"
@@ -330,157 +275,26 @@ function InboundInputVehicle({ route }: FormActivityProps) {
                     color={Colors.secondaryColor}
                     name={'calendar'}
                     onPress={() =>
-                      setOpenDatePicker((prev: any) => ({
-                        ...prev,
-                        [name]: true,
-                      }))
+                      setOpenDatePicker(prev => ({ ...prev, [name]: true }))
                     }
                     style={{ marginLeft: 4 }}
                   />
                   <DatePicker
                     modal
-                    open={!!openDatePicker?.[name]}
+                    open={openDatePicker?.[name]}
                     date={value ? new Date(value) : new Date()}
                     onConfirm={d => {
-                      setOpenDatePicker((prev: any) => ({
-                        ...prev,
-                        [name]: false,
-                      }));
+                      setOpenDatePicker(prev => ({ ...prev, [name]: false }));
                       onChange(d);
                     }}
                     onCancel={() =>
-                      setOpenDatePicker((prev: any) => ({
-                        ...prev,
-                        [name]: false,
-                      }))
+                      setOpenDatePicker(prev => ({ ...prev, [name]: false }))
                     }
                   />
                 </View>
               )}
             />
-            {errors.departure_time && (
-              <Text style={styles.errorText}>{'Error'}</Text>
-            )}
-            {mode !== 'add' ? (
-              <Controller
-                name="unloading_start"
-                control={control}
-                rules={{ required: 'Unloading Start is required' }}
-                render={({ field: { value, onChange, name } }) => (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      width: '100%',
-                    }}
-                  >
-                    <Text style={{ marginRight: 8, width: 120 }}>
-                      Unloading Start
-                    </Text>
-                    <TextInput
-                      style={[styles.input, { flex: 1, marginRight: 8 }]}
-                      placeholder="Unloading Start"
-                      value={value ? new Date(value).toLocaleString() : ''}
-                      editable={false}
-                    />
-                    <Ionicons
-                      size={25}
-                      color={Colors.secondaryColor}
-                      name={'calendar'}
-                      onPress={() =>
-                        setOpenDatePicker((prev: any) => ({
-                          ...prev,
-                          [name]: true,
-                        }))
-                      }
-                      style={{ marginLeft: 4 }}
-                    />
-                    <DatePicker
-                      modal
-                      open={!!openDatePicker?.[name]}
-                      date={value ? new Date(value) : new Date()}
-                      onConfirm={d => {
-                        setOpenDatePicker((prev: any) => ({
-                          ...prev,
-                          [name]: false,
-                        }));
-                        onChange(d);
-                      }}
-                      onCancel={() =>
-                        setOpenDatePicker((prev: any) => ({
-                          ...prev,
-                          [name]: false,
-                        }))
-                      }
-                    />
-                  </View>
-                )}
-              />
-            ) : null}
-
-            {errors.unloading_start && (
-              <Text style={styles.errorText}>{'Error'}</Text>
-            )}
-
-            {mode !== 'add' ? (
-              <Controller
-                name="unloading_finished"
-                control={control}
-                rules={{ required: 'Unloading Finished is required' }}
-                render={({ field: { value, onChange, name } }) => (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      width: '100%',
-                    }}
-                  >
-                    <Text style={{ marginRight: 8, width: 120 }}>
-                      Unloading Finished
-                    </Text>
-                    <TextInput
-                      style={[styles.input, { flex: 1, marginRight: 8 }]}
-                      placeholder="Unloading Finished"
-                      value={value ? new Date(value).toLocaleString() : ''}
-                      editable={false}
-                    />
-                    <Ionicons
-                      size={25}
-                      color={Colors.secondaryColor}
-                      name={'calendar'}
-                      onPress={() =>
-                        setOpenDatePicker((prev: any) => ({
-                          ...prev,
-                          [name]: true,
-                        }))
-                      }
-                      style={{ marginLeft: 4 }}
-                    />
-                    <DatePicker
-                      modal
-                      open={!!openDatePicker?.[name]}
-                      date={value ? new Date(value) : new Date()}
-                      onConfirm={d => {
-                        setOpenDatePicker((prev: any) => ({
-                          ...prev,
-                          [name]: false,
-                        }));
-                        onChange(d);
-                      }}
-                      onCancel={() =>
-                        setOpenDatePicker((prev: any) => ({
-                          ...prev,
-                          [name]: false,
-                        }))
-                      }
-                    />
-                  </View>
-                )}
-              />
-            ) : null}
-            {errors.unloading_finished && (
-              <Text style={styles.errorText}>{'Error'}</Text>
-            )}
+            {errors.departure_time && <Text style={styles.errorText}>Error: Departure Time is required</Text>}
 
             <TouchableOpacity
               onPress={handleSubmit(onSubmit)}

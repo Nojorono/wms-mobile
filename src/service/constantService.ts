@@ -13,9 +13,9 @@ class ConstantService {
     }
   }
 
-  static async getItems(): Promise<any> {
+  static async getItems(idInboundPlan:string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/master-item`);
+      const response = await axiosInstance.get(`inbound-plan/`+idInboundPlan);
       return response.data
     } catch (error: any) {
       console.error('Get items failed:', error);

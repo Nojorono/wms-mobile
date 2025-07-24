@@ -21,7 +21,7 @@ function InboundScreen() {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
-  const {setVehicle, setItems , setUom} = useConstantStore();
+  const {setVehicle , setUom} = useConstantStore();
   const {setInbound,inbound} = useInboundStore();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
@@ -51,9 +51,6 @@ function InboundScreen() {
       try {
         const getVehicleType = await ConstantService.getVehicleType();
         setVehicle(getVehicleType.data);
-
-        const getItemsConstant = await ConstantService.getItems();
-        setItems(getItemsConstant.data);
 
         const getUom = await ConstantService.getUom();
         setUom(getUom.data);

@@ -31,8 +31,6 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
   const {
-    control,
-    handleSubmit,
     formState: { errors },
     reset,
   } = useForm();
@@ -131,6 +129,7 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
           </View>
           {deliveryOrder?.data?.map((doItem: any) => (
             <DeliveryLetterList
+              key={doItem.id}
               title={doItem.number_delivery_order}
               type={doItem.items.length || ''}
               onClick={() => {
@@ -147,7 +146,7 @@ function DeliveryOrderScreen({ route }: FormActivityProps) {
                 });
               }}
               onProcess={() => {
-                navigation.navigate('InboundDetail', { item, vehicle });
+                navigation.navigate('InboundDetail', { item, vehicle, doItem });
               }}
             />
           ))}

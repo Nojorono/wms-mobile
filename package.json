@@ -25,6 +25,7 @@
     "react-native-gesture-handler": "^2.26.0",
     "react-native-safe-area-context": "^5.4.1",
     "react-native-screens": "^4.11.1",
+    "react-native-table-component": "^1.2.2",
     "react-native-toast-message": "^2.3.0",
     "react-native-vision-camera": "^4.7.0",
     "zustand": "^5.0.5"
@@ -42,6 +43,7 @@
     "@react-native/typescript-config": "0.80.0",
     "@types/jest": "^29.5.13",
     "@types/react": "^19.1.0",
+    "@types/react-native-table-component": "^1.2.8",
     "@types/react-native-vector-icons": "^6.4.18",
     "@types/react-test-renderer": "^19.1.0",
     "eslint": "^8.19.0",

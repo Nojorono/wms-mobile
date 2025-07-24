@@ -12,6 +12,7 @@ import GlobalStyles from '../../../util/GlobalStyles.ts';
 import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors.ts';
+import useConstantStore from '../../../store/useConstantStore.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundVehicle'>;
 type FormActivityProps = {
@@ -25,6 +26,8 @@ function InboundVehicleScreen( { route }: FormActivityProps ) {
   const navigation = useNavigation<NavigationProp>();
   const [refreshing, setRefreshing] = useState(false);
 
+  const { setItems } = useConstantStore();
+
   const [transporter, setTransporter] = useState<any>();
 
   const initialize = async () => {
@@ -32,6 +35,10 @@ function InboundVehicleScreen( { route }: FormActivityProps ) {
       setRefreshing(true);
       showLoadingDialog("Loading...");
       await ConstantService.getVehicleType();
+
+      const getItemsConstant = await ConstantService.getItems(item.inbound_plan_id);
+      setItems(getItemsConstant.data);
+
       const dataTransporter = await InboundServices.getTransporterList(item.inbound_plan_id);
       setTransporter(dataTransporter);
     } catch (error) {
@@ -45,6 +52,7 @@ function InboundVehicleScreen( { route }: FormActivityProps ) {
 
   useEffect(() => {
     initialize();
+    console.log('item', item);
   }, []);
 
   return (

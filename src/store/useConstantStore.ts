@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ConstantState {
   vehicle: any[];
-  items: any[];
+  items_sku: any;
   uom: any[];
   setVehicle: (vehicle: any[]) => void;
   setItems: (items: any[]) => void;
@@ -16,15 +16,15 @@ interface ConstantState {
 
 const useConstantStore = create<ConstantState>(set => ({
   vehicle: [],
-  items: [],
+  items_sku: [],
   uom: [],
   setVehicle: async (vehicle: any[]) => {
     await AsyncStorage.setItem('vehicle', JSON.stringify(vehicle));
     set({ vehicle });
   },
-  setItems: async (items: any[]) => {
-    await AsyncStorage.setItem('items', JSON.stringify(items));
-    set({ items });
+  setItems: async (items_sku: any[]) => {
+    await AsyncStorage.setItem('items_sku', JSON.stringify(items_sku));
+    set({ items_sku });
   },
   setUom: async (uom: any[]) => {
     await AsyncStorage.setItem('uom', JSON.stringify(uom));
@@ -35,18 +35,18 @@ const useConstantStore = create<ConstantState>(set => ({
     set({ vehicle: storedVehicle ? JSON.parse(storedVehicle) : [] });
   },
   getItems: async () => {
-    const storedItems = await AsyncStorage.getItem('items');
-    set({ items: storedItems ? JSON.parse(storedItems) : [] });
+    const storedItems = await AsyncStorage.getItem('items_sku');
+    set({ items_sku: storedItems ? JSON.parse(storedItems) : [] });
   },
   getUom: async () => {
     const storedUom = await AsyncStorage.getItem('uom');
-    set({ items: storedUom ? JSON.parse(storedUom) : [] });
+    set({ uom: storedUom ? JSON.parse(storedUom) : [] });
   },
   clearConstants: async () => {
     await AsyncStorage.removeItem('vehicle');
-    await AsyncStorage.removeItem('items');
+    await AsyncStorage.removeItem('items_sku');
     await AsyncStorage.removeItem('uom');
-    set({ vehicle: [], items: [], uom: [] });
+    set({ vehicle: [], items_sku: [], uom: [] });
   },
 }));
 

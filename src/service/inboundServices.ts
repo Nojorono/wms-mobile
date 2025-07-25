@@ -41,13 +41,13 @@ class InboundServices {
     }
   }
 
-  static async getInboundDetail(idInboundPlan:any): Promise<any> {
+  static async getListInboundScanning(idInboundPlan:any): Promise<any> {
     try {
-      const response = await axiosInstance.get('inbound-plan/'+idInboundPlan);
+      const response = await axiosInstance.get('checker-scanning/inbound-plan/'+idInboundPlan);
 
       return response.data;
     } catch (error: any) {
-      console.error('get inbound plan failed:', error);
+      console.error('get List inbound Scanning failed:', error);
       throw error.response;
     }
   }

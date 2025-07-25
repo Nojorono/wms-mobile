@@ -26,6 +26,7 @@ import useConstantStore from '../../../store/useConstantStore.ts';
 import { Picker } from '@react-native-picker/picker';
 import ScanList from '../../../components/inbound/ScanList.tsx';
 import { useAuthStore } from '../../../store/useAuthStore.ts';
+import inboundServices from '../../../service/inboundServices.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundDetail'>;
 type FormActivityProps = {
@@ -46,10 +47,29 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
     skuIdx: number;
     palletIdx: number;
   } | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const { items_sku } = useConstantStore();
+  const [editData, setEditData] = useState<SKUForm | null>(null);
   const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
-  const { items_sku } = useConstantStore();
+  const [listInboundScanning, setListInboundScanning] = useState<ListInboundScanning[]>([]);
+  interface ListInboundScanning {
+    id: string;
+    inbound_transporter_id: string;
+    organization_id: number;
+    inbound_plan_id: string;
+    inbound_delivery_order_id: string;
+    inbound_delivery_order_item_id: string;
+    item_id: string;
+    checker_assign_id: string;
+    actual_qty: number;
+    pallet_code: string;
+    status: string;
+    approved_by: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }
   const { user } = useAuthStore();
 
   const { control, handleSubmit, setValue } = useForm<SKUForm>({
@@ -72,7 +92,22 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   };
 
   useEffect(() => {
-    permission();
+    const fetchData = async () => {
+      try {
+        await permission();
+        showLoadingDialog('Loading Inbound Scanning Data');
+        const response = await inboundServices.getListInboundScanning(item.inbound_plan_id);
+        setListInboundScanning(response.data);
+        console.log('Inbound Scanning Data:', response);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        hideLoadingDialog()
+      }finally {
+        hideLoadingDialog()
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Code scanner for barcode/QR
@@ -95,33 +130,33 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
   });
 
   const onSubmit = (data: SKUForm) => {
-    const [item_id, item_detail_id] = data.sku.split('|');
-    const dataWithPallets = {
-      inbound_transporter_id: item.inbound_transporter_id,
-      inbound_delivery_order_id: doItem.id,
-      inbound_delivery_order_item_id: item_detail_id,
-      item_id: item_id,
-      organization_id: item.inbound_plan.organization_id,
-      inbound_plan_id: item.inbound_plan_id,
-      checker_assign_id: item.id, //ambil dari get(/checker_assign/+id)
-      checker_id: user?.id, //ambil dari id user yang login
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      items: [
-        {
-          actual_qty: Number(data.pallets[0].qty),
-          pallet_code: data.pallets[0].palletNumber,
-        },
-      ],
-    };
-    console.log('Submitted Data:', dataWithPallets);
-    // console.log('itemDO:', doItem);
-    console.log('item:', item);
-    // console.log('vehicle:', vehicle);
-    Alert.alert(
-      'Input Data',
-      `id Item: ${item_detail_id}\nSKU: ${item_id}\nPallet Number: ${data.pallets[0].palletNumber}\nQty: ${data.pallets[0].qty}`,
-    );
+    if (isEditMode) {
+      console.log('Edited Data:', data);
+      Alert.alert('Edit Data', `Edited SKU: ${data.sku}`);
+      setIsEditMode(false);
+      setEditData(null);
+    } else {
+      const [item_id, item_detail_id] = data.sku.split('|');
+      const dataWithPallets = {
+        inbound_transporter_id: item.inbound_transporter_id,
+        inbound_delivery_order_id: doItem.id,
+        inbound_delivery_order_item_id: item_detail_id,
+        item_id: item_id,
+        organization_id: item.inbound_plan.organization_id,
+        inbound_plan_id: item.inbound_plan_id,
+        checker_assign_id: item.id,
+        checker_id: user?.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        actual_qty: Number(data.pallets[0].qty),
+        pallet_code: data.pallets[0].palletNumber,
+      };
+      console.log('Submitted Data:', dataWithPallets);
+      Alert.alert(
+        'Input Data',
+        `id Item: ${item_detail_id}\nSKU: ${item_id}\nPallet Number: ${data.pallets[0].palletNumber}\nQty: ${data.pallets[0].qty}`,
+      );
+    }
   };
 
   return (
@@ -213,14 +248,33 @@ export default function InboundDetailScreen({ route }: FormActivityProps) {
             </View>
           </View>
           <View style={style.container}>
-            <ScanList title={'SKU-JAZ'} pallet={'P-01-OP'} qty={20} />
-            <ScanList title={'SKU-JAZ'} pallet={'P-01-OP'} qty={20} />
-            <ScanList title={'SKU-JAZ'} pallet={'P-01-OP'} qty={20} />
-            <ScanList title={'SKU-JAZ'} pallet={'P-01-OP'} qty={20} />
-            <ScanList title={'SKU-JAZ'} pallet={'P-01-OP'} qty={20} />
-            <ScanList title={'SKU-JAZ'} pallet={'P-01-OP'} qty={20} />
-            <ScanList title={'SKU-JAZ'} pallet={'P-01-OP'} qty={20} />
-            <ScanList title={'SKU-JAZ'} pallet={'P-01-OP'} qty={20} />
+            {listInboundScanning && listInboundScanning.length > 0 ? (
+              listInboundScanning.map((item) => (
+                <ScanList
+                  key={item.id}
+                  title={"item.item_id"}
+                  pallet={item.pallet_code}
+                  qty={item.actual_qty}
+                />
+              ))
+            ) : (
+              <View><Text>Empty Data</Text></View>
+            )}
+            {/*<ScanList*/}
+            {/*  title={'SKU-JAZ'}*/}
+            {/*  pallet={'P-01-OP'}*/}
+            {/*  qty={20}*/}
+            {/*  onClick={() => {*/}
+            {/*    setIsEditMode(true);*/}
+            {/*    setEditData({*/}
+            {/*      sku: 'SKU-JAZ',*/}
+            {/*      pallets: [{ palletNumber: 'P-01-OP', qty: '20' }],*/}
+            {/*    });*/}
+            {/*    setValue('sku', 'SKU-JAZ');*/}
+            {/*    setValue('pallets.0.palletNumber', 'P-01-OP');*/}
+            {/*    setValue('pallets.0.qty', '20');*/}
+            {/*  }}*/}
+            {/*/>*/}
           </View>
         </View>
       </ScrollView>

@@ -1,14 +1,14 @@
 import { createStackNavigator } from '@react-navigation/stack';
-import Colors from '../../constants/Colors';
+import Colors from '../../../constants/Colors.ts';
 import { Image, View } from 'react-native';
 import React from 'react';
-import InboundScreen from '../page/inbound/InboundScreen.tsx';
-import InboundVehicleScreen from '../page/inbound/InboundVehicleScreen.tsx';
-import InboundDetailScreen from '../page/inbound/InboundDetailScreen.tsx';
-import InboundDeliveryOrder from '../page/inbound/InboundDeliveryOrder.tsx';
-import InboundInputVehicle from '../page/inbound/InboundInputVehicle.tsx';
-import InboundInputDO from '../page/inbound/InboundInputDO.tsx';
-import InboundIndex from '../page/Inbound.tsx';
+import InboundScreen from '../../page/inbound/inboundMain/InboundScreen.tsx';
+import InboundVehicleScreen from '../../page/inbound/inboundMain/InboundVehicleScreen.tsx';
+import InboundDetailScreen from '../../page/inbound/inboundMain/InboundDetailScreen.tsx';
+import InboundDeliveryOrder from '../../page/inbound/inboundMain/InboundDeliveryOrder.tsx';
+import InboundInputVehicle from '../../page/inbound/inboundMain/InboundInputVehicle.tsx';
+import InboundInputDO from '../../page/inbound/inboundMain/InboundInputDO.tsx';
+import InboundIndex from '../../page/Inbound.tsx';
 import PutAwayNavigator from './PutAwayNavigator.tsx';
 
 
@@ -47,7 +47,7 @@ const InboundStackNavigator = () => (
             }}
           >
             <Image
-              source={require('../../assets/images/icon-white-nna.png')}
+              source={require('../../../assets/images/icon-white-nna.png')}
               style={{ width: 100, height: 22, resizeMode: 'contain' }}
             />
           </View>

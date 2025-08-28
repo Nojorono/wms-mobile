@@ -9,15 +9,15 @@ import {
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { Controller, useForm } from 'react-hook-form';
-import Colors from '../../../constants/Colors';
-import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
+import Colors from '../../../../constants/Colors';
+import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { StackNavigationProp } from '@react-navigation/stack';
-import GlobalStyles from '../../../util/GlobalStyles.ts';
-import useConstantStore from '../../../store/useConstantStore.ts';
-import { useAuthStore } from '../../../store/useAuthStore.ts';
+import GlobalStyles from '../../../../util/GlobalStyles.ts';
+import useConstantStore from '../../../../store/useConstantStore.ts';
+import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import { Picker } from '@react-native-picker/picker';
-import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
-import inboundServices from '../../../service/inboundServices.ts';
+import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
+import inboundServices from '../../../../service/inboundServices.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundInputDO'>;
 type FormActivityProps = {

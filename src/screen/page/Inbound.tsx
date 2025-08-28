@@ -5,19 +5,17 @@ import GlobalStyles from '../../util/GlobalStyles.ts';
 import Colors from '../../constants/Colors';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { InboundParamList } from '../navigation/InboundNavigator.tsx';
+import { InboundParamList } from '../navigation/inbound/InboundNavigator.tsx';
 import MenuCard from "../../components/MenuCard.tsx";
-import {PutAwayParamList} from "../navigation/PutAwayNavigator.tsx";
+import {PutAwayParamList} from "../navigation/inbound/PutAwayNavigator.tsx";
 
 
 type NavigationPropInbound = StackNavigationProp<InboundParamList,'InboundMain'>;
-type NavigationPropPutaway = StackNavigationProp<PutAwayParamList,'PutAwayMain'>;
 
 function InboundIndex() {
     const styles = GlobalStyles();
     const { user } = useAuthStore();
     const navigationInbound = useNavigation<NavigationPropInbound>();
-    const navigationPutaway = useNavigation<NavigationPropPutaway>();
 
     return (
       <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -31,24 +29,40 @@ function InboundIndex() {
           </View>
         </View>
         {/* Main Scrollable Content */}
-        <ScrollView
-          contentContainerStyle={styles.menuContainer}
-          stickyHeaderIndices={[2]}
-          style={styles.scrollViewContent}
-        >
-          <View style={styles.menuCard}>
-            <View
-              style={[
-                styles.activitiesHeader,
-                { borderBottomWidth: 2, borderBottomColor: '#ccc' },
-              ]}
-            >
-              <Text style={styles.activitiesHeaderText}>Inbound Menu</Text>
-            </View>
-            <MenuCard title={'Inbound'} onPress={() => {navigationInbound.navigate("InboundMain")}}/>
-            <MenuCard title={'Put Away'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
+        <View style={{ flex: 1 }}>
+          {/* Sticky Header */}
+          <View
+            style={[
+              styles.activitiesHeader,
+              {
+          borderBottomWidth: 2,
+          borderBottomColor: '#ccc',
+          zIndex: 1,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+          backgroundColor: "#fff" // Tambahkan ini agar background tetap sesuai
+              }
+            ]}
+          >
+            <Text style={styles.activitiesHeaderText}>Inbound Menu</Text>
           </View>
-        </ScrollView>
+          <ScrollView
+            contentContainerStyle={[styles.menuContainer, { paddingTop: 60 }]}
+            style={styles.scrollViewContent}
+          >
+            <View style={styles.menuCard}>
+              <MenuCard title={'Inbound'} onPress={() => {navigationInbound.navigate("InboundMain")}}/>
+              <MenuCard title={'Inbound Retur'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
+              <MenuCard title={'Checking'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
+              <MenuCard title={'Put Away'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
+              <MenuCard title={'History'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
+            </View>
+          </ScrollView>
+        </View>
       </View>
     );
 }

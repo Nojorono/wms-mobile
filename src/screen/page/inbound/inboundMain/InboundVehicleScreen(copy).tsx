@@ -9,20 +9,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import GlobalStyles from '../../../util/GlobalStyles.ts';
-import Colors from '../../../constants/Colors';
+import GlobalStyles from '../../../../util/GlobalStyles.ts';
+import Colors from '../../../../constants/Colors';
 import { RouteProp, useNavigation } from '@react-navigation/native';
-import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
-import VehicleList from '../../../components/inbound/VehicleList.tsx';
+import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
+import VehicleList from '../../../../components/inbound/VehicleList.tsx';
 import { StackNavigationProp } from '@react-navigation/stack';
 import DatePicker from 'react-native-date-picker';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { Controller, useForm } from 'react-hook-form';
-import ConstantService from '../../../service/constantService.ts';
-import useConstantStore from '../../../store/useConstantStore.ts';
-import InboundServices from '../../../service/inboundServices.ts';
-import { useAuthStore } from '../../../store/useAuthStore.ts';
-import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
+import ConstantService from '../../../../service/constantService.ts';
+import useConstantStore from '../../../../store/useConstantStore.ts';
+import InboundServices from '../../../../service/inboundServices.ts';
+import { useAuthStore } from '../../../../store/useAuthStore.ts';
+import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { initialize } from 'react-native-gesture-handler/lib/typescript/init';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundVehicle'>;
@@ -157,15 +157,14 @@ function InboundVehicleScreen({ route }: FormActivityProps) {
           organization_id: item.inbound_plan.organization_id,
           created_by: user?.firstName + ' ' + user?.lastName,
         };
-        InboundServices.inboundTransporter(data)
-          .then(response => {
+        InboundServices.postInboundTransporter(data)
+          .then((response: any) => {
             initialize()
             console.log('Form submitted successfully:', response);
           })
-          .catch(error => {
+          .catch((error: any) => {
             console.error('Error submitting form:', error);
           });
-        // Reset all fields after submit
         reset(); // Reset all fields after submit
         setDate(new Date());
         setOpenDatePicker({});

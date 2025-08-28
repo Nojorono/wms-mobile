@@ -8,7 +8,7 @@ import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
 import GlobalStyles from '../../../util/GlobalStyles.ts';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors.ts';
-import { PutAwayParamList } from '../../navigation/PutAwayNavigator.tsx';
+import { PutAwayParamList } from '../../navigation/inbound/PutAwayNavigator.tsx';
 
 type FormPutAwayRouteProp = RouteProp<PutAwayParamList, 'PutAwayAssign'>;
 type FormActivityProps = {

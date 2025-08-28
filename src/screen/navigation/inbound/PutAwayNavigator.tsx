@@ -1,8 +1,8 @@
 import { createStackNavigator } from '@react-navigation/stack';
-import Colors from '../../constants/Colors';
+import Colors from '../../../constants/Colors.ts';
 import { Image, View } from 'react-native';
 import React from 'react';
-import PutAwayScreen from '../page/putaway/PutAwayScreen.tsx';
+import PutAwayScreen from '../../page/putaway/PutAwayScreen.tsx';
 
 
 

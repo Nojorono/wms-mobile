@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import GlobalStyles from '../../../util/GlobalStyles.ts';
-import Colors from '../../../constants/Colors';
+import GlobalStyles from '../../../../util/GlobalStyles.ts';
+import Colors from '../../../../constants/Colors';
 import { RouteProp } from '@react-navigation/native';
-import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
+import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import {
   Camera,
@@ -20,13 +20,13 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera';
-import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
+import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { Controller, useForm } from 'react-hook-form';
-import useConstantStore from '../../../store/useConstantStore.ts';
+import useConstantStore from '../../../../store/useConstantStore.ts';
 import { Picker } from '@react-native-picker/picker';
-import ScanList from '../../../components/inbound/ScanList.tsx';
-import { useAuthStore } from '../../../store/useAuthStore.ts';
-import inboundServices from '../../../service/inboundServices.ts';
+import ScanList from '../../../../components/inbound/ScanList.tsx';
+import { useAuthStore } from '../../../../store/useAuthStore.ts';
+import inboundServices from '../../../../service/inboundServices.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundDetail'>;
 type FormActivityProps = {

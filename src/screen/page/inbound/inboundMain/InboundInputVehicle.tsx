@@ -9,17 +9,17 @@ import {
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { Controller, useForm } from 'react-hook-form';
-import Colors from '../../../constants/Colors';
-import { InboundParamList } from '../../navigation/InboundNavigator.tsx';
+import Colors from '../../../../constants/Colors';
+import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { StackNavigationProp } from '@react-navigation/stack';
-import GlobalStyles from '../../../util/GlobalStyles.ts';
+import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import { Picker } from '@react-native-picker/picker';
-import useConstantStore from '../../../store/useConstantStore.ts';
+import useConstantStore from '../../../../store/useConstantStore.ts';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import DatePicker from 'react-native-date-picker';
-import { useAuthStore } from '../../../store/useAuthStore.ts';
-import inboundServices from '../../../service/inboundServices.ts';
-import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
+import { useAuthStore } from '../../../../store/useAuthStore.ts';
+import inboundServices from '../../../../service/inboundServices.ts';
+import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 
 type FormInboundRouteProp = RouteProp<InboundParamList, 'InboundInputVehicle'>;
 type FormActivityProps = {

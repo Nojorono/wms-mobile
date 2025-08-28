@@ -4,8 +4,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Colors from "../../constants/Colors";
 import HomeStackNavigator, { HomeStackParamList } from "./HomeNavigator";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
-import InboundStackNavigator from './InboundNavigator.tsx';
-import PutAwayNavigator from "./PutAwayNavigator.tsx";
+import InboundStackNavigator from './inbound/InboundNavigator.tsx';
+import PutAwayNavigator from "./inbound/PutAwayNavigator.tsx";
 import OutboundNavigator from './OutboundNavigator.tsx';
 
 // Define the param list for MainTab

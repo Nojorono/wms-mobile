@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import useConstantStore from '../../../store/useConstantStore.ts';
 import { useLoadingDialogStore } from '../../../store/useLoadingStore.ts';
-import { PutAwayParamList } from '../../navigation/PutAwayNavigator.tsx';
+import { PutAwayParamList } from '../../navigation/inbound/PutAwayNavigator.tsx';
 import usePutAwayStore from '../../../store/usePutAwayStore.ts';
 import PutAwayService from '../../../service/putAwayService.ts';
 

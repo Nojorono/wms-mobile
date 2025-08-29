@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
-import Colors from '../../../../constants/Colors';
+import Colors from '../../../../constants/Colors.ts';
 import { RouteProp } from '@react-navigation/native';
 import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';

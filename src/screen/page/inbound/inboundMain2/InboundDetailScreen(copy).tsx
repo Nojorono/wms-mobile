@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useAuthStore } from '../../../../store/useAuthStore';
+import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
-import Colors from '../../../../constants/Colors';
+import Colors from '../../../../constants/Colors.ts';
 import { RouteProp } from '@react-navigation/native';
 import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { Picker } from '@react-native-picker/picker';

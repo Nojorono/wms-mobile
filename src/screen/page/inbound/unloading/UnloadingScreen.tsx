@@ -109,7 +109,7 @@ function UnloadingScreen() {
                   statusColor={statusColor}
                   role={item.role}
                   onClick={() => {
-                    // navigation.navigate('InboundCheck', { item });
+                    navigation.navigate('UnloadingVehicle', { item });
                   }}
                 />
               );

@@ -6,13 +6,13 @@ import Colors from '../../../../constants/Colors.ts';
 import InboundList from '../../../../components/inbound/InboundList.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
+import { UnloadingParamList } from '../../../navigation/inbound/UnloadingNavigator.tsx';
 
 
-type NavigationProp = StackNavigationProp<InboundParamList,'InboundMain'>;
+type NavigationProp = StackNavigationProp<UnloadingParamList,'UnloadingMain'>;
 
-function InboundScreen() {
+function UnloadingScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -71,24 +71,24 @@ function InboundScreen() {
               { borderBottomWidth: 2, borderBottomColor: '#ccc' },
             ]}
           >
-            <Text style={styles.activitiesHeaderText}>List Inbound Planning</Text>
+            <Text style={styles.activitiesHeaderText}>List Unloading</Text>
           </View>
             {[
               {
                 id: 1,
-                title: 'Inbound Shipment #001',
+                title: 'Unloading Shipment #001',
                 status: 'Pending',
                 role: 'Admin',
               },
               {
                 id: 2,
-                title: 'Inbound Shipment #002',
+                title: 'Unloading Shipment #002',
                 status: 'Completed',
                 role: 'Operator',
               },
               {
                 id: 3,
-                title: 'Inbound Shipment #003',
+                title: 'Unloading Shipment #003',
                 status: 'In Progress',
                 role: 'Supervisor',
               },
@@ -109,7 +109,7 @@ function InboundScreen() {
                   statusColor={statusColor}
                   role={item.role}
                   onClick={() => {
-                    navigation.navigate('InboundCheck', { item });
+                    // navigation.navigate('InboundCheck', { item });
                   }}
                 />
               );
@@ -120,4 +120,4 @@ function InboundScreen() {
   );
 }
 
-export default InboundScreen;
+export default UnloadingScreen;

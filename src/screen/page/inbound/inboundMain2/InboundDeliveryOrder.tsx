@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
-import Colors from '../../../../constants/Colors';
+import Colors from '../../../../constants/Colors.ts';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { StackNavigationProp } from '@react-navigation/stack';

@@ -16,7 +16,7 @@ type InboundListProps = {
 const InboundList: React.FC<InboundListProps> = ({
   title,
   status,
-  statusColor = '#E5FFF2',
+  statusColor = '#006834ff',
   onClick,
   role,
   client_name ='',
@@ -38,18 +38,19 @@ const InboundList: React.FC<InboundListProps> = ({
             {client_name && <Text style={styles.role}>{client_name}</Text>}
             {task_type && <Text style={styles.role}>{task_type}</Text>}
             {status && (
-              <View
+                <View
                 style={[
                   styles.statusBadge,
                   {
-                    marginTop: 10,
-                    backgroundColor: statusColor,
-                    alignSelf: 'flex-start',
+                  marginTop: 10,
+                  backgroundColor: statusColor,
+                  alignSelf: 'flex-start',
+                  borderRadius: 10,
                   },
                 ]}
-              >
+                >
                 <Text style={styles.statusText}>{status}</Text>
-              </View>
+                </View>
             )}
           </View>
         </View>
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   statusText: {
-    color: '#00994D',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 12,
   },

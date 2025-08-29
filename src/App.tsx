@@ -5,6 +5,7 @@ import { enableScreens } from 'react-native-screens';
 import GlobalDialog from './components/GlobalDialog';
 import LoadingDialog from './components/LoadingDialog';
 import AppNavigator from './AppNavigator';
+import "react-native-get-random-values";
 import { StatusBar, StyleSheet, View } from 'react-native';
 import Colors from './constants/Colors.ts';  // Your color constants file
 

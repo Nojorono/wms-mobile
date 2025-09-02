@@ -21,6 +21,7 @@ type PalletItem = {
 
 type SKUItem = {
   id: string;
+  typeInbound: string;
   skuNumber: string;
   uom: string;
   qtyPlan: string;
@@ -37,6 +38,7 @@ type FormValues = {
 /** helper factory */
 const makeNewSku = (): SKUItem => ({
   id: uuidv4(),
+  typeInbound: "",
   skuNumber: "",
   uom: "",
   qtyPlan: "900",
@@ -128,7 +130,7 @@ function SKUCard({
     <View style={styles.card}>
       {/* header */}
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>Inbound Detail</Text>
+        <Text style={styles.cardTitle}>Unloading Detail</Text>
 
         {/* delete card (only if > 1 card) */}
         <TouchableOpacity
@@ -139,6 +141,21 @@ function SKUCard({
           <Text style={styles.deleteText}>Delete</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Tyepe Inbound*/}
+      <Text style={styles.label}>Type Inbound</Text>
+      <Controller
+        control={control}
+        name={`skus.${cardIndex}.typeInbound`}
+        render={({ field: { value, onChange } }) => (
+          <TextInput
+            value={value}
+            onChangeText={onChange}
+            placeholder="Select / type SKU"
+            style={styles.input}
+          />
+        )}
+      />
 
       {/* SKU Number */}
       <Text style={styles.label}>SKU Number</Text>

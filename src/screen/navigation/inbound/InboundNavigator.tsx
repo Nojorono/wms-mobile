@@ -14,6 +14,7 @@ import InboundInputDO from '../../page/inbound/inboundMain2/InboundInputDO.tsx';
 import InboundCheck from '../../page/inbound/inboundMain/InboundCheck.tsx';
 import InboundAssign from '../../page/inbound/inboundMain/InboundAssign.tsx';
 import UnloadingNavigator from './UnloadingNavigator.tsx';
+import InspectionNavigator from './InspectionNavigator.tsx';
 
 
 
@@ -31,6 +32,7 @@ export type InboundParamList = {
   InboundCheck: { item: any };
   InboundAssign: {item:any}
   UnloadingNavigator: undefined;
+  InspectionNavigator: undefined;
 };
 
 const InboundStack = createStackNavigator<InboundParamList>();
@@ -166,6 +168,17 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="UnloadingNavigator"
       component={UnloadingNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="InspectionNavigator"
+      component={InspectionNavigator}
       options={{
         headerShown: false,
         headerTintColor: '#fff',

@@ -58,7 +58,7 @@ function InboundIndex() {
               <MenuCard title={'Inbound'} onPress={() => {navigationInbound.navigate("InboundMain")}}/>
               <MenuCard title={'Inbound Retur'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
               <MenuCard title={'Unloading'} onPress={() => {navigationInbound.navigate("UnloadingNavigator")}}/>
-              <MenuCard title={'Checking'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
+              <MenuCard title={'Inspection'} onPress={() => {navigationInbound.navigate("InspectionNavigator")}}/>
               <MenuCard title={'Put Away'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
               <MenuCard title={'History'} onPress={() => {navigationInbound.navigate("PutAwayNavigator")}}/>
             </View>

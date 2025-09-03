@@ -30,42 +30,69 @@ export default function InspectionDetail() {
 
   return (
     <View style={styles.container}>
-  
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Pallet Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Pallet ID</Text>
-          <Text style={styles.palletId}>PALLET - {palletId}</Text>
+      {/* Pallet Card */}
+      <View style={styles.card}>
+        <Text style={styles.cardLabel}>Pallet ID</Text>
+        <Text style={styles.palletId}>PALLET - {palletId}</Text>
 
-          {items.map((item, idx) => (
-            <View key={idx}>
-              <View style={styles.itemRow}>
-                <Icon name="checkbox-blank-outline" size={24} color="#FB923C" />
-                <Text style={styles.itemText}>{item.name}</Text>
-                <Text style={styles.qty}>{item.qty}</Text>
-              </View>
-
-              <Dropdown
-                style={styles.dropdown}
-                data={rejectionOptions}
-                labelField="label"
-                valueField="value"
-                placeholder="Rejection Status"
-                value={rejections[idx]}
-                onChange={(opt) =>
-                  setRejections({ ...rejections, [idx]: opt.value })
+        {items.map((item, idx) => {
+        const isChecked = rejections[idx] === "checked";
+        return (
+          <View key={idx}>
+          <View style={styles.itemRow}>
+            <TouchableOpacity
+            onPress={() => {
+              // Jika checkbox dicentang, dropdown hilang
+              setRejections((prev) => {
+                const updated = { ...prev };
+                if (prev[idx] === "checked") {
+                  delete updated[idx];
+                } else {
+                  updated[idx] = "checked";
                 }
-              />
-            </View>
-          ))}
-        </View>
+                return updated;
+              });
+            }}
+            >
+            <Icon
+              name={isChecked ? "checkbox-marked" : "checkbox-blank-outline"}
+              size={24}
+              color="#FB923C"
+            />
+            </TouchableOpacity>
+            <Text style={styles.itemText}>{item.name}</Text>
+            <Text style={styles.qty}>{item.qty}</Text>
+          </View>
 
-        {/* Save Button */}
-        <TouchableOpacity style={styles.saveBtn}>
-          <Icon name="content-save" size={20} color="#fff" />
-          <Text style={styles.saveText}>Save</Text>
-        </TouchableOpacity>
+          {/* Jika checkbox tidak dicentang, tampilkan dropdown */}
+          {!isChecked && (
+            <Dropdown
+            style={styles.dropdown}
+            data={rejectionOptions}
+            labelField="label"
+            valueField="value"
+            placeholder="Rejection Status"
+            value={rejections[idx] && rejections[idx] !== "checked" ? rejections[idx] : undefined}
+            onChange={(opt) =>
+              // Jika dropdown dipilih, checkbox tidak tercentang
+              setRejections((prev) => ({
+              ...prev,
+              [idx]: opt.value,
+              }))
+            }
+            />
+          )}
+          </View>
+        );
+        })}
+      </View>
+
+      {/* Save Button */}
+      <TouchableOpacity style={styles.saveBtn}>
+        <Icon name="content-save" size={20} color="#fff" />
+        <Text style={styles.saveText}>Save</Text>
+      </TouchableOpacity>
       </ScrollView>
     </View>
   );

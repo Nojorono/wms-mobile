@@ -6,12 +6,27 @@ import { InspectionParamList } from "../../../navigation/inbound/InspectionNavig
 
 
  type NavigationProp = StackNavigationProp<InspectionParamList,'InspectionMain'>;
+type PalletStatus = "not validate yet" | "validated" | "reject";
+
+const statusColors: Record<PalletStatus, string> = {
+  "not validate yet": "#F3F4F6",
+  validated: "#D1FAE5",
+  reject: "#FECACA",
+};
+
+const statusTextColors: Record<PalletStatus, string> = {
+  "not validate yet": "#6B7280",
+  validated: "#059669",
+  reject: "#DC2626",
+};
+
 export default function InspectionList() {
   const navigation = useNavigation<NavigationProp>();
 
-  const pallets = [
+  const pallets: { id: number; status: PalletStatus; items: { name: string; qty: number }[] }[] = [
     {
       id: 1,
+      status: "not validate yet",
       items: [
         { name: "Aroma 12’s", qty: 11 },
         { name: "Aroma Royal Tea 16’s", qty: 9 },
@@ -19,10 +34,12 @@ export default function InspectionList() {
     },
     {
       id: 2,
+      status: "validated",
       items: [{ name: "Aroma Royal Tea 16’s", qty: 20 }],
     },
     {
       id: 3,
+      status: "reject",
       items: [
         { name: "Aroma Royal Tea 16’s", qty: 11 },
         { name: "Aroma Slim 16’s", qty: 9 },
@@ -62,6 +79,23 @@ export default function InspectionList() {
               </TouchableOpacity>
             </View>
 
+            {/* Status Badge */}
+            <View
+              style={{
+                backgroundColor: statusColors[pallet.status],
+                borderRadius: 8,
+                alignSelf: "flex-start",
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                marginTop: 8,
+                marginBottom: 4,
+              }}
+            >
+              <Text style={{ color: statusTextColors[pallet.status], fontWeight: "600" }}>
+                {pallet.status}
+              </Text>
+            </View>
+
             {pallet.items.map((item, idx) => (
               <View key={idx} style={styles.itemRow}>
                 <Text style={styles.itemName}>{item.name}</Text>
@@ -72,7 +106,13 @@ export default function InspectionList() {
         ))}
 
         {/* Approve Button */}
-        <TouchableOpacity style={styles.approveButton}>
+        <TouchableOpacity
+          style={[
+            styles.approveButton,
+            pallets.some(pallet => pallet.status === "not validate yet") && { backgroundColor: "#D1D5DB" }
+          ]}
+          disabled={pallets.some(pallet => pallet.status === "not validate yet")}
+        >
           <Text style={styles.approveText}>Approve</Text>
         </TouchableOpacity>
       </ScrollView>

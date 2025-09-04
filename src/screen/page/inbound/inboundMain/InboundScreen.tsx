@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
+import InboundCard from '../../../../components/inbound/InboundListCard.tsx';
 
 
 type NavigationProp = StackNavigationProp<InboundParamList,'InboundMain'>;
@@ -75,43 +76,49 @@ function InboundScreen() {
           </View>
             {[
               {
-                id: 1,
-                title: 'Inbound Shipment #001',
-                status: 'Pending',
-                role: 'Admin',
+              id: 1,
+              code: 'CWH02-IN-0625-0001',
+              plate: 'K 9985 AT',
+              date: '2025-01-02',
+              role: 'Admin',
+              status: 'Pending',
               },
               {
-                id: 2,
-                title: 'Inbound Shipment #002',
-                status: 'Completed',
-                role: 'Operator',
+              id: 2,
+              code: 'CWH02-IN-0625-0002',
+              plate: 'B 1234 XY',
+              date: '2025-01-03',
+              role: 'Operator',
+              status: 'Completed',
               },
               {
-                id: 3,
-                title: 'Inbound Shipment #003',
-                status: 'In Progress',
-                role: 'Supervisor',
+              id: 3,
+              code: 'CWH02-IN-0625-0003',
+              plate: 'D 5678 ZZ',
+              date: '2025-01-04',
+              role: 'Supervisor',
+              status: 'In Progress',
               },
             ].map((item: any) => {
               let statusColor;
-                if (item.status === 'Completed') {
-                statusColor = '#228B22'; // dark green
-                } else if (item.status === 'In Progress') {
-                statusColor = '#FFB347'; // pastel orange
-                } else {
-                statusColor = '#696969'; // dark gray
-                }
+              if (item.status === 'Completed') {
+              statusColor = '#228B22'; // dark green
+              } else if (item.status === 'In Progress') {
+              statusColor = '#FFB347'; // pastel orange
+              } else {
+              statusColor = '#696969'; // dark gray
+              }
               return (
-                <InboundList
-                  key={item.id}
-                  title={item.title}
-                  status={item.status}
-                  statusColor={statusColor}
-                  role={item.role}
-                  onClick={() => {
-                    navigation.navigate('InboundCheck', { item });
-                  }}
-                />
+              <InboundCard
+                key={item.id}
+                code={item.code}
+                plate={item.plate}
+                date={item.date}
+                role={item.role}
+                status={item.status}
+                statusColor={statusColor}
+                onClick={() => console.log(`Card ${item.id} clicked!`)}
+              />
               );
             })}
         </View>

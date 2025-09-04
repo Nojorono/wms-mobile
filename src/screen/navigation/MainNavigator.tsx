@@ -28,8 +28,11 @@ const MainNavigator = () => (
       // Get the name of the currently focused route in nested navigator
       const routeName = getFocusedRouteNameFromRoute(route) ?? '';
 
-      // Determine if tab bar should be hidden
-      const hideTabBar = routeName === 'InboundVehicle' || routeName === 'InboundDetail' || routeName === 'InboundInputVehicle' || routeName === 'InboundDeliveryOrder';
+      // Hide tab bar if inside InboundStack (except index)
+      const hideTabBar =
+        route.name === 'Inbound' &&
+        routeName &&
+        routeName !== 'InboundIndex';
 
       return {
         tabBarIcon: ({ color, size }) => {

@@ -19,11 +19,6 @@ export type InboundParamList = {
   InboundIndex: undefined;
   PutAwayNavigator: undefined;
   InboundMain: undefined;
-  InboundInputDO: { item:any, mode:any, initialValues:any };
-  InboundDeliveryOrder: { item: any, vehicle:any };
-  InboundInputVehicle:{ item:any, mode:any, initialValues:any };
-  InboundVehicle: { item: any };
-  InboundDetail: { item: any; vehicle: any, doItem: any };
   //NEW WMS
   InboundCheck: { item: any };
   InboundAssign: {item:any}

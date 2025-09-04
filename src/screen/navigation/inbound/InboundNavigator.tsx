@@ -6,11 +6,6 @@ import InboundScreen from '../../page/inbound/inboundMain/InboundScreen.tsx';
 
 import InboundIndex from '../../page/Inbound.tsx';
 import PutAwayNavigator from './PutAwayNavigator.tsx';
-import InboundVehicleScreen from '../../page/inbound/inboundMain2/InboundVehicleScreen.tsx';
-import InboundDeliveryOrder from '../../page/inbound/inboundMain2/InboundDeliveryOrder.tsx';
-import InboundDetailScreen from '../../page/inbound/inboundMain2/InboundDetailScreen.tsx';
-import InboundInputVehicle from '../../page/inbound/inboundMain2/InboundInputVehicle.tsx';
-import InboundInputDO from '../../page/inbound/inboundMain2/InboundInputDO.tsx';
 import InboundCheck from '../../page/inbound/inboundMain/InboundCheck.tsx';
 import InboundAssign from '../../page/inbound/inboundMain/InboundAssign.tsx';
 import UnloadingNavigator from './UnloadingNavigator.tsx';
@@ -83,61 +78,6 @@ const InboundStackNavigator = () => (
       component={PutAwayNavigator}
       options={{
         headerShown: false,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <InboundStack.Screen
-      name="InboundVehicle"
-      component={InboundVehicleScreen}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <InboundStack.Screen
-      name="InboundDeliveryOrder"
-      component={InboundDeliveryOrder}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <InboundStack.Screen
-      name="InboundDetail"
-      component={InboundDetailScreen}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <InboundStack.Screen
-      name="InboundInputVehicle"
-      component={InboundInputVehicle}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <InboundStack.Screen
-      name="InboundInputDO"
-      component={InboundInputDO}
-      options={{
-        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,

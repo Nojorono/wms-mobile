@@ -1,10 +1,11 @@
 import axiosInstance from '../config/axiosInstance.ts';
+import { InboundMainResponse } from '../interface/inbound/inboundMainInterface.ts';
 
 
 class InboundServices {
-  static async getInboundList(userId:string): Promise<any> {
+  static async getInboundList(): Promise<InboundMainResponse> {
     try {
-      const response = await axiosInstance.get('checker-assign/user/' + userId);
+      const response = await axiosInstance.get('inbound');
       return response.data;
     } catch (error: any) {
       console.error('Inbound failed:', error);

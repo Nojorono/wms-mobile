@@ -36,7 +36,7 @@ const InboundCard: React.FC<InboundCardProps> = ({
 
       {/* Middle: Icon + Info */}
       <View style={styles.infoRow}>
-        <Ionicons name="cube-outline" size={28} color="black" />
+        <Ionicons name="cube-outline" size={58} color="black" />
         <View style={{ marginLeft: 8 }}>
           <Text style={styles.plate}>{plate}</Text>
           <Text style={styles.date}>{date}</Text>

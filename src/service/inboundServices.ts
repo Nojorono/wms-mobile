@@ -5,7 +5,7 @@ import { InboundMainResponse } from '../interface/inbound/inboundMainInterface.t
 class InboundServices {
   static async getInboundList(): Promise<InboundMainResponse> {
     try {
-      const response = await axiosInstance.get('inbound');
+      const response = await axiosInstance.get('inbound', { params: { status: 'CREATED' } });
       return response.data;
     } catch (error: any) {
       console.error('Inbound failed:', error);

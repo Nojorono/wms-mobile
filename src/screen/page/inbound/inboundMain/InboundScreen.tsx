@@ -21,38 +21,38 @@ function InboundScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
-  // const fetchInbound = async () => {
-  //   try {
-  //     setRefreshing(true);
-  //     showLoadingDialog("Loading List Inbound Planning")
-  //     const response = await InboundServices.getInboundList();
-  //     setInboundList(response?.data|| []);
-  //     console.log('Inbound data fetched successfully:', response?.data);
-  //   } catch (error) {
-  //     hideLoadingDialog()
-  //     console.error('Error fetching inbound data:', error);
-  //     Alert.alert(
-  //       'Error',
-  //       'Failed to fetch inbound data. Please check your connection and try again.',
-  //       [{ text: 'OK' }]
-  //     );
-  //   } finally {
-  //     hideLoadingDialog()
-  //     setRefreshing(false);
-  //   }
-  // }
+  const fetchInbound = async () => {
+    try {
+      setRefreshing(true);
+      showLoadingDialog("Loading List Inbound Planning")
+      const response = await InboundServices.getInboundList();
+      setInboundList(response?.data|| []);
+      console.log('Inbound data fetched successfully:', response.data);
+    } catch (error) {
+      hideLoadingDialog()
+      console.error('Error fetching inbound data:', error);
+      Alert.alert(
+        'Error',
+        'Failed to fetch inbound data. Please check your connection and try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      hideLoadingDialog()
+      setRefreshing(false);
+    }
+  }
 
 
-  // useEffect(() => {
-  //   const initialize = async () => {
-  //     try {
-  //       await fetchInbound()
-  //     } catch (error) {
-  //       console.error('Initialization error:', error);
-  //     }
-  //   };
-  //   initialize();
-  // },[])
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await fetchInbound()
+      } catch (error) {
+        console.error('Initialization error:', error);
+      }
+    };
+    initialize();
+  },[])
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -64,7 +64,7 @@ function InboundScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={()=> {
-              // fetchInbound()
+              fetchInbound()
             }}
             colors={[Colors.primeColor]}
           />
@@ -79,38 +79,9 @@ function InboundScreen() {
           >
             <Text style={styles.activitiesHeaderText}>List Inbound Planning</Text>
           </View>
-            {[
-            {
-              id: 1,
-              inbound_number: 'INB-001',
-              license_plate: 'B 1234 XYZ',
-              arrival_date: '2024-06-01',
-              status: 'Completed',
-            },
-            {
-              id: 2,
-              inbound_number: 'INB-002',
-              license_plate: 'B 5678 ABC',
-              arrival_date: '2024-06-02',
-              status: 'In Progress',
-            },
-            {
-              id: 3,
-              inbound_number: 'INB-003',
-              license_plate: 'B 9101 DEF',
-              arrival_date: '2024-06-03',
-              status: 'Pending',
-            },
-            {
-              id: 4,
-              inbound_number: 'INB-004',
-              license_plate: 'B 1121 GHI',
-              arrival_date: '2024-06-04',
-              status: 'Completed',
-            },
-            ].map((item: any) => {
+          {inboundList.map((item: any) => {
             let statusColor;
-            if (item.status === 'Completed') {
+            if (item.status === 'CREATED') {
               statusColor = '#228B22';
             } else if (item.status === 'In Progress') {
               statusColor = '#FFB347';

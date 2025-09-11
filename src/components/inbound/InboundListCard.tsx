@@ -108,6 +108,6 @@ const styles = StyleSheet.create({
     statusText: {
         fontSize: 16, // lebih besar
         fontWeight: "500",
-        color: "#333",
+        color: "#fff",
     },
 });

@@ -12,6 +12,17 @@ class InboundServices {
       throw error.response;
     }
   }
+
+    static async getInboundDetail(inboundId:string): Promise<any> {
+    try {
+      const response = await axiosInstance.get('inbound/' + inboundId);
+      return response.data;
+    } catch (error: any) {
+      console.error('get transporter list failed:', error);
+      throw error.response;
+    }
+  }
+  
   static async getTransporterList(inboundId:string): Promise<any> {
     try {
       const response = await axiosInstance.get('inbound-transporter/' + inboundId);

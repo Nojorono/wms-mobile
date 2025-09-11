@@ -12,6 +12,7 @@ import UnloadingNavigator from './UnloadingNavigator.tsx';
 import InspectionNavigator from './InspectionNavigator.tsx';
 import GoodReceiveNavigator from './GoodReceiveNavigator.tsx';
 import InboundDetail from '../../page/inbound/inboundMain/InboundDetail.tsx';
+import CheckerScreen from '../../page/inbound/inboundMain/checker/CheckerScreen.tsx';
 
 
 
@@ -23,6 +24,7 @@ export type InboundParamList = {
   //NEW WMS
   InboundCheck: { item: any };
   InboundDetail: { item: any };
+  CheckerScreen: { item: any };
   InboundAssign: {item:any}
   UnloadingNavigator: undefined;
   InspectionNavigator: undefined;
@@ -85,6 +87,17 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="InboundDetail"
       component={InboundDetail}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="CheckerScreen"
+      component={CheckerScreen}
       options={{
         headerShown: true,
         headerTintColor: '#fff',

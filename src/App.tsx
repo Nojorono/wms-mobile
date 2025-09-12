@@ -8,6 +8,7 @@ import AppNavigator from './AppNavigator';
 import "react-native-get-random-values";
 import { StatusBar, StyleSheet, View } from 'react-native';
 import Colors from './constants/Colors.ts';  // Your color constants file
+import GlobalConfirmation from './components/GlobalConfirmation.tsx';
 
 // Enable screens for better performance with navigation
 enableScreens();
@@ -17,6 +18,7 @@ const Main = () => {
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeAreaBackground}>
         <NavigationContainer theme={DefaultTheme}>
+          <GlobalConfirmation />
           <GlobalDialog />
           <LoadingDialog />
           <AppNavigator />

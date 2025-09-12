@@ -28,6 +28,7 @@ export default function HelperListScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingHelper, setEditingHelper] = useState<any | null>(null);
   const [dataHelper, setDataHelper] = useState<any[]>([]);
+  
 
   const fetchInbound = async () => {
     try {
@@ -146,25 +147,26 @@ export default function HelperListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FDFCFB", padding: 16 },
-  header: {
-    backgroundColor: "white",
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  headerTitle: { fontSize: 18, color: "#6B7280" },
-  headerNumber: { fontSize: 22, fontWeight: "700", marginTop: 4 },
-  vehicle: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginTop: 8,
-    color: "#DC2626",
-    textAlign: "center",
-  },
+header: {
+        backgroundColor: "white",
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 12,
+        shadowColor: "#000",
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+        alignItems: "center", // Center content horizontally
+    },
+    headerTitle: { fontSize: 18, color: "#6B7280", textAlign: "center" },
+    headerNumber: { fontSize: 22, fontWeight: "700", marginTop: 4, textAlign: "center" },
+    vehicle: {
+        fontSize: 20,
+        fontWeight: "600",
+        marginTop: 8,
+        color: "#DC2626",
+        textAlign: "center",
+    },
   sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 8 },
   card: {
     backgroundColor: "#fff",

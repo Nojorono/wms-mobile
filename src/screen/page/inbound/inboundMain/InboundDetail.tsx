@@ -15,6 +15,7 @@ import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import InboundServices from "../../../../service/inboundServices";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { InboundParamList } from "../../../navigation/inbound/InboundNavigator";
+import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 
 /* ========================
    1. Type & Merge Function
@@ -111,20 +112,38 @@ export default function InboundDetail() {
             inbound_number: string;
             license_plate: string;
             inbound_dos: InboundDo[];
+            status: string;
         };
     };
 
-type NavigationPropInbound = StackNavigationProp<InboundParamList,'InboundMain'>;
-const navigationInbound = useNavigation<NavigationPropInbound>();
+    type NavigationPropInbound = StackNavigationProp<InboundParamList, 'InboundMain'>;
+    const navigationInbound = useNavigation<NavigationPropInbound>();
     const route = useRoute();
     const payload = route.params as InboundDetailRouteParams;
     const [mergedData, setMergedData] = useState<(Omit<InboundDo, 'inbound_items'> & { inbound_items: InboundItemWithPo[] })[]>([]);
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+    const [status, setStatus] = useState<string>(payload.item ? payload.item.status : ''); // Inisialisasi status dari payload
 
-    const fetchInbound = async () => {
+    const confirm = useConfirmationStore();
+
+    const handleAccept = () => {
+        confirm.show("accept", "Are you sure to approve this?", () => {
+            console.log("✅ Hit API accept");
+            // fetch(API_ACCEPT)
+        });
+    };
+
+    const handleDecline = () => {
+        confirm.show("decline", "Are you sure to decline this?", (reason) => {
+            console.log("❌ Hit API decline dengan alasan:", payload.item.id);
+            // fetch(API_DELETE, { reason })
+        });
+    };
+    const fetchInboundById = async () => {
         try {
             showLoadingDialog("Loading List Inbound Planning")
             const response = await InboundServices.getInboundDetail(payload.item.id);
+            setStatus(response.data.status); // Update status dari response
             const inbound_dos = response.data.inbound_dos;
             setMergedData(mergeInboundDos(inbound_dos));
         } catch (error) {
@@ -144,7 +163,7 @@ const navigationInbound = useNavigation<NavigationPropInbound>();
     useEffect(() => {
         const initialize = async () => {
             try {
-                await fetchInbound()
+                await fetchInboundById()
             } catch (error) {
                 console.error('Initialization error:', error);
             }
@@ -175,7 +194,7 @@ const navigationInbound = useNavigation<NavigationPropInbound>();
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginVertical: 20 }}>
-                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("CheckerScreen",{item:payload.item})}>
+                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("CheckerScreen", { item: payload.item })}>
                     <Ionicons name="user-friends" size={28} color="#059669" />
                     <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Helper List</Text>
                 </TouchableOpacity>
@@ -237,14 +256,16 @@ const navigationInbound = useNavigation<NavigationPropInbound>();
                     );
                 }}
             />
-            <View style={styles.actions}>
-                <TouchableOpacity style={styles.declineBtn}>
-                    <Text style={styles.declineText}>Decline</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.approveBtn}>
-                    <Text style={styles.approveText}>Approve</Text>
-                </TouchableOpacity>
-            </View>
+            {status === "CREATED" && (
+                <View style={styles.actions}>
+                    <TouchableOpacity style={styles.declineBtn} onPress={handleDecline}>
+                        <Text style={styles.declineText}>Decline</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.approveBtn} onPress={handleAccept}>
+                        <Text style={styles.approveText}>Approve</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </SafeAreaView>
     );
 }
@@ -260,9 +281,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
+        alignItems: "center", // Center content horizontally
     },
-    headerTitle: { fontSize: 18, color: "#6B7280" },
-    headerNumber: { fontSize: 22, fontWeight: "700", marginTop: 4 },
+    headerTitle: { fontSize: 18, color: "#6B7280", textAlign: "center" },
+    headerNumber: { fontSize: 22, fontWeight: "700", marginTop: 4, textAlign: "center" },
     vehicle: {
         fontSize: 20,
         fontWeight: "600",

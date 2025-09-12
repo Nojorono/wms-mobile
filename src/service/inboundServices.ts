@@ -1,4 +1,5 @@
 import axiosInstance from '../config/axiosInstance.ts';
+import { HelperInterface } from '../interface/inbound/HelperInterface.ts';
 import { InboundMainResponse } from '../interface/inbound/inboundMainInterface.ts';
 
 
@@ -18,11 +19,42 @@ class InboundServices {
       const response = await axiosInstance.get('inbound/' + inboundId);
       return response.data;
     } catch (error: any) {
-      console.error('get transporter list failed:', error);
+      console.error('get Inbound list failed:', error);
       throw error.response;
     }
   }
-  
+
+  static async getHelperList(inboundId:string): Promise<any> {
+    try {
+      const response = await axiosInstance.get('assigned-helper', { params: { inboundId } });
+      return response.data;
+    } catch (error: any) {
+      console.error('get helper list failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async postHelper(data:any): Promise<any> {
+    try {
+      const response = await axiosInstance.post('assigned-helper', data );
+      return response.data;
+    } catch (error: any) {
+      console.error('post helper failed:', error);
+      throw error.response;
+    }
+  }
+
+   static async updateHelper(helperId:string, data:any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch('assigned-helper/'+ helperId , data );
+      return response.data;
+    } catch (error: any) {
+      console.error('update helper failed:', error);
+      throw error.response;
+    }
+  }
+
+
   static async getTransporterList(inboundId:string): Promise<any> {
     try {
       const response = await axiosInstance.get('inbound-transporter/' + inboundId);
@@ -75,7 +107,7 @@ class InboundServices {
     }
   }
 
-  static async getInboundDeliveryOrder(idInboundPlan:any): Promise<any> {
+  static async getInboundDeliveryOrder(idInboundPlan:any): Promise<HelperInterface> {
     try {
       const response = await axiosInstance.get('inbound-delivery-order/'+idInboundPlan);
 

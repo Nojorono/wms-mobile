@@ -118,8 +118,6 @@ type NavigationPropInbound = StackNavigationProp<InboundParamList,'InboundMain'>
 const navigationInbound = useNavigation<NavigationPropInbound>();
     const route = useRoute();
     const payload = route.params as InboundDetailRouteParams;
-    // const inbound_dos = payload.item.inbound_dos;
-    // const mergedData = mergeInboundDos(inbound_dos);
     const [mergedData, setMergedData] = useState<(Omit<InboundDo, 'inbound_items'> & { inbound_items: InboundItemWithPo[] })[]>([]);
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 

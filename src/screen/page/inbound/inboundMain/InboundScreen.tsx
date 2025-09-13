@@ -10,6 +10,7 @@ import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.t
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import InboundCard from '../../../../components/inbound/InboundListCard.tsx';
 import InboundServices from '../../../../service/inboundServices.ts';
+import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 
 type NavigationProp = StackNavigationProp<InboundParamList,'InboundMain'>;
 
@@ -20,6 +21,7 @@ function InboundScreen() {
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+  const showDialog = useDialogStore((state) => state.showDialog);
 
   const fetchInbound = async () => {
     try {
@@ -30,12 +32,7 @@ function InboundScreen() {
       console.log('Inbound data fetched successfully:', response.data);
     } catch (error) {
       hideLoadingDialog()
-      console.error('Error fetching inbound data:', error);
-      Alert.alert(
-        'Error',
-        'Failed to fetch inbound data. Please check your connection and try again.',
-        [{ text: 'OK' }]
-      );
+      showDialog("error", "Error while Fetching Data Inbound!");
     } finally {
       hideLoadingDialog()
       setRefreshing(false);

@@ -16,9 +16,9 @@ function mapMergedToItem(merged: MergedItem): any {
   return {
     inbound_id: merged.inbound_id,
     id: merged.item_id,
-    name: merged.item_id, // ganti dengan nama sebenarnya kalau punya data master
+    name: merged.item_id, 
     quantityPlan: merged.quantity,
-    quantityScan: 0, // default
+    quantityScan: 0, 
   };
 }
 
@@ -31,7 +31,6 @@ const UnloadingScreen = () => {
       license_plate: string;
       inbound_type: string;
       status: string;
-      // inbound_dos: InboundDo[];
     };
   };
 
@@ -54,7 +53,6 @@ const UnloadingScreen = () => {
       const response = await InboundServices.getInboundDetail(payload.item.id);
       const inbound_dos = response.data.inbound_dos;
       setMergedData(mergeUnloadingData(inbound_dos));
-      console.log("merged:", mergeUnloadingData(inbound_dos));
     } catch (error) {
       hideLoadingDialog()
       console.error('Error fetching inbound data:', error);

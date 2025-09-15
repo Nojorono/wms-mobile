@@ -4,9 +4,9 @@ import { InboundMainResponse } from '../interface/inbound/inboundMainInterface.t
 
 
 class InboundServices {
-  static async getInboundList(): Promise<InboundMainResponse> {
+  static async getInboundList(statusInput: string): Promise<InboundMainResponse> {
     try {
-      const response = await axiosInstance.get('inbound', { params: { status: 'CREATED' } });
+      const response = await axiosInstance.get('inbound', { params: { status: statusInput } });
       return response.data;
     } catch (error: any) {
       console.error('Inbound failed:', error);
@@ -14,7 +14,7 @@ class InboundServices {
     }
   }
 
-    static async getInboundDetail(inboundId:string): Promise<any> {
+  static async getInboundDetail(inboundId: string): Promise<any> {
     try {
       const response = await axiosInstance.get('inbound/' + inboundId);
       return response.data;
@@ -24,9 +24,19 @@ class InboundServices {
     }
   }
 
-  static async getHelperList(inboundId:string): Promise<any> {
+  static async updateStatusInbound(inboundId: string, data: any): Promise<any> {
     try {
-      const response = await axiosInstance.get('assigned-helper', { params: { inboundId } });
+      const response = await axiosInstance.patch('inbound/' + inboundId + '/status', data);
+      return response.data;
+    } catch (error: any) {
+      console.error('get Inbound list failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async getHelperList(inboundId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get('assigned-helper', { params: { inbound_id: inboundId } });
       return response.data;
     } catch (error: any) {
       console.error('get helper list failed:', error);
@@ -34,9 +44,9 @@ class InboundServices {
     }
   }
 
-  static async postHelper(data:any): Promise<any> {
+  static async postHelper(data: any): Promise<any> {
     try {
-      const response = await axiosInstance.post('assigned-helper', data );
+      const response = await axiosInstance.post('assigned-helper', data);
       return response.data;
     } catch (error: any) {
       console.error('post helper failed:', error);
@@ -44,9 +54,9 @@ class InboundServices {
     }
   }
 
-   static async updateHelper(helperId:string, data:any): Promise<any> {
+  static async updateHelper(helperId: string, data: any): Promise<any> {
     try {
-      const response = await axiosInstance.patch('assigned-helper/'+ helperId , data );
+      const response = await axiosInstance.patch('assigned-helper/' + helperId, data);
       return response.data;
     } catch (error: any) {
       console.error('update helper failed:', error);
@@ -54,90 +64,16 @@ class InboundServices {
     }
   }
 
-
-  static async getTransporterList(inboundId:string): Promise<any> {
+  //UNLOADING SERVICES
+  static async getUnloadingList(inboundId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('inbound-transporter/' + inboundId);
+      const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId } });
       return response.data;
     } catch (error: any) {
-      console.error('get transporter list failed:', error);
+      console.error('Unloading failed:', error);
       throw error.response;
     }
   }
-
-  static async postInboundTransporter(data:any): Promise<any> {
-    try {
-      const response = await axiosInstance.post('inbound-transporter',data);
-      return response.data;
-    } catch (error: any) {
-      console.error('get transporter list failed:', error);
-      throw error.response;
-    }
-  }
-
-  static async updateInboundTransporter(idTransporter:any,data:any): Promise<any> {
-    try {
-      const response = await axiosInstance.patch('inbound-transporter/'+idTransporter,data);
-      return response.data;
-    } catch (error: any) {
-      console.error('get transporter list failed:', error);
-      throw error.response;
-    }
-  }
-
-  static async getListInboundScanning(idInboundPlan:any): Promise<any> {
-    try {
-      const response = await axiosInstance.get('checker-scanning/inbound-plan/'+idInboundPlan);
-
-      return response.data;
-    } catch (error: any) {
-      console.error('get List inbound Scanning failed:', error);
-      throw error.response;
-    }
-  }
-
-  static async scanInboundDetail(data:any): Promise<any> {
-    try {
-      const response = await axiosInstance.post('/checker-scanning',data);
-
-      return response.data;
-    } catch (error: any) {
-      console.error('post scan inbound failed:', error);
-      throw error.response;
-    }
-  }
-
-  static async getInboundDeliveryOrder(idInboundPlan:any): Promise<HelperInterface> {
-    try {
-      const response = await axiosInstance.get('inbound-delivery-order/'+idInboundPlan);
-
-      return response.data;
-    } catch (error: any) {
-      console.error('get inbound delivery order failed:', error);
-      throw error.response;
-    }
-  }
-
-  static async postInboundDeliveryOrder(data:any): Promise<any> {
-    try {
-      const response = await axiosInstance.post('inbound-delivery-order',data);
-      return response.data;
-    } catch (error: any) {
-      console.error('get transporter list failed:', error);
-      throw error.response;
-    }
-  }
-
-  static async updateInboundDeliveryOrder(idDeliveryOrder:any,data:any): Promise<any> {
-    try {
-      const response = await axiosInstance.patch('inbound-delivery-order/'+idDeliveryOrder,data);
-      return response.data;
-    } catch (error: any) {
-      console.error('get transporter list failed:', error);
-      throw error.response;
-    }
-  }
-
 }
 
 export default InboundServices;

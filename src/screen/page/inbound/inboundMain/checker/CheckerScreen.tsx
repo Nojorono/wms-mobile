@@ -33,7 +33,9 @@ export default function HelperListScreen() {
   const fetchInbound = async () => {
     try {
       showLoadingDialog("Loading List Checkers");
+      console.log("Fetching checker list for inbound ID:", payload.item.id);
       const response = await InboundServices.getHelperList(payload.item.id);
+      console.log("Checker list data fetched successfully:", response?.data);
       setDataHelper(response?.data || []);
     } catch (error) {
       console.error("Error fetching checker list data:", error);

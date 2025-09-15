@@ -16,6 +16,7 @@ import InboundServices from "../../../../service/inboundServices";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { InboundParamList } from "../../../navigation/inbound/InboundNavigator";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
+import { useDialogStore } from "../../../../store/useGlobalDialog";
 
 /* ========================
    1. Type & Merge Function
@@ -123,20 +124,30 @@ export default function InboundDetail() {
     const [mergedData, setMergedData] = useState<(Omit<InboundDo, 'inbound_items'> & { inbound_items: InboundItemWithPo[] })[]>([]);
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const [status, setStatus] = useState<string>(payload.item ? payload.item.status : ''); // Inisialisasi status dari payload
-
+    const showDialog = useDialogStore((state) => state.showDialog);
     const confirm = useConfirmationStore();
 
     const handleAccept = () => {
-        confirm.show("accept", "Are you sure to approve this?", () => {
-            console.log("✅ Hit API accept");
-            // fetch(API_ACCEPT)
+        confirm.show("accept", "Are you sure to approve this?", async () => {
+            try {
+                await InboundServices.updateStatusInbound(payload.item.id, { status: 'UNLOADING' });
+                navigationInbound.navigate("CheckerScreen", { item: payload.item });
+            } catch (error) {
+                console.error('Error Accepting inbound:', error);
+                showDialog('error', 'Error while Accepting Inbound!' + error);
+            }
         });
     };
 
     const handleDecline = () => {
-        confirm.show("decline", "Are you sure to decline this?", (reason) => {
-            console.log("❌ Hit API decline dengan alasan:", payload.item.id);
-            // fetch(API_DELETE, { reason })
+        confirm.show("decline", "Are you sure to decline this?", async (reason) => {
+            try {
+                await InboundServices.updateStatusInbound(payload.item.id, { status: 'WAITING FOR REVISION', notes:reason });
+                navigationInbound.goBack();
+            } catch (error) {
+                console.error('Error Declining inbound:', error);
+                showDialog('error', 'Error while Declining Inbound!');
+            }
         });
     };
     const fetchInboundById = async () => {

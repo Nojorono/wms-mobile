@@ -19,8 +19,9 @@ import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import InboundCard from '../../../../components/inbound/InboundListCard.tsx';
 import InboundServices from '../../../../service/inboundServices.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
+import { UnloadingParamList } from '../../../navigation/inbound/UnloadingNavigator.tsx';
 
-type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
+type NavigationProp = StackNavigationProp<UnloadingParamList, 'UnloadingMain'>;
 
 const FILTER_OPTIONS = [
   'UNLOADING',
@@ -169,7 +170,7 @@ useEffect(() => {
                 role={'Warehouse Staff'}
                 status={item.status}
                 statusColor={statusColor}
-                onClick={() => navigation.navigate('InboundDetail', { item })}
+                onClick={() => navigation.navigate('UnloadingDetail', { item })}
               />
             );
           })}

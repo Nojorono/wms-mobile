@@ -65,9 +65,9 @@ class InboundServices {
   }
 
   //UNLOADING SERVICES
-  static async getUnloadingList(): Promise<InboundMainResponse> {
+  static async getUnloadingList(inboundId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('inbound', { params: { status: 'UNLOADING' } });
+      const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId } });
       return response.data;
     } catch (error: any) {
       console.error('Unloading failed:', error);

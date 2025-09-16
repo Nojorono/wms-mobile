@@ -3,7 +3,6 @@ import Colors from '../../../constants/Colors.ts';
 import { Image, View } from 'react-native';
 import React from 'react';
 import UnloadingScreen from '../../page/inbound/unloading/UnloadingScreen.tsx';
-import UnloadingVehicleScreen from '../../page/inbound/unloading/UnloadingVehicle.tsx';
 import UnloadingDetailScreen from '../../page/inbound/unloading/UnloadingDetail.tsx';
 import UnloadingScan from '../../page/inbound/unloading/UnloadingScan.tsx';
 import UnloadingScanScreen from '../../page/inbound/unloading/UnloadingScan.tsx';
@@ -34,17 +33,6 @@ const UnloadingStackNavigator = () => (
           elevation: 0, // Remove shadow on Android
           shadowOpacity: 0, // Remove shadow on iOS
           borderBottomWidth: 0, // Remove any border
-        },
-      }}
-    />
-    <UnloadingStack.Screen
-      name="UnloadingVehicle"
-      component={UnloadingVehicleScreen}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
         },
       }}
     />

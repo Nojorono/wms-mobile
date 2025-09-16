@@ -28,17 +28,14 @@ export default function HelperListScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingHelper, setEditingHelper] = useState<any | null>(null);
   const [dataHelper, setDataHelper] = useState<any[]>([]);
-  
 
   const fetchInbound = async () => {
     try {
-      showLoadingDialog("Loading List Checkers");
-      console.log("Fetching checker list for inbound ID:", payload.item.id);
+      showLoadingDialog("Loading List Helpers");
       const response = await InboundServices.getHelperList(payload.item.id);
-      console.log("Checker list data fetched successfully:", response?.data);
       setDataHelper(response?.data || []);
     } catch (error) {
-      console.error("Error fetching checker list data:", error);
+      console.error("Error fetching helper list data:", error);
     } finally {
       hideLoadingDialog();
     }
@@ -48,7 +45,7 @@ export default function HelperListScreen() {
     fetchInbound();
   }, []);
 
-  // 🔑 Auto refresh ketika modal ditutup
+  // Refresh saat modal ditutup
   useEffect(() => {
     if (!modalVisible) {
       fetchInbound();
@@ -56,7 +53,7 @@ export default function HelperListScreen() {
   }, [modalVisible]);
 
   const openAddModal = () => {
-    setEditingHelper({ inboundId: payload.item.id });
+    setEditingHelper(null); // null → Add Mode
     setModalVisible(true);
   };
 
@@ -66,7 +63,6 @@ export default function HelperListScreen() {
       deviceId: helper.deviceId ?? helper.helper_user_id ?? "",
       name: helper.name ?? helper.helper_name ?? "",
       contact: helper.contact ?? helper.helper_phone ?? "",
-      inboundId: payload.item.id
     });
     setModalVisible(true);
   };
@@ -75,21 +71,17 @@ export default function HelperListScreen() {
     <View style={styles.card}>
       <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
         <View style={{ flex: 1, gap: 6 }}>
-          <View
-            style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}
-          >
+          <View style={{ flexDirection: "row", marginBottom: 2 }}>
             <Text style={[styles.label, { width: 90 }]}>Device ID</Text>
             <Text style={styles.value}>
               {item.deviceId ?? item.helper_user_id?.slice(-10)}
             </Text>
           </View>
-          <View
-            style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}
-          >
+          <View style={{ flexDirection: "row", marginBottom: 2 }}>
             <Text style={[styles.label, { width: 90 }]}>Name</Text>
             <Text style={styles.value}>{item.name ?? item.helper_name}</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ flexDirection: "row" }}>
             <Text style={[styles.label, { width: 90 }]}>Contact</Text>
             <Text style={styles.value}>{item.contact ?? item.helper_phone}</Text>
           </View>
@@ -137,10 +129,11 @@ export default function HelperListScreen() {
         <Ionicons name="plus" size={28} color="#fff" />
       </TouchableOpacity>
 
-      {/* Modal dipisah */}
+      {/* Modal */}
       <HelperModal
         visible={modalVisible}
         helperData={editingHelper}
+        inboundId={payload.item.id}
         onClose={() => setModalVisible(false)}
       />
     </View>
@@ -149,26 +142,31 @@ export default function HelperListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FDFCFB", padding: 16 },
-header: {
-        backgroundColor: "white",
-        padding: 16,
-        borderRadius: 16,
-        marginBottom: 12,
-        shadowColor: "#000",
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-        alignItems: "center", // Center content horizontally
-    },
-    headerTitle: { fontSize: 18, color: "#6B7280", textAlign: "center" },
-    headerNumber: { fontSize: 22, fontWeight: "700", marginTop: 4, textAlign: "center" },
-    vehicle: {
-        fontSize: 20,
-        fontWeight: "600",
-        marginTop: 8,
-        color: "#DC2626",
-        textAlign: "center",
-    },
+  header: {
+    backgroundColor: "white",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    alignItems: "center",
+  },
+  headerTitle: { fontSize: 18, color: "#6B7280", textAlign: "center" },
+  headerNumber: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  vehicle: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginTop: 8,
+    color: "#DC2626",
+    textAlign: "center",
+  },
   sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 8 },
   card: {
     backgroundColor: "#fff",

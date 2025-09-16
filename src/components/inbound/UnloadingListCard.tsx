@@ -2,6 +2,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Ionicons from "react-native-vector-icons/FontAwesome5";
+import { ItemDetail } from "../../screen/page/inbound/service/inboundService";
 
 interface Item {
   id: string;
@@ -9,6 +10,7 @@ interface Item {
   quantityPlan: number;
   quantityScan: number;
   status?: string;
+  item: ItemDetail;
 }
 
 interface Props {
@@ -25,7 +27,7 @@ const UnloadingCardList: React.FC<Props> = ({ items, onCheck }) => {
           <View style={[styles.row, { justifyContent: "space-between" }]}>
             <View style={styles.row}>
               <Ionicons name="tag" size={22} color="#FF6B00" />
-              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemName}>{item.item.sku}</Text>
             </View>
             <TouchableOpacity
               style={styles.checkButton}

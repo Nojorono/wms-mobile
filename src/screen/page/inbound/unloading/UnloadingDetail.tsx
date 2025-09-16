@@ -13,12 +13,15 @@ import {  MergedItem, mergeUnloadingData } from "../service/inboundService";
 type NavigationProp = StackNavigationProp<UnloadingParamList, 'UnloadingMain'>;
 
 function mapMergedToItem(merged: MergedItem): any {
+  console.log('Mapping merged item:', merged);
   return {
     inbound_id: merged.inbound_id,
+    uom: merged.uom,
     id: merged.item_id,
     name: merged.item_id, 
     quantityPlan: merged.quantity,
     quantityScan: 0, 
+    item: merged.item
   };
 }
 
@@ -43,8 +46,10 @@ const UnloadingScreen = () => {
 
 
   const handleCheck = (item: any) => {
-    console.log("Check pressed:", item);
-    // bisa diarahkan ke halaman scan / modal dll
+    navigation.navigate("UnloadingScan", {
+      item,
+      payload: payload.item,
+    });
   };
 
   const fetchInboundById = async () => {
@@ -102,11 +107,10 @@ const UnloadingScreen = () => {
       {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false}>
-         
-            <UnloadingCardList
-              items={mergedData.map(mapMergedToItem)}
-              onCheck={handleCheck}
-            />
+          <UnloadingCardList
+            items={mergedData.map(mapMergedToItem)}
+            onCheck={handleCheck}
+          />
       
         </ScrollView>
       </View>

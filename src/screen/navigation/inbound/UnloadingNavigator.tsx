@@ -3,8 +3,10 @@ import Colors from '../../../constants/Colors.ts';
 import { Image, View } from 'react-native';
 import React from 'react';
 import UnloadingScreen from '../../page/inbound/unloading/UnloadingScreen.tsx';
-import UnloadingVehicleScreen from '../../page/inbound/unloading/UnloadingVehicle.tsx';
 import UnloadingDetailScreen from '../../page/inbound/unloading/UnloadingDetail.tsx';
+import UnloadingScan from '../../page/inbound/unloading/UnloadingScan.tsx';
+import UnloadingScanScreen from '../../page/inbound/unloading/UnloadingScan.tsx';
+import CameraScreen from '../../page/inbound/unloading/CameraScan.tsx';
 
 
 
@@ -12,6 +14,8 @@ export type UnloadingParamList = {
   UnloadingMain: undefined;
   UnloadingVehicle: { item: any; };
   UnloadingDetail: { item: any; };
+  UnloadingScan: { item: any; payload: any; scannedData?: any; };
+  CameraScreen: { item: any; onScanFinish: (data: string[]) => void; };
 };
 
 const UnloadingStack = createStackNavigator<UnloadingParamList>();
@@ -33,17 +37,6 @@ const UnloadingStackNavigator = () => (
       }}
     />
     <UnloadingStack.Screen
-      name="UnloadingVehicle"
-      component={UnloadingVehicleScreen}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <UnloadingStack.Screen
       name="UnloadingDetail"
       component={UnloadingDetailScreen}
       options={{
@@ -54,6 +47,28 @@ const UnloadingStackNavigator = () => (
         },
       }}
     />
+    <UnloadingStack.Screen
+      name="UnloadingScan"
+     component={UnloadingScanScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <UnloadingStack.Screen
+      name="CameraScreen"
+      component={CameraScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />  
   </UnloadingStack.Navigator>
 );
 

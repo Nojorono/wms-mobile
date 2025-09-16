@@ -1,6 +1,7 @@
 import axiosInstance from '../config/axiosInstance.ts';
 import { HelperInterface } from '../interface/inbound/HelperInterface.ts';
 import { InboundMainResponse } from '../interface/inbound/inboundMainInterface.ts';
+import { UnloadingPayload } from '../interface/inbound/unloadingInterface.ts';
 
 
 class InboundServices {
@@ -68,6 +69,26 @@ class InboundServices {
   static async getUnloadingList(inboundId: string): Promise<any> {
     try {
       const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId } });
+      return response.data;
+    } catch (error: any) {
+      console.error('Unloading failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async postUnloading(data: UnloadingPayload): Promise<any> {
+    try {
+      const response = await axiosInstance.post('transaction-scan-inbound', data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Unloading failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async getWeekProduction(date: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get('master-week/find-by-date/' + date);
       return response.data;
     } catch (error: any) {
       console.error('Unloading failed:', error);

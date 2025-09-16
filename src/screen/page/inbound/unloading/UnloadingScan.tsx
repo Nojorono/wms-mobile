@@ -12,6 +12,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useAuthStore } from "../../../../store/useAuthStore";
+import { ItemDetail } from "../service/inboundService";
 
 type ItemType = {
   inbound_id: string;
@@ -20,6 +21,7 @@ type ItemType = {
   name: string;
   quantityPlan: number;
   quantityScan: number;
+  item: ItemDetail;
 };
 
 type PayloadType = {
@@ -49,8 +51,6 @@ const UnloadingScanScreen = () => {
   const [activePallet, setActivePallet] = useState<string | null>(null);
   const [tempDate, setTempDate] = useState(new Date());
   const { user } = useAuthStore();
-  console.log("User Info:", user);
-
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const { item, payload } = route.params as RouteParams;
@@ -103,7 +103,7 @@ const UnloadingScanScreen = () => {
 
         <View style={styles.row}>
           <Text style={styles.label}>SKU Number</Text>
-          <Text style={styles.value}>{item.name}</Text>
+          <Text style={styles.value}>{item.item.sku}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Qty Plan</Text>
@@ -114,14 +114,11 @@ const UnloadingScanScreen = () => {
           <Text style={styles.value}>{item.uom}</Text>
         </View>
       </View>
-
-      {/* Pallet List */}
       <FlatList
   data={pallets}
   keyExtractor={(item) => item.id}
   renderItem={({ item }) => (
     <View style={styles.palletCard}>
-      {/* Button minus di pojok kanan atas */}
       <TouchableOpacity
         style={styles.removeBtn}
         onPress={() => removePallet(item.id)}

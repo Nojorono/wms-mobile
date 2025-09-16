@@ -21,6 +21,7 @@ function mapMergedToItem(merged: MergedItem): any {
     name: merged.item_id, 
     quantityPlan: merged.quantity,
     quantityScan: 0, 
+    item: merged.item
   };
 }
 
@@ -56,7 +57,6 @@ const UnloadingScreen = () => {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInboundDetail(payload.item.id);
       const inbound_dos = response.data.inbound_dos;
-      console.log('Fetched inbound data:', inbound_dos);
       setMergedData(mergeUnloadingData(inbound_dos));
     } catch (error) {
       hideLoadingDialog()
@@ -107,11 +107,10 @@ const UnloadingScreen = () => {
       {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false}>
-         
-            <UnloadingCardList
-              items={mergedData.map(mapMergedToItem)}
-              onCheck={handleCheck}
-            />
+          <UnloadingCardList
+            items={mergedData.map(mapMergedToItem)}
+            onCheck={handleCheck}
+          />
       
         </ScrollView>
       </View>

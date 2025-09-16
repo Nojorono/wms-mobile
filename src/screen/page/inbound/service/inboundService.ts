@@ -1,4 +1,21 @@
 
+export type ItemDetail = {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+    sku: string;
+    item_number: string;
+    description: string;
+    inventory_item_id: string;
+    dus_per_stack: number | null;
+    bal_per_dus: number | null;
+    press_per_bal: number | null;
+    bks_per_press: number | null;
+    btg_per_bks: number | null;
+    organization_id: string | null;
+};
+
 export type InboundItem = {
     id: string;
     createdAt: string;
@@ -10,7 +27,9 @@ export type InboundItem = {
     quantity: number;
     classification_id: string | null;
     uom: string;
+    item: ItemDetail;
 };
+
 export type InboundDo = {
     id: string;
     createdAt: string;
@@ -112,7 +131,8 @@ for (const inbound of data) {
                     classification_id: item.classification_id,
                     uom: item.uom,
                     quantity: item.quantity,
-                    deletedAt: null
+                    deletedAt: null,
+                    item: item.item
             });
         }
     }

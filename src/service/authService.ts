@@ -73,4 +73,27 @@ class AuthServices {
   }
 }
 
+//  const handleLogout = () => {
+//         Alert.alert("Confirm Logout", "Are you sure you want to logout?", [
+//             {
+//                 text: "Cancel",
+//                 style: "cancel",
+//             },
+//             {
+//                 text: "Logout",
+//                 onPress: () => {
+//                     showLoadingDialog("Logout");
+//                     clearAuth();
+//                     clearConstants();
+//                     Toast.show({
+//                         type: "success",
+//                         text1: "Success",
+//                         text2: "Logout Successful",
+//                     });
+//                     setTimeout(() => hideLoadingDialog(), 1000);
+//                 },
+//             },
+//         ]);
+//     };
+
 export default AuthServices;

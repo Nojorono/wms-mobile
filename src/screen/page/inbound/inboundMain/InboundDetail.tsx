@@ -21,6 +21,23 @@ import { useDialogStore } from "../../../../store/useGlobalDialog";
 /* ========================
    1. Type & Merge Function
    ======================== */
+type Item = {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+    sku: string;
+    item_number: string;
+    description: string;
+    inventory_item_id: string;
+    dus_per_stack: number | null;
+    bal_per_dus: number | null;
+    press_per_bal: number | null;
+    bks_per_press: number | null;
+    btg_per_bks: number | null;
+    organization_id: string | null;
+};
+
 type InboundItem = {
     id: string;
     createdAt: string;
@@ -32,6 +49,7 @@ type InboundItem = {
     quantity: number;
     classification_id: string | null;
     uom: string;
+    item: Item;
 };
 
 type InboundDo = {
@@ -254,7 +272,7 @@ export default function InboundDetail() {
                                     {item.inbound_items.map((sku, index) => (
                                         <View key={sku.id} style={styles.skuRow}>
                                             <Text style={styles.skuText}>
-                                                {index + 1}. {sku.item_id}
+                                                {index + 1}. {sku.item.sku}
                                             </Text>
                                             <Text style={styles.skuQty}>
                                                 {sku.quantity} {sku.uom}

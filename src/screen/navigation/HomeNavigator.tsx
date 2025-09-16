@@ -1,9 +1,10 @@
 import {createStackNavigator} from "@react-navigation/stack";
 import HomeScreen from "../HomeScreen";
 import Colors from "../../constants/Colors";
-import {Image, View} from "react-native";
+import {Alert, Image, View} from "react-native";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import React from "react";
+import { useAuthStore } from "../../store/useAuthStore";
 
 
 export type HomeStackParamList = {
@@ -12,32 +13,42 @@ export type HomeStackParamList = {
     PutAway: undefined;
 };
 
+
 const HomeStack = createStackNavigator<HomeStackParamList>();
 
-const HomeStackNavigator = () => (
-    <HomeStack.Navigator initialRouteName="HomeMain">
-        <HomeStack.Screen name="HomeMain" component={HomeScreen} options={{
-            headerShown: true,
-            headerStyle: {
-                backgroundColor: Colors.secondaryColor, // Full header background
-                elevation: 0, // Remove shadow on Android
-                shadowOpacity: 0, // Remove shadow on iOS
-                borderBottomWidth: 0, // Remove any border
-            },
-            headerTitle: () => (
-                <View style={{
-                    width: '100%',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}>
-                    <Image source={require('../../assets/images/icon-white-nna.png')}
-                           style={{width: 100, height: 22, resizeMode: 'contain'}}/>
-                    <Ionicons name="kaaba" size={24} color="#fff" style={{marginRight: 15}}/>
-                </View>
-            ),
-        }}/>
-    </HomeStack.Navigator>
-);
+const HomeStackNavigator = () => {
+    const { clearAuth } = useAuthStore();
+    return (
+        <HomeStack.Navigator initialRouteName="HomeMain">
+            <HomeStack.Screen name="HomeMain" component={HomeScreen} options={{
+                headerShown: true,
+                headerStyle: {
+                    backgroundColor: Colors.secondaryColor, // Full header background
+                    elevation: 0, // Remove shadow on Android
+                    shadowOpacity: 0, // Remove shadow on iOS
+                    borderBottomWidth: 0, // Remove any border
+                },
+                headerTitle: () => (
+                    <View style={{
+                        width: '100%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}>
+                        <Image source={require('../../assets/images/icon-white-nna.png')}
+                               style={{width: 100, height: 22, resizeMode: 'contain'}}/>
+                        <Ionicons
+                            name="kaaba"
+                            size={24}
+                            color="#fff"
+                            style={{marginRight: 15}}
+                            onPress={() => clearAuth()}
+                        />
+                    </View>
+                ),
+            }}/>
+        </HomeStack.Navigator>
+    );
+};
 
 export default HomeStackNavigator;

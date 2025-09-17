@@ -1,18 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  TextInput,
 } from "react-native";
-import DatePicker from "react-native-date-picker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useAuthStore } from "../../../../store/useAuthStore";
 import { ItemDetail } from "../service/inboundService";
+import InboundServices from "../../../../service/inboundServices";
+import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
+import Ionicons from "react-native-vector-icons/Ionicons"; // pastikan sudah install react-native-vector-icons
 
 type ItemType = {
   inbound_id: string;
@@ -40,59 +41,47 @@ type NavigationProp = StackNavigationProp<
 
 type PalletItem = {
   id: string;
-  palletNo: string;
-  qty: string;
-  production_date: string; // format YYYY-MM-DD
+  palletCode: string;
+  qty: number;
+  weekNumber: number;
+  stagingArea: string;
 };
 
 const UnloadingScanScreen = () => {
   const [pallets, setPallets] = useState<PalletItem[]>([]);
-  const [openPicker, setOpenPicker] = useState(false);
-  const [activePallet, setActivePallet] = useState<string | null>(null);
-  const [tempDate, setTempDate] = useState(new Date());
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const { item, payload } = route.params as RouteParams;
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        showLoadingDialog("Loading Pallets");
+        const res = await InboundServices.getUnloadingScanList(
+          item.inbound_id,
+          "PENDING"
+        );
+        if (res?.data) {
+          const mapped: PalletItem[] = res.data.map((d: any) => ({
+            id: d.id,
+            palletCode: d.pallet?.pallet_code || "-",
+            qty: d.quantity,
+            weekNumber: d.week_number,
+            stagingArea: d.m_warehouse_sub_id || "-",
+          }));
+          setPallets(mapped);
+        }
+      } catch (err) {
+        console.error("Error fetch pallets:", err);
+      } finally {
+        hideLoadingDialog();
+      }
+    };
 
-  const handleScanResult = (data: string[]) => {
-    setPallets((prev) => [
-      ...prev,
-      ...data.map((scan) => ({
-        id: scan,
-        palletNo: `Pallet ${scan}`,
-        qty: "",
-        production_date: "",
-      })),
-    ]);
-  };
-
-  const updatePallet = (
-    id: string,
-    field: "qty" | "production_date",
-    value: string
-  ) => {
-    setPallets((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
-    );
-  };
-
-  const removePallet = (id: string) => {
-    setPallets((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  const handleOpenPicker = (id: string, currentDate?: string) => {
-    setActivePallet(id);
-    setTempDate(currentDate ? new Date(currentDate) : new Date());
-    setOpenPicker(true);
-  };
+    fetchData();
+  }, [item.inbound_id]);
 
   return (
     <View style={styles.container}>
@@ -115,49 +104,38 @@ const UnloadingScanScreen = () => {
         </View>
       </View>
 
-
       <FlatList
         data={pallets}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.palletCard}>
-
-            <Text style={styles.palletTitle}>{item.palletNo}</Text>
-
-            <View style={styles.rowInput}>
-              <TextInput
-                style={styles.input}
-                placeholder="Qty"
-                keyboardType="numeric"
-                value={item.qty}
-                onChangeText={(val) => updatePallet(item.id, "qty", val)}
-                textAlign="right"
-                placeholderTextColor="#9ca3af"
-              />
+            {/* Left Icon */}
+            <View style={styles.iconWrapper}>
+              <Ionicons name="pricetag" size={28} color="#f97316" />
             </View>
 
-            {/* Production Date */}
-            <TouchableOpacity
-              style={[styles.input, { justifyContent: "center", marginTop: 8 }]}
-              onPress={() => handleOpenPicker(item.id, item.production_date)}
-            >
-              <Text
-                style={{
-                  color: item.production_date ? "#111" : "#9ca3af",
-                  textAlign: "right",
-                }}
-              >
-                {item.production_date || "Select Production Date"}
-              </Text>
-            </TouchableOpacity>
+            {/* Right Content */}
+            <View style={styles.cardContent}>
+              <Text style={styles.palletCode}>{item.palletCode}</Text>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Staging:</Text>
+                <Text style={styles.infoValue}>{item.stagingArea.slice(-15)}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Qty Scan:</Text>
+                <Text style={styles.infoValue}>{item.qty}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Week:</Text>
+                <Text style={styles.infoValue}>{item.weekNumber}</Text>
+              </View>
+            </View>
           </View>
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>Belum ada data scan</Text>
+          <Text style={styles.empty}>Belum ada data pending</Text>
         }
       />
-
-
 
       {/* Footer */}
       <View style={styles.footer}>
@@ -165,107 +143,82 @@ const UnloadingScanScreen = () => {
           style={styles.scanBtn}
           onPress={() =>
             navigation.navigate("CameraScreen", {
-              onScanFinish: handleScanResult,
               item: item,
             })
           }
         >
-          <Text style={styles.btnText}>Scan Pallet</Text>
+            <Ionicons name="qr-code-outline" size={28} color="#fff" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.saveBtn}
-          onPress={() => {
-            if (!user) {
-              console.warn("User information is missing.");
-              return;
-            }
-            const payloads = pallets.map((pallet) => ({
-              production_date: pallet.production_date,
-              inbound_id: item.inbound_id,
-              item_id: item.id,
-              quantity: Number(pallet.qty),
-              uom: item.uom,
-              user_id: user.id,
-              user_name: user.username,
-              pallet_code: pallet.palletNo,
-              status: "READY TO RECEIVE",
-            }));
-            console.log("Payload kirim:", payloads);
-          }}
-        >
-          <Text style={styles.btnText}>Save</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb", padding: 16 },
+  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 3,
-  },
-  title: { fontSize: 14, fontWeight: "600", marginBottom: 4, color: "#6b7280" },
-  number: { fontSize: 16, fontWeight: "700", marginBottom: 12, color: "#111" },
-  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
-  label: { fontSize: 14, color: "#6b7280" },
-  value: { fontSize: 14, fontWeight: "600", color: "#111" },
-  palletCard: {
-    backgroundColor: "#fff",
-    padding: 12,
     borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    position: "relative", // supaya absolute child bisa ditempatkan
+    padding: 14,
+    marginBottom: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 1,
   },
-  palletTitle: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
-  removeBtn: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "#ef4444",
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  title: { fontSize: 16, fontWeight: "500", marginBottom: 2, color: "#888" },
+  number: { fontSize: 20, fontWeight: "700", marginBottom: 10, color: "#222" },
+  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
+  label: { fontSize: 16, color: "#888" },
+  value: { fontSize: 16, fontWeight: "500", color: "#222" },
+
+  palletCard: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
+    backgroundColor: "#f6f6f6",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+    elevation: 0,
+    shadowColor: "transparent",
   },
-  rowInput: { flexDirection: "row", alignItems: "center" },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+  iconWrapper: {
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 8,
-    marginRight: 8,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
   },
+  cardContent: { flex: 1 },
+  palletCode: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 6,
+    color: "#222",
+  },
+  infoRow: { flexDirection: "row", marginBottom: 3 },
+  infoLabel: { fontSize: 15, color: "#aaa", width: 70 },
+  infoValue: { fontSize: 15, fontWeight: "500", color: "#222" },
 
-  empty: { textAlign: "center", color: "#9ca3af", marginTop: 20 },
-  footer: { flexDirection: "row", marginTop: 20 },
+  empty: { textAlign: "center", color: "#bbb", marginTop: 24, fontSize: 15 },
+  footer: {
+    flexDirection: "row",
+    marginTop: 24,
+    justifyContent: "flex-end",
+  },
   scanBtn: {
-    flex: 1,
-    backgroundColor: "#f97316",
-    padding: 14,
-    borderRadius: 12,
+    backgroundColor: "#FF6B00",
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 8,
     alignItems: "center",
-    marginRight: 8,
+    alignSelf: "flex-end",
+    elevation: 0,
   },
-  saveBtn: {
-    flex: 1,
-    backgroundColor: "#9ca3af",
-    padding: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  btnText: { color: "#fff", fontWeight: "600" },
+  btnText: { color: "#fff", fontWeight: "600", fontSize: 16 },
 });
 
 export default UnloadingScanScreen;

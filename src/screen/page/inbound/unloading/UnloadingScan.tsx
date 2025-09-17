@@ -114,72 +114,50 @@ const UnloadingScanScreen = () => {
           <Text style={styles.value}>{item.uom}</Text>
         </View>
       </View>
+
+
       <FlatList
-  data={pallets}
-  keyExtractor={(item) => item.id}
-  renderItem={({ item }) => (
-    <View style={styles.palletCard}>
-      <TouchableOpacity
-        style={styles.removeBtn}
-        onPress={() => removePallet(item.id)}
-      >
-        <Text style={{ color: "#fff", fontWeight: "700" }}>X</Text>
-      </TouchableOpacity>
+        data={pallets}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.palletCard}>
 
-      <Text style={styles.palletTitle}>{item.palletNo}</Text>
+            <Text style={styles.palletTitle}>{item.palletNo}</Text>
 
-      <View style={styles.rowInput}>
-        <TextInput
-          style={styles.input}
-          placeholder="Qty"
-          keyboardType="numeric"
-          value={item.qty}
-          onChangeText={(val) => updatePallet(item.id, "qty", val)}
-          textAlign="right"
-          placeholderTextColor="#9ca3af"
-        />
-      </View>
+            <View style={styles.rowInput}>
+              <TextInput
+                style={styles.input}
+                placeholder="Qty"
+                keyboardType="numeric"
+                value={item.qty}
+                onChangeText={(val) => updatePallet(item.id, "qty", val)}
+                textAlign="right"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
 
-      {/* Production Date */}
-      <TouchableOpacity
-        style={[styles.input, { justifyContent: "center", marginTop: 8 }]}
-        onPress={() => handleOpenPicker(item.id, item.production_date)}
-      >
-        <Text
-          style={{
-            color: item.production_date ? "#111" : "#9ca3af",
-            textAlign: "right",
-          }}
-        >
-          {item.production_date || "Select Production Date"}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  )}
-  ListEmptyComponent={
-    <Text style={styles.empty}>Belum ada data scan</Text>
-  }
-/>
-
-
-      {/* Date Picker Modal */}
-      <DatePicker
-        modal
-        open={openPicker}
-        date={tempDate}
-        mode="date"
-        onConfirm={(selectedDate) => {
-          if (activePallet) {
-            updatePallet(activePallet, "production_date", formatDate(selectedDate));
-          }
-          setOpenPicker(false);
-          setActivePallet(null);
-        }}
-        onCancel={() => {
-          setOpenPicker(false);
-          setActivePallet(null);
-        }}
+            {/* Production Date */}
+            <TouchableOpacity
+              style={[styles.input, { justifyContent: "center", marginTop: 8 }]}
+              onPress={() => handleOpenPicker(item.id, item.production_date)}
+            >
+              <Text
+                style={{
+                  color: item.production_date ? "#111" : "#9ca3af",
+                  textAlign: "right",
+                }}
+              >
+                {item.production_date || "Select Production Date"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        ListEmptyComponent={
+          <Text style={styles.empty}>Belum ada data scan</Text>
+        }
       />
+
+
 
       {/* Footer */}
       <View style={styles.footer}>
@@ -211,7 +189,7 @@ const UnloadingScanScreen = () => {
               user_id: user.id,
               user_name: user.username,
               pallet_code: pallet.palletNo,
-              status:"READY TO RECEIVE",
+              status: "READY TO RECEIVE",
             }));
             console.log("Payload kirim:", payloads);
           }}
@@ -237,28 +215,28 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   label: { fontSize: 14, color: "#6b7280" },
   value: { fontSize: 14, fontWeight: "600", color: "#111" },
- palletCard: {
-  backgroundColor: "#fff",
-  padding: 12,
-  borderRadius: 12,
-  marginBottom: 12,
-  borderWidth: 1,
-  borderColor: "#e5e7eb",
-  position: "relative", // supaya absolute child bisa ditempatkan
-},
-palletTitle: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
-removeBtn: {
-  position: "absolute",
-  top: 8,
-  right: 8,
-  backgroundColor: "#ef4444",
-  width: 20,
-  height: 20,
-  borderRadius: 10,
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 1,
-},
+  palletCard: {
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    position: "relative", // supaya absolute child bisa ditempatkan
+  },
+  palletTitle: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
+  removeBtn: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#ef4444",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
   rowInput: { flexDirection: "row", alignItems: "center" },
   input: {
     flex: 1,

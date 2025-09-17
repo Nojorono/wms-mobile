@@ -86,6 +86,36 @@ class InboundServices {
     }
   }
 
+  static async getUnloadingScanList(inboundId: string,status:string): Promise<any> {
+    try {
+      const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId, status: status } });
+      return response.data;
+    } catch (error: any) {
+      console.error('Unloading failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async getStagingArea(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/master-warehouse-sub/is-staging', { params: { is_staging:"INBOUND" } });
+      return response.data;
+    } catch (error: any) {
+      console.error('Get Staging Area failed:', error);
+      throw error.response;
+    }
+  }
+
+  static async getPalletInfo(palletId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/master-pallet/by-code/' + palletId + '/capacity-validation');
+      return response.data;
+    } catch (error: any) {
+      console.error('Get Pallet Info failed:', error);
+      throw error.response;
+    }
+  }
+
   static async getWeekProduction(date: string): Promise<any> {
     try {
       const response = await axiosInstance.get('master-week/find-by-date/' + date);

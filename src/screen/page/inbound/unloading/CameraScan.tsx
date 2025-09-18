@@ -10,6 +10,7 @@ import {
     Camera,
     useCameraDevice,
     useCameraPermission,
+    useCodeScanner,
 } from "react-native-vision-camera";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -60,6 +61,12 @@ const CameraScreen = () => {
 
     const device = useCameraDevice("back");
     const { hasPermission, requestPermission } = useCameraPermission();
+    const codeScanner = useCodeScanner({
+        codeTypes: ['qr', 'ean-13'],
+        onCodeScanned: (codes) => {
+            setManualInput(codes[0]?.value ?? ""); // langsung isi ke input
+        }
+    })
 
     // hanya 1 pallet
     const [scan, setScan] = useState<PalletItem | null>(null);
@@ -92,40 +99,40 @@ const CameraScreen = () => {
         fetchStaging();
     }, []);
 
-   const addManual = async () => {
-    if (!manualInput.trim() || !user) return;
+    const addManual = async () => {
+        if (!manualInput.trim() || !user) return;
 
-    try {
-        // 🔥 Panggil API validasi pallet
-        const res = await InboundServices.getPalletInfo(manualInput.trim());
-        const palletData = res?.data;
+        try {
+            // 🔥 Panggil API validasi pallet
+            const res = await InboundServices.getPalletInfo(manualInput.trim());
+            const palletData = res?.data;
 
-        if (!palletData) {
-            return;
+            if (!palletData) {
+                return;
+            }
+
+            // Jika valid, buat PalletItem
+            const newItem: PalletItem = {
+                id: Date.now().toString(),
+                palletNo: manualInput.trim(),
+                qty: palletData.qty?.toString() || "", // isi qty kalau ada dari API
+                production_date: palletData.production_date || null,
+                week: palletData.week?.toString() || null,
+                inbound_id: item.inbound_id,
+                item_id: item.id,
+                user_id: user.id,
+                user_name: user.username,
+                status: "PENDING",
+                uom: item.uom,
+                staging_area_id: "", // default kosong
+            };
+
+            setScan(newItem); // replace, hanya 1 card
+            setManualInput("");
+        } catch (err) {
+            console.error("Error check pallet:", err);
         }
-
-        // Jika valid, buat PalletItem
-        const newItem: PalletItem = {
-            id: Date.now().toString(),
-            palletNo: manualInput.trim(),
-            qty: palletData.qty?.toString() || "", // isi qty kalau ada dari API
-            production_date: palletData.production_date || null,
-            week: palletData.week?.toString() || null,
-            inbound_id: item.inbound_id,
-            item_id: item.id,
-            user_id: user.id,
-            user_name: user.username,
-            status: "PENDING",
-            uom: item.uom,
-            staging_area_id: "", // default kosong
-        };
-
-        setScan(newItem); // replace, hanya 1 card
-        setManualInput("");
-    } catch (err) {
-        console.error("Error check pallet:", err);
-    }
-};
+    };
 
 
     const deletePallet = () => {
@@ -187,7 +194,7 @@ const CameraScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Camera style={StyleSheet.absoluteFill} device={device} isActive={true} />
+            <Camera style={StyleSheet.absoluteFill} device={device} isActive={true} codeScanner={codeScanner} />
 
             <View style={styles.overlay}>
                 {/* Manual input */}

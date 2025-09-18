@@ -125,6 +125,17 @@ class InboundServices {
       throw error.response;
     }
   }
+
+  //INSPECTION SERVICES
+  static async getInspectionList(inboundId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/transaction-scan-inbound/inbound/${inboundId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Inspection failed:', error);
+      throw error.response;
+    }
+  }
 }
 
 export default InboundServices;

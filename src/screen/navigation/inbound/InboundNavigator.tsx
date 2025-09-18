@@ -6,8 +6,6 @@ import InboundScreen from '../../page/inbound/inboundMain/InboundScreen.tsx';
 
 import InboundIndex from '../../page/Inbound.tsx';
 import PutAwayNavigator from './PutAwayNavigator.tsx';
-import InboundCheck from '../../page/inbound/inboundMain/InboundCheck.tsx';
-import InboundAssign from '../../page/inbound/inboundMain/InboundAssign.tsx';
 import UnloadingNavigator from './UnloadingNavigator.tsx';
 import InspectionNavigator from './InspectionNavigator.tsx';
 import GoodReceiveNavigator from './GoodReceiveNavigator.tsx';
@@ -22,12 +20,13 @@ export type InboundParamList = {
   PutAwayNavigator: undefined;
   InboundMain: undefined;
   //NEW WMS
-  InboundCheck: { item: any };
   InboundDetail: { item: any };
   CheckerScreen: { item: any };
-  InboundAssign: {item:any}
   UnloadingNavigator: undefined;
-  InspectionNavigator: undefined;
+   InspectionNavigator: {
+    screen: "InspectionMain";
+    params: { item: any };
+  };
   GoodReceiveNavigator: undefined;
 };
 
@@ -98,28 +97,6 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="CheckerScreen"
       component={CheckerScreen}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <InboundStack.Screen
-      name="InboundCheck"
-      component={InboundCheck}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <InboundStack.Screen
-      name="InboundAssign"
-      component={InboundAssign}
       options={{
         headerShown: true,
         headerTintColor: '#fff',

@@ -160,7 +160,7 @@ export default function InboundDetail() {
     const handleDecline = () => {
         confirm.show("decline", "Are you sure to decline this?", async (reason) => {
             try {
-                await InboundServices.updateStatusInbound(payload.item.id, { status: 'WAITING FOR REVISION', notes:reason });
+                await InboundServices.updateStatusInbound(payload.item.id, { status: 'WAITING FOR REVISION', notes: reason });
                 navigationInbound.goBack();
             } catch (error) {
                 console.error('Error Declining inbound:', error);
@@ -227,7 +227,10 @@ export default function InboundDetail() {
                     <Ionicons name="user-friends" size={28} color="#059669" />
                     <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Helper List</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => console.log("Inspection pressed")}>
+                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("InspectionNavigator", {
+                    screen: "InspectionMain",
+                    params: { item: payload.item },
+                })}>
                     <Ionicons name="clipboard-check" size={28} color="#059669" />
                     <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Inspection</Text>
                 </TouchableOpacity>

@@ -9,9 +9,10 @@ import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import InboundServices from "../../../../../service/inboundServices";
 import UnloadingCardList from "../../../../../components/inbound/UnloadingListCard";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { InspectionParamList } from "../../../../navigation/inbound/InspectionNavigator";
 
 
-type NavigationProp = StackNavigationProp<UnloadingParamList, 'UnloadingMain'>;
+type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>;
 
 function mapMergedToItem(merged: MergedItem): any {
   console.log('Mapping merged item:', merged);
@@ -47,18 +48,19 @@ const InspectionScreen = () => {
 
 
   const handleCheck = (item: any) => {
-    navigation.navigate("UnloadingScan", {
-      item,
-      payload: payload.item,
-    });
+    // navigation.navigate("UnloadingScan", {
+    //   item,
+    //   payload: payload.item,
+    // });
   };
 
   const fetchInboundById = async () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
-      const response = await InboundServices.getInboundDetail(payload.item.id);
-      const inbound_dos = response.data.inbound_dos;
-      setMergedData(mergeUnloadingData(inbound_dos));
+      const response = await InboundServices.getInspectionList(payload.item.id);
+      const inbound = response.data;
+      console.log('Fetched inbound_dos:', inbound);
+      setMergedData(mergeUnloadingData(inbound));
     } catch (error) {
       hideLoadingDialog()
       console.error('Error fetching inbound data:', error);

@@ -15,7 +15,7 @@ export type UnloadingParamList = {
   UnloadingVehicle: { item: any; };
   UnloadingDetail: { item: any; };
   UnloadingScan: { item: any; payload: any; scannedData?: any; };
-  CameraScreen: { item: any; onScanFinish: (data: string[]) => void; };
+  CameraScreen: { item: any; };
 };
 
 const UnloadingStack = createStackNavigator<UnloadingParamList>();

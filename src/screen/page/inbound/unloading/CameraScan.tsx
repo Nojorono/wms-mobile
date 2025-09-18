@@ -17,6 +17,7 @@ import DatePicker from "react-native-date-picker";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import InboundServices from "../../../../service/inboundServices";
 import { useAuthStore } from "../../../../store/useAuthStore";
+import { Picker } from "@react-native-picker/picker";
 
 type NavigationProp = StackNavigationProp<
     UnloadingParamList,
@@ -24,7 +25,7 @@ type NavigationProp = StackNavigationProp<
 >;
 
 interface RouteParams {
-    item: { id: string; inbound_id: string , uom: string};
+    item: { id: string; inbound_id: string; uom: string };
     payload?: any;
     onScanFinish?: (data: PalletItem | null) => void;
 }
@@ -41,6 +42,7 @@ interface PalletItem {
     user_name: string;
     uom: string;
     status: string;
+    staging_area_id?: string; // 🔥 tambahkan field staging
 }
 
 const formatDate = (date: Date) => {
@@ -54,7 +56,7 @@ const CameraScreen = () => {
     const route = useRoute<any>();
     const { user } = useAuthStore();
     const navigation = useNavigation<NavigationProp>();
-    const { item, onScanFinish } = route.params as RouteParams;
+    const { item } = route.params as RouteParams;
 
     const device = useCameraDevice("back");
     const { hasPermission, requestPermission } = useCameraPermission();
@@ -67,31 +69,64 @@ const CameraScreen = () => {
     const [openPicker, setOpenPicker] = useState(false);
     const [tempDate, setTempDate] = useState(new Date());
 
+    // staging area
+    const [stagingAreas, setStagingAreas] = useState<any[]>([]);
+
     useEffect(() => {
         if (!hasPermission) {
             requestPermission();
         }
     }, [hasPermission]);
 
-    const addManual = () => {
-        if (manualInput.trim() && user) {
-            const newItem: PalletItem = {
-                id: Date.now().toString(),
-                palletNo: manualInput.trim(),
-                qty: "",
-                production_date: null,
-                week: null,
-                inbound_id: item.inbound_id,
-                item_id: item.id,
-                user_id: user.id,
-                user_name: user.username,
-                status: "PENDING",
-                uom: item.uom,
-            };
-            setScan(newItem); // replace, hanya 1 card
-            setManualInput("");
+    // fetch staging area
+    useEffect(() => {
+        const fetchStaging = async () => {
+            try {
+                const res = await InboundServices.getStagingArea();
+                setStagingAreas(res?.data || []);
+                console
+            } catch (err) {
+                console.error("Gagal fetch staging area:", err);
+            }
+        };
+        fetchStaging();
+    }, []);
+
+   const addManual = async () => {
+    if (!manualInput.trim() || !user) return;
+
+    try {
+        // 🔥 Panggil API validasi pallet
+        const res = await InboundServices.getPalletInfo(manualInput.trim());
+        const palletData = res?.data;
+
+        if (!palletData) {
+            return;
         }
-    };
+
+        // Jika valid, buat PalletItem
+        const newItem: PalletItem = {
+            id: Date.now().toString(),
+            palletNo: manualInput.trim(),
+            qty: palletData.qty?.toString() || "", // isi qty kalau ada dari API
+            production_date: palletData.production_date || null,
+            week: palletData.week?.toString() || null,
+            inbound_id: item.inbound_id,
+            item_id: item.id,
+            user_id: user.id,
+            user_name: user.username,
+            status: "PENDING",
+            uom: item.uom,
+            staging_area_id: "", // default kosong
+        };
+
+        setScan(newItem); // replace, hanya 1 card
+        setManualInput("");
+    } catch (err) {
+        console.error("Error check pallet:", err);
+    }
+};
+
 
     const deletePallet = () => {
         setScan(null);
@@ -99,7 +134,7 @@ const CameraScreen = () => {
 
     const updatePallet = (field: keyof PalletItem, value: string | null) => {
         if (scan) {
-            setScan({ ...scan, [field]: value });
+            setScan({ ...scan, [field]: value || "" });
         }
     };
 
@@ -122,32 +157,29 @@ const CameraScreen = () => {
     };
 
     const handleNext = () => {
-        // if (onScanFinish) {
         if (scan) {
             const data = {
-            production_date: scan.production_date ?? "",
-            week_number: scan.week ? Number(scan.week) : 0,
-            inbound_id: scan.inbound_id,
-            item_id: scan.item_id,
-            quantity: Number(scan.qty) || 0,
-            uom: scan.uom,
-            user_id: scan.user_id,
-            user_name: scan.user_name,
-            pallet_code: scan.palletNo,
-            status: scan.status,
+                production_date: scan.production_date ?? "",
+                week_number: scan.week ? Number(scan.week) : 0,
+                inbound_id: scan.inbound_id,
+                item_id: scan.item_id,
+                quantity: Number(scan.qty) || 0,
+                uom: scan.uom,
+                user_id: scan.user_id,
+                user_name: scan.user_name,
+                pallet_code: scan.palletNo,
+                status: scan.status,
+                m_warehouse_sub_id: scan.staging_area_id || "", // 🔥 ikut dikirim
             };
             console.log("Posting data:", data);
             InboundServices.postUnloading(data)
-            .then(() => {
-                navigation.goBack();
-            })
-            .catch((err) => {
-                console.error("Failed to post unloading:", err);
-            });
+                .then(() => {
+                    navigation.goBack();
+                })
+                .catch((err) => {
+                    console.error("Failed to post unloading:", err);
+                });
         }
-        // }
-        console.log("Final Scan:", scan);
-        // navigation.goBack();
     };
 
     if (!device) return <Text>Loading camera...</Text>;
@@ -186,6 +218,29 @@ const CameraScreen = () => {
                             <TouchableOpacity style={styles.deleteBtn} onPress={deletePallet}>
                                 <Text style={{ color: "#fff" }}>Delete</Text>
                             </TouchableOpacity>
+                        </View>
+
+                        {/* Staging Area */}
+                        <View style={{ marginBottom: 12 }}>
+                            <View style={styles.pickerWrapper}>
+                                <Picker
+                                    selectedValue={scan.staging_area_id ?? ""}
+                                    onValueChange={(itemValue) =>
+                                        updatePallet("staging_area_id", itemValue)
+                                    }
+                                    style={styles.picker}
+                                    dropdownIconColor="#111"
+                                >
+                                    <Picker.Item label="Select Staging Area" value="" />
+                                    {stagingAreas.map((area: any) => (
+                                        <Picker.Item
+                                            key={area.id}
+                                            label={area.code}
+                                            value={area.id}
+                                        />
+                                    ))}
+                                </Picker>
+                            </View>
                         </View>
 
                         {/* Qty */}
@@ -310,6 +365,23 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         marginBottom: 6,
         alignItems: "center",
+    },
+    label: {
+        color: "#e5e7eb",
+        fontSize: 14,
+        marginBottom: 4,
+    },
+    pickerWrapper: {
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: "#d1d5db",
+    },
+    picker: {
+        height: 50,
+        fontSize: 13,
+        color: "#111",
     },
 });
 

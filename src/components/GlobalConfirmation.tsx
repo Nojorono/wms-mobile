@@ -1,18 +1,21 @@
-// components/GlobalConfirmation.tsx
 import React, { useState } from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet, TextInput } from "react-native";
 import { useConfirmationStore } from "../store/useConfirmationStore";
 import Ionicons from "react-native-vector-icons/FontAwesome5";
 
 export default function GlobalConfirmation() {
-  const { visible, type, message, onConfirm, hide } = useConfirmationStore();
+  const { visible, type, message, requireReason, onConfirm, hide } = useConfirmationStore();
   const [reason, setReason] = useState("");
 
   if (!visible) return null;
 
   const handleConfirm = () => {
     if (onConfirm) {
-      type === "decline" ? onConfirm(reason) : onConfirm();
+      if (type === "decline" && requireReason) {
+        onConfirm(reason);
+      } else {
+        onConfirm();
+      }
     }
     hide();
     setReason("");
@@ -29,7 +32,7 @@ export default function GlobalConfirmation() {
           )}
           <Text style={styles.message}>{message}</Text>
 
-          {type === "decline" && (
+          {type === "decline" && requireReason && (
             <TextInput
               style={styles.input}
               placeholder="Reason..."
@@ -88,7 +91,7 @@ const styles = StyleSheet.create({
   cancel: {
     flex: 1,
     padding: 12,
-    backgroundColor: "#ccc",
+    backgroundColor: "#fe0000ff",
     borderRadius: 8,
     marginRight: 10,
     alignItems: "center",
@@ -96,7 +99,7 @@ const styles = StyleSheet.create({
   confirm: {
     flex: 1,
     padding: 12,
-    backgroundColor: "#007BFF",
+    backgroundColor: "#ff6200ff",
     borderRadius: 8,
     alignItems: "center",
   },

@@ -39,11 +39,11 @@ const UnloadingCardList: React.FC<Props> = ({ items, onCheck }) => {
 
           {/* Quantity Info */}
           <Text style={styles.quantityText}>
-            Plan: {item.quantityPlan}
+           Quantity Plan: {item.quantityPlan}
           </Text>
-          <Text style={styles.quantityText}>
+          {/* <Text style={styles.quantityText}>
             Scan: {item.quantityScan}
-          </Text>
+          </Text> */}
 
           {/* Status Badge */}
           {item.status && (

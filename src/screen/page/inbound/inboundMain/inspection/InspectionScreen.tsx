@@ -54,7 +54,7 @@ const InspectionScreen = () => {
     // });
   };
 
-  const fetchInboundById = async () => {
+  const fetchInspectionById = async () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInspectionList(payload.item.id);
@@ -78,7 +78,7 @@ const InspectionScreen = () => {
   useEffect(() => {
     const initialize = async () => {
       try {
-        await fetchInboundById()
+        await fetchInspectionById()
       } catch (error) {
         console.error('Initialization error:', error);
       }

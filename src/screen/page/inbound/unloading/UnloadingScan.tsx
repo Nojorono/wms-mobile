@@ -14,6 +14,8 @@ import { ItemDetail } from "../service/inboundService";
 import InboundServices from "../../../../service/inboundServices";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import Ionicons from "react-native-vector-icons/Ionicons"; // pastikan sudah install react-native-vector-icons
+import { useDialogStore } from "../../../../store/useGlobalDialog";
+import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 
 type ItemType = {
   inbound_id: string;
@@ -54,34 +56,56 @@ const UnloadingScanScreen = () => {
   const route = useRoute();
   const { item, payload } = route.params as RouteParams;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+  const showDialog = useDialogStore((state) => state.showDialog);
+  const confirm = useConfirmationStore();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        showLoadingDialog("Loading Pallets");
-        const res = await InboundServices.getUnloadingScanList(
-          item.inbound_id,
-          "PENDING"
-        );
-        if (res?.data) {
-          const mapped: PalletItem[] = res.data.map((d: any) => ({
-            id: d.id,
-            palletCode: d.pallet?.pallet_code || "-",
-            qty: d.quantity,
-            weekNumber: d.week_number,
-            stagingArea: d.m_warehouse_sub_id || "-",
-          }));
-          setPallets(mapped);
-        }
-      } catch (err) {
-        console.error("Error fetch pallets:", err);
-      } finally {
-        hideLoadingDialog();
+
+  const fetchData = async () => {
+    try {
+      showLoadingDialog("Loading Pallets");
+      const res = await InboundServices.getUnloadingScanList(
+        item.inbound_id,
+        "PENDING"
+      );
+      console.log("Fetched pallets:", res);
+      if (res?.data) {
+        const mapped: PalletItem[] = res.data.map((d: any) => ({
+          id: d.id,
+          palletCode: d.pallet?.pallet_code || "-",
+          qty: d.quantity,
+          weekNumber: d.week_number,
+          stagingArea: d.m_warehouse_sub_id || "-",
+        }));
+        setPallets(mapped);
       }
-    };
-
+    } catch (err) {
+      showDialog('error', 'Error while Fetching Pallets!');
+    } finally {
+      hideLoadingDialog();
+    }
+  };
+  useEffect(() => {
     fetchData();
-  }, [item.inbound_id]);
+
+    // Trigger fetchData on mount and when coming back to this screen
+    const unsubscribe = navigation.addListener("focus", fetchData);
+
+    return unsubscribe;
+  }, [navigation, item.inbound_id]);
+
+  const handleRemove = (palletId: string) => {
+    confirm.show("decline", "Are you sure Remove this pallet ?", async () => {
+      try {
+        showLoadingDialog("Removing Pallet... ");
+        await InboundServices.deleteUnloadingById(palletId);
+      } catch (error) {
+        console.error('Error Removing pallets:', error);
+        showDialog('error', 'Error while Removing pallets!');
+      } finally {
+        await fetchData();
+      }
+    }, false);
+  };
 
   return (
     <View style={styles.container}>
@@ -115,7 +139,16 @@ const UnloadingScanScreen = () => {
             </View>
 
             {/* Right Content */}
-            <View style={styles.cardContent}>
+            <View style={[styles.cardContent, { flexDirection: "column", flex: 1 }]}>
+              {/* Delete Icon in top right */}
+              <TouchableOpacity
+                style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 4 }}
+                onPress={() => {
+                  handleRemove(item.id);
+                }}
+              >
+                <Ionicons name="remove-circle" size={22} color="#FF3B30" />
+              </TouchableOpacity>
               <Text style={styles.palletCode}>{item.palletCode}</Text>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Staging:</Text>
@@ -147,7 +180,7 @@ const UnloadingScanScreen = () => {
             })
           }
         >
-            <Ionicons name="qr-code-outline" size={28} color="#fff" />
+          <Ionicons name="qr-code-outline" size={28} color="#fff" />
         </TouchableOpacity>
 
       </View>

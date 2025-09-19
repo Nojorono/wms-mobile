@@ -166,7 +166,8 @@ export default function InboundDetail() {
                 console.error('Error Declining inbound:', error);
                 showDialog('error', 'Error while Declining Inbound!');
             }
-        });
+        }, true // require reason
+    );
     };
     const fetchInboundById = async () => {
         try {

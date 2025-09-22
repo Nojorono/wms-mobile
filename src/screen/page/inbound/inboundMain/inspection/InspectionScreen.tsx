@@ -107,6 +107,30 @@ const InspectionScreen = () => {
       
         </ScrollView>
       </View>
+      <View style={{ alignItems: "center", justifyContent: "center", marginTop: 16 }}>
+        <TouchableOpacity
+          style={{
+        backgroundColor: "#FF6B00",
+        borderRadius: 32,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        flexDirection: "row",
+        alignItems: "center",
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+          }}
+          onPress={(item:any) => {
+        // TODO: Implement Good Receive action
+        navigation.navigate("GoodReceive", {  payload: payload.item });
+          }}
+        >
+          <Ionicons name="check-circle" size={20} color="#FFF" style={{ marginRight: 8 }} />
+          <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>Good Receive</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

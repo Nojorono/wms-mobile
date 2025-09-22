@@ -2,15 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from "react-native";
 import Ionicons from "react-native-vector-icons/FontAwesome5";
-import { UnloadingParamList } from "../../../../navigation/inbound/UnloadingNavigator";
-import {  MergedItem, mergeUnloadingData, transformInspectionResponse } from "../../service/inboundService";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
-import InboundServices from "../../../../../service/inboundServices";
-import UnloadingCardList from "../../../../../components/inbound/UnloadingListCard";
+import { InspectionParamList } from "../../../../../navigation/inbound/InspectionNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { InspectionParamList } from "../../../../navigation/inbound/InspectionNavigator";
-import InspectionCardList from "../../../../../components/inbound/InspectionListCard";
+import { useLoadingDialogStore } from "../../../../../../store/useLoadingStore";
+import InboundServices from "../../../../../../service/inboundServices";
+import { transformInspectionResponse } from "../../../service/inboundService";
+import InspectionCardList from "../../../../../../components/inbound/InspectionListCard";
+import { useNavigation, useRoute } from "@react-navigation/native";
+
 
 
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>;

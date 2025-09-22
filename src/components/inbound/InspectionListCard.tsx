@@ -2,13 +2,13 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Ionicons from "react-native-vector-icons/FontAwesome5";
-import { ItemDetail } from "../../screen/page/inbound/service/inboundService";
 
 interface Item {
   id: string;
   sku: string;
   quantity_plan: number;
   quantity_scan: number;
+  status: string;
 }
 
 interface Props {
@@ -20,7 +20,7 @@ const InspectionCardList: React.FC<Props> = ({ items, onCheck }) => {
   return (
     <View style={{ paddingBottom: 20 }}>
       {items.map((item,index) => (
-        <View style={styles.card} key={item.id}>
+        <View style={styles.card} key={index}>
           {/* Header Row */}
           <View style={[styles.row, { justifyContent: "space-between" }]}>
             <View style={styles.row}>
@@ -42,7 +42,11 @@ const InspectionCardList: React.FC<Props> = ({ items, onCheck }) => {
           <Text style={styles.quantityText}>
             Quantity Scan: {item.quantity_scan}
           </Text>
-
+            <View style={styles.statusBadge}>
+            <Text style={styles.statusText}>
+              {item.status }
+            </Text>
+            </View>
         </View>
       ))}
     </View>

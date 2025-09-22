@@ -153,7 +153,10 @@ type ItemSummary = {
 
 export function transformInspectionResponse(inbounds: any[]): any[] {
   return inbounds.map((inbound) => {
-    const planMap = new Map<string, ItemSummary>();
+    const planMap = new Map<
+      string,
+      ItemSummary & { latestStatus?: { status: string; updatedAt: string } }
+    >();
 
     // 🔹 Hitung quantity_plan
     inbound.inbound_dos.forEach((doItem: any) => {
@@ -165,6 +168,7 @@ export function transformInspectionResponse(inbounds: any[]): any[] {
             description: item.item?.description ?? "",
             quantity_plan: 0,
             quantity_scan: 0,
+            latestStatus: undefined,
           });
         }
         const current = planMap.get(item.item_id)!;
@@ -172,7 +176,7 @@ export function transformInspectionResponse(inbounds: any[]): any[] {
       });
     });
 
-    // 🔹 Hitung quantity_scan
+    // 🔹 Hitung quantity_scan & ambil status terbaru
     inbound.transaction_scan_inbounds.forEach((scan: any) => {
       if (!planMap.has(scan.item_id)) {
         planMap.set(scan.item_id, {
@@ -181,15 +185,32 @@ export function transformInspectionResponse(inbounds: any[]): any[] {
           description: "",
           quantity_plan: 0,
           quantity_scan: 0,
+          latestStatus: undefined,
         });
       }
       const current = planMap.get(scan.item_id)!;
       current.quantity_scan += scan.quantity;
+
+      if (scan.status) {
+        if (
+          !current.latestStatus ||
+          new Date(scan.updatedAt) > new Date(current.latestStatus.updatedAt)
+        ) {
+          current.latestStatus = { status: scan.status, updatedAt: scan.updatedAt };
+        }
+      }
     });
 
     return {
       ...inbound,
-      items_summary: Array.from(planMap.values()),
+      items_summary: Array.from(planMap.values()).map((item) => ({
+        item_id: item.item_id,
+        sku: item.sku,
+        description: item.description,
+        quantity_plan: item.quantity_plan,
+        quantity_scan: item.quantity_scan,
+        status: item.latestStatus?.status ?? "UNSCANNED",
+      })),
     };
   });
 }

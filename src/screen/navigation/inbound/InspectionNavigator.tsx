@@ -3,10 +3,16 @@ import Colors from '../../../constants/Colors.ts';
 import { Image, View } from 'react-native';
 import React from 'react';
 import InspectionScreen from '../../page/inbound/inboundMain/inspection/InspectionScreen.tsx';
+import InspectionDetail from '../../page/inbound/inboundMain/inspection/InspectionDetail.tsx';
+import GoodReceiveScreen from '../../page/inbound/inboundMain/inspection/goodreceive/GoodReceiveScreen.tsx';
+import GoodReceiveDetail from '../../page/inbound/inboundMain/inspection/goodreceive/GoodReceiveDetail.tsx';
 
 
 export type InspectionParamList = {
   InspectionMain: {item: any};
+  InspectionDetail: { item: any; payload: any };
+  GoodReceive: { payload: any };
+  GoodReceiveDetail: { item: any; payload: any };
 };
 
 const InspectionStack = createStackNavigator<InspectionParamList>();
@@ -27,9 +33,9 @@ const InspectionStackNavigator = () => (
         },
       }}
     />
-    {/* <UnloadingStack.Screen
-      name="UnloadingVehicle"
-      component={UnloadingVehicleScreen}
+    <InspectionStack.Screen
+      name="InspectionDetail"
+      component={InspectionDetail}
       options={{
         headerShown: true,
         headerTintColor: '#fff',
@@ -38,17 +44,29 @@ const InspectionStackNavigator = () => (
         },
       }}
     />
-    <UnloadingStack.Screen
-      name="UnloadingDetail"
-      component={UnloadingDetailScreen}
+    <InspectionStack.Screen
+      name="GoodReceive"
+      component={GoodReceiveScreen}
       options={{
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }} */}
-    {/* /> */}
+      }}
+    />
+    <InspectionStack.Screen
+      name="GoodReceiveDetail"
+      component={GoodReceiveDetail}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    
   </InspectionStack.Navigator>
 );
 

@@ -64,11 +64,12 @@ const UnloadingScanScreen = () => {
   const fetchData = async () => {
     try {
       showLoadingDialog("Loading Pallets");
+
       const res = await InboundServices.getUnloadingScanList(
         item.inbound_id,
-        "PENDING"
+        "PENDING",
+        item.item.id
       );
-      console.log("Fetched pallets:", res);
       if (res?.data) {
         const mapped: PalletItem[] = res.data.map((d: any) => ({
           id: d.id,

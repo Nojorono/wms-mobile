@@ -8,7 +8,6 @@ import InboundIndex from '../../page/Inbound.tsx';
 import PutAwayNavigator from './PutAwayNavigator.tsx';
 import UnloadingNavigator from './UnloadingNavigator.tsx';
 import InspectionNavigator from './InspectionNavigator.tsx';
-import GoodReceiveNavigator from './GoodReceiveNavigator.tsx';
 import InboundDetail from '../../page/inbound/inboundMain/InboundDetail.tsx';
 import CheckerScreen from '../../page/inbound/inboundMain/checker/CheckerScreen.tsx';
 
@@ -23,11 +22,10 @@ export type InboundParamList = {
   InboundDetail: { item: any };
   CheckerScreen: { item: any };
   UnloadingNavigator: undefined;
-   InspectionNavigator: {
+  InspectionNavigator: {
     screen: "InspectionMain";
     params: { item: any };
   };
-  GoodReceiveNavigator: undefined;
 };
 
 const InboundStack = createStackNavigator<InboundParamList>();
@@ -119,17 +117,6 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="InspectionNavigator"
       component={InspectionNavigator}
-      options={{
-        headerShown: false,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
-    <InboundStack.Screen
-      name="GoodReceiveNavigator"
-      component={GoodReceiveNavigator}
       options={{
         headerShown: false,
         headerTintColor: '#fff',

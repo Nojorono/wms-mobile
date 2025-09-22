@@ -1,25 +1,25 @@
-// screens/UnloadingScreen.tsx
+
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from "react-native";
 import Ionicons from "react-native-vector-icons/FontAwesome5";
-import { UnloadingParamList } from "../../../../navigation/inbound/UnloadingNavigator";
-import {  MergedItem, mergeUnloadingData, transformInspectionResponse } from "../../service/inboundService";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
-import InboundServices from "../../../../../service/inboundServices";
-import UnloadingCardList from "../../../../../components/inbound/UnloadingListCard";
+import { InspectionParamList } from "../../../../../navigation/inbound/InspectionNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { InspectionParamList } from "../../../../navigation/inbound/InspectionNavigator";
-import InspectionCardList from "../../../../../components/inbound/InspectionListCard";
+import { useLoadingDialogStore } from "../../../../../../store/useLoadingStore";
+import InboundServices from "../../../../../../service/inboundServices";
+import { mergeGoodReceive, transformInspectionResponse } from "../../../service/inboundService";
+import InspectionCardList from "../../../../../../components/inbound/InspectionListCard";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import GoodReceivedCardList from "../../../../../../components/inbound/GoodReceiveListCard";
+
 
 
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>;
 
 
-const InspectionScreen = () => {
+const GoodReceiveScreen = () => {
   // Ambil payload dari route params
-  type InboundDetailRouteParams = {
-    item: {
+   type InboundDetailRouteParams = {
+    payload: { 
       id: string;
       inbound_number: string;
       license_plate: string;
@@ -34,23 +34,22 @@ const InspectionScreen = () => {
   const route = useRoute();
   const payload = route.params as InboundDetailRouteParams;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
-
-
   const handleCheck = (item: any) => {
-    navigation.navigate("InspectionDetail", {
+    navigation.navigate("GoodReceiveDetail", {
       item,
-      payload: payload.item,
+      payload: payload.payload,
     });
   };
 
   const fetchInspectionById = async () => {
     try {
-      showLoadingDialog("Loading List Inbound Planning")
+      showLoadingDialog("Loading List Good Receive")
       const response = await InboundServices.getInspectionList('PENDING');
       const inbound = response.data;
-      console.log("inspection Response:", inbound);
-      const dataInspection: any = transformInspectionResponse(inbound);
-      setMergedData(dataInspection[0].items_summary);
+      const dataInspection: any = mergeGoodReceive(inbound[0]);
+        console.log("Data Good Receive:", dataInspection);
+
+      setMergedData(dataInspection);
     } catch (error) {
       hideLoadingDialog()
       console.error('Error fetching inspection data:', error);
@@ -84,58 +83,34 @@ const InspectionScreen = () => {
         <Text style={styles.infoTitle}>Inbound Planning Number</Text>
         <View style={styles.row}>
           <Ionicons name="book" size={18} color="black" />
-          <Text style={styles.infoValue}>{payload.item.inbound_number}</Text>
+          <Text style={styles.infoValue}>{payload.payload.inbound_number}</Text>
         </View>
 
         <View style={styles.vehicleBox}>
           <Ionicons name="truck" size={18} color="#FF6B00" />
-          <Text style={styles.vehicleText}>{payload.item.license_plate}</Text>
+          <Text style={styles.vehicleText}>{payload.payload.license_plate}</Text>
         </View>
 
         <View style={styles.typeBox}>
-          <Text style={styles.typeText}>{payload.item.inbound_type}</Text>
+          <Text style={styles.typeText}>{payload.payload.inbound_type}</Text>
         </View>
       </View>
 
-      {/* Scrollable Dynamic Card List */}
+        {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <InspectionCardList
+          <GoodReceivedCardList
             items={mergedData}
             onCheck={handleCheck}
           />
       
         </ScrollView>
       </View>
-      <View style={{ alignItems: "center", justifyContent: "center", marginTop: 16 }}>
-        <TouchableOpacity
-          style={{
-        backgroundColor: "#FF6B00",
-        borderRadius: 32,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        flexDirection: "row",
-        alignItems: "center",
-        elevation: 4,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-          }}
-          onPress={(item:any) => {
-        // TODO: Implement Good Receive action
-        navigation.navigate("GoodReceive", {  payload: payload.item });
-          }}
-        >
-          <Ionicons name="check-circle" size={20} color="#FFF" style={{ marginRight: 8 }} />
-          <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>Good Receive</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
 
-export default InspectionScreen;
+export default GoodReceiveScreen;
 
 const styles = StyleSheet.create({
   container: {

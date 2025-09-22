@@ -153,7 +153,10 @@ type ItemSummary = {
 
 export function transformInspectionResponse(inbounds: any[]): any[] {
   return inbounds.map((inbound) => {
-    const planMap = new Map<string, ItemSummary>();
+    const planMap = new Map<
+      string,
+      ItemSummary & { latestStatus?: { status: string; updatedAt: string } }
+    >();
 
     // 🔹 Hitung quantity_plan
     inbound.inbound_dos.forEach((doItem: any) => {
@@ -165,6 +168,7 @@ export function transformInspectionResponse(inbounds: any[]): any[] {
             description: item.item?.description ?? "",
             quantity_plan: 0,
             quantity_scan: 0,
+            latestStatus: undefined,
           });
         }
         const current = planMap.get(item.item_id)!;
@@ -172,7 +176,7 @@ export function transformInspectionResponse(inbounds: any[]): any[] {
       });
     });
 
-    // 🔹 Hitung quantity_scan
+    // 🔹 Hitung quantity_scan & ambil status terbaru
     inbound.transaction_scan_inbounds.forEach((scan: any) => {
       if (!planMap.has(scan.item_id)) {
         planMap.set(scan.item_id, {
@@ -181,17 +185,105 @@ export function transformInspectionResponse(inbounds: any[]): any[] {
           description: "",
           quantity_plan: 0,
           quantity_scan: 0,
+          latestStatus: undefined,
         });
       }
       const current = planMap.get(scan.item_id)!;
       current.quantity_scan += scan.quantity;
+
+      if (scan.status) {
+        if (
+          !current.latestStatus ||
+          new Date(scan.updatedAt) > new Date(current.latestStatus.updatedAt)
+        ) {
+          current.latestStatus = { status: scan.status, updatedAt: scan.updatedAt };
+        }
+      }
     });
 
     return {
       ...inbound,
-      items_summary: Array.from(planMap.values()),
+      items_summary: Array.from(planMap.values()).map((item) => ({
+        item_id: item.item_id,
+        sku: item.sku,
+        description: item.description,
+        quantity_plan: item.quantity_plan,
+        quantity_scan: item.quantity_scan,
+        status: item.latestStatus?.status ?? "UNSCANNED",
+      })),
     };
   });
 }
+
+export function mergeGoodReceive(inboundData:any) {
+  const resultMap = new Map();
+
+  // step 1: isi PLAN
+  inboundData.inbound_dos.forEach((doEntry:any) => {
+    doEntry.inbound_items.forEach((item:any) => {
+      const key = item.item_id;
+      if (!resultMap.has(key)) {
+        resultMap.set(key, {
+          item_id: item.item_id,
+          sku: item.item.sku,
+          description: item.item.description,
+          uom: item.uom,
+          quantity_plan: 0,
+          quantity_scanned: 0,
+          details: []
+        });
+      }
+
+      const existing = resultMap.get(key);
+      existing.quantity_plan += item.quantity;
+
+      existing.details.push({
+        item_id_inbound: item.id,
+        do_number: doEntry.inbound_do_number,
+        po_number: doEntry.inbound_po_number,
+        quantity_plan: item.quantity,
+        quantity_scanned: 0,
+        uom: item.uom
+      });
+    });
+  });
+
+  // step 2: distribusi SCAN ke detail plan
+  inboundData.transaction_scan_inbounds.forEach((scan:any) => {
+    const key = scan.item_id;
+    if (!resultMap.has(key)) return;
+
+    const existing = resultMap.get(key);
+    let remaining = scan.quantity;
+
+    for (const detail of existing.details) {
+      const available = detail.quantity_plan - detail.quantity_scanned;
+      if (available <= 0) continue;
+
+      const allocate = Math.min(available, remaining);
+      detail.quantity_scanned += allocate;
+      existing.quantity_scanned += allocate;
+      remaining -= allocate;
+
+      if (remaining <= 0) break;
+    }
+
+    // kalau masih ada sisa scan yg tidak bisa dipetakan ke PLAN
+    if (remaining > 0) {
+      existing.details.push({
+        do_number: null,
+        po_number: null,
+        quantity_plan: 0,
+        quantity_scanned: remaining,
+        uom: scan.uom,
+        note: "EXCESS_SCAN"
+      });
+      existing.quantity_scanned += remaining;
+    }
+  });
+
+  return Array.from(resultMap.values());
+}
+
 
 

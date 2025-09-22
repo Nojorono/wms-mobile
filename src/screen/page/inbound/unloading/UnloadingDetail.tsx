@@ -13,7 +13,6 @@ import {  MergedItem, mergeUnloadingData } from "../service/inboundService";
 type NavigationProp = StackNavigationProp<UnloadingParamList, 'UnloadingMain'>;
 
 function mapMergedToItem(merged: MergedItem): any {
-  console.log('Mapping merged item:', merged);
   return {
     inbound_id: merged.inbound_id,
     uom: merged.uom,

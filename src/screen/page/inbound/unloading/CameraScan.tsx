@@ -19,6 +19,7 @@ import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigat
 import InboundServices from "../../../../service/inboundServices";
 import { useAuthStore } from "../../../../store/useAuthStore";
 import { Picker } from "@react-native-picker/picker";
+import { useDialogStore } from "../../../../store/useGlobalDialog";
 
 type NavigationProp = StackNavigationProp<
     UnloadingParamList,
@@ -58,6 +59,7 @@ const CameraScreen = () => {
     const { user } = useAuthStore();
     const navigation = useNavigation<NavigationProp>();
     const { item } = route.params as RouteParams;
+    const showDialog = useDialogStore((state) => state.showDialog);
 
     const device = useCameraDevice("back");
     const { hasPermission, requestPermission } = useCameraPermission();
@@ -130,7 +132,7 @@ const CameraScreen = () => {
             setScan(newItem); // replace, hanya 1 card
             setManualInput("");
         } catch (err) {
-            console.error("Error check pallet:", err);
+            showDialog('error', 'Error, Pallet not found or invalid!');
         }
     };
 
@@ -151,7 +153,7 @@ const CameraScreen = () => {
             const minggu = res?.data?.[0]?.MINGGU?.toString() || null;
             setScan((prev) => (prev ? { ...prev, week: minggu } : prev));
         } catch (error) {
-            console.error("Gagal fetch minggu:", error);
+            showDialog('error', 'Error while Fetching Week Production!');
         }
     };
 
@@ -178,13 +180,12 @@ const CameraScreen = () => {
                 status: scan.status,
                 m_warehouse_sub_id: scan.staging_area_id || "", // 🔥 ikut dikirim
             };
-            console.log("Posting data:", data);
             InboundServices.postUnloading(data)
                 .then(() => {
                     navigation.goBack();
                 })
                 .catch((err) => {
-                    console.error("Failed to post unloading:", err);
+                    showDialog('error', 'Error while Posting Unloading Data!');
                 });
         }
     };

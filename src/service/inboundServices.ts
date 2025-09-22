@@ -96,6 +96,16 @@ class InboundServices {
     }
   }
 
+  static async deleteUnloadingById(unloadingId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete('transaction-scan-inbound/' + unloadingId);
+      return response.data;
+    } catch (error: any) {
+      console.error('Unloading failed:', error);
+      throw error.response;
+    }
+  }
+
   static async getStagingArea(): Promise<any> {
     try {
       const response = await axiosInstance.get('/master-warehouse-sub/is-staging', { params: { is_staging:"INBOUND" } });
@@ -111,7 +121,6 @@ class InboundServices {
       const response = await axiosInstance.get('/master-pallet/by-code/' + palletId + '/capacity-validation');
       return response.data;
     } catch (error: any) {
-      console.error('Get Pallet Info failed:', error);
       throw error.response;
     }
   }
@@ -127,9 +136,9 @@ class InboundServices {
   }
 
   //INSPECTION SERVICES
-  static async getInspectionList(inboundId: string): Promise<any> {
+  static async getInspectionList(status: string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/transaction-scan-inbound/inbound/${inboundId}`);
+      const response = await axiosInstance.get(`inbound/inspection`, { params: { status:status } });
       return response.data;
     } catch (error: any) {
       console.error('Inspection failed:', error);

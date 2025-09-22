@@ -142,3 +142,56 @@ for (const inbound of data) {
   return Array.from(itemMap.values());
 }
 
+
+type ItemSummary = {
+  item_id: string;
+  sku: string;
+  description: string;
+  quantity_plan: number;
+  quantity_scan: number;
+};
+
+export function transformInspectionResponse(inbounds: any[]): any[] {
+  return inbounds.map((inbound) => {
+    const planMap = new Map<string, ItemSummary>();
+
+    // 🔹 Hitung quantity_plan
+    inbound.inbound_dos.forEach((doItem: any) => {
+      doItem.inbound_items.forEach((item: any) => {
+        if (!planMap.has(item.item_id)) {
+          planMap.set(item.item_id, {
+            item_id: item.item_id,
+            sku: item.item?.sku ?? "",
+            description: item.item?.description ?? "",
+            quantity_plan: 0,
+            quantity_scan: 0,
+          });
+        }
+        const current = planMap.get(item.item_id)!;
+        current.quantity_plan += item.quantity;
+      });
+    });
+
+    // 🔹 Hitung quantity_scan
+    inbound.transaction_scan_inbounds.forEach((scan: any) => {
+      if (!planMap.has(scan.item_id)) {
+        planMap.set(scan.item_id, {
+          item_id: scan.item_id,
+          sku: "",
+          description: "",
+          quantity_plan: 0,
+          quantity_scan: 0,
+        });
+      }
+      const current = planMap.get(scan.item_id)!;
+      current.quantity_scan += scan.quantity;
+    });
+
+    return {
+      ...inbound,
+      items_summary: Array.from(planMap.values()),
+    };
+  });
+}
+
+

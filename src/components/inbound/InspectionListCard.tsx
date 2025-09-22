@@ -6,11 +6,9 @@ import { ItemDetail } from "../../screen/page/inbound/service/inboundService";
 
 interface Item {
   id: string;
-  name: string;
-  quantityPlan: number;
-  quantityScan: number;
-  status?: string;
-  item: ItemDetail;
+  sku: string;
+  quantity_plan: number;
+  quantity_scan: number;
 }
 
 interface Props {
@@ -18,16 +16,16 @@ interface Props {
   onCheck?: (item: Item) => void;
 }
 
-const UnloadingCardList: React.FC<Props> = ({ items, onCheck }) => {
+const InspectionCardList: React.FC<Props> = ({ items, onCheck }) => {
   return (
     <View style={{ paddingBottom: 20 }}>
-      {items.map((item) => (
+      {items.map((item,index) => (
         <View style={styles.card} key={item.id}>
           {/* Header Row */}
           <View style={[styles.row, { justifyContent: "space-between" }]}>
             <View style={styles.row}>
               <Ionicons name="tag" size={22} color="#FF6B00" />
-              <Text style={styles.itemName}>{item.item.sku}</Text>
+              <Text style={styles.itemName}>{item.sku}</Text>
             </View>
             <TouchableOpacity
               style={styles.checkButton}
@@ -39,27 +37,19 @@ const UnloadingCardList: React.FC<Props> = ({ items, onCheck }) => {
 
           {/* Quantity Info */}
           <Text style={styles.quantityText}>
-           Quantity Plan: {item.quantityPlan}
+           Quantity Plan: {item.quantity_plan}
           </Text>
-          {/* <Text style={styles.quantityText}>
-            Scan: {item.quantityScan}
-          </Text> */}
+          <Text style={styles.quantityText}>
+            Quantity Scan: {item.quantity_scan}
+          </Text>
 
-          {/* Status Badge */}
-          {item.status && (
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>
-                {item.status}
-              </Text>
-            </View>
-          )}
         </View>
       ))}
     </View>
   );
 };
 
-export default UnloadingCardList;
+export default InspectionCardList;
 
 const styles = StyleSheet.create({
   card: {

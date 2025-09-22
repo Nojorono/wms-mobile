@@ -118,7 +118,6 @@ function mergeInboundDos(data: InboundDo[]): (Omit<InboundDo, 'inbound_items'> &
             map.set(key, { ...rest, inbound_items: itemsWithPo });
         }
     });
-    console.log("Merged Data:", Array.from(map.values()));
     return Array.from(map.values());
 }
 
@@ -166,7 +165,8 @@ export default function InboundDetail() {
                 console.error('Error Declining inbound:', error);
                 showDialog('error', 'Error while Declining Inbound!');
             }
-        });
+        }, true // require reason
+    );
     };
     const fetchInboundById = async () => {
         try {

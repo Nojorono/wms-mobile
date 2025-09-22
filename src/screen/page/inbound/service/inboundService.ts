@@ -225,6 +225,7 @@ export function mergeGoodReceive(inboundData:any) {
       if (!resultMap.has(key)) {
         resultMap.set(key, {
           item_id: item.item_id,
+          id_inbound_items: item.id,
           sku: item.item.sku,
           description: item.item.description,
           uom: item.uom,

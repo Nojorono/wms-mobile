@@ -48,6 +48,7 @@ const GoodReceiveScreen = () => {
       const inbound = response.data;
       const dataInspection: any = mergeGoodReceive(inbound[0]);
         console.log("Data Good Receive:", dataInspection);
+        
       setMergedData(dataInspection);
     } catch (error) {
       hideLoadingDialog()

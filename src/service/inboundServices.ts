@@ -136,9 +136,9 @@ class InboundServices {
   }
 
   //INSPECTION SERVICES
-  static async getInspectionList(inboundId: string): Promise<any> {
+  static async getInspectionList(status: string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/transaction-scan-inbound/inbound/${inboundId}`);
+      const response = await axiosInstance.get(`inbound/inspection`, { params: { status:status } });
       return response.data;
     } catch (error: any) {
       console.error('Inspection failed:', error);

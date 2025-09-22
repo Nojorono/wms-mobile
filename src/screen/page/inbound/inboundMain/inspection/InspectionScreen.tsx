@@ -3,29 +3,18 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from "react-native";
 import Ionicons from "react-native-vector-icons/FontAwesome5";
 import { UnloadingParamList } from "../../../../navigation/inbound/UnloadingNavigator";
-import { MergedItem, mergeUnloadingData } from "../../service/inboundService";
+import {  MergedItem, mergeUnloadingData, transformInspectionResponse } from "../../service/inboundService";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import InboundServices from "../../../../../service/inboundServices";
 import UnloadingCardList from "../../../../../components/inbound/UnloadingListCard";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { InspectionParamList } from "../../../../navigation/inbound/InspectionNavigator";
+import InspectionCardList from "../../../../../components/inbound/InspectionListCard";
 
 
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>;
 
-function mapMergedToItem(merged: MergedItem): any {
-  console.log('Mapping merged item:', merged);
-  return {
-    inbound_id: merged.inbound_id,
-    uom: merged.uom,
-    id: merged.item_id,
-    name: merged.item_id, 
-    quantityPlan: merged.quantity,
-    quantityScan: 0, 
-    item: merged.item
-  };
-}
 
 const InspectionScreen = () => {
   // Ambil payload dari route params
@@ -41,7 +30,7 @@ const InspectionScreen = () => {
 
 
   const navigation = useNavigation<NavigationProp>();
-  const [mergedData, setMergedData] = useState<MergedItem[]>([]);
+  const [mergedData, setMergedData] = useState<any>([]);
   const route = useRoute();
   const payload = route.params as InboundDetailRouteParams;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
@@ -57,16 +46,17 @@ const InspectionScreen = () => {
   const fetchInspectionById = async () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
-      const response = await InboundServices.getInspectionList(payload.item.id);
+      const response = await InboundServices.getInspectionList('PENDING');
       const inbound = response.data;
-      console.log('Fetched inbound_dos:', inbound);
-      setMergedData(mergeUnloadingData(inbound));
+      const dataInspection: any = transformInspectionResponse(inbound);
+      console.log("Data Inspection:", dataInspection);
+      setMergedData(dataInspection[0].items_summary);
     } catch (error) {
       hideLoadingDialog()
-      console.error('Error fetching inbound data:', error);
+      console.error('Error fetching inspection data:', error);
       Alert.alert(
         'Error',
-        'Failed to fetch inbound data. Please check your connection and try again.',
+        'Failed to fetch inspection data. Please check your connection and try again.',
         [{ text: 'OK' }]
       );
     } finally {
@@ -110,8 +100,8 @@ const InspectionScreen = () => {
       {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <UnloadingCardList
-            items={mergedData.map(mapMergedToItem)}
+          <InspectionCardList
+            items={mergedData}
             onCheck={handleCheck}
           />
       

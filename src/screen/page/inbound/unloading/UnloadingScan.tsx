@@ -47,6 +47,7 @@ type PalletItem = {
   qty: number;
   weekNumber: number;
   stagingArea: string;
+  productionDate: string;
 };
 
 const UnloadingScanScreen = () => {
@@ -75,6 +76,7 @@ const UnloadingScanScreen = () => {
           qty: d.quantity,
           weekNumber: d.week_number,
           stagingArea: d.m_warehouse_sub_id || "-",
+          productionDate: d.production_date || "-",
         }));
         setPallets(mapped);
       }
@@ -157,6 +159,10 @@ const UnloadingScanScreen = () => {
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Qty Scan:</Text>
                 <Text style={styles.infoValue}>{item.qty}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Code:</Text>
+                <Text style={styles.infoValue}>{item.productionDate}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Week:</Text>

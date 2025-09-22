@@ -118,7 +118,6 @@ function mergeInboundDos(data: InboundDo[]): (Omit<InboundDo, 'inbound_items'> &
             map.set(key, { ...rest, inbound_items: itemsWithPo });
         }
     });
-    console.log("Merged Data:", Array.from(map.values()));
     return Array.from(map.values());
 }
 

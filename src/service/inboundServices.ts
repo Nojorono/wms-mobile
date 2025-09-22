@@ -10,7 +10,6 @@ class InboundServices {
       const response = await axiosInstance.get('inbound', { params: { status: statusInput } });
       return response.data;
     } catch (error: any) {
-      console.error('Inbound failed:', error);
       throw error.response;
     }
   }
@@ -20,7 +19,6 @@ class InboundServices {
       const response = await axiosInstance.get('inbound/' + inboundId);
       return response.data;
     } catch (error: any) {
-      console.error('get Inbound list failed:', error);
       throw error.response;
     }
   }
@@ -30,7 +28,6 @@ class InboundServices {
       const response = await axiosInstance.patch('inbound/' + inboundId + '/status', data);
       return response.data;
     } catch (error: any) {
-      console.error('get Inbound list failed:', error);
       throw error.response;
     }
   }
@@ -40,7 +37,6 @@ class InboundServices {
       const response = await axiosInstance.get('assigned-helper', { params: { inbound_id: inboundId } });
       return response.data;
     } catch (error: any) {
-      console.error('get helper list failed:', error);
       throw error.response;
     }
   }
@@ -50,7 +46,6 @@ class InboundServices {
       const response = await axiosInstance.post('assigned-helper', data);
       return response.data;
     } catch (error: any) {
-      console.error('post helper failed:', error);
       throw error.response;
     }
   }
@@ -60,7 +55,6 @@ class InboundServices {
       const response = await axiosInstance.patch('assigned-helper/' + helperId, data);
       return response.data;
     } catch (error: any) {
-      console.error('update helper failed:', error);
       throw error.response;
     }
   }
@@ -71,7 +65,6 @@ class InboundServices {
       const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId } });
       return response.data;
     } catch (error: any) {
-      console.error('Unloading failed:', error);
       throw error.response;
     }
   }
@@ -81,17 +74,15 @@ class InboundServices {
       const response = await axiosInstance.post('transaction-scan-inbound', data);
       return response.data;
     } catch (error: any) {
-      console.error('Unloading failed:', error);
       throw error.response;
     }
   }
 
-  static async getUnloadingScanList(inboundId: string,status:string, itemId:string): Promise<any> {
+  static async getUnloadingScanList(inboundId: string, status: string, itemId: string): Promise<any> {
     try {
       const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId, status: status, item_id: itemId } });
       return response.data;
     } catch (error: any) {
-      console.error('Unloading failed:', error);
       throw error.response;
     }
   }
@@ -101,17 +92,15 @@ class InboundServices {
       const response = await axiosInstance.delete('transaction-scan-inbound/' + unloadingId);
       return response.data;
     } catch (error: any) {
-      console.error('Unloading failed:', error);
       throw error.response;
     }
   }
 
   static async getStagingArea(): Promise<any> {
     try {
-      const response = await axiosInstance.get('/master-warehouse-sub/is-staging', { params: { is_staging:"INBOUND" } });
+      const response = await axiosInstance.get('/master-warehouse-sub/is-staging', { params: { is_staging: "INBOUND" } });
       return response.data;
     } catch (error: any) {
-      console.error('Get Staging Area failed:', error);
       throw error.response;
     }
   }
@@ -130,7 +119,6 @@ class InboundServices {
       const response = await axiosInstance.get('master-week/find-by-date/' + date);
       return response.data;
     } catch (error: any) {
-      console.error('Unloading failed:', error);
       throw error.response;
     }
   }
@@ -138,10 +126,19 @@ class InboundServices {
   //INSPECTION SERVICES
   static async getInspectionList(status: string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`inbound/inspection`, { params: { status:status } });
+      const response = await axiosInstance.get(`inbound/inspection`, { params: { status: status } });
       return response.data;
     } catch (error: any) {
-      console.error('Inspection failed:', error);
+      throw error.response;
+    }
+  }
+
+  //GOOD RECEIVE SERVICES
+  static async updateGoodReceiveDetail(data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`inbound/inbound-items/bulk/saldo-inspection`,   data  );
+      return response.data;
+    } catch (error: any) {
       throw error.response;
     }
   }

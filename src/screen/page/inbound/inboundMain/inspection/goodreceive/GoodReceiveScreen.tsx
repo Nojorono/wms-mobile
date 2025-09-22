@@ -18,7 +18,7 @@ type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>
 
 const GoodReceiveScreen = () => {
   // Ambil payload dari route params
-  type InboundDetailRouteParams = {
+   type InboundDetailRouteParams = {
     payload: { 
       id: string;
       inbound_number: string;
@@ -35,10 +35,10 @@ const GoodReceiveScreen = () => {
   const payload = route.params as InboundDetailRouteParams;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const handleCheck = (item: any) => {
-    // navigation.navigate("InspectionDetail", {
-    //   item,
-    //   payload: payload.item,
-    // });
+    navigation.navigate("GoodReceiveDetail", {
+      item,
+      payload: payload.payload,
+    });
   };
 
   const fetchInspectionById = async () => {
@@ -48,7 +48,7 @@ const GoodReceiveScreen = () => {
       const inbound = response.data;
       const dataInspection: any = mergeGoodReceive(inbound[0]);
         console.log("Data Good Receive:", dataInspection);
-        
+
       setMergedData(dataInspection);
     } catch (error) {
       hideLoadingDialog()

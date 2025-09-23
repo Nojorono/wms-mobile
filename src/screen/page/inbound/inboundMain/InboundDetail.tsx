@@ -166,7 +166,7 @@ export default function InboundDetail() {
                 showDialog('error', 'Error while Declining Inbound!');
             }
         }, true // require reason
-    );
+        );
     };
     const fetchInboundById = async () => {
         try {
@@ -234,9 +234,12 @@ export default function InboundDetail() {
                     <Ionicons name="clipboard-check" size={28} color="#059669" />
                     <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Inspection</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => console.log("Good Receive pressed")}>
+                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("UpdateSaldoNavigator", {
+                    screen: "UpdateSaldoMain",
+                    params: { item: payload.item },
+                })}>
                     <Ionicons name="box-open" size={28} color="#059669" />
-                    <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Good Receive</Text>
+                    <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Update Saldo</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => console.log("Forklift pressed")}>
                     <Ionicons name="truck-loading" size={28} color="#059669" />

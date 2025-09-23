@@ -8,7 +8,6 @@ interface ItemDetail {
   po_number: string;
   quantity_plan: number;
   quantity_scanned: number;
-  quantity_inspected?: number;
   uom: string;
 }
 
@@ -19,7 +18,6 @@ interface Item {
   uom: string;
   quantity_plan: number;
   quantity_scanned: number;
-  quantity_inspected?: number;
   details: ItemDetail[];
 }
 
@@ -28,12 +26,11 @@ interface Props {
   onCheck?: (item: Item) => void;
 }
 
-const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
+const UpdateSaldoListCard: React.FC<Props> = ({ items, onCheck }) => {
   return (
     <View style={{ paddingBottom: 20 }}>
       {items.map((item, index) => {
         const isReady = item.quantity_plan === item.quantity_scanned;
-        console.log("Item Details:", item);
 
         return (
           <View style={styles.card} key={index}>
@@ -51,7 +48,7 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
               </Text>
               <Text style={styles.quantityLabel}>Scanned</Text>
               <Text style={styles.quantityValue}>
-                {item.quantity_inspected ?? item.quantity_scanned} {item.uom}
+                {item.quantity_scanned} {item.uom}
               </Text>
             </View>
 
@@ -63,7 +60,7 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
                     DO <Text style={styles.bold}>{detail.do_number}</Text>{" "}
                     PO <Text style={styles.bold}>{detail.po_number}</Text>{" "}
                     <Text style={styles.detailQty}>
-                      {detail.quantity_inspected ?? detail.quantity_scanned} {detail.uom}
+                      {detail.quantity_scanned} {detail.uom}
                     </Text>
                   </Text>
                 </View>
@@ -101,7 +98,7 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
   );
 };
 
-export default GoodReceivedCardList;
+export default UpdateSaldoListCard;
 
 const styles = StyleSheet.create({
   card: {

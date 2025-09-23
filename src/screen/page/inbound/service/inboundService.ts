@@ -215,12 +215,12 @@ export function transformInspectionResponse(inbounds: any[]): any[] {
   });
 }
 
-export function mergeGoodReceive(inboundData:any) {
+export function mergeGoodReceive(inboundData: any) {
   const resultMap = new Map();
 
-  // step 1: isi PLAN
-  inboundData.inbound_dos.forEach((doEntry:any) => {
-    doEntry.inbound_items.forEach((item:any) => {
+  // step 1: isi PLAN & INSPECTED
+  inboundData.inbound_dos.forEach((doEntry: any) => {
+    doEntry.inbound_items.forEach((item: any) => {
       const key = item.item_id;
       if (!resultMap.has(key)) {
         resultMap.set(key, {
@@ -230,26 +230,29 @@ export function mergeGoodReceive(inboundData:any) {
           uom: item.uom,
           quantity_plan: 0,
           quantity_scanned: 0,
-          details: []
+          quantity_inspected: 0, // tambahkan summary inspected
+          details: [],
         });
       }
 
       const existing = resultMap.get(key);
       existing.quantity_plan += item.quantity;
+      existing.quantity_inspected += item.quantity_inspection || 0; // akumulasi inspected
 
       existing.details.push({
         item_id_inbound: item.id,
         do_number: doEntry.inbound_do_number,
         po_number: doEntry.inbound_po_number,
+        quantity_inspected: item.quantity_inspection || 0,
         quantity_plan: item.quantity,
         quantity_scanned: 0,
-        uom: item.uom
+        uom: item.uom,
       });
     });
   });
 
   // step 2: distribusi SCAN ke detail plan
-  inboundData.transaction_scan_inbounds.forEach((scan:any) => {
+  inboundData.transaction_scan_inbounds.forEach((scan: any) => {
     const key = scan.item_id;
     if (!resultMap.has(key)) return;
 
@@ -275,8 +278,9 @@ export function mergeGoodReceive(inboundData:any) {
         po_number: null,
         quantity_plan: 0,
         quantity_scanned: remaining,
+        quantity_inspected: 0,
         uom: scan.uom,
-        note: "EXCESS_SCAN"
+        note: "EXCESS_SCAN",
       });
       existing.quantity_scanned += remaining;
     }

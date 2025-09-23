@@ -19,7 +19,7 @@ type NavigationProp = StackNavigationProp<UpdateSaldoParamList, 'UpdateSaldoMain
 const UpdateSaldoScreen = () => {
   // Ambil payload dari route params
    type InboundDetailRouteParams = {
-    payload: { 
+    item: {
       id: string;
       inbound_number: string;
       license_plate: string;
@@ -35,11 +35,12 @@ const UpdateSaldoScreen = () => {
   const payload = route.params as InboundDetailRouteParams;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const handleCheck = (item: any) => {
-    // navigation.navigate("GoodReceiveDetail", {
-    //   item,
-    //   payload: payload.payload,
-    // });
+    navigation.navigate("UpdateSaldoDetail", {
+      item,
+      payload: payload.item,
+    });
   };
+  console.log("Payload Update Saldo:", payload);
 
   const fetchInspectionById = async () => {
     try {
@@ -83,16 +84,16 @@ const UpdateSaldoScreen = () => {
         <Text style={styles.infoTitle}>Inbound Planning Number</Text>
         <View style={styles.row}>
           <Ionicons name="book" size={18} color="black" />
-          <Text style={styles.infoValue}>{payload.payload.inbound_number}</Text>
+          <Text style={styles.infoValue}>{payload.item.inbound_number}</Text>
         </View>
 
         <View style={styles.vehicleBox}>
           <Ionicons name="truck" size={18} color="#FF6B00" />
-          <Text style={styles.vehicleText}>{payload.payload.license_plate}</Text>
+          <Text style={styles.vehicleText}>{payload.item.license_plate}</Text>
         </View>
 
         <View style={styles.typeBox}>
-          <Text style={styles.typeText}>{payload.payload.inbound_type}</Text>
+          <Text style={styles.typeText}>{payload.item.inbound_type}</Text>
         </View>
       </View>
 
@@ -110,7 +111,7 @@ const UpdateSaldoScreen = () => {
   );
 };
 
-export default GoodReceiveScreen;
+export default UpdateSaldoScreen;
 
 const styles = StyleSheet.create({
   container: {

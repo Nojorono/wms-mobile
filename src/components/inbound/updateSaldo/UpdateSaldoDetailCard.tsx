@@ -3,9 +3,9 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { TextInput } from "react-native";
-import InboundServices from "../../service/inboundServices";
-import Colors from "../../constants/Colors";
-import { useLoadingDialogStore } from "../../store/useLoadingStore";
+import { useLoadingDialogStore } from "../../../store/useLoadingStore";
+import { Colors } from "react-native/Libraries/NewAppScreen";
+
 
 
 interface Detail {
@@ -14,7 +14,6 @@ interface Detail {
     po_number: string;
     quantity_plan: number;
     quantity_scanned: number;
-    quantity_inspected?: number;
     uom: string;
 }
 
@@ -28,27 +27,12 @@ interface Item {
     details: Detail[];
 }
 
-const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = ({
+const UpdateSaldoDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = ({
     data,
     onApprove,
 }) => {
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const [details, setDetails] = useState(data.details);
-
-    const handleScannedChange = (value: string, idx: number) => {
-        const newDetails = [...details];
-        const numericValue = Number(value.replace(/[^0-9]/g, ""));
-        const maxPlan = newDetails[idx].quantity_plan;
-
-
-        if (numericValue > maxPlan) {
-            Alert.alert("Invalid Input", "Quantity scanned tidak boleh lebih besar dari quantity plan");
-            return;
-        }
-
-        newDetails[idx].quantity_scanned = numericValue;
-        setDetails(newDetails);
-    };
 
     return (
         <View style={styles.card}>
@@ -98,49 +82,12 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                             </View>
                             <View style={styles.infoBlock}>
                                 <Text style={styles.detailLabel}>Scanned</Text>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        value={String(item.quantity_scanned)}
-                                        keyboardType="numeric"
-                                        onChangeText={(val) => handleScannedChange(val, index)}
-                                        editable={true}
-                                        placeholder="0"
-                                        placeholderTextColor="#B0B0B0"
-                                    />
-                                </View>
+                                <Text style={styles.detailValue}>{item.quantity_scanned}</Text>
                             </View>
                         </View>
                     </View>
                 )}
             />
-
-            <TouchableOpacity
-                style={[styles.approveButton, { backgroundColor: Colors.secondaryColor }]}
-                onPress={async () => {
-                    try {
-                        showLoadingDialog("Updating Good Receive");
-                        const payload = {
-                            items: details.map((d) => ({
-                                id: d.item_id_inbound,
-                                quantity_inspection: d.quantity_scanned,
-                            })),
-                        };
-                        console.log("Data to be sent:", payload);
-                        await InboundServices.updateGoodReceiveDetail(payload);
-                        Alert.alert("Success", "Data berhasil diperbarui");
-                    } catch (error) {
-                        Alert.alert("Error", "Gagal memperbarui data");
-                        hideLoadingDialog
-                    } finally {
-                        hideLoadingDialog();
-                    }
-                }}
-                activeOpacity={0.85}
-            >
-                <Icon name="check-circle-outline" size={22} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.approveText}>Approve</Text>
-            </TouchableOpacity>
         </View>
     );
 };
@@ -251,5 +198,5 @@ const styles = StyleSheet.create({
     },
 });
 
-export default GoodReceiveDetailCard;
+export default UpdateSaldoDetailCard;
 

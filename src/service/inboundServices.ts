@@ -133,6 +133,17 @@ class InboundServices {
     }
   }
 
+  static async updateInspectionData(itemId: string, data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`transaction-scan-inbound/${itemId}`, data);
+      console.log("Response from updateInspectionData:", response);
+      return response.data;
+    } catch (error: any) {
+      console.error("Error updating inspection data:", error);
+      throw error.response;
+    }
+  }
+
   //GOOD RECEIVE SERVICES
   static async updateGoodReceiveDetail(data: any): Promise<any> {
     try {

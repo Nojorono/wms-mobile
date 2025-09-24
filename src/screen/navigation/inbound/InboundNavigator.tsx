@@ -10,6 +10,7 @@ import UnloadingNavigator from './UnloadingNavigator.tsx';
 import InspectionNavigator from './InspectionNavigator.tsx';
 import InboundDetail from '../../page/inbound/inboundMain/InboundDetail.tsx';
 import CheckerScreen from '../../page/inbound/inboundMain/checker/CheckerScreen.tsx';
+import UpdateSaldoNavigator from './UpdateSaldoNavigator.tsx';
 
 
 
@@ -26,6 +27,10 @@ export type InboundParamList = {
     screen: "InspectionMain";
     params: { item: any };
   };
+  UpdateSaldoNavigator:{
+    screen: "UpdateSaldoMain";
+    params: { item: any };
+  }
 };
 
 const InboundStack = createStackNavigator<InboundParamList>();
@@ -117,6 +122,17 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="InspectionNavigator"
       component={InspectionNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="UpdateSaldoNavigator"
+      component={UpdateSaldoNavigator}
       options={{
         headerShown: false,
         headerTintColor: '#fff',

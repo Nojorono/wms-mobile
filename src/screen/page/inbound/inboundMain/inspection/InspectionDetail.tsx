@@ -49,7 +49,9 @@ const InspectionDetail = () => {
     const [pallets, setPallets] = useState<PalletItem[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editQty, setEditQty] = useState("");
+    const [palletCode, setPalletCode] = useState("");
     const [editCode, setEditCode] = useState(""); // string (yyyy-mm-dd)
+     
     const [editDate, setEditDate] = useState<Date>(new Date());
 
     const navigation = useNavigation<StackNavigationProp<any>>();
@@ -126,18 +128,20 @@ const InspectionDetail = () => {
     const handleEdit = (pallet: PalletItem) => {
         setEditingId(pallet.id);
         setEditQty(String(pallet.qty));
+        setPalletCode(pallet.palletCode);
         setEditCode(pallet.productionDate);
         setEditDate(pallet.productionDate ? new Date(pallet.productionDate) : new Date());
     };
 
-    const handleSave = async (id: string) => {
+    const handleSave = async (item: any) => {
         try {
             showLoadingDialog("Updating Pallet...");
             // Simpan ke backend
-            // await InboundServices.updatePallet(id, {
-            //     qty: Number(editQty),
-            //     production_date: editCode,
-            // });
+            await InboundServices.updateInspectionData(item.id, {
+                quantity: editQty,
+                // production_date: item.productionDate,
+                // week_number: item.weekNumber,
+            });
 
             // Update state lokal
             await fetchData();
@@ -209,10 +213,13 @@ const InspectionDetail = () => {
                         </View>
 
                         <View style={[styles.cardContent, { flex: 1 }]}>
-                            <Text style={styles.palletCode}>{item.palletCode}</Text>
-
                             {editingId === item.id ? (
                                 <>
+                                    <TextInput
+                                        style={[styles.palletCode, styles.input]}
+                                        value={palletCode}
+                                        onChangeText={setPalletCode}
+                                    />
                                     <View style={styles.infoRow}>
                                         <Text style={styles.infoLabel}>Staging:</Text>
                                         <Text style={styles.infoValue}>
@@ -250,7 +257,7 @@ const InspectionDetail = () => {
                                     <View style={styles.actionRow}>
                                         <TouchableOpacity
                                             style={styles.saveBtn}
-                                            onPress={() => handleSave(item.id)}
+                                            onPress={() => handleSave(item)}
                                         >
                                             <Text style={styles.saveText}>Save</Text>
                                         </TouchableOpacity>
@@ -274,13 +281,14 @@ const InspectionDetail = () => {
                                 </>
                             ) : (
                                 <>
+                                    <Text style={styles.palletCode}>{item.palletCode}</Text>
                                     <View style={styles.infoRow}>
                                         <Text style={styles.infoLabel}>Staging:</Text>
                                         <Text style={styles.infoValue}>
                                             {item.stagingArea.slice(-15)}
                                         </Text>
                                     </View>
-                                     <View style={styles.infoRow}>
+                                    <View style={styles.infoRow}>
                                         <Text style={styles.infoLabel}>Week:</Text>
                                         <Text style={styles.infoValue}>{item.weekNumber}</Text>
                                     </View>
@@ -292,7 +300,6 @@ const InspectionDetail = () => {
                                         <Text style={styles.infoLabel}>Code:</Text>
                                         <Text style={styles.infoValue}>{item.productionDate}</Text>
                                     </View>
-                                   
                                 </>
                             )}
                         </View>

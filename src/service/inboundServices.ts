@@ -133,6 +133,16 @@ class InboundServices {
     }
   }
 
+  static async getInspectionByInboundId(inboundId:string): Promise<any> {
+     try {
+      const response = await axiosInstance.get(`inbound/${inboundId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+
+  }
+
   static async updateInspectionData(itemId: string, data: any): Promise<any> {
     try {
       const response = await axiosInstance.patch(`transaction-scan-inbound/${itemId}`, data);

@@ -46,7 +46,7 @@ const InspectionScreen = () => {
   const fetchInspectionById = async () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
-      const response = await InboundServices.getInspectionList('PENDING');
+      const response = await InboundServices.getInspectionByInboundId(payload.item.id);
       const inbound = response.data;
       console.log("inspection Response:", inbound);
       const dataInspection: any = transformInspectionResponse(inbound);

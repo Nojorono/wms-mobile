@@ -48,9 +48,10 @@ const InspectionScreen = () => {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInspectionByInboundId(payload.item.id);
       const inbound = response.data;
-      console.log("inspection Response:", inbound);
       const dataInspection: any = transformInspectionResponse(inbound);
-      setMergedData(dataInspection[0].items_summary);
+     
+       console.log('Transformed Inspection Data:', dataInspection);
+      setMergedData(dataInspection.items_summary);
     } catch (error) {
       hideLoadingDialog()
       console.error('Error fetching inspection data:', error);

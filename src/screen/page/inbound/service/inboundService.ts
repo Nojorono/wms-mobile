@@ -143,6 +143,7 @@ for (const inbound of data) {
 }
 
 
+
 type ItemSummary = {
   item_id: string;
   sku: string;
@@ -151,69 +152,79 @@ type ItemSummary = {
   quantity_scan: number;
 };
 
-export function transformInspectionResponse(inbounds: any[]): any[] {
-  return inbounds.map((inbound) => {
-    const planMap = new Map<
-      string,
-      ItemSummary & { latestStatus?: { status: string; updatedAt: string } }
-    >();
+export function transformInspectionResponse(inbound: any): any {
+  const planMap = new Map<
+    string,
+    {
+      item_id: string;
+      sku: string;
+      description: string;
+      quantity_plan: number;
+      quantity_scan: number;
+      latestStatus?: { status: string; updatedAt: string };
+    }
+  >();
 
-    // 🔹 Hitung quantity_plan
-    inbound.inbound_dos.forEach((doItem: any) => {
-      doItem.inbound_items.forEach((item: any) => {
-        if (!planMap.has(item.item_id)) {
-          planMap.set(item.item_id, {
-            item_id: item.item_id,
-            sku: item.item?.sku ?? "",
-            description: item.item?.description ?? "",
-            quantity_plan: 0,
-            quantity_scan: 0,
-            latestStatus: undefined,
-          });
-        }
-        const current = planMap.get(item.item_id)!;
-        current.quantity_plan += item.quantity;
-      });
-    });
-
-    // 🔹 Hitung quantity_scan & ambil status terbaru
-    inbound.transaction_scan_inbounds.forEach((scan: any) => {
-      if (!planMap.has(scan.item_id)) {
-        planMap.set(scan.item_id, {
-          item_id: scan.item_id,
-          sku: "",
-          description: "",
+  // 🔹 Hitung quantity_plan
+  inbound.inbound_dos.forEach((doItem: any) => {
+    doItem.inbound_items.forEach((item: any) => {
+      if (!planMap.has(item.item_id)) {
+        planMap.set(item.item_id, {
+          item_id: item.item_id,
+          sku: item.item?.sku ?? "",
+          description: item.item?.description ?? "",
           quantity_plan: 0,
           quantity_scan: 0,
           latestStatus: undefined,
         });
       }
-      const current = planMap.get(scan.item_id)!;
-      current.quantity_scan += scan.quantity;
-
-      if (scan.status) {
-        if (
-          !current.latestStatus ||
-          new Date(scan.updatedAt) > new Date(current.latestStatus.updatedAt)
-        ) {
-          current.latestStatus = { status: scan.status, updatedAt: scan.updatedAt };
-        }
-      }
+      const current = planMap.get(item.item_id)!;
+      current.quantity_plan += item.quantity;
     });
-
-    return {
-      ...inbound,
-      items_summary: Array.from(planMap.values()).map((item) => ({
-        item_id: item.item_id,
-        sku: item.sku,
-        description: item.description,
-        quantity_plan: item.quantity_plan,
-        quantity_scan: item.quantity_scan,
-        status: item.latestStatus?.status ?? "UNSCANNED",
-      })),
-    };
   });
+
+  // 🔹 Hitung quantity_scan & ambil status terbaru
+  inbound.transaction_scan_inbounds.forEach((scan: any) => {
+    if (!planMap.has(scan.item_id)) {
+      planMap.set(scan.item_id, {
+        item_id: scan.item_id,
+        sku: "",
+        description: "",
+        quantity_plan: 0,
+        quantity_scan: 0,
+        latestStatus: undefined,
+      });
+    }
+    const current = planMap.get(scan.item_id)!;
+    current.quantity_scan += scan.quantity;
+
+    if (scan.status) {
+      if (
+        !current.latestStatus ||
+        new Date(scan.updatedAt) > new Date(current.latestStatus.updatedAt)
+      ) {
+        current.latestStatus = {
+          status: scan.status,
+          updatedAt: scan.updatedAt,
+        };
+      }
+    }
+  });
+
+  return {
+    ...inbound,
+    items_summary: Array.from(planMap.values()).map((item) => ({
+      item_id: item.item_id,
+      sku: item.sku,
+      description: item.description,
+      quantity_plan: item.quantity_plan,
+      quantity_scan: item.quantity_scan,
+      status: item.latestStatus?.status ?? "UNSCANNED",
+    })),
+  };
 }
+
+
 
 export function mergeGoodReceive(inboundData: any) {
   const resultMap = new Map();

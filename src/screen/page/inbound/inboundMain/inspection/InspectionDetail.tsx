@@ -6,6 +6,8 @@ import {
     FlatList,
     TouchableOpacity,
     TextInput,
+    Modal,
+    Pressable,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { ItemDetail } from "../../service/inboundService";
@@ -40,19 +42,22 @@ type PalletItem = {
     id: string;
     palletCode: string;
     qty: number;
-    weekNumber: number;
+    weekNumber: string;
     stagingArea: string;
     productionDate: string;
 };
 
 const InspectionDetail = () => {
     const [pallets, setPallets] = useState<PalletItem[]>([]);
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingItem, setEditingItem] = useState<PalletItem | null>(null);
+
     const [editQty, setEditQty] = useState("");
     const [palletCode, setPalletCode] = useState("");
-    const [editCode, setEditCode] = useState(""); // string (yyyy-mm-dd)
-     
+    const [editCode, setEditCode] = useState("");
     const [editDate, setEditDate] = useState<Date>(new Date());
+    const [editWeekNumber, setEditWeekNumber] = useState<string | null>(null);
+
+    const [openDatePicker, setOpenDatePicker] = useState(false);
 
     const navigation = useNavigation<StackNavigationProp<any>>();
     const route = useRoute();
@@ -60,47 +65,13 @@ const InspectionDetail = () => {
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const showDialog = useDialogStore((state) => state.showDialog);
 
-    // const [openPicker, setOpenPicker] = useState(false);
-    const [openDatePicker, setOpenDatePicker] = useState(false);
-    const [tempDate, setTempDate] = useState<Date | null>(null);
-
-    // buka datepicker → copy tanggal sekarang dulu
-    const handleOpenDatePicker = (currentDate: Date) => {
-        setTempDate(currentDate);
-        setOpenDatePicker(true);
-    };
-
-    // konfirmasi pilih tanggal
-    const handleConfirmDate = async (selectedDate: Date, palletId: string) => {
-        setOpenDatePicker(false);
-        setTempDate(null);
-
-        // update tanggal
-        setPallets((prev) =>
-            prev.map((p) =>
-                p.id === palletId ? { ...p, date: selectedDate.toISOString() } : p
-            )
-        );
-
-        // fetch week number setelah konfirmasi
-        await fetchWeek(selectedDate.toISOString(), palletId);
-    };
-
-    // cancel → jangan ubah apa-apa
-    const handleCancelDate = () => {
-        setOpenDatePicker(false);
-        setTempDate(null);
-    };
-
     const fetchData = async () => {
         try {
             showLoadingDialog("Loading Pallets");
             const res = await InboundServices.getUnloadingScanList(
                 payload.id,
-                "PENDING",
                 item.item_id
             );
-            console.log("Pallets Response:", res.data);
             if (res?.data) {
                 const mapped: PalletItem[] = res.data.map((d: any) => ({
                     id: d.id,
@@ -126,26 +97,32 @@ const InspectionDetail = () => {
     }, [navigation, item.inbound_id]);
 
     const handleEdit = (pallet: PalletItem) => {
-        setEditingId(pallet.id);
+        setEditingItem(pallet);
         setEditQty(String(pallet.qty));
         setPalletCode(pallet.palletCode);
         setEditCode(pallet.productionDate);
+        setEditWeekNumber(pallet.weekNumber);
         setEditDate(pallet.productionDate ? new Date(pallet.productionDate) : new Date());
     };
 
-    const handleSave = async (item: any) => {
+    const handleSave = async () => {
+        if (!editingItem) return;
         try {
             showLoadingDialog("Updating Pallet...");
-            // Simpan ke backend
-            await InboundServices.updateInspectionData(item.id, {
+            console.log("Updating pallet:", {
+                id: editingItem.id,
+                pallet_code: palletCode,
                 quantity: editQty,
-                // production_date: item.productionDate,
-                // week_number: item.weekNumber,
+                production_date: editCode,
+                week_number: Number(editWeekNumber),
             });
-
-            // Update state lokal
+            // await InboundServices.updateInspectionData(editingItem.id, {
+            //     quantity: editQty,
+            //     production_date: editCode,
+            //     week_number: editingItem.weekNumber,
+            // });
             await fetchData();
-            setEditingId(null);
+            setEditingItem(null);
         } catch (error) {
             showDialog("error", "Failed to update pallet!");
         } finally {
@@ -162,6 +139,12 @@ const InspectionDetail = () => {
                     p.id === id ? { ...p, weekNumber: minggu || p.weekNumber } : p
                 )
             );
+            // setEditingItem((prev) =>
+            //     prev && prev.id === id ? { ...prev, weekNumber: minggu || prev.weekNumber } : prev
+            // );
+
+            // simpan ke form state
+            setEditWeekNumber(minggu);
         } catch (error) {
             showDialog("error", "Error while Fetching Week Production!");
         }
@@ -174,11 +157,13 @@ const InspectionDetail = () => {
         return `${year}-${month}-${day}`;
     };
 
-    const handleDateSelect = (selectedDate: Date, id: string) => {
+    const handleDateSelect = (selectedDate: Date) => {
         const formatted = formatDate(selectedDate);
         setEditDate(selectedDate);
         setEditCode(formatted);
-        fetchWeek(formatted, id);
+        if (editingItem) {
+            fetchWeek(formatted, editingItem.id);
+        }
     };
 
     return (
@@ -207,114 +192,140 @@ const InspectionDetail = () => {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.palletCard}>
-                        {/* Left Icon */}
                         <View style={styles.iconWrapper}>
                             <Ionicons name="pricetag" size={28} color="#f97316" />
                         </View>
 
                         <View style={[styles.cardContent, { flex: 1 }]}>
-                            {editingId === item.id ? (
-                                <>
-                                    <TextInput
-                                        style={[styles.palletCode, styles.input]}
-                                        value={palletCode}
-                                        onChangeText={setPalletCode}
-                                    />
-                                    <View style={styles.infoRow}>
-                                        <Text style={styles.infoLabel}>Staging:</Text>
-                                        <Text style={styles.infoValue}>
-                                            {item.stagingArea.slice(-15)}
-                                        </Text>
-                                    </View>
-
-                                    <View style={styles.infoRow}>
-                                        <Text style={styles.infoLabel}>Week:</Text>
-                                        <Text style={styles.infoValue}>{item.weekNumber}</Text>
-                                    </View>
-
-                                    <View style={styles.infoRow}>
-                                        <Text style={styles.infoLabel}>Qty:</Text>
-                                        <TextInput
-                                            style={styles.input}
-                                            value={editQty}
-                                            onChangeText={setEditQty}
-                                            keyboardType="numeric"
-                                        />
-                                    </View>
-
-                                    <View style={styles.infoRow}>
-                                        <Text style={styles.infoLabel}>Code:</Text>
-                                        <TouchableOpacity
-                                            style={[styles.input, { justifyContent: "center", marginTop: 8 }]}
-                                            onPress={() => handleOpenDatePicker(editDate)}
-                                        >
-                                            <Text style={{ color: "#111", textAlign: "right" }}>
-                                                {editCode || "Select Production Date"}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    <View style={styles.actionRow}>
-                                        <TouchableOpacity
-                                            style={styles.saveBtn}
-                                            onPress={() => handleSave(item)}
-                                        >
-                                            <Text style={styles.saveText}>Save</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.cancelBtn}
-                                            onPress={() => setEditingId(null)}
-                                        >
-                                            <Text style={styles.cancelText}>Cancel</Text>
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    {/* Date Picker */}
-                                    <DatePicker
-                                        modal
-                                        mode="date"
-                                        open={openDatePicker}
-                                        date={tempDate || new Date()}
-                                        onConfirm={(date) => handleConfirmDate(date, item.id)}
-                                        onCancel={handleCancelDate}
-                                    />
-                                </>
-                            ) : (
-                                <>
-                                    <Text style={styles.palletCode}>{item.palletCode}</Text>
-                                    <View style={styles.infoRow}>
-                                        <Text style={styles.infoLabel}>Staging:</Text>
-                                        <Text style={styles.infoValue}>
-                                            {item.stagingArea.slice(-15)}
-                                        </Text>
-                                    </View>
-                                    <View style={styles.infoRow}>
-                                        <Text style={styles.infoLabel}>Week:</Text>
-                                        <Text style={styles.infoValue}>{item.weekNumber}</Text>
-                                    </View>
-                                    <View style={styles.infoRow}>
-                                        <Text style={styles.infoLabel}>Qty Scan:</Text>
-                                        <Text style={styles.infoValue}>{item.qty}</Text>
-                                    </View>
-                                    <View style={styles.infoRow}>
-                                        <Text style={styles.infoLabel}>Code:</Text>
-                                        <Text style={styles.infoValue}>{item.productionDate}</Text>
-                                    </View>
-                                </>
-                            )}
+                            <Text style={styles.palletCode}>{item.palletCode}</Text>
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Staging:</Text>
+                                <Text style={styles.infoValue}>
+                                    {item.stagingArea.slice(-15)}
+                                </Text>
+                            </View>
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Week:</Text>
+                                <Text style={styles.infoValue}>{item.weekNumber}</Text>
+                            </View>
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Qty Scan:</Text>
+                                <Text style={styles.infoValue}>{item.qty}</Text>
+                            </View>
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Code:</Text>
+                                <Text style={styles.infoValue}>{item.productionDate}</Text>
+                            </View>
                         </View>
 
-                        {/* Edit Button */}
-                        {editingId !== item.id && (
-                            <TouchableOpacity onPress={() => handleEdit(item)}>
-                                <Ionicons name="create-outline" size={22} color="#555" />
-                            </TouchableOpacity>
-                        )}
+                        <TouchableOpacity onPress={() => handleEdit(item)}>
+                            <Ionicons name="create-outline" size={22} color="#555" />
+                        </TouchableOpacity>
                     </View>
                 )}
                 ListEmptyComponent={
                     <Text style={styles.empty}>Belum ada data pending</Text>
                 }
+            />
+
+            {/* Modal Edit */}
+            <Modal
+                visible={!!editingItem}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setEditingItem(null)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Edit Pallet</Text>
+
+                        {/* Pallet Code */}
+                        <View style={styles.fieldRow}>
+                            <Text style={styles.fieldLabel}>Pallet Code</Text>
+                            <TextInput
+                                style={styles.fieldInput}
+                                value={palletCode}
+                                onChangeText={setPalletCode}
+                                placeholder="Pallet Code"
+                            />
+                        </View>
+
+                        {/* Quantity */}
+                        <View style={styles.fieldRow}>
+                            <Text style={styles.fieldLabel}>Qty</Text>
+                            <TextInput
+                                style={styles.fieldInput}
+                                value={editQty}
+                                onChangeText={setEditQty}
+                                placeholder="Quantity"
+                                keyboardType="numeric"
+                            />
+                        </View>
+
+                        {/* Production Date */}
+                        <View style={styles.fieldRow}>
+                            <Text style={styles.fieldLabel}>Prod. Date</Text>
+                            <Pressable
+                                style={[styles.fieldInput, { justifyContent: "center" }]}
+                                onPress={() => setOpenDatePicker(true)}
+                            >
+                                <Text style={{ color: editCode ? "#222" : "#aaa" }}>
+                                    {editCode || "Select Production Date"}
+                                </Text>
+                            </Pressable>
+                        </View>
+
+                        {/* Week Info (readonly) */}
+                        <View style={styles.fieldRow}>
+                            <Text style={styles.fieldLabel}>Week</Text>
+                            <Text
+                                style={[
+                                    styles.fieldInput,
+                                    { borderBottomWidth: 0 },
+                                    {
+                                        fontWeight: "bold",
+                                        color:
+                                            pallets.find((p) => p.id === editingItem?.id)?.weekNumber !== editingItem?.weekNumber
+                                                ? "green"
+                                                : "#222",
+                                    },
+                                ]}
+                            >
+                                {editWeekNumber || "-"}
+                            </Text>
+                        </View>
+
+                        <View style={styles.actionRow}>
+                            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+                                <Text style={styles.saveText}>Save</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.cancelBtn}
+                                onPress={async () => {
+                                    setEditingItem(null);
+                                    await fetchData();
+                                }}
+                            >
+                                <Text style={styles.cancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+
+
+            {/* Date Picker */}
+            <DatePicker
+                modal
+                mode="date"
+                open={openDatePicker}
+                date={editDate}
+                onConfirm={(date) => {
+                    setOpenDatePicker(false);
+                    handleDateSelect(date);
+                }}
+                onCancel={() => setOpenDatePicker(false)}
             />
         </View>
     );
@@ -367,15 +378,15 @@ const styles = StyleSheet.create({
     infoValue: { fontSize: 15, fontWeight: "500", color: "#222" },
 
     input: {
-        flex: 1,
         borderBottomWidth: 1,
         borderBottomColor: "#ccc",
         fontSize: 15,
-        paddingVertical: 2,
+        paddingVertical: 6,
+        marginBottom: 12,
         color: "#222",
     },
 
-    actionRow: { flexDirection: "row", marginTop: 8, gap: 8 },
+    actionRow: { flexDirection: "row", marginTop: 8, gap: 8, justifyContent: "flex-end" },
     saveBtn: {
         backgroundColor: "#4CAF50",
         paddingHorizontal: 14,
@@ -392,6 +403,44 @@ const styles = StyleSheet.create({
     cancelText: { color: "#333" },
 
     empty: { textAlign: "center", color: "#bbb", marginTop: 24, fontSize: 15 },
+
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    modalContent: {
+        width: "85%",
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        padding: 20,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "700",
+        marginBottom: 12,
+        color: "#222",
+    },
+    fieldRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 12,
+    },
+    fieldLabel: {
+        width: 100,              // lebar tetap biar rata
+        fontSize: 15,
+        color: "#555",
+    },
+    fieldInput: {
+        flex: 1,
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
+        fontSize: 15,
+        paddingVertical: 4,
+        color: "#222",
+    },
+
 });
 
 export default InspectionDetail;

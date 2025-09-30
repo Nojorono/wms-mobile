@@ -67,7 +67,6 @@ const UnloadingScanScreen = () => {
 
       const res = await InboundServices.getUnloadingScanList(
         item.inbound_id,
-        "PENDING",
         item.item.id
       );
       if (res?.data) {

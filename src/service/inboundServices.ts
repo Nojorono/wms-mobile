@@ -78,9 +78,9 @@ class InboundServices {
     }
   }
 
-  static async getUnloadingScanList(inboundId: string, status: string, itemId: string): Promise<any> {
+  static async getUnloadingScanList(inboundId: string, itemId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId, status: status, item_id: itemId } });
+      const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId,  item_id: itemId } });
       return response.data;
     } catch (error: any) {
       throw error.response;

@@ -116,11 +116,12 @@ const InspectionDetail = () => {
                 production_date: editCode,
                 week_number: Number(editWeekNumber),
             });
-            // await InboundServices.updateInspectionData(editingItem.id, {
-            //     quantity: editQty,
-            //     production_date: editCode,
-            //     week_number: editingItem.weekNumber,
-            // });
+            await InboundServices.updateInspectionData(editingItem.id, {
+                quantity: editQty,
+                production_date: editCode,
+                // pallet_code: palletCode,
+                week_number:  Number(editWeekNumber),
+            });
             await fetchData();
             setEditingItem(null);
         } catch (error) {
@@ -296,15 +297,28 @@ const InspectionDetail = () => {
                         </View>
 
                         <View style={styles.actionRow}>
-                            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+                            <TouchableOpacity
+                                style={[styles.saveBtn, { backgroundColor: "#f97316", flex: 1 }]}
+                               onPress={async () => {
+                                    // Approve action: save then close modal
+                                    
+                                }}
+                            >
+                                <Text style={styles.saveText}>Approve</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={[styles.actionRow, { gap: 12 }]}>
+                            <TouchableOpacity style={[styles.saveBtn, { flex: 1 }]}  
+                            onPress={async () => {
+                                    // Approve action: save then close modal
+                                    await handleSave();
+                                    setEditingItem(null);
+                                }}>
                                 <Text style={styles.saveText}>Save</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={styles.cancelBtn}
-                                onPress={async () => {
-                                    setEditingItem(null);
-                                    await fetchData();
-                                }}
+                                style={[styles.cancelBtn, { flex: 1 }]}
+                                onPress={() => setEditingItem(null)}
                             >
                                 <Text style={styles.cancelText}>Cancel</Text>
                             </TouchableOpacity>
@@ -386,21 +400,23 @@ const styles = StyleSheet.create({
         color: "#222",
     },
 
-    actionRow: { flexDirection: "row", marginTop: 8, gap: 8, justifyContent: "flex-end" },
+    actionRow: { flexDirection: "row", marginTop: 8, gap: 8, justifyContent: "center" },
     saveBtn: {
         backgroundColor: "#4CAF50",
         paddingHorizontal: 14,
         paddingVertical: 6,
         borderRadius: 6,
+        marginHorizontal:20
     },
     cancelBtn: {
         backgroundColor: "#ddd",
         paddingHorizontal: 14,
         paddingVertical: 6,
         borderRadius: 6,
+        marginRight:20
     },
-    saveText: { color: "#fff", fontWeight: "600" },
-    cancelText: { color: "#333" },
+    saveText: { color: "#fff", fontWeight: "600" , textAlign: "center"},
+    cancelText: { color: "#333",textAlign: "center" },
 
     empty: { textAlign: "center", color: "#bbb", marginTop: 24, fontSize: 15 },
 

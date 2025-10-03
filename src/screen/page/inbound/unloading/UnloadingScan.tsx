@@ -48,6 +48,7 @@ type PalletItem = {
   weekNumber: number;
   stagingArea: string;
   productionDate: string;
+  status: string;
 };
 
 const UnloadingScanScreen = () => {
@@ -75,6 +76,7 @@ const UnloadingScanScreen = () => {
           palletCode: d.pallet?.pallet_code || "-",
           qty: d.quantity,
           weekNumber: d.week_number,
+          status: d.status,
           stagingArea: d.m_warehouse_sub_id || "-",
           productionDate: d.production_date || "-",
         }));
@@ -94,6 +96,28 @@ const UnloadingScanScreen = () => {
 
     return unsubscribe;
   }, [navigation, item.inbound_id]);
+
+  const updateStatusAll = async () => {
+    
+    const totalQtyScan = pallets.reduce((sum, p) => sum + p.qty, 0);
+    if (totalQtyScan > item.quantityPlan) {
+    // kalau qty scan lebih besar dari plan
+    showDialog("error", "Quantity melebihi jumlah plan!");
+    return;
+  }
+    try {
+      const payloadToSend = {
+        ids: pallets.map(p => p.id),
+      };
+      showLoadingDialog("Sending... ");
+      await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
+    } catch (error) {
+      showDialog('error', 'Error while Sending Status!');
+    } finally {
+      await fetchData();
+    }
+
+  }
 
   const handleRemove = (palletId: string) => {
     confirm.show("decline", "Are you sure Remove this pallet ?", async () => {
@@ -143,14 +167,16 @@ const UnloadingScanScreen = () => {
             {/* Right Content */}
             <View style={[styles.cardContent, { flexDirection: "column", flex: 1 }]}>
               {/* Delete Icon in top right */}
-              <TouchableOpacity
-                style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 4 }}
-                onPress={() => {
-                  handleRemove(item.id);
-                }}
-              >
-                <Ionicons name="remove-circle" size={22} color="#FF3B30" />
-              </TouchableOpacity>
+              {item.status !== "PENDING" && (
+                <TouchableOpacity
+                  style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 4 }}
+                  onPress={() => {
+                    handleRemove(item.id);
+                  }}
+                >
+                  <Ionicons name="remove-circle" size={22} color="#FF3B30" />
+                </TouchableOpacity>
+              )}
               <Text style={styles.palletCode}>{item.palletCode}</Text>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Staging:</Text>
@@ -168,6 +194,10 @@ const UnloadingScanScreen = () => {
                 <Text style={styles.infoLabel}>Week:</Text>
                 <Text style={styles.infoValue}>{item.weekNumber}</Text>
               </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Status:</Text>
+                <Text style={styles.infoValue}>{item.status}</Text>
+              </View>
             </View>
           </View>
         )}
@@ -177,9 +207,34 @@ const UnloadingScanScreen = () => {
       />
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { justifyContent: "space-between" }]}>
         <TouchableOpacity
-          style={styles.scanBtn}
+          style={[
+            styles.scanBtn,
+            { flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e" }
+          ]}
+          onPress={async () => {
+            updateStatusAll()
+
+            // try {
+            //   const payloadToSend = {
+            //     ids: pallets.map(p => p.id),
+            //   };
+            //   console.log("Payload to send:", payloadToSend);
+            //   showLoadingDialog("Sending... ");
+            //   await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
+            // } catch (error) {
+            //   showDialog('error', 'Error while Sending Status!');
+            // } finally {
+            //   await fetchData();
+            // }
+          }}
+        >
+          <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.btnText}>Send to SPV</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.scanBtn, { flexDirection: "row", alignItems: "center" }]}
           onPress={() =>
             navigation.navigate("CameraScreen", {
               item: item,
@@ -188,6 +243,7 @@ const UnloadingScanScreen = () => {
         >
           <Ionicons name="qr-code-outline" size={28} color="#fff" />
         </TouchableOpacity>
+
 
       </View>
     </View>

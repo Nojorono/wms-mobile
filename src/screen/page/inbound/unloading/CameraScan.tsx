@@ -124,7 +124,7 @@ const CameraScreen = () => {
                 item_id: item.id,
                 user_id: user.id,
                 user_name: user.username,
-                status: "PENDING",
+                status: "OPEN",
                 uom: item.uom,
                 staging_area_id: "", // default kosong
             };

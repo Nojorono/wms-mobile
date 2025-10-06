@@ -142,9 +142,9 @@ class InboundServices {
     }
   }
 
-  static async getInspectionByInboundId(inboundId:string, status_inbound:string): Promise<any> {
+  static async getInspectionByInboundId(inboundId:string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`inbound/${inboundId}`, { params: { status: status_inbound } });
+      const response = await axiosInstance.get(`inbound/${inboundId}`);
       return response.data;
     } catch (error: any) {
       throw error.response;

@@ -31,6 +31,7 @@ const InspectionScreen = () => {
 
   const navigation = useNavigation<NavigationProp>();
   const [mergedData, setMergedData] = useState<any>([]);
+  const [responseInbound, setResponseInbound] = useState<any>(null);
   const route = useRoute();
   const payload = route.params as InboundDetailRouteParams;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
@@ -46,10 +47,11 @@ const InspectionScreen = () => {
   const fetchInspectionById = async () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
-      console.log("Fetching inspection for inbound ID:", payload.item.id);
-      const response = await InboundServices.getInspectionByInboundId(payload.item.id,"PENDING");
+      const response = await InboundServices.getInspectionByInboundId(payload.item.id);
+      console.log("Inspection Response:", response);
       const inbound = response.data;
       const dataInspection: any = transformInspectionResponse(inbound);
+      setResponseInbound(inbound);
       setMergedData(dataInspection.items_summary);
     } catch (error) {
       hideLoadingDialog()
@@ -105,13 +107,20 @@ const InspectionScreen = () => {
 
       {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <InspectionCardList
-            items={mergedData}
-            onCheck={handleCheck}
-          />
-
-        </ScrollView>
+        {responseInbound?.status === "CREATED" ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ color: "#FF6B00", fontWeight: "bold", fontSize: 16 }}>
+              Please approve this inbound first
+            </Text>
+          </View>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <InspectionCardList
+              items={mergedData}
+              onCheck={handleCheck}
+            />
+          </ScrollView>
+        )}
       </View>
       {mergedData.length > 0 &&
         mergedData.every((item: any) => item.status === "COMPLETED") && (

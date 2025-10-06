@@ -142,9 +142,9 @@ class InboundServices {
     }
   }
 
-  static async getInspectionByInboundId(inboundId:string): Promise<any> {
-     try {
-      const response = await axiosInstance.get(`inbound/${inboundId}`);
+  static async getInspectionByInboundId(inboundId:string, status_inbound:string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`inbound/${inboundId}`, { params: { status: status_inbound } });
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -159,6 +159,16 @@ class InboundServices {
       return response.data;
     } catch (error: any) {
       console.error("Error updating inspection data:", error);
+      throw error.response;
+    }
+  }
+
+  static async approveInspectionById(item_id: string, status_item: string): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/transaction-scan-inbound/inspection-approved/${item_id}?status=${status_item}`);
+      return response.data;
+      
+    } catch (error: any) {
       throw error.response;
     }
   }

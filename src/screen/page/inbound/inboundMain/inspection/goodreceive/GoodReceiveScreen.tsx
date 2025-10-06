@@ -44,11 +44,9 @@ const GoodReceiveScreen = () => {
   const fetchInspectionById = async () => {
     try {
       showLoadingDialog("Loading List Good Receive")
-      const response = await InboundServices.getInspectionByInboundId(payload.payload.id);
+      const response = await InboundServices.getInspectionByInboundId(payload.payload.id,"COMPLETED");
       const inbound = response.data;
       const dataInspection: any = mergeGoodReceive(inbound);
-        console.log("Data Good Receive:", dataInspection);
-
       setMergedData(dataInspection);
     } catch (error) {
       hideLoadingDialog()

@@ -158,6 +158,7 @@ export function transformInspectionResponse(inbound: any): any {
     {
       item_id: string;
       sku: string;
+      uom: string;
       description: string;
       quantity_plan: number;
       quantity_scan: number;
@@ -171,6 +172,7 @@ export function transformInspectionResponse(inbound: any): any {
       if (!planMap.has(item.item_id)) {
         planMap.set(item.item_id, {
           item_id: item.item_id,
+          uom: item.uom,
           sku: item.item?.sku ?? "",
           description: item.item?.description ?? "",
           quantity_plan: 0,
@@ -189,6 +191,7 @@ export function transformInspectionResponse(inbound: any): any {
       planMap.set(scan.item_id, {
         item_id: scan.item_id,
         sku: "",
+        uom: "",
         description: "",
         quantity_plan: 0,
         quantity_scan: 0,
@@ -216,6 +219,7 @@ export function transformInspectionResponse(inbound: any): any {
     items_summary: Array.from(planMap.values()).map((item) => ({
       item_id: item.item_id,
       sku: item.sku,
+      uom:item.uom,
       description: item.description,
       quantity_plan: item.quantity_plan,
       quantity_scan: item.quantity_scan,

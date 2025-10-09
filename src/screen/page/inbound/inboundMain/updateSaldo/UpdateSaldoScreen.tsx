@@ -40,7 +40,6 @@ const UpdateSaldoScreen = () => {
       payload: payload.item,
     });
   };
-  console.log("Payload Update Saldo:", payload);
 
   const fetchInspectionById = async () => {
     try {

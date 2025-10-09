@@ -163,6 +163,15 @@ class InboundServices {
     }
   }
 
+  static async updateInspectionWhenPalletChange(itemId: string, data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/transaction-scan-inbound/change-pallet/${itemId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   static async approveInspectionById(item_id: string, status_item: string): Promise<any> {
     try {
       const response = await axiosInstance.patch(`/transaction-scan-inbound/inspection-approved/${item_id}?status=${status_item}`);

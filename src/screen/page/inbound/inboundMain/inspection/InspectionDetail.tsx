@@ -17,6 +17,8 @@ import { useDialogStore } from "../../../../../store/useGlobalDialog";
 import InboundServices from "../../../../../service/inboundServices";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import DatePicker from "react-native-date-picker";
+import UserServices from "../../../../../service/userServices";
+import { useAuthStore } from "../../../../../store/useAuthStore";
 
 type ItemType = {
     inbound_id: string;
@@ -59,6 +61,7 @@ const InspectionDetail = () => {
     const [editWeekNumber, setEditWeekNumber] = useState<string | null>(null);
 
     const [openDatePicker, setOpenDatePicker] = useState(false);
+    const { user } = useAuthStore();
 
     const navigation = useNavigation<StackNavigationProp<any>>();
     const route = useRoute();
@@ -68,6 +71,7 @@ const InspectionDetail = () => {
 
     const fetchData = async () => {
         try {
+            console.log("Fetching pallets for item:", item, payload);
             showLoadingDialog("Loading Pallets");
             const res = await InboundServices.getUnloadingScanList(
                 payload.id,
@@ -125,23 +129,42 @@ const InspectionDetail = () => {
         if (!editingItem) return;
         try {
             showLoadingDialog("Updating Pallet...");
-            console.log("Updating pallet:", {
-                id: editingItem.id,
-                pallet_code: palletCode,
-                quantity: editQty,
-                production_date: editCode,
-                week_number: Number(editWeekNumber),
-            });
-            await InboundServices.updateInspectionData(editingItem.id, {
-                quantity: editQty,
-                production_date: editCode,
-                // pallet_code: palletCode,
-                week_number: Number(editWeekNumber),
-            });
+            // Jika palletCode berubah, gunakan updateInspectionWhenPalletChange
+            if (editingItem.palletCode !== palletCode) {
+                const palletInfo = await InboundServices.getPalletInfo(palletCode); // Validasi pallet code dulu
+                if (palletInfo?.data) {
+                    await InboundServices.updateInspectionWhenPalletChange(editingItem.id, {
+                        production_date: editCode,
+                        week_number: Number(editWeekNumber),
+                        inbound_id: payload.id,
+                        item_id: item.item_id,
+                        quantity: editQty,
+                        uom: item.uom,
+                        user_id: user?.id ?? "",
+                        user_name: user?.username ?? "",
+                        pallet_code: palletCode,
+                        m_warehouse_sub_id: editingItem.stagingArea,
+                        status: editingItem.status,
+                    });
+                } else {
+                    showDialog("error", "Pallet code tidak valid!");
+                    return;
+                }
+            } else {
+                await InboundServices.updateInspectionData(editingItem.id, {
+                    quantity: editQty,
+                    production_date: editCode,
+                    week_number: Number(editWeekNumber),
+                });
+            }
             await fetchData();
             setEditingItem(null);
         } catch (error) {
-            showDialog("error", "Failed to update pallet!");
+            const errorMessage =
+                typeof error === "object" && error !== null && "data" in error
+                    ? (error as any).data?.error?.toString() || "Failed to Update Pallet!"
+                    : "Failed to Update Pallet!";
+            showDialog("error", errorMessage);
         } finally {
             hideLoadingDialog();
         }

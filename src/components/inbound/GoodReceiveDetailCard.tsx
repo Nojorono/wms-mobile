@@ -21,6 +21,7 @@ interface Detail {
 interface Item {
     item_id: string;
     sku: string;
+    do_id: string;
     description: string;
     uom: string;
     quantity_plan: number;
@@ -121,6 +122,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                     try {
                         showLoadingDialog("Updating Good Receive");
                         const payload = {
+                            inbound_do_id: data.do_id,
                             items: details.map((d) => ({
                                 id: d.item_id_inbound,
                                 quantity_inspection: d.quantity_scanned,

@@ -123,6 +123,15 @@ class InboundServices {
     }
   }
 
+  static async postStatusBulkbyIdScan(status: string, data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`transaction-scan-inbound/update-many-status-to/${status}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   //INSPECTION SERVICES
   static async getInspectionList(status: string): Promise<any> {
     try {
@@ -134,7 +143,7 @@ class InboundServices {
   }
 
   static async getInspectionByInboundId(inboundId:string): Promise<any> {
-     try {
+    try {
       const response = await axiosInstance.get(`inbound/${inboundId}`);
       return response.data;
     } catch (error: any) {
@@ -150,6 +159,25 @@ class InboundServices {
       return response.data;
     } catch (error: any) {
       console.error("Error updating inspection data:", error);
+      throw error.response;
+    }
+  }
+
+  static async updateInspectionWhenPalletChange(itemId: string, data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/transaction-scan-inbound/change-pallet/${itemId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async approveInspectionById(item_id: string, status_item: string): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/transaction-scan-inbound/inspection-approved/${item_id}?status=${status_item}`);
+      return response.data;
+      
+    } catch (error: any) {
       throw error.response;
     }
   }

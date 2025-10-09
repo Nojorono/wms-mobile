@@ -40,16 +40,13 @@ const UpdateSaldoScreen = () => {
       payload: payload.item,
     });
   };
-  console.log("Payload Update Saldo:", payload);
 
   const fetchInspectionById = async () => {
     try {
       showLoadingDialog("Loading List Good Receive")
-      const response = await InboundServices.getInspectionList('PENDING');
+      const response = await InboundServices.getInspectionByInboundId(payload.item.id);
       const inbound = response.data;
-      const dataInspection: any = mergeGoodReceive(inbound[0]);
-        console.log("Data Good Receive:", dataInspection);
-
+      const dataInspection: any = mergeGoodReceive(inbound);
       setMergedData(dataInspection);
     } catch (error) {
       hideLoadingDialog()

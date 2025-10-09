@@ -52,6 +52,7 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
               <Text style={styles.quantityLabel}>Scanned</Text>
               <Text style={styles.quantityValue}>
                 {item.quantity_inspected ?? item.quantity_scanned} {item.uom}
+                {/* { item.quantity_scanned} {item.uom} */}
               </Text>
             </View>
 
@@ -64,6 +65,7 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
                     PO <Text style={styles.bold}>{detail.po_number}</Text>{" "}
                     <Text style={styles.detailQty}>
                       {detail.quantity_inspected ?? detail.quantity_scanned} {detail.uom}
+                      {/* {detail.quantity_scanned} {detail.uom} */}
                     </Text>
                   </Text>
                 </View>

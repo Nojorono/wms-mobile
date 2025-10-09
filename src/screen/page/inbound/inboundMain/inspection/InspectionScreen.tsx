@@ -1,10 +1,10 @@
 // screens/UnloadingScreen.tsx
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from "react-native";
 import Ionicons from "react-native-vector-icons/FontAwesome5";
 import { UnloadingParamList } from "../../../../navigation/inbound/UnloadingNavigator";
-import {  MergedItem, mergeUnloadingData, transformInspectionResponse } from "../../service/inboundService";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { MergedItem, mergeUnloadingData, transformInspectionResponse } from "../../service/inboundService";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import InboundServices from "../../../../../service/inboundServices";
 import UnloadingCardList from "../../../../../components/inbound/UnloadingListCard";
@@ -31,6 +31,7 @@ const InspectionScreen = () => {
 
   const navigation = useNavigation<NavigationProp>();
   const [mergedData, setMergedData] = useState<any>([]);
+  const [responseInbound, setResponseInbound] = useState<any>(null);
   const route = useRoute();
   const payload = route.params as InboundDetailRouteParams;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
@@ -47,10 +48,10 @@ const InspectionScreen = () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInspectionByInboundId(payload.item.id);
+      console.log("Inspection Response:", response);
       const inbound = response.data;
       const dataInspection: any = transformInspectionResponse(inbound);
-     
-       console.log('Transformed Inspection Data:', dataInspection);
+      setResponseInbound(inbound);
       setMergedData(dataInspection.items_summary);
     } catch (error) {
       hideLoadingDialog()
@@ -77,6 +78,12 @@ const InspectionScreen = () => {
     initialize();
   }, [])
 
+    useFocusEffect(
+    useCallback(() => {
+      fetchInspectionById();
+    }, [payload.item.id])
+  );
+
 
   return (
     <View style={styles.container}>
@@ -100,38 +107,47 @@ const InspectionScreen = () => {
 
       {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <InspectionCardList
-            items={mergedData}
-            onCheck={handleCheck}
-          />
-      
-        </ScrollView>
+        {responseInbound?.status === "CREATED" ? (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ color: "#FF6B00", fontWeight: "bold", fontSize: 16 }}>
+              Please approve this inbound first
+            </Text>
+          </View>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <InspectionCardList
+              items={mergedData}
+              onCheck={handleCheck}
+            />
+          </ScrollView>
+        )}
       </View>
-      <View style={{ alignItems: "center", justifyContent: "center", marginTop: 16 }}>
+      {mergedData.length > 0 &&
+        mergedData.every((item: any) => item.status === "COMPLETED") && (
+          <View style={{ alignItems: "center", justifyContent: "center", marginTop: 16 }}>
         <TouchableOpacity
           style={{
-        backgroundColor: "#FF6B00",
-        borderRadius: 32,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        flexDirection: "row",
-        alignItems: "center",
-        elevation: 4,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+            backgroundColor: "#FF6B00",
+            borderRadius: 32,
+            paddingVertical: 14,
+            paddingHorizontal: 24,
+            flexDirection: "row",
+            alignItems: "center",
+            elevation: 4,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
           }}
-          onPress={(item:any) => {
-        // TODO: Implement Good Receive action
-        navigation.navigate("GoodReceive", {  payload: payload.item });
+          onPress={() => {
+            navigation.navigate("GoodReceive", { payload: payload.item });
           }}
         >
           <Ionicons name="check-circle" size={20} color="#FFF" style={{ marginRight: 8 }} />
           <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>Good Receive</Text>
         </TouchableOpacity>
-      </View>
+          </View>
+      )}
     </View>
   );
 };

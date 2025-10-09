@@ -20,6 +20,7 @@ import InboundServices from "../../../../service/inboundServices";
 import { useAuthStore } from "../../../../store/useAuthStore";
 import { Picker } from "@react-native-picker/picker";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
+import { set } from "react-hook-form";
 
 type NavigationProp = StackNavigationProp<
     UnloadingParamList,
@@ -69,6 +70,9 @@ const CameraScreen = () => {
             setManualInput(codes[0]?.value ?? ""); // langsung isi ke input
         }
     })
+    
+    // pallet data
+    const [qtyPalletExist, setQtyPalletExist] = useState(0);
 
     // hanya 1 pallet
     const [scan, setScan] = useState<PalletItem | null>(null);
@@ -77,6 +81,7 @@ const CameraScreen = () => {
     // date picker
     const [openPicker, setOpenPicker] = useState(false);
     const [tempDate, setTempDate] = useState(new Date());
+    
 
     // staging area
     const [stagingAreas, setStagingAreas] = useState<any[]>([]);
@@ -93,7 +98,6 @@ const CameraScreen = () => {
             try {
                 const res = await InboundServices.getStagingArea();
                 setStagingAreas(res?.data || []);
-                console
             } catch (err) {
                 console.error("Gagal fetch staging area:", err);
             }
@@ -106,7 +110,7 @@ const CameraScreen = () => {
 
         try {
             // 🔥 Panggil API validasi pallet
-            const res = await InboundServices.getPalletInfo(manualInput.trim());
+            const res = await InboundServices.getPalletInfo(manualInput.trim().toUpperCase());
             const palletData = res?.data;
 
             if (!palletData) {
@@ -116,7 +120,7 @@ const CameraScreen = () => {
             // Jika valid, buat PalletItem
             const newItem: PalletItem = {
                 id: Date.now().toString(),
-                palletNo: manualInput.trim(),
+                palletNo: manualInput.trim().toUpperCase(),
                 qty: palletData.qty?.toString() || "", // isi qty kalau ada dari API
                 production_date: palletData.production_date || null,
                 week: palletData.week?.toString() || null,
@@ -124,11 +128,11 @@ const CameraScreen = () => {
                 item_id: item.id,
                 user_id: user.id,
                 user_name: user.username,
-                status: "PENDING",
+                status: "OPEN",
                 uom: item.uom,
                 staging_area_id: "", // default kosong
             };
-
+            setQtyPalletExist(palletData.available_capacity || 0);
             setScan(newItem); // replace, hanya 1 card
             setManualInput("");
         } catch (err) {
@@ -185,7 +189,7 @@ const CameraScreen = () => {
                     navigation.goBack();
                 })
                 .catch((err) => {
-                    showDialog('error', 'Error while Posting Unloading Data!');
+                    showDialog('error', err.data.error || 'Error while Posting Unloading!');
                 });
         }
     };
@@ -222,7 +226,7 @@ const CameraScreen = () => {
                 {scan ? (
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
-                            <Text style={styles.palletTitle}>{scan.palletNo}</Text>
+                            <Text style={styles.palletTitle}>{scan.palletNo} | available capacity : {qtyPalletExist}</Text>
                             <TouchableOpacity style={styles.deleteBtn} onPress={deletePallet}>
                                 <Text style={{ color: "#fff" }}>Delete</Text>
                             </TouchableOpacity>

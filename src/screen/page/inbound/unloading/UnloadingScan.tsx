@@ -98,26 +98,38 @@ const UnloadingScanScreen = () => {
   }, [navigation, item.inbound_id]);
 
   const updateStatusAll = async () => {
-    
-    const totalQtyScan = pallets.reduce((sum, p) => sum + p.qty, 0);
-    if (totalQtyScan > item.quantityPlan) {
-    // kalau qty scan lebih besar dari plan
+  const totalQtyScan = pallets.reduce((sum, p) => sum + p.qty, 0);
+
+  // Cek apakah total qty melebihi plan
+  if (totalQtyScan > item.quantityPlan) {
     showDialog("error", "Quantity melebihi jumlah plan!");
     return;
   }
-    try {
-      const payloadToSend = {
-        ids: pallets.map(p => p.id),
-      };
-      showLoadingDialog("Sending... ");
-      await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
-    } catch (error) {
-      showDialog('error', 'Error while Sending Status!');
-    } finally {
-      await fetchData();
-    }
 
+  // Ambil hanya pallet yang status-nya CREATED
+  const createdPallets = pallets.filter(p => p.status === "CREATED");
+
+  // Kalau tidak ada pallet dengan status CREATED
+  if (createdPallets.length === 0) {
+    showDialog("error", "Semua data sudah dikirim ke SPV!");
+    return;
   }
+
+  try {
+    const payloadToSend = {
+      ids: createdPallets.map(p => p.id),
+    };
+    showLoadingDialog("Sending...");
+    await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
+
+    showDialog("success", "Status pallet CREATED berhasil diupdate!");
+  } catch (error) {
+    console.error("Error while updating:", error);
+    showDialog("error", "Error while Sending Status!");
+  } finally {
+    await fetchData();
+  }
+};
 
   const handleRemove = (palletId: string) => {
     confirm.show("decline", "Are you sure Remove this pallet ?", async () => {
@@ -167,7 +179,7 @@ const UnloadingScanScreen = () => {
             {/* Right Content */}
             <View style={[styles.cardContent, { flexDirection: "column", flex: 1 }]}>
               {/* Delete Icon in top right */}
-              {item.status !== "PENDING" && (
+              {item.status !== "PENDING" && item.status !== "COMPLETED" && (
                 <TouchableOpacity
                   style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 4 }}
                   onPress={() => {

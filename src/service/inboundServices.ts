@@ -80,7 +80,7 @@ class InboundServices {
 
   static async getUnloadingScanList(inboundId: string, itemId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId,  item_id: itemId } });
+      const response = await axiosInstance.get('transaction-scan-inbound', { params: { inbound_id: inboundId, item_id: itemId } });
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -142,7 +142,7 @@ class InboundServices {
     }
   }
 
-  static async getInspectionByInboundId(inboundId:string): Promise<any> {
+  static async getInspectionByInboundId(inboundId: string): Promise<any> {
     try {
       const response = await axiosInstance.get(`inbound/${inboundId}`);
       return response.data;
@@ -176,7 +176,7 @@ class InboundServices {
     try {
       const response = await axiosInstance.patch(`/transaction-scan-inbound/inspection-approved/${item_id}?status=${status_item}`);
       return response.data;
-      
+
     } catch (error: any) {
       throw error.response;
     }
@@ -185,7 +185,26 @@ class InboundServices {
   //GOOD RECEIVE SERVICES
   static async updateGoodReceiveDetail(data: any): Promise<any> {
     try {
-      const response = await axiosInstance.patch(`inbound/inbound-items/bulk/saldo-inspection`,   data  );
+      const response = await axiosInstance.patch(`inbound/inbound-items/bulk/saldo-inspection`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  //FORKLIFT SERVICES
+  static async getForkLiftList(userId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/put-away/find-task/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async postForkLiftComplete(id: string): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/put-away/task-completed/${id}`);
       return response.data;
     } catch (error: any) {
       throw error.response;

@@ -57,7 +57,7 @@ function InboundIndex() {
             <View style={styles.menuCard}>
               <MenuCard title={'Inbound'} onPress={() => {navigationInbound.navigate("InboundMain")}}/>
               <MenuCard title={'Unloading'} onPress={() => {navigationInbound.navigate("UnloadingNavigator")}}/>
-              <MenuCard title={'ForkLift'} onPress={() => {navigationInbound.navigate("ForkLiftNavigator")}}/>
+              <MenuCard title={'Put Away'} onPress={() => {navigationInbound.navigate("ForkLiftNavigator")}}/>
             </View>
           </ScrollView>
         </View>

@@ -241,10 +241,7 @@ export default function InboundDetail() {
                     <Ionicons name="box-open" size={28} color="#059669" />
                     <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Update Saldo</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => console.log("Forklift pressed")}>
-                    <Ionicons name="truck-loading" size={28} color="#059669" />
-                    <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Forklift</Text>
-                </TouchableOpacity>
+            
             </View>
 
             {/* List Delivery Orders */}

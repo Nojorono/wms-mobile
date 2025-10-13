@@ -11,7 +11,7 @@ interface Role {
 }
 
 interface User {
-    id:            string;
+    id: string;
     username: string;
     organizationId: number;
     password: string;

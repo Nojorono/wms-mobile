@@ -11,6 +11,7 @@ import InspectionNavigator from './InspectionNavigator.tsx';
 import InboundDetail from '../../page/inbound/inboundMain/InboundDetail.tsx';
 import CheckerScreen from '../../page/inbound/inboundMain/checker/CheckerScreen.tsx';
 import UpdateSaldoNavigator from './UpdateSaldoNavigator.tsx';
+import ForkLiftNavigator from './ForkLiftNavigator.tsx';
 
 
 
@@ -23,6 +24,7 @@ export type InboundParamList = {
   InboundDetail: { item: any };
   CheckerScreen: { item: any };
   UnloadingNavigator: undefined;
+  ForkLiftNavigator: undefined;
   InspectionNavigator: {
     screen: "InspectionMain";
     params: { item: any };
@@ -133,6 +135,17 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="UpdateSaldoNavigator"
       component={UpdateSaldoNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="ForkLiftNavigator"
+      component={ForkLiftNavigator}
       options={{
         headerShown: false,
         headerTintColor: '#fff',

@@ -58,16 +58,16 @@ function UnloadingScreen() {
     }
   };
 
-useEffect(() => {
-  fetchInbound();
-}, []);
-
-// ✅ fetch data lagi kalau filter berubah
-useEffect(() => {
-  if (selectedFilter !== null) {
+  useEffect(() => {
     fetchInbound();
-  }
-}, [selectedFilter]);
+  }, []);
+
+  // ✅ fetch data lagi kalau filter berubah
+  useEffect(() => {
+    if (selectedFilter !== null) {
+      fetchInbound();
+    }
+  }, [selectedFilter]);
 
   // filter & search data
   const filteredList = useMemo(() => {
@@ -104,7 +104,7 @@ useEffect(() => {
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List Inbound Planning
+              List Unloading Planning
             </Text>
           </View>
 
@@ -152,28 +152,34 @@ useEffect(() => {
           </View>
 
           {/* 📦 List Card */}
-          {filteredList.map((item: any) => {
-            let statusColor;
-            if (item.status === 'CREATED') {
-              statusColor = '#228B22';
-            } else if (item.status === 'UNLOADING') {
-              statusColor = '#228B22';
-            } else {
-              statusColor = '#696969';
-            }
-            return (
-              <InboundCard
-                key={item.id}
-                code={item.inbound_number}
-                plate={item.license_plate}
-                date={item.arrival_date}
-                role={'Warehouse Staff'}
-                status={item.status}
-                statusColor={statusColor}
-                onClick={() => navigation.navigate('UnloadingDetail', { item })}
-              />
-            );
-          })}
+          {filteredList.length === 0 ? (
+            <View style={{ alignItems: 'center', marginTop: 40 }}>
+              <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
+            </View>
+          ) : (
+            filteredList.map((item: any) => {
+              let statusColor;
+              if (item.status === 'CREATED') {
+                statusColor = '#228B22';
+              } else if (item.status === 'UNLOADING') {
+                statusColor = '#228B22';
+              } else {
+                statusColor = '#696969';
+              }
+              return (
+                <InboundCard
+                  key={item.id}
+                  code={item.inbound_number}
+                  plate={item.license_plate}
+                  date={item.arrival_date}
+                  role={'Warehouse Staff'}
+                  status={item.status}
+                  statusColor={statusColor}
+                  onClick={() => navigation.navigate('UnloadingDetail', { item })}
+                />
+              );
+            })
+          )}
         </View>
       </ScrollView>
     </View>

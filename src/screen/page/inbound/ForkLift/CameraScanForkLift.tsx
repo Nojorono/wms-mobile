@@ -12,7 +12,7 @@ import {
     useCameraPermission,
     useCodeScanner,
 } from "react-native-vision-camera";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation, CommonActions } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { ForkLiftParamList } from "../../../navigation/inbound/ForkLiftNavigator";
@@ -111,9 +111,15 @@ const CameraScreenForkLift = () => {
                 {/* Tombol Next */}
                 <TouchableOpacity
                     style={[styles.nextBtn, { backgroundColor: matched ? "#16a34a" : "#6b7280" }]}
-                    onPress={() => {
+                    onPress={async () => {
                         try {
-                            InboundServices.postForkLiftComplete(item.id)
+                            await InboundServices.postForkLiftComplete(item.id)
+                            navigation.dispatch(
+                                CommonActions.reset({
+                                    index: 0,
+                                    routes: [{ name: "ForkLiftMain" }],
+                                })
+                            );
                         } catch (error) {
                             showDialog("error", "Error completing forklift task");
                         }

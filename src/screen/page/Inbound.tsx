@@ -16,6 +16,7 @@ function InboundIndex() {
     const styles = GlobalStyles();
     const { user } = useAuthStore();
     const navigationInbound = useNavigation<NavigationPropInbound>();
+     const roleName = user?.role?.name || "";
 
     return (
       <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -55,9 +56,37 @@ function InboundIndex() {
             style={styles.scrollViewContent}
           >
             <View style={styles.menuCard}>
-              <MenuCard title={'Inbound'} onPress={() => {navigationInbound.navigate("InboundMain")}}/>
-              <MenuCard title={'Unloading'} onPress={() => {navigationInbound.navigate("UnloadingNavigator")}}/>
-              <MenuCard title={'Put Away'} onPress={() => {navigationInbound.navigate("ForkLiftNavigator")}}/>
+              {roleName === "DRIVER FORKLIFT" && (
+          <MenuCard
+            title={"Put Away"}
+            onPress={() => navigationInbound.navigate("ForkLiftNavigator")}
+          />
+        )}
+
+        {roleName === "SUPERVISOR" && (
+          <MenuCard
+            title={"Inbound"}
+            onPress={() => navigationInbound.navigate("InboundMain")}
+          />
+        )}
+
+        {roleName === "HELPER" && (
+          <MenuCard
+            title={"Unloading"}
+            onPress={() => navigationInbound.navigate("UnloadingNavigator")}
+          />
+        )}
+
+        {/* 🔸 Optional: fallback jika role tidak dikenali */}
+        {!["DRIVER FORKLIFT", "SUPERVISOR", "HELPER"].includes(roleName) && (
+          <Text style={{
+              textAlign: "center",
+              color: "#999",
+              marginTop: 20
+            }}>
+            Role "{roleName}" belum memiliki menu khusus.
+          </Text>
+        )}
             </View>
           </ScrollView>
         </View>

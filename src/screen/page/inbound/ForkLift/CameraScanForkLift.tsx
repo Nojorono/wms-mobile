@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
     TouchableOpacity,
     StyleSheet,
     TextInput,
+    Alert,
+    Keyboard,
 } from "react-native";
 import {
     Camera,
@@ -35,7 +37,11 @@ const CameraScreenForkLift = () => {
 
     const [manualInput, setManualInput] = useState("");
     const [matched, setMatched] = useState(false);
+    const [useCamera, setUseCamera] = useState(true);
 
+    const inputRef = useRef<TextInput>(null);
+
+    // ✅ Fungsi untuk cek match
     const handleMatch = (value: string) => {
         if (!value.trim()) {
             setMatched(false);
@@ -52,8 +58,9 @@ const CameraScreenForkLift = () => {
         }
     };
 
+    // ✅ Scanner VisionCamera
     const codeScanner = useCodeScanner({
-        codeTypes: ["qr", "ean-13"],
+        codeTypes: ["qr", "ean-13", "code-128", "code-39"],
         onCodeScanned: (codes) => {
             const value = codes[0]?.value ?? "";
             if (value && value !== manualInput) {
@@ -63,42 +70,104 @@ const CameraScreenForkLift = () => {
         },
     });
 
+    // ✅ Minta izin kamera
     useEffect(() => {
-        if (!hasPermission) {
-            requestPermission();
-        }
+        if (!hasPermission) requestPermission();
     }, [hasPermission]);
 
-    if (!device) return <Text>Loading camera...</Text>;
-    if (!hasPermission) return <Text>No camera permission</Text>;
+    // ✅ Fokus ke TextInput jika pakai hardware scanner
+    useEffect(() => {
+        const focusInput = () => inputRef.current?.focus();
+
+        const hideSub = Keyboard.addListener("keyboardDidHide", focusInput);
+        focusInput(); // fokus awal
+
+        return () => hideSub.remove();
+    }, []);
+
+    // ✅ Saat user tekan enter di scanner
+    const handleSubmitEditing = () => {
+        handleMatch(manualInput);
+    };
+
+    // ✅ Tombol Next
+    const handleNext = async () => {
+        try {
+            await InboundServices.postForkLiftComplete(item.id);
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: "ForkLiftMain" }],
+                })
+            );
+        } catch (error) {
+            showDialog("error", "Error completing forklift task");
+        }
+    };
+
+    // ✅ Jika kamera belum siap
+    if (useCamera && (!device || !hasPermission)) {
+        return (
+            <View style={styles.loadingView}>
+                <Text style={{ color: "#fff" }}>
+                    Waiting for camera permission or device...
+                </Text>
+                <TouchableOpacity
+                    onPress={() => setUseCamera(false)}
+                    style={[styles.switchBtn, { backgroundColor: "#FF6B00" }]}
+                >
+                    <Text style={styles.btnText}>Use Hardware Scanner Instead</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
-            <Camera
-                style={StyleSheet.absoluteFill}
-                device={device}
-                isActive={true}
-                codeScanner={codeScanner}
-            />
+            {/* ✅ Mode Kamera */}
+            {useCamera && (
+                <Camera
+                    style={StyleSheet.absoluteFill}
+                    device={device!}
+                    isActive={true}
+                    codeScanner={codeScanner}
+                />
+            )}
 
+            {/* ✅ Mode Input Manual / Scanner */}
             <View style={styles.overlay}>
-                {/* Manual input tetap aktif */}
-                <View style={styles.row}>
-                    <TextInput
-                        style={[
-                            styles.input,
-                            matched && { borderColor: "#22c55e", borderWidth: 2 },
-                        ]}
-                        placeholder="Input manual jika QR gagal"
-                        value={manualInput}
-                        onChangeText={(text) => {
-                            setManualInput(text);
-                            handleMatch(text);
-                        }}
-                    />
-                </View>
+                {/* Input Text untuk scanner fisik */}
+                <TextInput
+                    ref={inputRef}
+                    value={manualInput}
+                    onChangeText={(text) => {
+                        setManualInput(text);
+                        handleMatch(text);
+                    }}
+                    onSubmitEditing={handleSubmitEditing}
+                    blurOnSubmit={false}
+                    autoFocus
+                    placeholder="Scan atau input manual kode bin..."
+                    style={[
+                        styles.input,
+                        matched && { borderColor: "#22c55e", borderWidth: 2 },
+                    ]}
+                />
 
-                {/* Status match */}
+                {/* Tombol Ganti Mode */}
+                <TouchableOpacity
+                    onPress={() => setUseCamera((prev) => !prev)}
+                    style={[
+                        styles.switchBtn,
+                        { backgroundColor: useCamera ? "#6b7280" : "#FF6B00" },
+                    ]}
+                >
+                    <Text style={styles.btnText}>
+                        {useCamera ? "Use Hardware Scanner" : "Use Camera Scanner"}
+                    </Text>
+                </TouchableOpacity>
+
+                {/* Status */}
                 {matched ? (
                     <View style={styles.matchCard}>
                         <Text style={styles.matchText}>✅ Destination Bin Matched</Text>
@@ -110,20 +179,11 @@ const CameraScreenForkLift = () => {
 
                 {/* Tombol Next */}
                 <TouchableOpacity
-                    style={[styles.nextBtn, { backgroundColor: matched ? "#16a34a" : "#6b7280" }]}
-                    onPress={async () => {
-                        try {
-                            await InboundServices.postForkLiftComplete(item.id)
-                            navigation.dispatch(
-                                CommonActions.reset({
-                                    index: 0,
-                                    routes: [{ name: "ForkLiftMain" }],
-                                })
-                            );
-                        } catch (error) {
-                            showDialog("error", "Error completing forklift task");
-                        }
-                    }}
+                    style={[
+                        styles.nextBtn,
+                        { backgroundColor: matched ? "#16a34a" : "#6b7280" },
+                    ]}
+                    onPress={handleNext}
                     disabled={!matched}
                 >
                     <Text style={styles.btnText}>Next</Text>
@@ -133,8 +193,16 @@ const CameraScreenForkLift = () => {
     );
 };
 
+export default CameraScreenForkLift;
+
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#000" },
+    loadingView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#000",
+    },
     overlay: {
         position: "absolute",
         bottom: 0,
@@ -142,13 +210,18 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(0,0,0,0.7)",
         padding: 16,
     },
-    row: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
     input: {
-        flex: 1,
         backgroundColor: "#fff",
         borderRadius: 8,
         padding: 10,
         fontSize: 16,
+        marginBottom: 12,
+    },
+    switchBtn: {
+        padding: 12,
+        borderRadius: 8,
+        alignItems: "center",
+        marginBottom: 10,
     },
     nextBtn: {
         padding: 14,
@@ -165,21 +238,12 @@ const styles = StyleSheet.create({
         padding: 10,
         alignItems: "center",
     },
-    matchText: {
-        color: "#22c55e",
-        fontSize: 18,
-        fontWeight: "bold",
-    },
-    matchSub: {
-        color: "#fff",
-        fontSize: 14,
-        marginTop: 4,
-    },
+    matchText: { color: "#22c55e", fontSize: 18, fontWeight: "bold" },
+    matchSub: { color: "#fff", fontSize: 14, marginTop: 4 },
     notMatchText: {
         color: "#f87171",
         fontSize: 14,
         textAlign: "center",
+        marginBottom: 6,
     },
 });
-
-export default CameraScreenForkLift;

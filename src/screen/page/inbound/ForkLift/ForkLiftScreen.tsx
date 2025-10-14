@@ -52,7 +52,7 @@ export default function ForkLiftScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List ForkLift Task');
       const response = await InboundServices.getForkLiftList(
-        '7ca0f958-6c1b-4d18-81bd-6489c9a7c6ad'
+        user?.id || ''
       );
       setForkLiftList(response?.data || []);
     } catch (error) {

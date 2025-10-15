@@ -105,9 +105,9 @@ class InboundServices {
     }
   }
 
-  static async getPalletInfo(palletId: string): Promise<any> {
+  static async getPalletInfo(palletCode: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('/master-pallet/by-code/' + palletId + '/capacity-validation');
+      const response = await axiosInstance.get('/inventory-tracking/validate-pallet/' + palletCode);
       return response.data;
     } catch (error: any) {
       throw error.response;

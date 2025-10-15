@@ -9,8 +9,8 @@ import { useAuthStore } from "../../store/useAuthStore";
 
 export type HomeStackParamList = {
     HomeMain: undefined;
-    PrepareScreen: undefined;
-    PutAway: undefined;
+    inboundIndex: undefined;
+    outBoundIndex: undefined;
 };
 
 

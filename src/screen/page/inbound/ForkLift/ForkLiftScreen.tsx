@@ -215,28 +215,32 @@ export default function ForkLiftScreen() {
       </ScrollView>
 
       {/* 🔘 Tombol toggle scanner mode */}
-      <View style={stylex.buttonWrapper}>
+      <View style={stylex.buttonWrapper} pointerEvents="box-none">
         <TouchableOpacity
           style={[stylex.scanButton, { backgroundColor: '#FF6B00' }]}
+          activeOpacity={0.8}
           onPress={() => {
-            Alert.alert(
-              'Pilih Mode Scan',
-              'Gunakan hardware scanner atau kamera?',
-              [
-                {
-                  text: 'Hardware',
-                  onPress: () => inputRef.current?.focus(),
-                },
-                {
-                  text: 'Kamera',
-                  onPress: () => {
-                    setScanned(false);
-                    setShowCamera(true);
+            Keyboard.dismiss();
+            setTimeout(() => {
+              Alert.alert(
+                'Pilih Mode Scan',
+                'Gunakan hardware scanner atau kamera?',
+                [
+                  {
+                    text: 'Hardware',
+                    onPress: () => inputRef.current?.focus(),
                   },
-                },
-                { text: 'Batal', style: 'cancel' },
-              ]
-            );
+                  {
+                    text: 'Kamera',
+                    onPress: () => {
+                      setScanned(false);
+                      setShowCamera(true);
+                    },
+                  },
+                  { text: 'Batal', style: 'cancel' },
+                ]
+              );
+            }, 100);
           }}
         >
           <Icon name="barcode" size={20} color="#fff" />

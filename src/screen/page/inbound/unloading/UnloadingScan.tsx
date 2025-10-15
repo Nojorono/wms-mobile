@@ -80,6 +80,7 @@ const UnloadingScanScreen = () => {
           stagingArea: d.m_warehouse_sub_id || "-",
           productionDate: d.production_date || "-",
         }));
+        console.log("Fetched Pallets:", mapped);
         setPallets(mapped);
       }
     } catch (err) {
@@ -227,19 +228,6 @@ const UnloadingScanScreen = () => {
           ]}
           onPress={async () => {
             updateStatusAll()
-
-            // try {
-            //   const payloadToSend = {
-            //     ids: pallets.map(p => p.id),
-            //   };
-            //   console.log("Payload to send:", payloadToSend);
-            //   showLoadingDialog("Sending... ");
-            //   await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
-            // } catch (error) {
-            //   showDialog('error', 'Error while Sending Status!');
-            // } finally {
-            //   await fetchData();
-            // }
           }}
         >
           <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
@@ -250,6 +238,7 @@ const UnloadingScanScreen = () => {
           onPress={() =>
             navigation.navigate("CameraScreen", {
               item: item,
+              dataExist: pallets,
             })
           }
         >

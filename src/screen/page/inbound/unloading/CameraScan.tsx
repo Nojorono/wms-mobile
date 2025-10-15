@@ -26,6 +26,7 @@ type NavigationProp = StackNavigationProp<UnloadingParamList, "UnloadingMain">;
 
 interface RouteParams {
   item: { id: string; inbound_id: string; uom: string };
+  dataExist?: any[];
   payload?: any;
   onScanFinish?: (data: PalletItem | null) => void;
 }
@@ -56,10 +57,10 @@ const CameraScreen = () => {
   const route = useRoute<any>();
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
-  const { item } = route.params as RouteParams;
+  const { item, dataExist = [] } = route.params as RouteParams;
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  // camera setup
+  // Camera setup
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
 
@@ -70,6 +71,7 @@ const CameraScreen = () => {
   const [stagingAreas, setStagingAreas] = useState<any[]>([]);
   const [openPicker, setOpenPicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
+  const [isEditMode, setIsEditMode] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   // 🧠 QR / Barcode via kamera
@@ -112,53 +114,127 @@ const CameraScreen = () => {
     }
   }, [isCameraActive]);
 
-  // 🔄 handle tambah pallet
-  const handleAddPallet = async (code: string) => {
-    const value = code.trim().toUpperCase();
-    if (!value || !user) return;
+  // 🔄 handle tambah/edit pallet
+ const handleAddPallet = async (code: string) => {
+  const value = code.trim().toUpperCase();
+  if (!value || !user) return;
 
-    try {
+  // 🔍 Cek apakah pallet_code sudah ada di dataExist
+  const existing = dataExist?.find(
+    (item: any) => item.palletCode?.toUpperCase() === value
+  );
+
+  try {
+    if (existing) {
+      // 🚫 Jika status bukan OPEN, blokir edit/post
+      if (existing.status !== "OPEN") {
+        showDialog(
+          "error",
+          `Pallet ${existing.palletCode} tidak dapat diedit karena status-nya "${existing.status}".`
+        );
+        return;
+      }
+
+      // 🔄 Jika status OPEN, tetap lakukan getPalletInfo untuk refresh data
       const res = await InboundServices.getPalletInfo(value);
       const palletData = res?.data;
-      // Jika respons kosong
+
       if (!palletData) {
         showDialog("error", "Pallet not found or invalid!");
         return;
       }
 
-      // Jika API response success = false
       if (!palletData.success) {
         showDialog("error", palletData.message || "Something went wrong!");
         return;
       }
 
-      // Jika nested data.success = false (kadang API taruh status di dalam data)
       if (palletData.data && palletData.data.success === false) {
         showDialog("error", palletData.data.message || "Pallet invalid!");
         return;
       }
 
-      const newItem: PalletItem = {
-        id: Date.now().toString(),
-        palletNo: value,
-        qty: palletData.qty?.toString() || "",
-        production_date: palletData.production_date || null,
-        week: palletData.week?.toString() || null,
+      const refreshedItem: PalletItem = {
+        id: existing.id, // tetap gunakan ID existing
+        palletNo: existing.palletCode,
+        qty:
+          palletData.data?.qty?.toString() ||
+          existing.qty?.toString() ||
+          "",
+        production_date:
+          palletData.data?.production_date || existing.productionDate || null,
+        week:
+          palletData.data?.week?.toString() ||
+          existing.weekNumber?.toString() ||
+          null,
         inbound_id: item.inbound_id,
         item_id: item.id,
         user_id: user.id,
         user_name: user.username,
-        status: "OPEN",
+        status: existing.status || "OPEN",
         uom: item.uom,
-        staging_area_id: "",
+        staging_area_id: existing.stagingArea || "",
       };
-      setQtyPalletExist(palletData.pallet_status.capacity - palletData.pallet_status.current_quantity || 0);
-      setScan(newItem);
+setQtyPalletExist(
+      palletData.pallet_status.capacity -
+        palletData.pallet_status.current_quantity || 0
+    );
+      setScan(refreshedItem);
+      setIsEditMode(true);
       setManualInput("");
-    } catch (err) {
-      showDialog("error", "Error fetching pallet info!");
+      showDialog(
+        "success",
+        "Data existing pallet (OPEN) berhasil dimuat & diperbarui dari server."
+      );
+      return;
     }
-  };
+
+    // 🆕 Jika belum ada di existing, fetch dari API seperti biasa
+    const res = await InboundServices.getPalletInfo(value);
+    const palletData = res?.data;
+
+    if (!palletData) {
+      showDialog("error", "Pallet not found or invalid!");
+      return;
+    }
+
+    if (!palletData.success) {
+      showDialog("error", palletData.message || "Something went wrong!");
+      return;
+    }
+
+    if (palletData.data && palletData.data.success === false) {
+      showDialog("error", palletData.data.message || "Pallet invalid!");
+      return;
+    }
+
+    const newItem: PalletItem = {
+      id: Date.now().toString(),
+      palletNo: value,
+      qty: palletData.qty?.toString() || "",
+      production_date: palletData.production_date || null,
+      week: palletData.week?.toString() || null,
+      inbound_id: item.inbound_id,
+      item_id: item.id,
+      user_id: user.id,
+      user_name: user.username,
+      status: "OPEN",
+      uom: item.uom,
+      staging_area_id: "",
+    };
+
+    setQtyPalletExist(
+      palletData.pallet_status.capacity -
+        palletData.pallet_status.current_quantity || 0
+    );
+    setScan(newItem);
+    setIsEditMode(false);
+    setManualInput("");
+  } catch (err) {
+    showDialog("error", "Error fetching pallet info!");
+  }
+};
+
 
   const handleSubmitEditing = () => {
     if (manualInput.trim()) handleAddPallet(manualInput);
@@ -189,20 +265,44 @@ const CameraScreen = () => {
   };
 
   const handleNext = () => {
-    if (scan) {
-      const data = {
-        production_date: scan.production_date ?? "",
-        week_number: scan.week ? Number(scan.week) : 0,
-        inbound_id: scan.inbound_id,
-        item_id: scan.item_id,
-        quantity: Number(scan.qty) || 0,
-        uom: scan.uom,
-        user_id: scan.user_id,
-        user_name: scan.user_name,
-        pallet_code: scan.palletNo,
-        status: scan.status,
-        m_warehouse_sub_id: scan.staging_area_id || "",
+    if (!scan) return;
+
+    // 🚫 Validasi status
+    if (scan.status !== "OPEN") {
+      showDialog(
+        "error",
+        `Tidak dapat melakukan ${isEditMode ? "edit" : "post"} karena status pallet adalah "${scan.status}".`
+      );
+      return;
+    }
+
+    const data = {
+      production_date: scan.production_date ?? "",
+      week_number: scan.week ? Number(scan.week) : 0,
+      inbound_id: scan.inbound_id,
+      item_id: scan.item_id,
+      quantity: Number(scan.qty) || 0,
+      uom: scan.uom,
+      user_id: scan.user_id,
+      user_name: scan.user_name,
+      pallet_code: scan.palletNo,
+      status: scan.status,
+      m_warehouse_sub_id: scan.staging_area_id || "",
+    };
+
+    if (isEditMode) {
+      const editData = {
+      production_date: scan.production_date ?? "",
+      week_number: scan.week ? Number(scan.week) : 0,
+      quantity: Number(scan.qty) || 0,
+      m_warehouse_sub_id: scan.staging_area_id || "",
       };
+      InboundServices.updateInspectionData(scan.id, editData)
+      .then(() => navigation.goBack())
+      .catch((err) =>
+        showDialog("error", err?.data?.error || "Error while updating pallet!")
+      );
+    } else {
       InboundServices.postUnloading(data)
         .then(() => navigation.goBack())
         .catch((err) =>
@@ -231,7 +331,6 @@ const CameraScreen = () => {
         />
       )}
 
-      {/* Hidden input hanya aktif jika kamera mati */}
       {!isCameraActive && (
         <TextInput
           ref={inputRef}
@@ -291,6 +390,13 @@ const CameraScreen = () => {
               </TouchableOpacity>
             </View>
 
+            {/* Indikator status */}
+            {scan.status !== "OPEN" && (
+              <Text style={{ color: "#f87171", marginBottom: 8 }}>
+                ⚠️ Status: {scan.status} — tidak bisa diedit.
+              </Text>
+            )}
+
             {/* Staging Area */}
             <View style={{ marginBottom: 12 }}>
               <View style={styles.pickerWrapper}>
@@ -344,6 +450,7 @@ const CameraScreen = () => {
                 );
                 setOpenPicker(true);
               }}
+              disabled={scan.status !== "OPEN"}
             >
               <Text
                 style={{
@@ -359,8 +466,28 @@ const CameraScreen = () => {
           <Text style={{ color: "#9ca3af" }}>Belum ada hasil scan</Text>
         )}
 
-        <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
-          <Text style={styles.btnText}>Next</Text>
+        <TouchableOpacity
+          style={[
+            styles.nextBtn,
+            {
+              backgroundColor:
+                scan?.status !== "OPEN"
+                  ? "#9ca3af"
+                  : isEditMode
+                  ? "#f59e0b"
+                  : "#16a34a",
+            },
+          ]}
+          onPress={handleNext}
+          disabled={scan?.status !== "OPEN"}
+        >
+          <Text style={styles.btnText}>
+            {scan?.status !== "OPEN"
+              ? "Locked"
+              : isEditMode
+              ? "Edit"
+              : "Next"}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -412,7 +539,6 @@ const styles = StyleSheet.create({
   },
   btnText: { color: "#fff", fontWeight: "600" },
   nextBtn: {
-    backgroundColor: "#16a34a",
     padding: 14,
     borderRadius: 8,
     alignItems: "center",

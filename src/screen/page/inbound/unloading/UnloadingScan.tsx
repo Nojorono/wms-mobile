@@ -13,7 +13,7 @@ import { useAuthStore } from "../../../../store/useAuthStore";
 import { ItemDetail } from "../service/inboundService";
 import InboundServices from "../../../../service/inboundServices";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
-import Ionicons from "react-native-vector-icons/Ionicons"; // pastikan sudah install react-native-vector-icons
+import Ionicons from "react-native-vector-icons/Ionicons";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 
@@ -98,38 +98,38 @@ const UnloadingScanScreen = () => {
   }, [navigation, item.inbound_id]);
 
   const updateStatusAll = async () => {
-  const totalQtyScan = pallets.reduce((sum, p) => sum + p.qty, 0);
+    const totalQtyScan = pallets.reduce((sum, p) => sum + p.qty, 0);
 
-  // Cek apakah total qty melebihi plan
-  if (totalQtyScan > item.quantityPlan) {
-    showDialog("error", "Quantity melebihi jumlah plan!");
-    return;
-  }
+    // Cek apakah total qty melebihi plan
+    if (totalQtyScan > item.quantityPlan) {
+      showDialog("error", "Quantity melebihi jumlah plan!");
+      return;
+    }
 
-  // Ambil hanya pallet yang status-nya CREATED
-  const createdPallets = pallets.filter(p => p.status === "CREATED");
+    // Ambil hanya pallet yang status-nya OPEN
+    const createdPallets = pallets.filter(p => p.status === "OPEN");
 
-  // Kalau tidak ada pallet dengan status CREATED
-  if (createdPallets.length === 0) {
-    showDialog("error", "Semua data sudah dikirim ke SPV!");
-    return;
-  }
+    // Kalau tidak ada pallet dengan status OPEN
+    if (createdPallets.length === 0) {
+      showDialog("error", "Semua data sudah dikirim ke SPV!");
+      return;
+    }
 
-  try {
-    const payloadToSend = {
-      ids: createdPallets.map(p => p.id),
-    };
-    showLoadingDialog("Sending...");
-    await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
+    try {
+      const payloadToSend = {
+        ids: createdPallets.map(p => p.id),
+      };
+      showLoadingDialog("Sending...");
+      await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
 
-    showDialog("success", "Status pallet CREATED berhasil diupdate!");
-  } catch (error) {
-    console.error("Error while updating:", error);
-    showDialog("error", "Error while Sending Status!");
-  } finally {
-    await fetchData();
-  }
-};
+      showDialog("success", "Status pallet OPEN berhasil diupdate!");
+    } catch (error) {
+      console.error("Error while updating:", error);
+      showDialog("error", "Error while Sending Status!");
+    } finally {
+      await fetchData();
+    }
+  };
 
   const handleRemove = (palletId: string) => {
     confirm.show("decline", "Are you sure Remove this pallet ?", async () => {

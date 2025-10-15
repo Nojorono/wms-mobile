@@ -42,9 +42,14 @@ function OutboundIndex() {
           >
             <Text style={styles.activitiesHeaderText}>Outbound Menu</Text>
           </View>
-          <MenuCard title={'Outbound Picking'} onPress={() => {navigation.navigate("OutboundMain")}}/>
-          <MenuCard title={'Outbound Packing'} />
-          <MenuCard title={'Outbound Checking'} />
+        <View style={{ padding: 20, alignItems: 'center' }}>
+          <Text style={{ color: Colors.secondaryColor, fontSize: 16, fontWeight: 'bold' }}>
+            Menu outbound masih dalam pengembangan.
+          </Text>
+          <Text style={{ color: "#888", marginTop: 8, textAlign: 'center' }}>
+            Silakan kembali lagi nanti untuk fitur outbound yang lebih lengkap.
+          </Text>
+        </View>
         </View>
       </ScrollView>
     </View>

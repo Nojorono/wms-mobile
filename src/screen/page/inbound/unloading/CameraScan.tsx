@@ -120,8 +120,21 @@ const CameraScreen = () => {
     try {
       const res = await InboundServices.getPalletInfo(value);
       const palletData = res?.data;
+      // Jika respons kosong
       if (!palletData) {
         showDialog("error", "Pallet not found or invalid!");
+        return;
+      }
+
+      // Jika API response success = false
+      if (!palletData.success) {
+        showDialog("error", palletData.message || "Something went wrong!");
+        return;
+      }
+
+      // Jika nested data.success = false (kadang API taruh status di dalam data)
+      if (palletData.data && palletData.data.success === false) {
+        showDialog("error", palletData.data.message || "Pallet invalid!");
         return;
       }
 
@@ -139,7 +152,7 @@ const CameraScreen = () => {
         uom: item.uom,
         staging_area_id: "",
       };
-      setQtyPalletExist(palletData.available_capacity || 0);
+      setQtyPalletExist(palletData.pallet_status.capacity - palletData.pallet_status.current_quantity || 0);
       setScan(newItem);
       setManualInput("");
     } catch (err) {

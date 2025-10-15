@@ -7,7 +7,6 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { InboundParamList } from '../navigation/inbound/InboundNavigator.tsx';
 import MenuCard from "../../components/MenuCard.tsx";
-import {PutAwayParamList} from "../navigation/inbound/PutAwayNavigator.tsx";
 
 
 type NavigationPropInbound = StackNavigationProp<InboundParamList,'InboundMain'>;

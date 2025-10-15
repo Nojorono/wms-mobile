@@ -1,66 +1,73 @@
-import React, {useState} from 'react';
-import { StyleSheet, ScrollView, Text, TouchableOpacity, View, Image} from "react-native";
-import {useAuthStore} from "../store/useAuthStore";
+import React, { useState } from 'react';
+import { StyleSheet, ScrollView, Text, TouchableOpacity, View, Image } from "react-native";
+import { useAuthStore } from "../store/useAuthStore";
 // import Ionicons from '@react-native-vector-icons/ionicons';
 
 import GlobalStyles from "../util/GlobalStyles.ts";
 import Colors from "../constants/Colors";
 import StatusCard from "../components/NameCard";
 import MenuGrid from "../components/MenuGrid";
-import {useDialogStore} from "../store/useGlobalDialog";
-import {useLoadingDialogStore} from "../store/useLoadingStore";
+import { useDialogStore } from "../store/useGlobalDialog";
+import { useLoadingDialogStore } from "../store/useLoadingStore";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
-function HomeScreen() {
-    const styles = GlobalStyles();
-    const { user } = useAuthStore();
-    const [showMainCard, setShowMainCard] = useState(true);
-    const [showMenuCards, setShowMenuCards] = useState(false);
-    const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainTabParamList } from './navigation/MainNavigator.tsx';
+type TabNavProp = BottomTabNavigationProp<MainTabParamList, 'Home'>;
 
-    return (
-        <View style={{flex: 1, backgroundColor: Colors.secondaryColor}}>
-            {/* Header */}
-            <View style={styles.headerHome}>
-                <View style={styles.profileSection}>
-                    <Text style={styles.profileText}>Hi!</Text>
-                    <Text style={styles.profileSubtext}>Selamat beraktifitas, jaga selalu kesehatan rumah tanggamu</Text>
-                </View>
-            </View>
-            {/* Main Scrollable Content */}
-            <ScrollView contentContainerStyle={styles.menuContainer} style={styles.scrollViewContent} stickyHeaderIndices={[2]} >
-                <View style={styles.menuCard}>
-                    <View style={styles.activitiesHeader}>
-                        <Text style={styles.activitiesHeaderText}>Dahboard</Text>
-                    </View>
-                    <View style={stylez.rowWithMargin}>
-                        <View style={[stylez.cardx, stylez.flexOne, stylez.marginRight8]}>
-                            <Ionicons name="arrow-down" size={32} color={Colors.primeColor} />
-                            <Text style={stylez.titlex}>Inbound</Text>
-                            <Text style={stylez.inboundText}>5</Text>
-                        </View>
-                        <View style={[stylez.cardx, stylez.flexOne, stylez.marginLeft8]}>
-                            <Ionicons name="arrow-up" size={32} color={Colors.secondaryColor} />
-                            <Text style={stylez.titlex}>Outbound</Text>
-                            <Text style={stylez.outboundText}>9</Text>
-                        </View>
-                    </View>
-                    <View style={stylez.row}>
-                        <View style={[stylez.cardx, stylez.flexOne, stylez.marginRight8]}>
-                            <Ionicons name="user-plus" size={32} color={Colors.primeColor} />
-                            <Text style={stylez.titlex}>Assign</Text>
-                            <Text style={stylez.inboundText}>8</Text>
-                        </View>
-                        <View style={[stylez.cardx, stylez.flexOne, stylez.marginLeft8]}>
-                            <Ionicons name="user-minus" size={32} color={Colors.secondaryColor} />
-                            <Text style={stylez.titlex}>Not Assign</Text>
-                            <Text style={stylez.outboundText}>6</Text>
-                        </View>
-                    </View>
-                </View>
-            </ScrollView>
+function HomeScreen() {
+  const styles = GlobalStyles();
+  const { user } = useAuthStore();
+
+
+  const navigation = useNavigation<TabNavProp>();
+
+
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
+      {/* Header */}
+      <View style={styles.headerHome}>
+        <View style={styles.profileSection}>
+          <Text style={styles.profileText}>Hi!</Text>
+          <Text style={styles.profileSubtext}>Selamat beraktifitas, jaga selalu kesehatan rumah tanggamu</Text>
         </View>
-    );
+      </View>
+      {/* Main Scrollable Content */}
+      <ScrollView contentContainerStyle={styles.menuContainer} style={styles.scrollViewContent} stickyHeaderIndices={[2]} >
+        <View style={styles.menuCard}>
+          <View style={styles.activitiesHeader}>
+            <Text style={styles.activitiesHeaderText}>Dahboard</Text>
+          </View>
+          <View style={stylez.rowWithMargin}>
+            <TouchableOpacity
+              style={[stylez.cardx, stylez.flexOne, stylez.marginRight8]}
+              onPress={() => {
+                // TODO: handle inbound card press
+                navigation.navigate('Inbound', { screen: 'inboundIndex' });
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-down" size={32} color={Colors.secondaryColor} />
+              <Text style={stylez.titlex}>Inbound</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[stylez.cardx, stylez.flexOne, stylez.marginRight8]}
+              onPress={() => {
+                // TODO: handle inbound card press
+                navigation.navigate('Outbond', { screen: 'outBoundIndex' });
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-up" size={32} color={Colors.primeColor} />
+              <Text style={stylez.titlex}>Outbound</Text>
+            </TouchableOpacity>
+           
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
 }
 
 export default HomeScreen;

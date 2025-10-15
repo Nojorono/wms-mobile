@@ -5,7 +5,6 @@ import React from 'react';
 import InboundScreen from '../../page/inbound/inboundMain/InboundScreen.tsx';
 
 import InboundIndex from '../../page/Inbound.tsx';
-import PutAwayNavigator from './PutAwayNavigator.tsx';
 import UnloadingNavigator from './UnloadingNavigator.tsx';
 import InspectionNavigator from './InspectionNavigator.tsx';
 import InboundDetail from '../../page/inbound/inboundMain/InboundDetail.tsx';
@@ -18,7 +17,6 @@ import ForkLiftNavigator from './ForkLiftNavigator.tsx';
 
 export type InboundParamList = {
   InboundIndex: undefined;
-  PutAwayNavigator: undefined;
   InboundMain: undefined;
   //NEW WMS
   InboundDetail: { item: any };
@@ -76,17 +74,7 @@ const InboundStackNavigator = () => (
         },
       }}
     />
-    <InboundStack.Screen
-      name="PutAwayNavigator"
-      component={PutAwayNavigator}
-      options={{
-        headerShown: false,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
+    
     {/* //NEW WMS */}
     <InboundStack.Screen
       name="InboundDetail"

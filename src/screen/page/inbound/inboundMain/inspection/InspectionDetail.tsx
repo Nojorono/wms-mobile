@@ -262,9 +262,11 @@ const InspectionDetail = () => {
                             </View>
                         </View>
 
-                        <TouchableOpacity onPress={() => handleEdit(item)}>
-                            <Ionicons name="create-outline" size={22} color="#555" />
-                        </TouchableOpacity>
+                        {item.status !== "COMPLETED" && (
+                            <TouchableOpacity onPress={() => handleEdit(item)}>
+                                <Ionicons name="create-outline" size={22} color="#555" />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
                 ListEmptyComponent={

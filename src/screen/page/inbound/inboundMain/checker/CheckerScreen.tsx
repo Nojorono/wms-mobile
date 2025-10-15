@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+
+import { useRoute } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/FontAwesome5";
-import { useRoute } from "@react-navigation/core";
 import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import InboundServices from "../../../../../service/inboundServices";
 import HelperModal from "./CheckerModal";

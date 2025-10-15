@@ -11,11 +11,10 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
-    "@react-native-community/datetimepicker": "^8.4.5",
     "@react-native-picker/picker": "^2.11.1",
     "@react-native-vector-icons/ionicons": "^12.0.1",
-    "@react-native/new-app-screen": "0.80.0",
     "@react-navigation/bottom-tabs": "^7.3.15",
+    "@react-navigation/native": "^7.1.18",
     "@react-navigation/stack": "^7.3.4",
     "axios": "^1.10.0",
     "lottie-react-native": "^5.1.6",
@@ -23,7 +22,6 @@
     "react-hook-form": "^7.58.0",
     "react-native": "0.80.0",
     "react-native-date-picker": "^5.0.13",
-    "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "^2.26.0",
     "react-native-get-random-values": "^1.11.0",
     "react-native-safe-area-context": "^5.4.1",
@@ -31,7 +29,6 @@
     "react-native-table-component": "^1.2.2",
     "react-native-toast-message": "^2.3.0",
     "react-native-vision-camera": "^4.7.0",
-    "uuid": "^11.1.0",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

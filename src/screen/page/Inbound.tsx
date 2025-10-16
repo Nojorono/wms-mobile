@@ -24,7 +24,7 @@ function InboundIndex() {
           <View style={styles.profileSection}>
             <Text style={styles.profileText}>Hi!</Text>
             <Text style={styles.profileSubtext}>
-              Selamat beraktifitas, jaga selalu kesehatan rumah tanggamu
+              Selamat beraktifitas, jaga selalu kesehatan
             </Text>
           </View>
         </View>
@@ -62,7 +62,7 @@ function InboundIndex() {
           />
         )}
 
-        {roleName === "SUPERVISOR" && (
+        {roleName === "WH STAFF" && (
           <MenuCard
             title={"Inbound"}
             onPress={() => navigationInbound.navigate("InboundMain")}
@@ -77,7 +77,7 @@ function InboundIndex() {
         )}
 
         {/* 🔸 Optional: fallback jika role tidak dikenali */}
-        {!["DRIVER FORKLIFT", "SUPERVISOR", "HELPER"].includes(roleName) && (
+        {!["DRIVER FORKLIFT", "WH STAFF", "HELPER"].includes(roleName) && (
           <Text style={{
               textAlign: "center",
               color: "#999",

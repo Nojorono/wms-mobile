@@ -63,7 +63,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                     <Text style={styles.value}>{data.quantity_plan}</Text>
                 </View>
                 <View style={styles.infoBlock}>
-                    <Text style={styles.label}>Scan</Text>
+                    <Text style={styles.label}>Inspection</Text>
                     <Text style={styles.value}>{data.quantity_scanned}</Text>
                 </View>
                 <View style={styles.infoBlock}>
@@ -98,7 +98,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                                 <Text style={styles.detailValue}>{item.quantity_plan}</Text>
                             </View>
                             <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>Scanned</Text>
+                                <Text style={styles.detailLabel}>Inspected</Text>
                                 <View style={styles.inputWrapper}>
                                     <TextInput
                                         style={styles.input}

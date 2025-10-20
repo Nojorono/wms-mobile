@@ -33,7 +33,6 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
     <View style={{ paddingBottom: 20 }}>
       {items.map((item, index) => {
         const isReady = item.quantity_plan === item.quantity_scanned;
-        console.log("Item Details:", item);
 
         return (
           <View style={styles.card} key={index}>

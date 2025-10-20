@@ -34,6 +34,7 @@ export default function HelperListScreen() {
     try {
       showLoadingDialog("Loading List Helpers");
       const response = await InboundServices.getHelperList(payload.item.id);
+      console.log("Helper List Response:", response);
       setDataHelper(response?.data || []);
     } catch (error) {
       console.error("Error fetching helper list data:", error);

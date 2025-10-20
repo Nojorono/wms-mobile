@@ -8,7 +8,7 @@ import { useLoadingDialogStore } from "../../../../../../store/useLoadingStore";
 import InboundServices from "../../../../../../service/inboundServices";
 import { mergeGoodReceive, transformInspectionResponse } from "../../../service/inboundService";
 import InspectionCardList from "../../../../../../components/inbound/InspectionListCard";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import GoodReceivedCardList from "../../../../../../components/inbound/GoodReceiveListCard";
 
 
@@ -40,6 +40,12 @@ const GoodReceiveScreen = () => {
       payload: payload.payload,
     });
   };
+
+    useFocusEffect(
+          React.useCallback(() => {
+              fetchInspectionById();
+          }, [])
+      );
 
   const fetchInspectionById = async () => {
     try {

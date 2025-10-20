@@ -10,7 +10,7 @@ import {
     Alert,
 } from "react-native";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import InboundServices from "../../../../service/inboundServices";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -143,6 +143,18 @@ export default function InboundDetail() {
     const [status, setStatus] = useState<string>(payload.item ? payload.item.status : ''); // Inisialisasi status dari payload
     const showDialog = useDialogStore((state) => state.showDialog);
     const confirm = useConfirmationStore();
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = async () => {
+        try {
+            setRefreshing(true);
+            await fetchInboundById(); // fungsi fetch kamu yang sudah ada
+        } catch (error) {
+            console.error("Error refreshing data:", error);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const handleAccept = () => {
         confirm.show("accept", "Are you sure to approve this?", async () => {
@@ -175,6 +187,7 @@ export default function InboundDetail() {
             setStatus(response.data.status); // Update status dari response
             const inbound_dos = response.data.inbound_dos;
             setMergedData(mergeInboundDos(inbound_dos));
+            console.log("Inbound Response:", response);
         } catch (error) {
             hideLoadingDialog()
             console.error('Error fetching inbound data:', error);
@@ -187,6 +200,12 @@ export default function InboundDetail() {
             hideLoadingDialog()
         }
     }
+
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchInboundById();
+        }, [payload.item.id])
+    );
 
 
     useEffect(() => {
@@ -222,32 +241,36 @@ export default function InboundDetail() {
                 <Text style={styles.vehicle}> <Ionicons name="truck" size={20} /> {payload.item.license_plate}</Text>
             </View>
 
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginVertical: 20 }}>
-                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("CheckerScreen", { item: payload.item })}>
-                    <Ionicons name="user-friends" size={28} color="#059669" />
-                    <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Helper List</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("InspectionNavigator", {
-                    screen: "InspectionMain",
-                    params: { item: payload.item },
-                })}>
-                    <Ionicons name="clipboard-check" size={28} color="#059669" />
-                    <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Inspection</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("UpdateSaldoNavigator", {
+            {payload?.item?.status !== "CREATED" && (
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginVertical: 20 }}>
+                    <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("CheckerScreen", { item: payload.item })}>
+                        <Ionicons name="user-friends" size={28} color="#059669" />
+                        <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Helper List</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("InspectionNavigator", {
+                        screen: "InspectionMain",
+                        params: { item: payload.item },
+                    })}>
+                        <Ionicons name="clipboard-check" size={28} color="#059669" />
+                        <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Inspection</Text>
+                    </TouchableOpacity>
+                    {/* <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("UpdateSaldoNavigator", {
                     screen: "UpdateSaldoMain",
                     params: { item: payload.item },
                 })}>
                     <Ionicons name="box-open" size={28} color="#059669" />
                     <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Update Saldo</Text>
-                </TouchableOpacity>
-            
-            </View>
+                </TouchableOpacity> */}
+
+                </View>
+            )}
 
             {/* List Delivery Orders */}
             <FlatList
                 data={mergedData}
                 keyExtractor={(item) => item.id}
+                refreshing={refreshing}
+                onRefresh={onRefresh}
                 renderItem={({ item }) => {
                     const expanded = expandedIds.includes(item.id);
                     return (

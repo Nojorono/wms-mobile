@@ -6,6 +6,9 @@ import { TextInput } from "react-native";
 import InboundServices from "../../service/inboundServices";
 import Colors from "../../constants/Colors";
 import { useLoadingDialogStore } from "../../store/useLoadingStore";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { InspectionParamList } from "../../screen/navigation/inbound/InspectionNavigator";
 
 
 interface Detail {
@@ -20,6 +23,7 @@ interface Detail {
 
 interface Item {
     item_id: string;
+    inspection_status: string;
     sku: string;
     do_id: string;
     description: string;
@@ -28,13 +32,16 @@ interface Item {
     quantity_scanned: number;
     details: Detail[];
 }
+type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>;
 
 const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = ({
     data,
     onApprove,
 }) => {
+    const navigation = useNavigation<NavigationProp>();
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const [details, setDetails] = useState(data.details);
+    console.log('GoodReceiveDetailCard data:', data);
 
     const handleScannedChange = (value: string, idx: number) => {
         const newDetails = [...details];
@@ -105,7 +112,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                                         value={String(item.quantity_scanned)}
                                         keyboardType="numeric"
                                         onChangeText={(val) => handleScannedChange(val, index)}
-                                        editable={true}
+                                        editable={false}
                                         placeholder="0"
                                         placeholderTextColor="#B0B0B0"
                                     />
@@ -116,33 +123,43 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                 )}
             />
 
-            <TouchableOpacity
-                style={[styles.approveButton, { backgroundColor: Colors.secondaryColor }]}
-                onPress={async () => {
-                    try {
-                        showLoadingDialog("Updating Good Receive");
-                        const payload = {
-                            inbound_do_id: data.do_id,
-                            items: details.map((d) => ({
-                                id: d.item_id_inbound,
-                                quantity_inspection: d.quantity_scanned,
-                            })),
-                        };
-                        console.log("Data to be sent:", payload);
-                        await InboundServices.updateGoodReceiveDetail(payload);
-                        Alert.alert("Success", "Data berhasil diperbarui");
-                    } catch (error) {
-                        Alert.alert("Error", "Gagal memperbarui data");
-                        hideLoadingDialog
-                    } finally {
-                        hideLoadingDialog();
-                    }
-                }}
-                activeOpacity={0.85}
-            >
-                <Icon name="check-circle-outline" size={22} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.approveText}>Approve</Text>
-            </TouchableOpacity>
+            {data.inspection_status?.toUpperCase() !== "APPROVED" && (
+                <TouchableOpacity
+                    style={[styles.approveButton, { backgroundColor: Colors.secondaryColor }]}
+                    onPress={async () => {
+                        try {
+                            showLoadingDialog("Updating Good Receive");
+                            const payload = {
+                                inbound_do_id: data.do_id,
+                                items: details.map((d) => ({
+                                    id: d.item_id_inbound,
+                                    quantity_inspection: d.quantity_scanned,
+                                })),
+                            };
+
+                            await InboundServices.updateGoodReceiveDetail(payload);
+
+                            hideLoadingDialog();
+                            Alert.alert("Success", "Data berhasil diperbarui", [
+                                {
+                                    text: "OK",
+                                    onPress: () => {
+                                        navigation.pop(1); // sama seperti goBack(), tapi hapus index saat ini
+                                    },
+                                },
+                            ]);
+                        } catch (error) {
+                            hideLoadingDialog();
+                            Alert.alert("Error", "Gagal memperbarui data");
+                            console.error(error);
+                        }
+                    }}
+                    activeOpacity={0.85}
+                >
+                    <Icon name="check-circle-outline" size={22} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.approveText}>Approve</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };

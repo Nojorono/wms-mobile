@@ -1,10 +1,11 @@
-import {createStackNavigator} from "@react-navigation/stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import HomeScreen from "../HomeScreen";
 import Colors from "../../constants/Colors";
-import {Alert, Image, View} from "react-native";
+import { Alert, Image, View } from "react-native";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import React from "react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useConfirmationStore } from "../../store/useConfirmationStore";
 
 
 export type HomeStackParamList = {
@@ -18,6 +19,7 @@ const HomeStack = createStackNavigator<HomeStackParamList>();
 
 const HomeStackNavigator = () => {
     const { clearAuth } = useAuthStore();
+    const confirm = useConfirmationStore();
     return (
         <HomeStack.Navigator initialRouteName="HomeMain">
             <HomeStack.Screen name="HomeMain" component={HomeScreen} options={{
@@ -36,17 +38,22 @@ const HomeStackNavigator = () => {
                         justifyContent: 'space-between',
                     }}>
                         <Image source={require('../../assets/images/icon-white-nna.png')}
-                               style={{width: 100, height: 22, resizeMode: 'contain'}}/>
+                            style={{ width: 100, height: 22, resizeMode: 'contain' }} />
                         <Ionicons
-                            name="kaaba"
+                            name="sign-out-alt"
                             size={24}
                             color="#fff"
-                            style={{marginRight: 15}}
-                            onPress={() => clearAuth()}
+                            style={{ marginRight: 15 }}
+                            onPress={() => {
+                                    confirm.show("decline", "Are you sure want to sign out ?", () => {
+                                        clearAuth()
+                                    }, false
+                                    );
+                            }}
                         />
                     </View>
                 ),
-            }}/>
+            }} />
         </HomeStack.Navigator>
     );
 };

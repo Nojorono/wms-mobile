@@ -60,7 +60,7 @@ const ForkLiftList: React.FC<ForkLiftListProps> = ({ item, index, onClick }) => 
 
           <View style={styles.infoRow}>
             <Text style={styles.label}>Destination</Text>
-            <Text style={styles.value}>{destination}</Text>
+            <Text style={styles.value}>{stagingArea}-{destination}</Text>
           </View>
 
           <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>

@@ -50,7 +50,7 @@ const ForkLiftDetailScreen = () => {
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Destination Bin</Text>
-          <Text style={styles.infoValue}>{destination.code}</Text>
+          <Text style={styles.infoValue}>{staging.name}-{destination.code}</Text>
         </View>
 
       </View>

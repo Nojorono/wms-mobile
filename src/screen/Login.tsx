@@ -19,7 +19,7 @@ import Toast from 'react-native-toast-message';
 import { loadAuthState, useAuthStore } from '../store/useAuthStore.ts';
 import AuthServices from '../service/authService';
 import Colors from '../../src/constants/Colors';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from "react-native-vector-icons/FontAwesome5";
 import { AuthStackParamList } from "./navigation/AuthNavigator";
 import { useLoadingDialogStore } from "../store/useLoadingStore.ts";
 import CustomButton from "../../src/components/CustomButton";
@@ -160,14 +160,14 @@ export default function LoginScreen() {
                 <TouchableOpacity
                     style={styles.eyeIcon}
                     onPress={() => setPasswordVisible(!passwordVisible)}>
-                    <Ionicons name={passwordVisible ? 'eye-off-outline' : 'eye-outline'} size={24} />
+                    <Ionicons name={passwordVisible ? 'eye' : 'eye-slash'} size={24} />
                 </TouchableOpacity>
             </View>
 
             <View style={styles.rememberContainer}>
                 <TouchableOpacity onPress={() => setRememberMe(!rememberMe)}>
                     <View style={[styles.checkbox, rememberMe && styles.checkedBox]}>
-                        {rememberMe && (<Ionicons name="checkmark" size={16} color="#fff" />)}
+                        {rememberMe && (<Ionicons name="check" size={12} color="#fff" />)}
                     </View>
                 </TouchableOpacity>
                 <Text style={styles.rememberText}>Remember Me</Text>

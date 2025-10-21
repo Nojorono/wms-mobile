@@ -233,6 +233,9 @@ export function transformInspectionResponse(inbound: any): any {
 export function mergeGoodReceive(inboundData: any) {
   const resultMap = new Map();
 
+  // Helper untuk memastikan float
+  const toFloat = (val: any) => parseFloat(val ?? 0) || 0.0;
+
   // step 1: isi PLAN & INSPECTED
   inboundData.inbound_dos.forEach((doEntry: any) => {
     doEntry.inbound_items.forEach((item: any) => {
@@ -242,26 +245,27 @@ export function mergeGoodReceive(inboundData: any) {
           item_id: item.item_id,
           sku: item.item.sku,
           do_id: doEntry.id,
+          inspection_status: item.inspection_status,
           description: item.item.description,
           uom: item.uom,
-          quantity_plan: 0,
-          quantity_scanned: 0,
-          quantity_inspected: 0, // tambahkan summary inspected
+          quantity_plan: 0.0,
+          quantity_scanned: 0.0,
+          quantity_inspected: 0.0,
           details: [],
         });
       }
 
       const existing = resultMap.get(key);
-      existing.quantity_plan += item.quantity;
-      existing.quantity_inspected += item.quantity_inspection || 0; // akumulasi inspected
+      existing.quantity_plan += toFloat(item.quantity);
+      existing.quantity_inspected += toFloat(item.quantity_inspection);
 
       existing.details.push({
         item_id_inbound: item.id,
         do_number: doEntry.inbound_do_number,
         po_number: doEntry.inbound_po_number,
-        quantity_inspected: item.quantity_inspection || 0,
-        quantity_plan: item.quantity,
-        quantity_scanned: 0,
+        quantity_inspected: toFloat(item.quantity_inspection),
+        quantity_plan: toFloat(item.quantity),
+        quantity_scanned: 0.0,
         uom: item.uom,
       });
     });
@@ -273,37 +277,50 @@ export function mergeGoodReceive(inboundData: any) {
     if (!resultMap.has(key)) return;
 
     const existing = resultMap.get(key);
-    let remaining = scan.quantity;
+    let remaining = toFloat(scan.quantity);
 
     for (const detail of existing.details) {
-      const available = detail.quantity_plan - detail.quantity_scanned;
+      const available = toFloat(detail.quantity_plan) - toFloat(detail.quantity_scanned);
       if (available <= 0) continue;
 
       const allocate = Math.min(available, remaining);
-      detail.quantity_scanned += allocate;
-      existing.quantity_scanned += allocate;
+      detail.quantity_scanned = toFloat(detail.quantity_scanned) + allocate;
+      existing.quantity_scanned = toFloat(existing.quantity_scanned) + allocate;
       remaining -= allocate;
 
       if (remaining <= 0) break;
     }
 
-    // kalau masih ada sisa scan yg tidak bisa dipetakan ke PLAN
+    // jika masih ada sisa scan yang tidak bisa dipetakan ke PLAN
     if (remaining > 0) {
       existing.details.push({
         do_number: null,
         po_number: null,
-        quantity_plan: 0,
+        quantity_plan: 0.0,
         quantity_scanned: remaining,
-        quantity_inspected: 0,
+        quantity_inspected: 0.0,
         uom: scan.uom,
         note: "EXCESS_SCAN",
       });
-      existing.quantity_scanned += remaining;
+      existing.quantity_scanned = toFloat(existing.quantity_scanned) + remaining;
     }
   });
 
-  return Array.from(resultMap.values());
+  // optional: pastikan semua nilai akhir dibulatkan ke 2 desimal (jika dibutuhkan)
+  return Array.from(resultMap.values()).map((entry) => ({
+    ...entry,
+    quantity_plan: parseFloat(entry.quantity_plan.toFixed(2)),
+    quantity_scanned: parseFloat(entry.quantity_scanned.toFixed(2)),
+    quantity_inspected: parseFloat(entry.quantity_inspected.toFixed(2)),
+    details: entry.details.map((d: any) => ({
+      ...d,
+      quantity_plan: parseFloat(d.quantity_plan.toFixed(2)),
+      quantity_scanned: parseFloat(d.quantity_scanned.toFixed(2)),
+      quantity_inspected: parseFloat(d.quantity_inspected.toFixed(2)),
+    })),
+  }));
 }
+
 
 
 

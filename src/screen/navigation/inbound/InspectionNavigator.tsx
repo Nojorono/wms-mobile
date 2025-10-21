@@ -11,7 +11,7 @@ import GoodReceiveDetail from '../../page/inbound/inboundMain/inspection/goodrec
 export type InspectionParamList = {
   InspectionMain: {item: any};
   InspectionDetail: { item: any; payload: any };
-  GoodReceive: { payload: any };
+  GoodReceive: { payload?: any };
   GoodReceiveDetail: { item: any; payload: any };
 };
 

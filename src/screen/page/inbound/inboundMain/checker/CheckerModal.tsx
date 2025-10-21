@@ -79,17 +79,21 @@ export default function HelperModal({
     }
   };
 
-  const fetchUserList = async () => {
-    try {
-      showLoadingDialog("Loading Data Users");
-      const response = await UserServices.getUserList();
-      setUserList(response?.data || []);
-    } catch (error) {
-      console.error("Error fetching user list data:", error);
-    } finally {
-      hideLoadingDialog();
-    }
-  };
+const fetchUserList = async (roleName = "HELPER") => {
+  try {
+    showLoadingDialog(`Loading Data Users (${roleName})`);
+    const response = await UserServices.getUserList();
+    const filteredUsers = (response?.data || []).filter(
+      (user:any) => user?.role?.name?.toUpperCase() === roleName.toUpperCase()
+    );
+    setUserList(filteredUsers);
+  } catch (error) {
+    console.error("Error fetching user list data:", error);
+  } finally {
+    hideLoadingDialog();
+  }
+};
+
 
   useEffect(() => {
     fetchUserList();

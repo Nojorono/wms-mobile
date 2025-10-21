@@ -23,7 +23,7 @@ function OutboundIndex() {
         <View style={styles.profileSection}>
           <Text style={styles.profileText}>Hi! {user?.firstName}</Text>
           <Text style={styles.profileSubtext}>
-            Selamat beraktifitas, jaga selalu kesehatan rumah tanggamu
+            Selamat beraktifitas, jaga selalu kesehatan
           </Text>
         </View>
       </View>

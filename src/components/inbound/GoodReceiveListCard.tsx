@@ -17,6 +17,7 @@ interface Item {
   sku: string;
   description: string;
   uom: string;
+  inspection_status: string;
   quantity_plan: number;
   quantity_scanned: number;
   quantity_inspected?: number;
@@ -33,7 +34,6 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
     <View style={{ paddingBottom: 20 }}>
       {items.map((item, index) => {
         const isReady = item.quantity_plan === item.quantity_scanned;
-        console.log("Item Details:", item);
 
         return (
           <View style={styles.card} key={index}>
@@ -85,7 +85,8 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
                   { color: isReady ? "#10B981" : "#FF6B00" },
                 ]}
               >
-                {isReady ? "Ready to Receive" : "Pending"}
+                {/* {isReady ? "Ready to Receive" : "Pending"} */}
+                {item.inspection_status?.toUpperCase() || "PENDING"}
               </Text>
             </View>
 

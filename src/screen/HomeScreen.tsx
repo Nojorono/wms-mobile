@@ -30,14 +30,14 @@ function HomeScreen() {
       <View style={styles.headerHome}>
         <View style={styles.profileSection}>
           <Text style={styles.profileText}>Hi!</Text>
-          <Text style={styles.profileSubtext}>Selamat beraktifitas, jaga selalu kesehatan rumah tanggamu</Text>
+          <Text style={styles.profileSubtext}>Selamat beraktifitas, jaga selalu kesehatan</Text>
         </View>
       </View>
       {/* Main Scrollable Content */}
       <ScrollView contentContainerStyle={styles.menuContainer} style={styles.scrollViewContent} stickyHeaderIndices={[2]} >
         <View style={styles.menuCard}>
           <View style={styles.activitiesHeader}>
-            <Text style={styles.activitiesHeaderText}>Dahboard</Text>
+            <Text style={styles.activitiesHeaderText}>Menu</Text>
           </View>
           <View style={stylez.rowWithMargin}>
             <TouchableOpacity

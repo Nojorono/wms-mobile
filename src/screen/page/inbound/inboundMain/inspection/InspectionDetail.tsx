@@ -46,6 +46,7 @@ type PalletItem = {
     qty: number;
     weekNumber: string;
     stagingArea: string;
+    stagingAreaName: string;
     productionDate: string;
     status: string;
 };
@@ -71,7 +72,6 @@ const InspectionDetail = () => {
 
     const fetchData = async () => {
         try {
-            console.log("Fetching pallets for item:", item, payload);
             showLoadingDialog("Loading Pallets");
             const res = await InboundServices.getUnloadingScanList(
                 payload.id,
@@ -84,6 +84,7 @@ const InspectionDetail = () => {
                     qty: d.quantity,
                     weekNumber: d.week_number,
                     stagingArea: d.m_warehouse_sub_id || "-",
+                    stagingAreaName: d.warehouseSub?.name || "-",
                     productionDate: d.production_date || "-",
                     status: d.status || "-",
                 }));
@@ -241,7 +242,7 @@ const InspectionDetail = () => {
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Staging:</Text>
                                 <Text style={styles.infoValue}>
-                                    {item.stagingArea.slice(-15)}
+                                    {item.stagingAreaName}
                                 </Text>
                             </View>
                             <View style={styles.infoRow}>

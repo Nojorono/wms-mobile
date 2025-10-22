@@ -47,6 +47,7 @@ type PalletItem = {
   qty: number;
   weekNumber: number;
   stagingArea: string;
+  stagingAreaName: string;
   productionDate: string;
   status: string;
 };
@@ -78,6 +79,7 @@ const UnloadingScanScreen = () => {
           weekNumber: d.week_number,
           status: d.status,
           stagingArea: d.m_warehouse_sub_id || "-",
+          stagungAreaName: d.warehouseSub.name || "-",
           productionDate: d.production_date || "-",
         }));
         console.log("Fetched Pallets:", mapped);
@@ -193,7 +195,7 @@ const UnloadingScanScreen = () => {
               <Text style={styles.palletCode}>{item.palletCode}</Text>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Staging:</Text>
-                <Text style={styles.infoValue}>{item.stagingArea.slice(-15)}</Text>
+                <Text style={styles.infoValue}>{item.stagingAreaName}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Qty Scan:</Text>

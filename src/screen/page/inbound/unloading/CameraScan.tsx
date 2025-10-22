@@ -115,27 +115,81 @@ const CameraScreen = () => {
   }, [isCameraActive]);
 
   // 🔄 handle tambah/edit pallet
- const handleAddPallet = async (code: string) => {
-  const value = code.trim().toUpperCase();
-  if (!value || !user) return;
+  const handleAddPallet = async (code: string) => {
+    const value = code.trim().toUpperCase();
+    if (!value || !user) return;
 
-  // 🔍 Cek apakah pallet_code sudah ada di dataExist
-  const existing = dataExist?.find(
-    (item: any) => item.palletCode?.toUpperCase() === value
-  );
+    // 🔍 Cek apakah pallet_code sudah ada di dataExist
+    const existing = dataExist?.find(
+      (item: any) => item.palletCode?.toUpperCase() === value
+    );
 
-  try {
-    if (existing) {
-      // 🚫 Jika status bukan OPEN, blokir edit/post
-      if (existing.status !== "OPEN") {
+    try {
+      if (existing) {
+        // 🚫 Jika status bukan OPEN, blokir edit/post
+        if (existing.status !== "OPEN") {
+          showDialog(
+            "error",
+            `Pallet ${existing.palletCode} tidak dapat diedit karena status-nya "${existing.status}".`
+          );
+          return;
+        }
+
+        // 🔄 Jika status OPEN, tetap lakukan getPalletInfo untuk refresh data
+        const res = await InboundServices.getPalletInfo(value);
+        const palletData = res?.data;
+
+        if (!palletData) {
+          showDialog("error", "Pallet not found or invalid!");
+          return;
+        }
+
+        if (!palletData.success) {
+          showDialog("error", palletData.message || "Something went wrong!");
+          return;
+        }
+
+        if (palletData.data && palletData.data.success === false) {
+          showDialog("error", palletData.data.message || "Pallet invalid!");
+          return;
+        }
+
+        const refreshedItem: PalletItem = {
+          id: existing.id, // tetap gunakan ID existing
+          palletNo: existing.palletCode,
+          qty:
+            palletData.data?.qty?.toString() ||
+            existing.qty?.toString() ||
+            "",
+          production_date:
+            palletData.data?.production_date || existing.productionDate || null,
+          week:
+            palletData.data?.week?.toString() ||
+            existing.weekNumber?.toString() ||
+            null,
+          inbound_id: item.inbound_id,
+          item_id: item.id,
+          user_id: user.id,
+          user_name: user.username,
+          status: existing.status || "OPEN",
+          uom: item.uom,
+          staging_area_id: existing.stagingArea || "",
+        };
+        setQtyPalletExist(
+          palletData.pallet_status.capacity -
+          palletData.pallet_status.current_quantity || 0
+        );
+        setScan(refreshedItem);
+        setIsEditMode(true);
+        setManualInput("");
         showDialog(
-          "error",
-          `Pallet ${existing.palletCode} tidak dapat diedit karena status-nya "${existing.status}".`
+          "success",
+          "Data existing pallet (OPEN) berhasil dimuat & diperbarui dari server."
         );
         return;
       }
 
-      // 🔄 Jika status OPEN, tetap lakukan getPalletInfo untuk refresh data
+      // 🆕 Jika belum ada di existing, fetch dari API seperti biasa
       const res = await InboundServices.getPalletInfo(value);
       const palletData = res?.data;
 
@@ -154,86 +208,32 @@ const CameraScreen = () => {
         return;
       }
 
-      const refreshedItem: PalletItem = {
-        id: existing.id, // tetap gunakan ID existing
-        palletNo: existing.palletCode,
-        qty:
-          palletData.data?.qty?.toString() ||
-          existing.qty?.toString() ||
-          "",
-        production_date:
-          palletData.data?.production_date || existing.productionDate || null,
-        week:
-          palletData.data?.week?.toString() ||
-          existing.weekNumber?.toString() ||
-          null,
+      const newItem: PalletItem = {
+        id: Date.now().toString(),
+        palletNo: value,
+        qty: palletData.qty?.toString() || "",
+        production_date: palletData.production_date || null,
+        week: palletData.week?.toString() || null,
         inbound_id: item.inbound_id,
         item_id: item.id,
         user_id: user.id,
         user_name: user.username,
-        status: existing.status || "OPEN",
+        status: "OPEN",
         uom: item.uom,
-        staging_area_id: existing.stagingArea || "",
+        staging_area_id: "",
       };
-setQtyPalletExist(
-      palletData.pallet_status.capacity -
+
+      setQtyPalletExist(
+        palletData.pallet_status.capacity -
         palletData.pallet_status.current_quantity || 0
-    );
-      setScan(refreshedItem);
-      setIsEditMode(true);
-      setManualInput("");
-      showDialog(
-        "success",
-        "Data existing pallet (OPEN) berhasil dimuat & diperbarui dari server."
       );
-      return;
+      setScan(newItem);
+      setIsEditMode(false);
+      setManualInput("");
+    } catch (err) {
+      showDialog("error", "Error fetching pallet info!");
     }
-
-    // 🆕 Jika belum ada di existing, fetch dari API seperti biasa
-    const res = await InboundServices.getPalletInfo(value);
-    const palletData = res?.data;
-
-    if (!palletData) {
-      showDialog("error", "Pallet not found or invalid!");
-      return;
-    }
-
-    if (!palletData.success) {
-      showDialog("error", palletData.message || "Something went wrong!");
-      return;
-    }
-
-    if (palletData.data && palletData.data.success === false) {
-      showDialog("error", palletData.data.message || "Pallet invalid!");
-      return;
-    }
-
-    const newItem: PalletItem = {
-      id: Date.now().toString(),
-      palletNo: value,
-      qty: palletData.qty?.toString() || "",
-      production_date: palletData.production_date || null,
-      week: palletData.week?.toString() || null,
-      inbound_id: item.inbound_id,
-      item_id: item.id,
-      user_id: user.id,
-      user_name: user.username,
-      status: "OPEN",
-      uom: item.uom,
-      staging_area_id: "",
-    };
-
-    setQtyPalletExist(
-      palletData.pallet_status.capacity -
-        palletData.pallet_status.current_quantity || 0
-    );
-    setScan(newItem);
-    setIsEditMode(false);
-    setManualInput("");
-  } catch (err) {
-    showDialog("error", "Error fetching pallet info!");
-  }
-};
+  };
 
 
   const handleSubmitEditing = () => {
@@ -292,16 +292,16 @@ setQtyPalletExist(
 
     if (isEditMode) {
       const editData = {
-      production_date: scan.production_date ?? "",
-      week_number: scan.week ? Number(scan.week) : 0,
-      quantity: Number(scan.qty) || 0,
-      m_warehouse_sub_id: scan.staging_area_id || "",
+        production_date: scan.production_date ?? "",
+        week_number: scan.week ? Number(scan.week) : 0,
+        quantity: Number(scan.qty) || 0,
+        m_warehouse_sub_id: scan.staging_area_id || "",
       };
       InboundServices.updateInspectionData(scan.id, editData)
-      .then(() => navigation.goBack())
-      .catch((err) =>
-        showDialog("error", err?.data?.error || "Error while updating pallet!")
-      );
+        .then(() => navigation.goBack())
+        .catch((err) =>
+          showDialog("error", err?.data?.error || "Error while updating pallet!")
+        );
     } else {
       InboundServices.postUnloading(data)
         .then(() => navigation.goBack())
@@ -474,8 +474,8 @@ setQtyPalletExist(
                 scan?.status !== "OPEN"
                   ? "#9ca3af"
                   : isEditMode
-                  ? "#f59e0b"
-                  : "#16a34a",
+                    ? "#f59e0b"
+                    : "#16a34a",
             },
           ]}
           onPress={handleNext}
@@ -485,8 +485,8 @@ setQtyPalletExist(
             {scan?.status !== "OPEN"
               ? "Locked"
               : isEditMode
-              ? "Edit"
-              : "Next"}
+                ? "Edit"
+                : "Next"}
           </Text>
         </TouchableOpacity>
       </View>

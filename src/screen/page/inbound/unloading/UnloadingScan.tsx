@@ -79,7 +79,7 @@ const UnloadingScanScreen = () => {
           weekNumber: d.week_number,
           status: d.status,
           stagingArea: d.m_warehouse_sub_id || "-",
-          stagungAreaName: d.warehouseSub.name || "-",
+          stagingAreaName: d.warehouseSub.name || "-",
           productionDate: d.production_date || "-",
         }));
         console.log("Fetched Pallets:", mapped);

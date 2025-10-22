@@ -42,7 +42,7 @@ const GoodReceiveDetail = () => {
 
             {/* Scrollable Dynamic Card List */}
             <View style={{ flex: 1 }}>
-                    <GoodReceiveDetailCard data={payload.item} />
+                    <GoodReceiveDetailCard data={payload.item} inbound_id={payload.payload.id} />
                 
             </View>
         </View>

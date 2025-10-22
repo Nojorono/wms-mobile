@@ -192,6 +192,15 @@ class InboundServices {
     }
   }
 
+  static async updateStatusAfterGoodReceive(inboundId: string,): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`inbound/sequential-status/${inboundId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   //FORKLIFT SERVICES
   static async getForkLiftList(userId: string): Promise<any> {
     try {

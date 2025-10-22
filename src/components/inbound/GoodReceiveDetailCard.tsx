@@ -34,14 +34,15 @@ interface Item {
 }
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>;
 
-const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = ({
+const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbound_id: string }> = ({
     data,
+    inbound_id,
     onApprove,
 }) => {
     const navigation = useNavigation<NavigationProp>();
-    const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+    const { showLoadingDialog, hideLoadingDialog, setLoadingMessage } = useLoadingDialogStore();
     const [details, setDetails] = useState(data.details);
-    console.log('GoodReceiveDetailCard data:', data);
+    console.log('inboundId data:', inbound_id);
 
     const handleScannedChange = (value: string, idx: number) => {
         const newDetails = [...details];
@@ -58,6 +59,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
         setDetails(newDetails);
     };
 
+
     return (
         <View style={styles.card}>
             <View style={styles.row}>
@@ -70,7 +72,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                     <Text style={styles.value}>{data.quantity_plan}</Text>
                 </View>
                 <View style={styles.infoBlock}>
-                    <Text style={styles.label}>Inspection</Text>
+                    <Text style={styles.label}>Inspec</Text>
                     <Text style={styles.value}>{data.quantity_scanned}</Text>
                 </View>
                 <View style={styles.infoBlock}>
@@ -128,7 +130,8 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                     style={[styles.approveButton, { backgroundColor: Colors.secondaryColor }]}
                     onPress={async () => {
                         try {
-                            showLoadingDialog("Updating Good Receive");
+                            // Step 1: Update Good Receive Detail
+                            showLoadingDialog("Updating Good Receive...");
                             const payload = {
                                 inbound_do_id: data.do_id,
                                 items: details.map((d) => ({
@@ -139,12 +142,17 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
 
                             await InboundServices.updateGoodReceiveDetail(payload);
 
+                            // Step 2: Ubah teks tanpa menutup loading
+                            setLoadingMessage("Updating Status After Good Receive...");
+                            await InboundServices.updateStatusAfterGoodReceive(inbound_id);
+
+                            // Step 3: Selesai
                             hideLoadingDialog();
-                            Alert.alert("Success", "Data berhasil diperbarui", [
+                            Alert.alert("Success", "Data berhasil diperbarui dan status diperbarui", [
                                 {
                                     text: "OK",
                                     onPress: () => {
-                                        navigation.pop(1); // sama seperti goBack(), tapi hapus index saat ini
+                                        navigation.pop(1);
                                     },
                                 },
                             ]);
@@ -195,7 +203,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
     value: {
-        fontSize: 15,
+        fontSize: 12,
         fontWeight: "600",
         color: "#222",
     },

@@ -25,6 +25,7 @@ type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
 const FILTER_OPTIONS = [
   'CREATED',
   'UNLOADING',
+  'INSPECTION',
 ];
 
 function InboundScreen() {
@@ -35,6 +36,13 @@ function InboundScreen() {
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
+  const availableFilters = useMemo(() => {
+    if (user?.role?.name === "HELPER") {
+      // Hilangkan INSPECTION untuk HELPER
+      return FILTER_OPTIONS.filter((f) => f !== "INSPECTION");
+    }
+    return FILTER_OPTIONS;
+  }, [user]);
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -120,14 +128,12 @@ function InboundScreen() {
               showsHorizontalScrollIndicator={false}
               style={{ marginTop: 10 }}
             >
-              {FILTER_OPTIONS.map((filter) => (
+              {availableFilters.map((filter) => (
                 <TouchableOpacity
                   key={filter}
                   style={[
                     localStyles.filterButton,
-                    selectedFilter === filter && {
-                      backgroundColor: Colors.primeColor,
-                    },
+                    selectedFilter === filter && { backgroundColor: Colors.primeColor },
                   ]}
                   onPress={() => {
                     const newFilter = selectedFilter === filter ? null : filter;
@@ -137,7 +143,7 @@ function InboundScreen() {
                   <Text
                     style={[
                       localStyles.filterText,
-                      selectedFilter === filter && { color: '#fff' },
+                      selectedFilter === filter && { color: "#fff" },
                     ]}
                   >
                     {filter}
@@ -145,6 +151,7 @@ function InboundScreen() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+
           </View>
 
           {/* 📦 List Card */}

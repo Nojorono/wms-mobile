@@ -12,8 +12,8 @@ import Icon from "react-native-vector-icons/FontAwesome5";
 import { ForkLiftParamList } from "../../../navigation/inbound/ForkLiftNavigator";
 
 type NavigationProp = StackNavigationProp<
-    ForkLiftParamList,
-    "ForkLiftMain"
+  ForkLiftParamList,
+  "ForkLiftMain"
 >;
 
 
@@ -21,8 +21,8 @@ const ForkLiftDetailScreen = () => {
   const route = useRoute();
   const { item } = route.params as any; // ambil payload.item dari navigasi
   const pallet = item.inventoryTracking.pallet;
-  
-      const navigation = useNavigation<NavigationProp>();
+
+  const navigation = useNavigation<NavigationProp>();
   const staging = item.inventoryTracking.warehouseSub;
   const destination = item.destinationBin;
 
@@ -50,7 +50,7 @@ const ForkLiftDetailScreen = () => {
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Destination Bin</Text>
-          <Text style={styles.infoValue}>{staging.name}-{destination.code}</Text>
+          <Text style={styles.infoValue}>{destination.code}</Text>
         </View>
 
       </View>
@@ -60,9 +60,9 @@ const ForkLiftDetailScreen = () => {
       <View style={styles.buttonWrapper}>
         <TouchableOpacity
           style={[styles.scanButton, { backgroundColor: "#FF6B00" }]}
-          onPress={() =>  navigation.navigate("CameraScreen", {
-              item: item,
-            })}
+          onPress={() => navigation.navigate("CameraScreen", {
+            item: item,
+          })}
         >
           <Icon name="barcode" size={20} color="#fff" />
           <Text style={styles.scanText}>Scan Bin</Text>

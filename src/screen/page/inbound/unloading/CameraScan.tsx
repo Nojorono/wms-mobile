@@ -21,6 +21,7 @@ import InboundServices from "../../../../service/inboundServices";
 import { useAuthStore } from "../../../../store/useAuthStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
+import { set } from "react-hook-form";
 
 type NavigationProp = StackNavigationProp<UnloadingParamList, "UnloadingMain">;
 
@@ -86,6 +87,27 @@ const CameraScreen = () => {
     },
   });
 
+  // Pastikan input selalu fokus walau keyboard tidak muncul
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isCameraActive && inputRef.current && !inputRef.current.isFocused()) {
+        inputRef.current.focus();
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isCameraActive]);
+
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTextChange = (text: string) => {
+    setManualInput(text);
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(() => {
+      if (text.trim()) handleAddPallet(text);
+    }, 300);
+  };
+
+
   useEffect(() => {
     if (!hasPermission) requestPermission();
   }, [hasPermission]);
@@ -116,6 +138,8 @@ const CameraScreen = () => {
 
   // 🔄 handle tambah/edit pallet
   const handleAddPallet = async (code: string) => {
+    setIsCameraActive(false);
+    Keyboard.dismiss();
     const value = code.trim().toUpperCase();
     if (!value || !user) return;
 
@@ -128,6 +152,7 @@ const CameraScreen = () => {
       if (existing) {
         // 🚫 Jika status bukan OPEN, blokir edit/post
         if (existing.status !== "OPEN") {
+          setManualInput("");
           showDialog(
             "error",
             `Pallet ${existing.palletCode} tidak dapat diedit karena status-nya "${existing.status}".`
@@ -135,24 +160,26 @@ const CameraScreen = () => {
           return;
         }
 
+
         // 🔄 Jika status OPEN, tetap lakukan getPalletInfo untuk refresh data
         const res = await InboundServices.getPalletInfo(value);
         const palletData = res?.data;
 
         if (!palletData) {
+          setManualInput("");
           showDialog("error", "Pallet not found or invalid!");
           return;
         }
 
-        if (!palletData.success) {
-          showDialog("error", palletData.message || "Something went wrong!");
-          return;
-        }
+        // if (!palletData.success) {
+        //   showDialog("error", palletData.message || "Something went wrong!");
+        //   return;
+        // }
 
-        if (palletData.data && palletData.data.success === false) {
-          showDialog("error", palletData.data.message || "Pallet invalid!");
-          return;
-        }
+        // if (palletData.data && palletData.data.success === false) {
+        //   showDialog("error", palletData.data.message || "Pallet invalid!");
+        //   return;
+        // }
 
         const refreshedItem: PalletItem = {
           id: existing.id, // tetap gunakan ID existing
@@ -194,16 +221,19 @@ const CameraScreen = () => {
       const palletData = res?.data;
 
       if (!palletData) {
+        setManualInput("");
         showDialog("error", "Pallet not found or invalid!");
         return;
       }
 
       if (!palletData.success) {
+        setManualInput("");
         showDialog("error", palletData.message || "Something went wrong!");
         return;
       }
 
       if (palletData.data && palletData.data.success === false) {
+        setManualInput("");
         showDialog("error", palletData.data.message || "Pallet invalid!");
         return;
       }
@@ -231,13 +261,14 @@ const CameraScreen = () => {
       setIsEditMode(false);
       setManualInput("");
     } catch (err) {
+      setManualInput("");
       showDialog("error", "Error fetching pallet info!");
     }
   };
 
 
   const handleSubmitEditing = () => {
-    if (manualInput.trim()) handleAddPallet(manualInput);
+    handleAddPallet(manualInput);
   };
 
   const deletePallet = () => setScan(null);
@@ -331,17 +362,16 @@ const CameraScreen = () => {
         />
       )}
 
-      {!isCameraActive && (
+      <View style={{ position: "absolute", height: 0, width: 0 }}>
         <TextInput
           ref={inputRef}
-          style={styles.hiddenInput}
+          style={{ height: 0, width: 0, opacity: 0 }}
           value={manualInput}
-          onChangeText={setManualInput}
-          onSubmitEditing={handleSubmitEditing}
+          onChangeText={handleTextChange}
           blurOnSubmit={false}
-          autoFocus
         />
-      )}
+      </View>
+
 
       <View style={styles.overlay}>
         {/* Tombol toggle mode */}

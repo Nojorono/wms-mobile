@@ -97,7 +97,13 @@ export default function ForkLiftScreen() {
       navigation.navigate('ForkLiftDetail', { item: matchedItem });
     } else {
       Alert.alert('Not Found', `No pallet matched for: ${code}`, [
-        { text: 'OK', onPress: () => inputRef.current?.focus() },
+        { text: 'OK',
+           onPress: () => {
+            inputRef.current?.focus();
+            setScannedCode('');
+
+          }
+         },
       ]);
       setScannedCode('');
     }

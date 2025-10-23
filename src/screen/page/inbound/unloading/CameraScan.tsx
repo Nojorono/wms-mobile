@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TextInput,
   Keyboard,
+  BackHandler,
 } from "react-native";
 import {
   Camera,
@@ -13,7 +14,7 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from "react-native-vision-camera";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import DatePicker from "react-native-date-picker";
 import { Picker } from "@react-native-picker/picker";
@@ -22,6 +23,7 @@ import { useAuthStore } from "../../../../store/useAuthStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import { set } from "react-hook-form";
+import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 
 type NavigationProp = StackNavigationProp<UnloadingParamList, "UnloadingMain">;
 
@@ -74,6 +76,8 @@ const CameraScreen = () => {
   const [tempDate, setTempDate] = useState(new Date());
   const [isEditMode, setIsEditMode] = useState(false);
   const inputRef = useRef<TextInput>(null);
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+  const [showInput, setShowInput] = useState(false);
 
   // 🧠 QR / Barcode via kamera
   const codeScanner = useCodeScanner({
@@ -87,6 +91,17 @@ const CameraScreen = () => {
     },
   });
 
+  // useEffect(() => {
+  //   console.log("Navigation object:", navigation);
+  //   console.log("InputRef object:", inputRef);
+  //   const test = (inputRef.current as any).clear?.();
+  //   console.log("Cleared inputRef:", test);
+  //   setManualInput("");
+  // }, [navigation]);
+
+
+
+
   // Pastikan input selalu fokus walau keyboard tidak muncul
   useEffect(() => {
     const interval = setInterval(() => {
@@ -99,13 +114,26 @@ const CameraScreen = () => {
 
   const typingTimeout = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    // tampilkan input setelah 3 detik
+    showLoadingDialog("Loading...")
+    const timer = setTimeout(() => {
+      setShowInput(true);
+      hideLoadingDialog()
+    }, 3000);
+
+    return () => clearTimeout(timer); // bersihkan timer jika unmount
+  }, []);
+
   const handleTextChange = (text: string) => {
-    setManualInput(text);
-    if (typingTimeout.current) clearTimeout(typingTimeout.current);
-    typingTimeout.current = setTimeout(() => {
-      if (text.trim()) handleAddPallet(text);
-    }, 300);
+    setTimeout(() => {
+      setManualInput(text);
+      handleAddPallet(text)
+    }, 300)
+
   };
+
+
 
 
   useEffect(() => {
@@ -267,10 +295,6 @@ const CameraScreen = () => {
   };
 
 
-  const handleSubmitEditing = () => {
-    handleAddPallet(manualInput);
-  };
-
   const deletePallet = () => setScan(null);
 
   const updatePallet = (field: keyof PalletItem, value: string | null) => {
@@ -361,17 +385,17 @@ const CameraScreen = () => {
           codeScanner={codeScanner}
         />
       )}
-
-      <View style={{ position: "absolute", height: 0, width: 0 }}>
-        <TextInput
-          ref={inputRef}
-          style={{ height: 0, width: 0, opacity: 0 }}
-          value={manualInput}
-          onChangeText={handleTextChange}
-          blurOnSubmit={false}
-        />
-      </View>
-
+      {showInput && (
+        <View style={{ position: "absolute", height: 0, width: 0 }}>
+          <TextInput
+            ref={inputRef}
+            style={{ height: 0, width: 0, opacity: 0 }}
+            value={manualInput}
+            onChangeText={handleTextChange}
+            blurOnSubmit={false}
+          />
+        </View>
+      )}
 
       <View style={styles.overlay}>
         {/* Tombol toggle mode */}

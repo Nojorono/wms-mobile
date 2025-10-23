@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TextInput,
   Keyboard,
-  BackHandler,
 } from "react-native";
 import {
   Camera,
@@ -14,7 +13,7 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from "react-native-vision-camera";
-import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import DatePicker from "react-native-date-picker";
 import { Picker } from "@react-native-picker/picker";
@@ -22,7 +21,6 @@ import InboundServices from "../../../../service/inboundServices";
 import { useAuthStore } from "../../../../store/useAuthStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
-import { set } from "react-hook-form";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 
 type NavigationProp = StackNavigationProp<UnloadingParamList, "UnloadingMain">;
@@ -80,61 +78,40 @@ const CameraScreen = () => {
   const [showInput, setShowInput] = useState(false);
 
   // 🧠 QR / Barcode via kamera
+  // const codeScanner = useCodeScanner({
+  //   codeTypes: ["qr", "code-128", "ean-13"],
+  //   onCodeScanned: (codes) => {
+      
+  //     const val = codes[0]?.value ?? "";
+  //     if (val) {
+
+  //       console.log("Scanned Value:", val);
+  //       setManualInput(val);
+  //       handleAddPallet(val);
+  //     }
+  //   },
+  // });
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const codeScanner = useCodeScanner({
     codeTypes: ["qr", "code-128", "ean-13"],
     onCodeScanned: (codes) => {
       const val = codes[0]?.value ?? "";
-      if (val) {
+      
+      if (val && !isProcessing) {
+        setIsProcessing(true);
+        console.log("Scanned Value:", val);
         setManualInput(val);
         handleAddPallet(val);
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+          setIsProcessing(false);
+        }, 5000);
       }
     },
-  });
-
-  // useEffect(() => {
-  //   console.log("Navigation object:", navigation);
-  //   console.log("InputRef object:", inputRef);
-  //   const test = (inputRef.current as any).clear?.();
-  //   console.log("Cleared inputRef:", test);
-  //   setManualInput("");
-  // }, [navigation]);
-
-
-
-
-  // Pastikan input selalu fokus walau keyboard tidak muncul
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isCameraActive && inputRef.current && !inputRef.current.isFocused()) {
-        inputRef.current.focus();
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isCameraActive]);
-
-  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    // tampilkan input setelah 3 detik
-    showLoadingDialog("Loading...")
-    const timer = setTimeout(() => {
-      setShowInput(true);
-      hideLoadingDialog()
-    }, 3000);
-
-    return () => clearTimeout(timer); // bersihkan timer jika unmount
-  }, []);
-
-  const handleTextChange = (text: string) => {
-    setTimeout(() => {
-      setManualInput(text);
-      handleAddPallet(text)
-    }, 300)
-
-  };
-
-
-
+  })
 
   useEffect(() => {
     if (!hasPermission) requestPermission();
@@ -164,10 +141,19 @@ const CameraScreen = () => {
     }
   }, [isCameraActive]);
 
+    useEffect(() => {
+    // tampilkan input setelah 3 detik
+    showLoadingDialog("Loading...")
+    const timer = setTimeout(() => {
+      setShowInput(true);
+      hideLoadingDialog()
+    }, 1500);
+
+    return () => clearTimeout(timer); // bersihkan timer jika unmount
+  }, []);
+
   // 🔄 handle tambah/edit pallet
   const handleAddPallet = async (code: string) => {
-    setIsCameraActive(false);
-    Keyboard.dismiss();
     const value = code.trim().toUpperCase();
     if (!value || !user) return;
 
@@ -180,7 +166,6 @@ const CameraScreen = () => {
       if (existing) {
         // 🚫 Jika status bukan OPEN, blokir edit/post
         if (existing.status !== "OPEN") {
-          setManualInput("");
           showDialog(
             "error",
             `Pallet ${existing.palletCode} tidak dapat diedit karena status-nya "${existing.status}".`
@@ -188,26 +173,9 @@ const CameraScreen = () => {
           return;
         }
 
-
         // 🔄 Jika status OPEN, tetap lakukan getPalletInfo untuk refresh data
         const res = await InboundServices.getPalletInfo(value);
         const palletData = res?.data;
-
-        if (!palletData) {
-          setManualInput("");
-          showDialog("error", "Pallet not found or invalid!");
-          return;
-        }
-
-        // if (!palletData.success) {
-        //   showDialog("error", palletData.message || "Something went wrong!");
-        //   return;
-        // }
-
-        // if (palletData.data && palletData.data.success === false) {
-        //   showDialog("error", palletData.data.message || "Pallet invalid!");
-        //   return;
-        // }
 
         const refreshedItem: PalletItem = {
           id: existing.id, // tetap gunakan ID existing
@@ -249,19 +217,16 @@ const CameraScreen = () => {
       const palletData = res?.data;
 
       if (!palletData) {
-        setManualInput("");
         showDialog("error", "Pallet not found or invalid!");
         return;
       }
 
       if (!palletData.success) {
-        setManualInput("");
         showDialog("error", palletData.message || "Something went wrong!");
         return;
       }
 
       if (palletData.data && palletData.data.success === false) {
-        setManualInput("");
         showDialog("error", palletData.data.message || "Pallet invalid!");
         return;
       }
@@ -289,11 +254,14 @@ const CameraScreen = () => {
       setIsEditMode(false);
       setManualInput("");
     } catch (err) {
-      setManualInput("");
       showDialog("error", "Error fetching pallet info!");
     }
   };
 
+
+  const handleSubmitEditing = () => {
+    if (manualInput.trim()) handleAddPallet(manualInput);
+  };
 
   const deletePallet = () => setScan(null);
 
@@ -352,6 +320,8 @@ const CameraScreen = () => {
         quantity: Number(scan.qty) || 0,
         m_warehouse_sub_id: scan.staging_area_id || "",
       };
+      console.log("Edit Data:", editData);
+      console.log("Scan ID:", scan.id);
       InboundServices.updateInspectionData(scan.id, editData)
         .then(() => navigation.goBack())
         .catch((err) =>
@@ -385,16 +355,17 @@ const CameraScreen = () => {
           codeScanner={codeScanner}
         />
       )}
-      {showInput && (
-        <View style={{ position: "absolute", height: 0, width: 0 }}>
-          <TextInput
-            ref={inputRef}
-            style={{ height: 0, width: 0, opacity: 0 }}
-            value={manualInput}
-            onChangeText={handleTextChange}
-            blurOnSubmit={false}
-          />
-        </View>
+
+      {!isCameraActive && showInput && (
+        <TextInput
+          ref={inputRef}
+          style={styles.hiddenInput}
+          value={manualInput}
+          onChangeText={setManualInput}
+          onSubmitEditing={handleSubmitEditing}
+          blurOnSubmit={false}
+          autoFocus
+        />
       )}
 
       <View style={styles.overlay}>

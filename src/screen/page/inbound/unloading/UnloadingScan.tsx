@@ -233,7 +233,7 @@ const UnloadingScanScreen = () => {
           }}
         >
           <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.btnText}>Send to SPV</Text>
+          <Text style={styles.btnText}>Send to WH STAFF</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.scanBtn, { flexDirection: "row", alignItems: "center" }]}

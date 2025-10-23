@@ -54,6 +54,7 @@ type PalletItem = {
 
 const UnloadingScanScreen = () => {
   const [pallets, setPallets] = useState<PalletItem[]>([]);
+  const [totalScan, setTotalScan] = useState(0);
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
@@ -84,6 +85,7 @@ const UnloadingScanScreen = () => {
         }));
         console.log("Fetched Pallets:", mapped);
         setPallets(mapped);
+        setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
       }
     } catch (err) {
       showDialog('error', 'Error while Fetching Pallets!');
@@ -114,7 +116,7 @@ const UnloadingScanScreen = () => {
 
     // Kalau tidak ada pallet dengan status OPEN
     if (createdPallets.length === 0) {
-      showDialog("error", "Semua data sudah dikirim ke SPV!");
+      showDialog("success", "Semua data sudah dikirim ke SPV!");
       return;
     }
 
@@ -162,6 +164,10 @@ const UnloadingScanScreen = () => {
         <View style={styles.row}>
           <Text style={styles.label}>Qty Plan</Text>
           <Text style={styles.value}>{item.quantityPlan}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Total Qty Scan</Text>
+          <Text style={styles.value}>{totalScan}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>UoM</Text>

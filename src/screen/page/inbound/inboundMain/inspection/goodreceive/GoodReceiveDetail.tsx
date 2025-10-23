@@ -6,22 +6,17 @@ import { Text, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
 const GoodReceiveDetail = () => {
-    // type InboundDetailRouteParams = {
-    //     payload: {
-    //         id: string;
-    //         inbound_number: string;
-    //         license_plate: string;
-    //         inbound_type: string;
-    //         status: string;
-    //     };
-    // };
     const route = useRoute();
     const payload = route.params as any;
     const mergedData = payload.items || [];
-    const handleCheck = () => {};
+    const handleCheck = () => { };
 
     return (
-        <View style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={{ paddingBottom: 40 }} // 🔥 biar bagian bawah tidak ketutup
+            showsVerticalScrollIndicator={true}
+        >
             {/* Info Section */}
             <View style={styles.infoCard}>
                 <Text style={styles.infoTitle}>Inbound Planning Number</Text>
@@ -40,12 +35,12 @@ const GoodReceiveDetail = () => {
                 </View>
             </View>
 
-            {/* Scrollable Dynamic Card List */}
-            <View style={{ flex: 1 }}>
-                    <GoodReceiveDetailCard data={payload.item} inbound_id={payload.payload.id} />
-                
-            </View>
-        </View>
+            {/* Card Detail yang panjang */}
+            <GoodReceiveDetailCard
+                data={payload.item}
+                inbound_id={payload.payload.id}
+            />
+        </ScrollView>
     );
 };
 

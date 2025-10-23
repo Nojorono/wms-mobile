@@ -19,36 +19,40 @@ interface Props {
 const InspectionCardList: React.FC<Props> = ({ items, onCheck }) => {
   return (
     <View style={{ paddingBottom: 20 }}>
-      {items.map((item,index) => (
-        <View style={styles.card} key={index}>
-          {/* Header Row */}
-          <View style={[styles.row, { justifyContent: "space-between" }]}>
-            <View style={styles.row}>
-              <Ionicons name="tag" size={22} color="#FF6B00" />
-              <Text style={styles.itemName}>{item.sku}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.checkButton}
-              onPress={() => onCheck?.(item)}
-            >
-              <Text style={styles.checkText}>Check</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Quantity Info */}
-          <Text style={styles.quantityText}>
-           Quantity Plan: {item.quantity_plan}
-          </Text>
-          <Text style={styles.quantityText}>
-            Quantity Scan: {item.quantity_scan}
-          </Text>
-            <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>
-              {item.status }
-            </Text>
-            </View>
+      {items
+  .slice() // salin array biar tidak ubah data asli
+  .sort((a, b) => {
+    // urutkan agar pending muncul duluan
+    if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+    if (a.status !== "PENDING" && b.status === "PENDING") return 1;
+    return 0; // sisanya tetap urutan asli
+  })
+  .map((item, index) => (
+    <View style={styles.card} key={index}>
+      {/* Header Row */}
+      <View style={[styles.row, { justifyContent: "space-between" }]}>
+        <View style={styles.row}>
+          <Ionicons name="tag" size={22} color="#FF6B00" />
+          <Text style={styles.itemName}>{item.sku}</Text>
         </View>
-      ))}
+        <TouchableOpacity
+          style={styles.checkButton}
+          onPress={() => onCheck?.(item)}
+        >
+          <Text style={styles.checkText}>Check</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Quantity Info */}
+      <Text style={styles.quantityText}>Quantity Plan: {item.quantity_plan}</Text>
+      <Text style={styles.quantityText}>Quantity Scan: {item.quantity_scan}</Text>
+
+      <View style={styles.statusBadge}>
+        <Text style={styles.statusText}>{item.status}</Text>
+      </View>
+    </View>
+  ))}
+
     </View>
   );
 };

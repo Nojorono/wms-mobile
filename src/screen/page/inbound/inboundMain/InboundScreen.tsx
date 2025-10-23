@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Alert,
   ScrollView,
@@ -12,7 +12,7 @@ import {
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import Colors from '../../../../constants/Colors.ts';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
@@ -25,21 +25,21 @@ type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
 const FILTER_OPTIONS = [
   'CREATED',
   'UNLOADING',
-  'INSPECTION',
+  'READY_INTEGRATION',
 ];
 
 function InboundScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [inboundList, setInboundList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>("CREATED");
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const availableFilters = useMemo(() => {
     if (user?.role?.name === "HELPER") {
       // Hilangkan INSPECTION untuk HELPER
-      return FILTER_OPTIONS.filter((f) => f !== "INSPECTION");
+      return FILTER_OPTIONS.filter((f) => f !== "READY_INTEGRATION");
     }
     return FILTER_OPTIONS;
   }, [user]);
@@ -73,6 +73,12 @@ function InboundScreen() {
       fetchInbound();
     }
   }, [selectedFilter]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchInbound();
+    }, [])
+  );
 
   // filter & search data
   const filteredList = useMemo(() => {

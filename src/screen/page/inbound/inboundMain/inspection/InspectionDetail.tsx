@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -9,7 +9,7 @@ import {
     Modal,
     Pressable,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { ItemDetail } from "../../service/inboundService";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
@@ -63,12 +63,15 @@ const InspectionDetail = () => {
 
     const [openDatePicker, setOpenDatePicker] = useState(false);
     const { user } = useAuthStore();
+    const [isDataChanged, setIsDataChanged] = useState(false);
+
 
     const navigation = useNavigation<StackNavigationProp<any>>();
     const route = useRoute();
     const { item, payload } = route.params as RouteParams;
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const showDialog = useDialogStore((state) => state.showDialog);
+    const [totalScan, setTotalScan] = useState(0);
 
     const fetchData = async () => {
         try {
@@ -89,6 +92,8 @@ const InspectionDetail = () => {
                     status: d.status || "-",
                 }));
                 setPallets(mapped);
+                
+        setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
             }
         } catch (err) {
             showDialog("error", "Error while Fetching Pallets!");
@@ -97,11 +102,29 @@ const InspectionDetail = () => {
         }
     };
 
+        useFocusEffect(
+          useCallback(() => {
+            fetchData();
+          }, [])
+        );
+
     useEffect(() => {
         fetchData();
         const unsubscribe = navigation.addListener("focus", fetchData);
         return unsubscribe;
     }, [navigation, item.inbound_id]);
+
+    useEffect(() => {
+        if (!editingItem) return;
+
+        const hasChanged =
+            palletCode !== editingItem.palletCode ||
+            Number(editQty) !== Number(editingItem.qty) ||
+            editCode !== editingItem.productionDate ||
+            editWeekNumber !== editingItem.weekNumber;
+
+        setIsDataChanged(hasChanged);
+    }, [palletCode, editQty, editCode, editWeekNumber, editingItem]);
 
     const handleEdit = (pallet: PalletItem) => {
         setEditingItem(pallet);
@@ -110,6 +133,7 @@ const InspectionDetail = () => {
         setEditCode(pallet.productionDate);
         setEditWeekNumber(pallet.weekNumber);
         setEditDate(pallet.productionDate ? new Date(pallet.productionDate) : new Date());
+        setIsDataChanged(false); // ✅ reset perubahan
     };
 
     const handleStatusApprove = async () => {
@@ -127,49 +151,75 @@ const InspectionDetail = () => {
     }
 
     const handleSave = async () => {
-        if (!editingItem) return;
-        try {
-            showLoadingDialog("Updating Pallet...");
-            // Jika palletCode berubah, gunakan updateInspectionWhenPalletChange
-            if (editingItem.palletCode !== palletCode) {
-                const palletInfo = await InboundServices.getPalletInfo(palletCode); // Validasi pallet code dulu
-                if (palletInfo?.data) {
-                    await InboundServices.updateInspectionWhenPalletChange(editingItem.id, {
-                        production_date: editCode,
-                        week_number: Number(editWeekNumber),
-                        inbound_id: payload.id,
-                        item_id: item.item_id,
-                        quantity: editQty,
-                        uom: item.uom,
-                        user_id: user?.id ?? "",
-                        user_name: user?.username ?? "",
-                        pallet_code: palletCode,
-                        m_warehouse_sub_id: editingItem.stagingArea,
-                        status: editingItem.status,
-                    });
-                } else {
-                    showDialog("error", "Pallet code tidak valid!");
-                    return;
-                }
-            } else {
-                await InboundServices.updateInspectionData(editingItem.id, {
-                    quantity: editQty,
+    if (!editingItem) return;
+
+    // ✅ Validasi data kosong / tidak valid
+        if (
+            !palletCode ||
+            palletCode === "" ||
+            editQty === "" ||
+            Number(editQty) === 0 ||
+            editQty === undefined ||
+            editCode === "" ||
+            editCode === undefined ||
+            editWeekNumber === "" ||
+            Number(editWeekNumber) === 0 ||
+            editWeekNumber === undefined
+        ) {
+            showDialog("error", "Tolong lengkapi semua data!");
+            return
+        }
+
+        if (Number(editQty) > totalScan){
+            showDialog("error", "qty scan tidak boleh melebihi ");
+            return
+        }
+
+    try {
+        showLoadingDialog("Updating Pallet...");
+
+        // Jika palletCode berubah, gunakan updateInspectionWhenPalletChange
+        if (editingItem.palletCode !== palletCode) {
+            const palletInfo = await InboundServices.getPalletInfo(palletCode); // Validasi pallet code dulu
+            if (palletInfo?.data) {
+                await InboundServices.updateInspectionWhenPalletChange(editingItem.id, {
                     production_date: editCode,
                     week_number: Number(editWeekNumber),
+                    inbound_id: payload.id,
+                    item_id: item.item_id,
+                    quantity: editQty,
+                    uom: item.uom,
+                    user_id: user?.id ?? "",
+                    user_name: user?.username ?? "",
+                    pallet_code: palletCode,
+                    m_warehouse_sub_id: editingItem.stagingArea,
+                    status: editingItem.status,
                 });
+            } else {
+                showDialog("error", "Pallet code tidak valid!");
+                return;
             }
-            await fetchData();
-            setEditingItem(null);
-        } catch (error) {
-            const errorMessage =
-                typeof error === "object" && error !== null && "data" in error
-                    ? (error as any).data?.error?.toString() || "Failed to Update Pallet!"
-                    : "Failed to Update Pallet!";
-            showDialog("error", errorMessage);
-        } finally {
-            hideLoadingDialog();
+        } else {
+            await InboundServices.updateInspectionData(editingItem.id, {
+                quantity: editQty,
+                production_date: editCode,
+                week_number: Number(editWeekNumber),
+            });
         }
-    };
+
+        await fetchData();
+        setEditingItem(null);
+    } catch (error) {
+        const errorMessage =
+            typeof error === "object" && error !== null && "data" in error
+                ? (error as any).data?.error?.toString() || "Failed to Update Pallet!"
+                : "Failed to Update Pallet!";
+        showDialog("error", errorMessage);
+    } finally {
+        hideLoadingDialog();
+    }
+};
+
 
     const fetchWeek = async (date: string, id: string) => {
         try {
@@ -224,7 +274,7 @@ const InspectionDetail = () => {
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Qty Scan</Text>
-                    <Text style={styles.value}>{item.quantity_scan}</Text>
+                    <Text style={styles.value}>{totalScan}</Text>
                 </View>
             </View>
 
@@ -342,18 +392,19 @@ const InspectionDetail = () => {
                             </Text>
                         </View>
 
-                        <View style={styles.actionRow}>
-                            <TouchableOpacity
-                                style={[styles.saveBtn, { backgroundColor: "#f97316", flex: 1 }]}
-                                onPress={async () => {
-                                    // Approve action: save then close modal
-                                    await handleStatusApprove();
-                                    setEditingItem(null);
-                                }}
-                            >
-                                <Text style={styles.saveText}>Approve</Text>
-                            </TouchableOpacity>
-                        </View>
+                        {!isDataChanged && (
+                            <View style={styles.actionRow}>
+                                <TouchableOpacity
+                                    style={[styles.saveBtn, { backgroundColor: "#f97316", flex: 1 }]}
+                                    onPress={async () => {
+                                        await handleStatusApprove();
+                                        setEditingItem(null);
+                                    }}
+                                >
+                                    <Text style={styles.saveText}>Approve</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
                         <View style={[styles.actionRow, { gap: 12 }]}>
                             <TouchableOpacity style={[styles.saveBtn, { flex: 1 }]}
                                 onPress={async () => {

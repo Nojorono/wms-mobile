@@ -300,44 +300,68 @@ const CameraScreen = () => {
     }
 
     const data = {
+    production_date: scan.production_date ?? "",
+    week_number: scan.week ? Number(scan.week) : 0,
+    inbound_id: scan.inbound_id,
+    item_id: scan.item_id,
+    quantity: Number(scan.qty) || 0,
+    uom: scan.uom,
+    user_id: scan.user_id,
+    user_name: scan.user_name,
+    pallet_code: scan.palletNo,
+    status: scan.status,
+    m_warehouse_sub_id: scan.staging_area_id || "",
+  };
+
+  // ✅ Validasi sebelum kirim
+  const requiredFields = [
+    data.production_date,
+    data.week_number,
+    data.quantity,
+    data.m_warehouse_sub_id,
+    data.pallet_code,
+  ];
+
+  const hasMissing = requiredFields.some(
+    (val) => val === "" || val === 0 || val === null
+  );
+
+  if (hasMissing) {
+    showDialog("error", "Tolong Lengkapi semua field sebelum melanjutkan!");
+    return; // hentikan proses
+  }
+
+  if (isEditMode) {
+    const editData = {
       production_date: scan.production_date ?? "",
-      week_number: scan.week ? Number(scan.week) : 0,
-      inbound_id: scan.inbound_id,
-      item_id: scan.item_id,
+      week_number: Number(scan.week) || 0,
       quantity: Number(scan.qty) || 0,
-      uom: scan.uom,
-      user_id: scan.user_id,
-      user_name: scan.user_name,
-      pallet_code: scan.palletNo,
-      status: scan.status,
       m_warehouse_sub_id: scan.staging_area_id || "",
     };
 
-    if (isEditMode) {
-      const editData = {
-        production_date: scan.production_date ?? "",
-        week_number: scan.week ? Number(scan.week) : 0,
-        quantity: Number(scan.qty) || 0,
-        m_warehouse_sub_id: scan.staging_area_id || "",
-      };
-      console.log("Edit Data:", editData);
-      console.log("Scan ID:", scan.id);
-      InboundServices.updateInspectionData(scan.id, editData)
-        .then(() => navigation.goBack())
-        .catch((err) =>
-          showDialog("error", err?.data?.error || "Error while updating pallet!")
-        );
-    } else {
-      InboundServices.postUnloading(data)
-        .then(() => navigation.goBack())
-        .catch((err) =>
-          showDialog(
-            "error",
-            err?.data?.error || "Error while Posting Unloading!"
-          )
-        );
+    // 🔁 Validasi juga untuk edit mode
+    const hasEditMissing = Object.values(editData).some(
+      (val) => val === "" || val === 0 || val === null
+    );
+
+    if (hasEditMissing) {
+      showDialog("error", "Tolong Lengkapi semua field sebelum edit!");
+      return;
     }
-  };
+
+    InboundServices.updateInspectionData(scan.id, editData)
+      .then(() => navigation.goBack())
+      .catch((err) =>
+        showDialog("error", err?.data?.error || "Error while updating pallet!")
+      );
+  } else {
+    InboundServices.postUnloading(data)
+      .then(() => navigation.goBack())
+      .catch((err) =>
+        showDialog("error", err?.data?.error || "Error while Posting Unloading!")
+      );
+  }
+}
 
   // 🌗 Toggle antara kamera dan scanner hardware
   if (isCameraActive) {

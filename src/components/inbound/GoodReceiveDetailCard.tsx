@@ -1,6 +1,6 @@
 // components/InboundCard.tsx
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Dimensions } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { TextInput } from "react-native";
 import InboundServices from "../../service/inboundServices";
@@ -86,44 +86,53 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
             </View>
 
             <Text style={styles.sectionTitle}>Detail SKU</Text>
-            <FlatList
-                data={details}
-                keyExtractor={(item) => item.item_id_inbound}
-                renderItem={({ item, index }) => (
-                    <View style={styles.detailCard}>
-                        <View style={styles.detailRow}>
-                            <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>DO</Text>
-                                <Text style={styles.detailValue}>{item.do_number}</Text>
+            <View style={{ flexGrow: 1 }}>
+                <FlatList
+                    data={details}
+                    keyExtractor={(item) => item.item_id_inbound}
+                    renderItem={({ item, index }) => (
+                        <View style={styles.detailCard}>
+                            {/* Baris 1 */}
+                            <View style={styles.detailRow}>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.detailLabel}>DO</Text>
+                                    <Text style={styles.detailValue}>{item.do_number}</Text>
+                                </View>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.detailLabel}>PO</Text>
+                                    <Text style={styles.detailValue}>{item.po_number}</Text>
+                                </View>
                             </View>
-                            <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>PO</Text>
-                                <Text style={styles.detailValue}>{item.po_number}</Text>
-                            </View>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>Plan</Text>
-                                <Text style={styles.detailValue}>{item.quantity_plan}</Text>
-                            </View>
-                            <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>Inspected</Text>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        value={String(item.quantity_scanned)}
-                                        keyboardType="numeric"
-                                        onChangeText={(val) => handleScannedChange(val, index)}
-                                        editable={false}
-                                        placeholder="0"
-                                        placeholderTextColor="#B0B0B0"
-                                    />
+
+                            {/* Baris 2 */}
+                            <View style={styles.detailRow}>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.detailLabel}>Plan</Text>
+                                    <Text style={styles.detailValue}>{item.quantity_plan}</Text>
+                                </View>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.detailLabel}>Inspected</Text>
+                                    <View style={styles.inputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            value={String(item.quantity_scanned)}
+                                            keyboardType="numeric"
+                                            onChangeText={(val) => handleScannedChange(val, index)}
+                                            editable={false}
+                                            placeholder="0"
+                                            placeholderTextColor="#B0B0B0"
+                                        />
+                                    </View>
                                 </View>
                             </View>
                         </View>
-                    </View>
-                )}
-            />
+                    )}
+                    scrollEnabled={false}
+                />
+            </View>
+
+
+
 
             {data.inspection_status?.toUpperCase() !== "APPROVED" && (
                 <TouchableOpacity
@@ -269,6 +278,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.12,
         shadowRadius: 8,
         elevation: 2,
+        marginBottom: 6,
     },
     approveText: {
         color: "#fff",

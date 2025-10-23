@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Alert,
   ScrollView,
@@ -12,7 +12,7 @@ import {
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import Colors from '../../../../constants/Colors.ts';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
@@ -61,6 +61,12 @@ function UnloadingScreen() {
   useEffect(() => {
     fetchInbound();
   }, []);
+
+    useFocusEffect(
+      useCallback(() => {
+        fetchInbound();
+      }, [])
+    );
 
   // ✅ fetch data lagi kalau filter berubah
   useEffect(() => {

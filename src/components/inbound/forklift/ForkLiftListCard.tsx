@@ -22,6 +22,7 @@ const ForkLiftList: React.FC<ForkLiftListProps> = ({ item, index, onClick }) => 
   const palletCode = item?.inventoryTracking?.pallet?.pallet_code ?? '-';
   const stagingArea = item?.inventoryTracking?.warehouseSub?.name ?? '-';
   const destination = item?.destinationBin?.name ?? '-';
+  const destinationZone = item?.destinationBin?.warehouseSub?.name ?? '-';
   const driverName = item?.driver_name ?? '-';
   const driverPhone = item?.driver_phone ?? '-';
 
@@ -60,7 +61,7 @@ const ForkLiftList: React.FC<ForkLiftListProps> = ({ item, index, onClick }) => 
 
           <View style={styles.infoRow}>
             <Text style={styles.label}>Destination</Text>
-            <Text style={styles.value}>{stagingArea}-{destination}</Text>
+            <Text style={styles.value}>{destinationZone}-{destination}</Text>
           </View>
 
           <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>

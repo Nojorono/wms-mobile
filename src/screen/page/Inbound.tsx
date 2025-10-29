@@ -22,7 +22,7 @@ function InboundIndex() {
         {/* Header */}
         <View style={styles.headerHome}>
           <View style={styles.profileSection}>
-            <Text style={styles.profileText}>Hi!</Text>
+            <Text style={styles.profileText}>Hi! {roleName}</Text>
             <Text style={styles.profileSubtext}>
               Selamat beraktifitas, jaga selalu kesehatan
             </Text>

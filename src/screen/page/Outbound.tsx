@@ -15,45 +15,99 @@ function OutboundIndex() {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
+  const roleName = user?.role?.name || "";
 
-  return (
-    <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
-      {/* Header */}
-      <View style={styles.headerHome}>
-        <View style={styles.profileSection}>
-          <Text style={styles.profileText}>Hi! {user?.firstName}</Text>
-          <Text style={styles.profileSubtext}>
-            Selamat beraktifitas, jaga selalu kesehatan
-          </Text>
+ return (
+      <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
+        {/* Header */}
+        <View style={styles.headerHome}>
+          <View style={styles.profileSection}>
+            <Text style={styles.profileText}>Hi!</Text>
+            <Text style={styles.profileSubtext}>
+              Selamat beraktifitas, jaga selalu kesehatan
+            </Text>
+          </View>
         </View>
-      </View>
-      {/* Main Scrollable Content */}
-      <ScrollView
-        contentContainerStyle={styles.menuContainer}
-        stickyHeaderIndices={[2]}
-        style={styles.scrollViewContent}
-      >
-        <View style={styles.menuCard}>
+        {/* Main Scrollable Content */}
+        <View style={{ flex: 1 }}>
+          {/* Sticky Header */}
           <View
             style={[
               styles.activitiesHeader,
-              { borderBottomWidth: 2, borderBottomColor: '#ccc' },
+              {
+          borderBottomWidth: 2,
+          borderBottomColor: '#ccc',
+          zIndex: 1,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+          backgroundColor: "#fff" // Tambahkan ini agar background tetap sesuai
+              }
             ]}
           >
-            <Text style={styles.activitiesHeaderText}>Outbound Menu</Text>
+            <Text style={styles.activitiesHeaderText}>Inbound Menu</Text>
           </View>
-        <View style={{ padding: 20, alignItems: 'center' }}>
-          <Text style={{ color: Colors.secondaryColor, fontSize: 16, fontWeight: 'bold' }}>
-            Menu outbound masih dalam pengembangan.
+          <ScrollView
+            contentContainerStyle={[styles.menuContainer, { paddingTop: 60 }]}
+            style={styles.scrollViewContent}
+          >
+            <View style={styles.menuCard}>
+              {roleName === "DRIVER FORKLIFT" && (
+          <MenuCard
+            title={"Put Away"}
+            // onPress={() => navigationInbound.navigate("ForkLiftNavigator")}
+          />
+        )}
+
+        {roleName === "WH STAFF" && (
+          <>
+           <MenuCard
+            title={"Inspection"}
+            // onPress={() => navigationInbound.navigate("InboundMain")}
+          />
+          <MenuCard
+            title={"Assign Gate"}
+            // onPress={() => navigationInbound.navigate("InboundMain")}
+          />
+          <MenuCard
+            title={"Update Inventory"}
+            // onPress={() => navigationInbound.navigate("InboundMain")}
+          />
+          </>
+        )}
+
+        {roleName === "HELPER" && (
+          <>
+          <MenuCard
+            title={"PICKING"}
+            // onPress={() => navigationInbound.navigate("UnloadingNavigator")}
+          />
+          <MenuCard
+            title={"LOADING"}
+            // onPress={() => navigationInbound.navigate("UnloadingNavigator")}
+          />
+          </>
+          
+        )}
+
+        {/* 🔸 Optional: fallback jika role tidak dikenali */}
+        {!["DRIVER FORKLIFT", "WH STAFF", "HELPER"].includes(roleName) && (
+          <Text style={{
+              textAlign: "center",
+              color: "#999",
+              marginTop: 20
+            }}>
+            Role "{roleName}" belum memiliki menu khusus.
           </Text>
-          <Text style={{ color: "#888", marginTop: 8, textAlign: 'center' }}>
-            Silakan kembali lagi nanti untuk fitur outbound yang lebih lengkap.
-          </Text>
+        )}
+            </View>
+          </ScrollView>
         </View>
-        </View>
-      </ScrollView>
-    </View>
-  );
+      </View>
+    );
 }
 
 export default OutboundIndex;

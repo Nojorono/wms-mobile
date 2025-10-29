@@ -21,6 +21,7 @@ import InboundServices from "../../../../service/inboundServices";
 import { useAuthStore } from "../../../../store/useAuthStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
+import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 
 type NavigationProp = StackNavigationProp<UnloadingParamList, "UnloadingMain">;
 
@@ -73,18 +74,44 @@ const CameraScreen = () => {
   const [tempDate, setTempDate] = useState(new Date());
   const [isEditMode, setIsEditMode] = useState(false);
   const inputRef = useRef<TextInput>(null);
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+  const [showInput, setShowInput] = useState(false);
 
   // 🧠 QR / Barcode via kamera
+  // const codeScanner = useCodeScanner({
+  //   codeTypes: ["qr", "code-128", "ean-13"],
+  //   onCodeScanned: (codes) => {
+      
+  //     const val = codes[0]?.value ?? "";
+  //     if (val) {
+
+  //       console.log("Scanned Value:", val);
+  //       setManualInput(val);
+  //       handleAddPallet(val);
+  //     }
+  //   },
+  // });
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const codeScanner = useCodeScanner({
     codeTypes: ["qr", "code-128", "ean-13"],
     onCodeScanned: (codes) => {
       const val = codes[0]?.value ?? "";
-      if (val) {
+      
+      if (val && !isProcessing) {
+        setIsProcessing(true);
+        console.log("Scanned Value:", val);
         setManualInput(val);
         handleAddPallet(val);
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+          setIsProcessing(false);
+        }, 5000);
       }
     },
-  });
+  })
 
   useEffect(() => {
     if (!hasPermission) requestPermission();
@@ -114,28 +141,78 @@ const CameraScreen = () => {
     }
   }, [isCameraActive]);
 
+    useEffect(() => {
+    // tampilkan input setelah 3 detik
+    showLoadingDialog("Loading...")
+    const timer = setTimeout(() => {
+      setShowInput(true);
+      hideLoadingDialog()
+    }, 1500);
+
+    return () => clearTimeout(timer); // bersihkan timer jika unmount
+  }, []);
+
   // 🔄 handle tambah/edit pallet
- const handleAddPallet = async (code: string) => {
-  const value = code.trim().toUpperCase();
-  if (!value || !user) return;
+  const handleAddPallet = async (code: string) => {
+    const value = code.trim().toUpperCase();
+    if (!value || !user) return;
 
-  // 🔍 Cek apakah pallet_code sudah ada di dataExist
-  const existing = dataExist?.find(
-    (item: any) => item.palletCode?.toUpperCase() === value
-  );
+    // 🔍 Cek apakah pallet_code sudah ada di dataExist
+    const existing = dataExist?.find(
+      (item: any) => item.palletCode?.toUpperCase() === value
+    );
 
-  try {
-    if (existing) {
-      // 🚫 Jika status bukan OPEN, blokir edit/post
-      if (existing.status !== "OPEN") {
+    try {
+      if (existing) {
+        // 🚫 Jika status bukan OPEN, blokir edit/post
+        if (existing.status !== "OPEN") {
+          showDialog(
+            "error",
+            `Pallet ${existing.palletCode} tidak dapat diedit karena status-nya "${existing.status}".`
+          );
+          return;
+        }
+
+        // 🔄 Jika status OPEN, tetap lakukan getPalletInfo untuk refresh data
+        const res = await InboundServices.getPalletInfo(value);
+        const palletData = res?.data;
+
+        const refreshedItem: PalletItem = {
+          id: existing.id, // tetap gunakan ID existing
+          palletNo: existing.palletCode,
+          qty:
+            palletData.data?.qty?.toString() ||
+            existing.qty?.toString() ||
+            "",
+          production_date:
+            palletData.data?.production_date || existing.productionDate || null,
+          week:
+            palletData.data?.week?.toString() ||
+            existing.weekNumber?.toString() ||
+            null,
+          inbound_id: item.inbound_id,
+          item_id: item.id,
+          user_id: user.id,
+          user_name: user.username,
+          status: existing.status || "OPEN",
+          uom: item.uom,
+          staging_area_id: existing.stagingArea || "",
+        };
+        setQtyPalletExist(
+          palletData.pallet_status.capacity -
+          palletData.pallet_status.current_quantity || 0
+        );
+        setScan(refreshedItem);
+        setIsEditMode(true);
+        setManualInput("");
         showDialog(
-          "error",
-          `Pallet ${existing.palletCode} tidak dapat diedit karena status-nya "${existing.status}".`
+          "success",
+          "Data existing pallet (OPEN) berhasil dimuat & diperbarui dari server."
         );
         return;
       }
 
-      // 🔄 Jika status OPEN, tetap lakukan getPalletInfo untuk refresh data
+      // 🆕 Jika belum ada di existing, fetch dari API seperti biasa
       const res = await InboundServices.getPalletInfo(value);
       const palletData = res?.data;
 
@@ -154,86 +231,32 @@ const CameraScreen = () => {
         return;
       }
 
-      const refreshedItem: PalletItem = {
-        id: existing.id, // tetap gunakan ID existing
-        palletNo: existing.palletCode,
-        qty:
-          palletData.data?.qty?.toString() ||
-          existing.qty?.toString() ||
-          "",
-        production_date:
-          palletData.data?.production_date || existing.productionDate || null,
-        week:
-          palletData.data?.week?.toString() ||
-          existing.weekNumber?.toString() ||
-          null,
+      const newItem: PalletItem = {
+        id: Date.now().toString(),
+        palletNo: value,
+        qty: palletData.qty?.toString() || "",
+        production_date: palletData.production_date || null,
+        week: palletData.week?.toString() || null,
         inbound_id: item.inbound_id,
         item_id: item.id,
         user_id: user.id,
         user_name: user.username,
-        status: existing.status || "OPEN",
+        status: "OPEN",
         uom: item.uom,
-        staging_area_id: existing.stagingArea || "",
+        staging_area_id: "",
       };
-setQtyPalletExist(
-      palletData.pallet_status.capacity -
+
+      setQtyPalletExist(
+        palletData.pallet_status.capacity -
         palletData.pallet_status.current_quantity || 0
-    );
-      setScan(refreshedItem);
-      setIsEditMode(true);
-      setManualInput("");
-      showDialog(
-        "success",
-        "Data existing pallet (OPEN) berhasil dimuat & diperbarui dari server."
       );
-      return;
+      setScan(newItem);
+      setIsEditMode(false);
+      setManualInput("");
+    } catch (err) {
+      showDialog("error", "Error fetching pallet info!");
     }
-
-    // 🆕 Jika belum ada di existing, fetch dari API seperti biasa
-    const res = await InboundServices.getPalletInfo(value);
-    const palletData = res?.data;
-
-    if (!palletData) {
-      showDialog("error", "Pallet not found or invalid!");
-      return;
-    }
-
-    if (!palletData.success) {
-      showDialog("error", palletData.message || "Something went wrong!");
-      return;
-    }
-
-    if (palletData.data && palletData.data.success === false) {
-      showDialog("error", palletData.data.message || "Pallet invalid!");
-      return;
-    }
-
-    const newItem: PalletItem = {
-      id: Date.now().toString(),
-      palletNo: value,
-      qty: palletData.qty?.toString() || "",
-      production_date: palletData.production_date || null,
-      week: palletData.week?.toString() || null,
-      inbound_id: item.inbound_id,
-      item_id: item.id,
-      user_id: user.id,
-      user_name: user.username,
-      status: "OPEN",
-      uom: item.uom,
-      staging_area_id: "",
-    };
-
-    setQtyPalletExist(
-      palletData.pallet_status.capacity -
-        palletData.pallet_status.current_quantity || 0
-    );
-    setScan(newItem);
-    setIsEditMode(false);
-    setManualInput("");
-  } catch (err) {
-    showDialog("error", "Error fetching pallet info!");
-  }
-};
+  };
 
 
   const handleSubmitEditing = () => {
@@ -277,42 +300,68 @@ setQtyPalletExist(
     }
 
     const data = {
+    production_date: scan.production_date ?? "",
+    week_number: scan.week ? Number(scan.week) : 0,
+    inbound_id: scan.inbound_id,
+    item_id: scan.item_id,
+    quantity: Number(scan.qty) || 0,
+    uom: scan.uom,
+    user_id: scan.user_id,
+    user_name: scan.user_name,
+    pallet_code: scan.palletNo,
+    status: scan.status,
+    m_warehouse_sub_id: scan.staging_area_id || "",
+  };
+
+  // ✅ Validasi sebelum kirim
+  const requiredFields = [
+    data.production_date,
+    data.week_number,
+    data.quantity,
+    data.m_warehouse_sub_id,
+    data.pallet_code,
+  ];
+
+  const hasMissing = requiredFields.some(
+    (val) => val === "" || val === 0 || val === null
+  );
+
+  if (hasMissing) {
+    showDialog("error", "Tolong Lengkapi semua field sebelum melanjutkan!");
+    return; // hentikan proses
+  }
+
+  if (isEditMode) {
+    const editData = {
       production_date: scan.production_date ?? "",
-      week_number: scan.week ? Number(scan.week) : 0,
-      inbound_id: scan.inbound_id,
-      item_id: scan.item_id,
+      week_number: Number(scan.week) || 0,
       quantity: Number(scan.qty) || 0,
-      uom: scan.uom,
-      user_id: scan.user_id,
-      user_name: scan.user_name,
-      pallet_code: scan.palletNo,
-      status: scan.status,
       m_warehouse_sub_id: scan.staging_area_id || "",
     };
 
-    if (isEditMode) {
-      const editData = {
-      production_date: scan.production_date ?? "",
-      week_number: scan.week ? Number(scan.week) : 0,
-      quantity: Number(scan.qty) || 0,
-      m_warehouse_sub_id: scan.staging_area_id || "",
-      };
-      InboundServices.updateInspectionData(scan.id, editData)
+    // 🔁 Validasi juga untuk edit mode
+    const hasEditMissing = Object.values(editData).some(
+      (val) => val === "" || val === 0 || val === null
+    );
+
+    if (hasEditMissing) {
+      showDialog("error", "Tolong Lengkapi semua field sebelum edit!");
+      return;
+    }
+
+    InboundServices.updateInspectionData(scan.id, editData)
       .then(() => navigation.goBack())
       .catch((err) =>
         showDialog("error", err?.data?.error || "Error while updating pallet!")
       );
-    } else {
-      InboundServices.postUnloading(data)
-        .then(() => navigation.goBack())
-        .catch((err) =>
-          showDialog(
-            "error",
-            err?.data?.error || "Error while Posting Unloading!"
-          )
-        );
-    }
-  };
+  } else {
+    InboundServices.postUnloading(data)
+      .then(() => navigation.goBack())
+      .catch((err) =>
+        showDialog("error", err?.data?.error || "Error while Posting Unloading!")
+      );
+  }
+}
 
   // 🌗 Toggle antara kamera dan scanner hardware
   if (isCameraActive) {
@@ -331,7 +380,7 @@ setQtyPalletExist(
         />
       )}
 
-      {!isCameraActive && (
+      {!isCameraActive && showInput && (
         <TextInput
           ref={inputRef}
           style={styles.hiddenInput}
@@ -474,8 +523,8 @@ setQtyPalletExist(
                 scan?.status !== "OPEN"
                   ? "#9ca3af"
                   : isEditMode
-                  ? "#f59e0b"
-                  : "#16a34a",
+                    ? "#f59e0b"
+                    : "#16a34a",
             },
           ]}
           onPress={handleNext}
@@ -485,8 +534,8 @@ setQtyPalletExist(
             {scan?.status !== "OPEN"
               ? "Locked"
               : isEditMode
-              ? "Edit"
-              : "Next"}
+                ? "Edit"
+                : "Next"}
           </Text>
         </TouchableOpacity>
       </View>

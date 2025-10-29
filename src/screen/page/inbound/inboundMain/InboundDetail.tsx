@@ -8,6 +8,9 @@ import {
     StyleSheet,
     SafeAreaView,
     Alert,
+    Linking,
+    Modal,
+    Pressable,
 } from "react-native";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
@@ -17,6 +20,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { InboundParamList } from "../../../navigation/inbound/InboundNavigator";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
+import WebView from "react-native-webview";
 
 /* ========================
    1. Type & Merge Function
@@ -201,6 +205,19 @@ export default function InboundDetail() {
         }
     }
 
+    const [pdfVisible, setPdfVisible] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState("");
+
+    const handleOpenAttachment = (url: any) => {
+        setPdfUrl(url);
+        setPdfVisible(true);
+    };
+
+    const handleClosePdf = () => {
+        setPdfVisible(false);
+        setPdfUrl("");
+    };
+
     useFocusEffect(
         React.useCallback(() => {
             fetchInboundById();
@@ -254,14 +271,6 @@ export default function InboundDetail() {
                         <Ionicons name="clipboard-check" size={28} color="#059669" />
                         <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Inspection</Text>
                     </TouchableOpacity>
-                    {/* <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("UpdateSaldoNavigator", {
-                    screen: "UpdateSaldoMain",
-                    params: { item: payload.item },
-                })}>
-                    <Ionicons name="box-open" size={28} color="#059669" />
-                    <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Update Saldo</Text>
-                </TouchableOpacity> */}
-
                 </View>
             )}
 
@@ -273,6 +282,8 @@ export default function InboundDetail() {
                 onRefresh={onRefresh}
                 renderItem={({ item }) => {
                     const expanded = expandedIds.includes(item.id);
+                    const url = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/testingcoba";
+                    const url2 = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/test"
                     return (
                         <View style={styles.card}>
                             <TouchableOpacity
@@ -287,6 +298,24 @@ export default function InboundDetail() {
                                     {expanded ? <Ionicons name="chevron-down" size={20} /> : <Ionicons name="chevron-right" size={20} />}
                                 </Text>
                             </TouchableOpacity>
+
+                            {/* 📎 Attachment link */}
+                            <TouchableOpacity
+                                onPress={() => handleOpenAttachment(url2)}
+                                style={{ paddingHorizontal: 16, marginBottom: 4 }}
+                            >
+                                <Text
+                                    style={{
+                                        color: "#007bff",
+                                        textDecorationLine: "underline",
+                                    }}
+                                >
+                                    📎 Attachment
+                                </Text>
+                            </TouchableOpacity>
+
+
+
                             {/* Date below title */}
                             <View style={{ paddingHorizontal: 16, marginBottom: expanded ? 10 : 10 }}>
                                 <Text style={styles.cardDate}>
@@ -311,6 +340,36 @@ export default function InboundDetail() {
                     );
                 }}
             />
+
+            {/* 🧾 PDF Viewer Modal */}
+            <Modal visible={pdfVisible} animationType="slide">
+                <View style={{ flex: 1, backgroundColor: "#000" }}>
+                    {/* Header Close Button */}
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: 12,
+                            backgroundColor: "#111",
+                        }}
+                    >
+                        <Text style={{ color: "#fff", fontSize: 16 }}>Attachment Viewer</Text>
+                        <Pressable onPress={handleClosePdf}>
+                            <Ionicons name="minus" size={24} color="#fff" />
+                        </Pressable>
+                    </View>
+
+                    {/* PDF/Gambar Viewer */}
+                    <WebView
+                        source={{ uri: pdfUrl }}
+                        style={{ flex: 1 }}
+                        startInLoadingState={true}
+                        scalesPageToFit={true}
+                    />
+                </View>
+            </Modal>
+
             {status === "CREATED" && (
                 <View style={styles.actions}>
                     <TouchableOpacity style={styles.declineBtn} onPress={handleDecline}>

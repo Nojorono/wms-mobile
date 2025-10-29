@@ -54,6 +54,7 @@ export default function ForkLiftScreen() {
       const response = await InboundServices.getForkLiftList(
         user?.id || ''
       );
+      console.log('ForkLift data fetched successfully:', response.data);
       setForkLiftList(response?.data || []);
     } catch (error) {
       showDialog('error', 'Error while fetching ForkLift data!');
@@ -97,7 +98,13 @@ export default function ForkLiftScreen() {
       navigation.navigate('ForkLiftDetail', { item: matchedItem });
     } else {
       Alert.alert('Not Found', `No pallet matched for: ${code}`, [
-        { text: 'OK', onPress: () => inputRef.current?.focus() },
+        { text: 'OK',
+           onPress: () => {
+            inputRef.current?.focus();
+            setScannedCode('');
+
+          }
+         },
       ]);
       setScannedCode('');
     }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Alert,
   ScrollView,
@@ -12,7 +12,7 @@ import {
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import Colors from '../../../../constants/Colors.ts';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
@@ -25,16 +25,24 @@ type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
 const FILTER_OPTIONS = [
   'CREATED',
   'UNLOADING',
+  'READY_INTEGRATION',
 ];
 
 function InboundScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [inboundList, setInboundList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>("CREATED");
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
+  const availableFilters = useMemo(() => {
+    if (user?.role?.name === "HELPER") {
+      // Hilangkan INSPECTION untuk HELPER
+      return FILTER_OPTIONS.filter((f) => f !== "READY_INTEGRATION");
+    }
+    return FILTER_OPTIONS;
+  }, [user]);
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -65,6 +73,12 @@ function InboundScreen() {
       fetchInbound();
     }
   }, [selectedFilter]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchInbound();
+    }, [])
+  );
 
   // filter & search data
   const filteredList = useMemo(() => {
@@ -120,14 +134,12 @@ function InboundScreen() {
               showsHorizontalScrollIndicator={false}
               style={{ marginTop: 10 }}
             >
-              {FILTER_OPTIONS.map((filter) => (
+              {availableFilters.map((filter) => (
                 <TouchableOpacity
                   key={filter}
                   style={[
                     localStyles.filterButton,
-                    selectedFilter === filter && {
-                      backgroundColor: Colors.primeColor,
-                    },
+                    selectedFilter === filter && { backgroundColor: Colors.primeColor },
                   ]}
                   onPress={() => {
                     const newFilter = selectedFilter === filter ? null : filter;
@@ -137,7 +149,7 @@ function InboundScreen() {
                   <Text
                     style={[
                       localStyles.filterText,
-                      selectedFilter === filter && { color: '#fff' },
+                      selectedFilter === filter && { color: "#fff" },
                     ]}
                   >
                     {filter}
@@ -145,6 +157,7 @@ function InboundScreen() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+
           </View>
 
           {/* 📦 List Card */}

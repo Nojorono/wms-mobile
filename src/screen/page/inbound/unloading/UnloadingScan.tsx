@@ -47,13 +47,16 @@ type PalletItem = {
   qty: number;
   weekNumber: number;
   stagingArea: string;
+  stagingAreaName: string;
   productionDate: string;
   status: string;
 };
 
 const UnloadingScanScreen = () => {
   const [pallets, setPallets] = useState<PalletItem[]>([]);
+  const [totalScan, setTotalScan] = useState(0);
   const { user } = useAuthStore();
+  const userId = user?.id || "";
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const { item, payload } = route.params as RouteParams;
@@ -78,10 +81,12 @@ const UnloadingScanScreen = () => {
           weekNumber: d.week_number,
           status: d.status,
           stagingArea: d.m_warehouse_sub_id || "-",
+          stagingAreaName: d.warehouseSub.name || "-",
           productionDate: d.production_date || "-",
         }));
         console.log("Fetched Pallets:", mapped);
         setPallets(mapped);
+        setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
       }
     } catch (err) {
       showDialog('error', 'Error while Fetching Pallets!');
@@ -112,7 +117,7 @@ const UnloadingScanScreen = () => {
 
     // Kalau tidak ada pallet dengan status OPEN
     if (createdPallets.length === 0) {
-      showDialog("error", "Semua data sudah dikirim ke SPV!");
+      showDialog("success", "Semua data sudah dikirim ke SPV!");
       return;
     }
 
@@ -121,7 +126,7 @@ const UnloadingScanScreen = () => {
         ids: createdPallets.map(p => p.id),
       };
       showLoadingDialog("Sending...");
-      await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
+      await InboundServices.postStatusBulkbyIdScan(userId ,"PENDING", payloadToSend);
 
       showDialog("success", "Status pallet OPEN berhasil diupdate!");
     } catch (error) {
@@ -162,6 +167,10 @@ const UnloadingScanScreen = () => {
           <Text style={styles.value}>{item.quantityPlan}</Text>
         </View>
         <View style={styles.row}>
+          <Text style={styles.label}>Total Qty Scan</Text>
+          <Text style={styles.value}>{totalScan}</Text>
+        </View>
+        <View style={styles.row}>
           <Text style={styles.label}>UoM</Text>
           <Text style={styles.value}>{item.uom}</Text>
         </View>
@@ -193,7 +202,7 @@ const UnloadingScanScreen = () => {
               <Text style={styles.palletCode}>{item.palletCode}</Text>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Staging:</Text>
-                <Text style={styles.infoValue}>{item.stagingArea.slice(-15)}</Text>
+                <Text style={styles.infoValue}>{item.stagingAreaName}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Qty Scan:</Text>
@@ -231,7 +240,7 @@ const UnloadingScanScreen = () => {
           }}
         >
           <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.btnText}>Send to SPV</Text>
+          <Text style={styles.btnText}>Send to WH STAFF</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.scanBtn, { flexDirection: "row", alignItems: "center" }]}

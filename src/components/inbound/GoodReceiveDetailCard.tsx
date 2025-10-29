@@ -1,6 +1,6 @@
 // components/InboundCard.tsx
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Dimensions } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { TextInput } from "react-native";
 import InboundServices from "../../service/inboundServices";
@@ -34,14 +34,15 @@ interface Item {
 }
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>;
 
-const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = ({
+const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbound_id: string }> = ({
     data,
+    inbound_id,
     onApprove,
 }) => {
     const navigation = useNavigation<NavigationProp>();
-    const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+    const { showLoadingDialog, hideLoadingDialog, setLoadingMessage } = useLoadingDialogStore();
     const [details, setDetails] = useState(data.details);
-    console.log('GoodReceiveDetailCard data:', data);
+    console.log('inboundId data:', inbound_id);
 
     const handleScannedChange = (value: string, idx: number) => {
         const newDetails = [...details];
@@ -58,6 +59,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
         setDetails(newDetails);
     };
 
+
     return (
         <View style={styles.card}>
             <View style={styles.row}>
@@ -70,7 +72,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
                     <Text style={styles.value}>{data.quantity_plan}</Text>
                 </View>
                 <View style={styles.infoBlock}>
-                    <Text style={styles.label}>Inspection</Text>
+                    <Text style={styles.label}>Inspec</Text>
                     <Text style={styles.value}>{data.quantity_scanned}</Text>
                 </View>
                 <View style={styles.infoBlock}>
@@ -84,51 +86,61 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
             </View>
 
             <Text style={styles.sectionTitle}>Detail SKU</Text>
-            <FlatList
-                data={details}
-                keyExtractor={(item) => item.item_id_inbound}
-                renderItem={({ item, index }) => (
-                    <View style={styles.detailCard}>
-                        <View style={styles.detailRow}>
-                            <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>DO</Text>
-                                <Text style={styles.detailValue}>{item.do_number}</Text>
+            <View style={{ flexGrow: 1 }}>
+                <FlatList
+                    data={details}
+                    keyExtractor={(item) => item.item_id_inbound}
+                    renderItem={({ item, index }) => (
+                        <View style={styles.detailCard}>
+                            {/* Baris 1 */}
+                            <View style={styles.detailRow}>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.detailLabel}>DO</Text>
+                                    <Text style={styles.detailValue}>{item.do_number}</Text>
+                                </View>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.detailLabel}>PO</Text>
+                                    <Text style={styles.detailValue}>{item.po_number}</Text>
+                                </View>
                             </View>
-                            <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>PO</Text>
-                                <Text style={styles.detailValue}>{item.po_number}</Text>
-                            </View>
-                        </View>
-                        <View style={styles.detailRow}>
-                            <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>Plan</Text>
-                                <Text style={styles.detailValue}>{item.quantity_plan}</Text>
-                            </View>
-                            <View style={styles.infoBlock}>
-                                <Text style={styles.detailLabel}>Inspected</Text>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        value={String(item.quantity_scanned)}
-                                        keyboardType="numeric"
-                                        onChangeText={(val) => handleScannedChange(val, index)}
-                                        editable={false}
-                                        placeholder="0"
-                                        placeholderTextColor="#B0B0B0"
-                                    />
+
+                            {/* Baris 2 */}
+                            <View style={styles.detailRow}>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.detailLabel}>Plan</Text>
+                                    <Text style={styles.detailValue}>{item.quantity_plan}</Text>
+                                </View>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.detailLabel}>Inspected</Text>
+                                    <View style={styles.inputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            value={String(item.quantity_scanned)}
+                                            keyboardType="numeric"
+                                            onChangeText={(val) => handleScannedChange(val, index)}
+                                            editable={false}
+                                            placeholder="0"
+                                            placeholderTextColor="#B0B0B0"
+                                        />
+                                    </View>
                                 </View>
                             </View>
                         </View>
-                    </View>
-                )}
-            />
+                    )}
+                    scrollEnabled={false}
+                />
+            </View>
+
+
+
 
             {data.inspection_status?.toUpperCase() !== "APPROVED" && (
                 <TouchableOpacity
                     style={[styles.approveButton, { backgroundColor: Colors.secondaryColor }]}
                     onPress={async () => {
                         try {
-                            showLoadingDialog("Updating Good Receive");
+                            // Step 1: Update Good Receive Detail
+                            showLoadingDialog("Updating Good Receive...");
                             const payload = {
                                 inbound_do_id: data.do_id,
                                 items: details.map((d) => ({
@@ -139,12 +151,17 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void }> = 
 
                             await InboundServices.updateGoodReceiveDetail(payload);
 
+                            // Step 2: Ubah teks tanpa menutup loading
+                            setLoadingMessage("Updating Status After Good Receive...");
+                            await InboundServices.updateStatusAfterGoodReceive(inbound_id);
+
+                            // Step 3: Selesai
                             hideLoadingDialog();
-                            Alert.alert("Success", "Data berhasil diperbarui", [
+                            Alert.alert("Success", "Data berhasil diperbarui dan status diperbarui", [
                                 {
                                     text: "OK",
                                     onPress: () => {
-                                        navigation.pop(1); // sama seperti goBack(), tapi hapus index saat ini
+                                        navigation.pop(1);
                                     },
                                 },
                             ]);
@@ -195,7 +212,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
     value: {
-        fontSize: 15,
+        fontSize: 12,
         fontWeight: "600",
         color: "#222",
     },
@@ -261,6 +278,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.12,
         shadowRadius: 8,
         elevation: 2,
+        marginBottom: 6,
     },
     approveText: {
         color: "#fff",

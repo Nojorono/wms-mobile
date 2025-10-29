@@ -59,16 +59,35 @@ const CameraScreenForkLift = () => {
     };
 
     // ✅ Scanner VisionCamera
+    // const codeScanner = useCodeScanner({
+    //     codeTypes: ["qr", "ean-13", "code-128", "code-39"],
+    //     onCodeScanned: (codes) => {
+    //         const value = codes[0]?.value ?? "";
+    //         if (value && value !== manualInput) {
+    //             setManualInput(value);
+    //             handleMatch(value);
+    //         }
+    //     },
+    // });
+    const [isProcessing, setIsProcessing] = useState(false);
+
     const codeScanner = useCodeScanner({
-        codeTypes: ["qr", "ean-13", "code-128", "code-39"],
+        codeTypes: ["qr", "code-128", "ean-13"],
         onCodeScanned: (codes) => {
-            const value = codes[0]?.value ?? "";
-            if (value && value !== manualInput) {
-                setManualInput(value);
-                handleMatch(value);
+            const val = codes[0]?.value ?? "";
+
+            if (val && !isProcessing && val !== manualInput) {
+                setIsProcessing(true);
+                setManualInput(val);
+                handleMatch(val);
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    setIsProcessing(false);
+                }, 5000);
             }
         },
-    });
+    })
 
     // ✅ Minta izin kamera
     useEffect(() => {

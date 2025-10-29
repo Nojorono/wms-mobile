@@ -123,14 +123,23 @@ class InboundServices {
     }
   }
 
-  static async postStatusBulkbyIdScan(status: string, data: any): Promise<any> {
-    try {
-      const response = await axiosInstance.post(`transaction-scan-inbound/update-many-status-to/${status}`, data);
-      return response.data;
-    } catch (error: any) {
-      throw error.response;
-    }
+static async postStatusBulkbyIdScan(inspection_by: string, status: string, data: any): Promise<any> {
+  try {
+    const response = await axiosInstance.post(
+      `transaction-scan-inbound/update-many-status-to`,
+      data,
+      {
+        params: {
+          status,
+          inspection_by,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    throw error.response;
   }
+}
 
   //INSPECTION SERVICES
   static async getInspectionList(status: string): Promise<any> {
@@ -186,6 +195,15 @@ class InboundServices {
   static async updateGoodReceiveDetail(data: any): Promise<any> {
     try {
       const response = await axiosInstance.patch(`inbound/inbound-items/bulk/saldo-inspection`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateStatusAfterGoodReceive(inboundId: string,): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`inbound/sequential-status/${inboundId}`);
       return response.data;
     } catch (error: any) {
       throw error.response;

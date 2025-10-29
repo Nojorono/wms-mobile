@@ -123,7 +123,7 @@ class InboundServices {
     }
   }
 
-  static async postStatusBulkbyIdScan(status: string, data: any): Promise<any> {
+  static async postStatusBulkbyIdScan(inspection_by:string,status: string, data: any): Promise<any> {
     try {
       const response = await axiosInstance.post(`transaction-scan-inbound/update-many-status-to/${status}`, data);
       return response.data;

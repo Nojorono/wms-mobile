@@ -271,14 +271,6 @@ export default function InboundDetail() {
                         <Ionicons name="clipboard-check" size={28} color="#059669" />
                         <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Inspection</Text>
                     </TouchableOpacity>
-                    {/* <TouchableOpacity style={{ alignItems: "center", flex: 1 }} onPress={() => navigationInbound.navigate("UpdateSaldoNavigator", {
-                    screen: "UpdateSaldoMain",
-                    params: { item: payload.item },
-                })}>
-                    <Ionicons name="box-open" size={28} color="#059669" />
-                    <Text style={{ marginTop: 6, fontSize: 14, color: "#374151" }}>Update Saldo</Text>
-                </TouchableOpacity> */}
-
                 </View>
             )}
 

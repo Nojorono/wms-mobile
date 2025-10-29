@@ -56,6 +56,7 @@ const UnloadingScanScreen = () => {
   const [pallets, setPallets] = useState<PalletItem[]>([]);
   const [totalScan, setTotalScan] = useState(0);
   const { user } = useAuthStore();
+  const userId = user?.id || "";
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const { item, payload } = route.params as RouteParams;
@@ -125,7 +126,7 @@ const UnloadingScanScreen = () => {
         ids: createdPallets.map(p => p.id),
       };
       showLoadingDialog("Sending...");
-      await InboundServices.postStatusBulkbyIdScan("PENDING", payloadToSend);
+      await InboundServices.postStatusBulkbyIdScan(userId ,"PENDING", payloadToSend);
 
       showDialog("success", "Status pallet OPEN berhasil diupdate!");
     } catch (error) {

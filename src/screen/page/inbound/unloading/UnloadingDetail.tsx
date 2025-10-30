@@ -56,6 +56,7 @@ const UnloadingScreen = () => {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInboundDetail(payload.item.id);
       const inbound_dos = response.data.inbound_dos;
+      console.log("Inbound Dos:", inbound_dos);
       setMergedData(mergeUnloadingData(inbound_dos));
     } catch (error) {
       hideLoadingDialog()

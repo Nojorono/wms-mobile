@@ -2,8 +2,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../constants/Colors';
 import { Image, View } from 'react-native';
 import React from 'react';
-import OutboundScreen from '../page/outbound/OutboundScreen.tsx';
-import OutboundAssignScreen from '../page/outbound/OutboundAssignScreen.tsx';
 import OutboundIndex from '../page/Outbound.tsx';
 
 
@@ -44,7 +42,7 @@ const OutboundStackNavigator = () => (
         ),
       }}
     />
-    <OutboundStack.Screen
+    {/* <OutboundStack.Screen
       name="OutboundMain"
       component={OutboundScreen}
       options={{
@@ -54,18 +52,7 @@ const OutboundStackNavigator = () => (
           backgroundColor: Colors.secondaryColor,
         },
       }}
-    />
-    <OutboundStack.Screen
-      name="OutboundAssign"
-      component={OutboundAssignScreen}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor,
-        },
-      }}
-    />
+    /> */}
   </OutboundStack.Navigator>
 );
 

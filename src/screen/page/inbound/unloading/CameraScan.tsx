@@ -22,6 +22,7 @@ import { useAuthStore } from "../../../../store/useAuthStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
+import ConstantService from "../../../../service/constantService";
 
 type NavigationProp = StackNavigationProp<UnloadingParamList, "UnloadingMain">;
 
@@ -70,6 +71,7 @@ const CameraScreen = () => {
   const [scan, setScan] = useState<PalletItem | null>(null);
   const [qtyPalletExist, setQtyPalletExist] = useState(0);
   const [stagingAreas, setStagingAreas] = useState<any[]>([]);
+  const [uom, setUom] = useState<any[]>([]);
   const [openPicker, setOpenPicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
   const [isEditMode, setIsEditMode] = useState(false);
@@ -122,6 +124,8 @@ const CameraScreen = () => {
     const fetchStaging = async () => {
       try {
         const res = await InboundServices.getStagingArea();
+        const resUom = await ConstantService.getUom()
+        setUom(resUom.data || []);
         setStagingAreas(res?.data || []);
       } catch (err) {
         console.error("Gagal fetch staging area:", err);
@@ -313,6 +317,8 @@ const CameraScreen = () => {
     m_warehouse_sub_id: scan.staging_area_id || "",
   };
 
+  console.log("Data to submit/edit:", data);
+
   // ✅ Validasi sebelum kirim
   const requiredFields = [
     data.production_date,
@@ -457,7 +463,7 @@ const CameraScreen = () => {
                   style={styles.picker}
                   dropdownIconColor="#111"
                 >
-                  <Picker.Item label="Select Staging Area" value="" />
+                  <Picker.Item label="Select Staging Area" value="" style={{ fontSize: 14 }} />
                   {stagingAreas.map((area: any) => (
                     <Picker.Item
                       key={area.id}
@@ -469,24 +475,38 @@ const CameraScreen = () => {
               </View>
             </View>
 
-            {/* Qty */}
-            <TextInput
-              style={styles.input}
-              placeholder="Qty"
-              keyboardType="numeric"
-              value={scan.qty}
-              onChangeText={(val) => updatePallet("qty", val)}
-              textAlign="right"
-            />
+            {/* Qty & UOM in one row */}
+            <View style={{ flexDirection: "row", alignItems: "center"}}>
+              <TextInput
+                style={[styles.input, { flex: 1, height: 50 }]}
+                placeholder="Qty"
+                keyboardType="numeric"
+                value={scan.qty}
+                onChangeText={(val) => updatePallet("qty", val)}
+                textAlign="right"
+              />
 
-            {/* Week */}
-            <TextInput
-              style={[styles.input, { backgroundColor: "#fef9c3", marginTop: 8 }]}
-              placeholder="Week (auto)"
-              value={scan.week ?? ""}
-              editable={false}
-              textAlign="right"
-            />
+              
+              <View style={{backgroundColor: "#fff",  height: 50, borderRadius: 8, marginLeft: 8, width: 100 }}>
+                <Picker
+                  selectedValue={scan.uom ?? ""}
+                  onValueChange={(itemValue) =>
+                    updatePallet("uom", itemValue)
+                  }
+                  style={{alignItems: "center", color: "#111"}}
+                  dropdownIconColor="#111"
+                >
+                  <Picker.Item label="Uom" value="" style={{ fontSize: 13,color: "#111" }} />
+                  {uom.map((item: any) => (
+                    <Picker.Item
+                      key={item.code}
+                      label={item.code}
+                      value={item.code}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
 
             {/* Production Date */}
             <TouchableOpacity
@@ -510,6 +530,15 @@ const CameraScreen = () => {
                 {scan.production_date || "Select Production Date"}
               </Text>
             </TouchableOpacity>
+
+               {/* Week */}
+            <TextInput
+              style={[styles.input, { backgroundColor: "#fef9c3", marginTop: 8 }]}
+              placeholder="Week (auto)"
+              value={scan.week ?? ""}
+              editable={false}
+              textAlign="right"
+            />
           </View>
         ) : (
           <Text style={{ color: "#9ca3af" }}>Belum ada hasil scan</Text>

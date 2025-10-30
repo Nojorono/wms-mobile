@@ -19,6 +19,7 @@ type TabNavProp = BottomTabNavigationProp<MainTabParamList, 'Home'>;
 function HomeScreen() {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
+   const roleName = user?.role?.name || "";
 
 
   const navigation = useNavigation<TabNavProp>();
@@ -29,7 +30,7 @@ function HomeScreen() {
       {/* Header */}
       <View style={styles.headerHome}>
         <View style={styles.profileSection}>
-          <Text style={styles.profileText}>Hi!</Text>
+          <Text style={styles.profileText}>Hi! {roleName}</Text>
           <Text style={styles.profileSubtext}>Selamat beraktifitas, jaga selalu kesehatan</Text>
         </View>
       </View>

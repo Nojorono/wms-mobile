@@ -53,7 +53,6 @@ function InboundScreen() {
       showLoadingDialog('Loading List Inbound Planning');
       const response = await InboundServices.getInboundList(selectedFilter || 'CREATED');
       setInboundList(response?.data || []);
-      console.log('Inbound data fetched successfully:', response.data);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Inbound!');
@@ -63,22 +62,11 @@ function InboundScreen() {
     }
   };
 
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     fetchInbound();
-  }, []);
-
-  // ✅ fetch data lagi kalau filter berubah
-  useEffect(() => {
-    if (selectedFilter !== null) {
-      fetchInbound();
-    }
-  }, [selectedFilter]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchInbound();
-    }, [])
-  );
+  }, [selectedFilter])
+);
 
   // filter & search data
   const filteredList = useMemo(() => {

@@ -108,51 +108,126 @@ export function mergeInboundDos(data: InboundDo[]): (Omit<InboundDo, 'inbound_it
 }
 
 export function mergeUnloadingData(data: InboundDo[]) {
-  // Map untuk menampung hasil merge per item_id
+  // Map untuk menampung hasil merge per item_id + uom
   const itemMap = new Map<
     string,
     Omit<InboundItem, "quantity" | "inbound_do_id" | "createdAt" | "updatedAt"> & {
       quantity: number;
     }
   >();
-for (const inbound of data) {
-    for (const item of inbound.inbound_items) {
-        if (itemMap.has(item.item_id)) {
-            // kalau sudah ada, tambahkan quantity
-            const existing = itemMap.get(item.item_id)!;
-            existing.quantity += item.quantity;
-            itemMap.set(item.item_id, existing);
-        } else {
-            // kalau belum ada, simpan baru
-            itemMap.set(item.item_id, {
-                    id: item.id,
-                    item_id: item.item_id,
-                    inbound_id: item.inbound_id,
-                    classification_id: item.classification_id,
-                    uom: item.uom,
-                    quantity: item.quantity,
-                    deletedAt: null,
-                    item: item.item
-            });
-        }
-    }
-}
 
-  // Hasil akhirnya array
+  for (const inbound of data) {
+    for (const item of inbound.inbound_items) {
+      // Gunakan kombinasi item_id + uom sebagai key unik
+      const key = `${item.item_id}_${item.uom}`;
+
+      if (itemMap.has(key)) {
+        // Jika sudah ada kombinasi item_id + uom tersebut, tambahkan quantity
+        const existing = itemMap.get(key)!;
+        existing.quantity += item.quantity;
+        itemMap.set(key, existing);
+      } else {
+        // Jika belum ada, simpan sebagai entry baru
+        itemMap.set(key, {
+          id: item.id,
+          item_id: item.item_id,
+          inbound_id: item.inbound_id,
+          classification_id: item.classification_id,
+          uom: item.uom,
+          quantity: item.quantity,
+          deletedAt: null,
+          item: item.item,
+        });
+      }
+    }
+  }
+
+  // Kembalikan hasil sebagai array
   return Array.from(itemMap.values());
 }
 
 
-
-type ItemSummary = {
-  item_id: string;
-  sku: string;
-  description: string;
-  quantity_plan: number;
-  quantity_scan: number;
-};
-
 export function transformInspectionResponse(inbound: any): any {
+  const planMap = new Map<
+    string,
+    {
+      item_id: string;
+      sku: string;
+      uom: string;
+      description: string;
+      quantity_plan: number;
+      quantity_scan: number;
+      latestStatus?: { status: string; updatedAt: string };
+    }
+  >();
+
+  // 🔹 Hitung quantity_plan per item_id + uom
+  inbound.inbound_dos.forEach((doItem: any) => {
+    doItem.inbound_items.forEach((item: any) => {
+      const key = `${item.item_id}_${item.uom}`; // <-- pisahkan berdasarkan UOM
+      if (!planMap.has(key)) {
+        planMap.set(key, {
+          item_id: item.item_id,
+          sku: item.item?.sku ?? "",
+          uom: item.uom,
+          description: item.item?.description ?? "",
+          quantity_plan: 0,
+          quantity_scan: 0,
+          latestStatus: undefined,
+        });
+      }
+      const current = planMap.get(key)!;
+      current.quantity_plan += item.quantity;
+    });
+  });
+
+  // 🔹 Hitung quantity_scan per item_id + uom
+  inbound.transaction_scan_inbounds.forEach((scan: any) => {
+    const key = `${scan.item_id}_${scan.uom}`; // <-- pisahkan berdasarkan UOM
+    if (!planMap.has(key)) {
+      planMap.set(key, {
+        item_id: scan.item_id,
+        sku: "",
+        uom: scan.uom,
+        description: "",
+        quantity_plan: 0,
+        quantity_scan: 0,
+        latestStatus: undefined,
+      });
+    }
+    const current = planMap.get(key)!;
+    current.quantity_scan += scan.quantity;
+
+    // Ambil status terbaru
+    if (scan.status) {
+      if (
+        !current.latestStatus ||
+        new Date(scan.updatedAt) > new Date(current.latestStatus.updatedAt)
+      ) {
+        current.latestStatus = {
+          status: scan.status,
+          updatedAt: scan.updatedAt,
+        };
+      }
+    }
+  });
+
+  return {
+    ...inbound,
+    items_summary: Array.from(planMap.values()).map((item) => ({
+      item_id: item.item_id,
+      sku: item.sku,
+      uom: item.uom,
+      description: item.description,
+      quantity_plan: item.quantity_plan,
+      quantity_scan: item.quantity_scan,
+      status: item.latestStatus?.status ?? "UNSCANNED",
+    })),
+  };
+}
+
+
+export function transformInspectionResponse2(inbound: any): any {
   const planMap = new Map<
     string,
     {

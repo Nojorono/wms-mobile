@@ -11,6 +11,7 @@ interface Item {
   quantityScan: number;
   status?: string;
   item: ItemDetail;
+  uom: string;
 }
 
 interface Props {
@@ -21,8 +22,8 @@ interface Props {
 const UnloadingCardList: React.FC<Props> = ({ items, onCheck }) => {
   return (
     <View style={{ paddingBottom: 20 }}>
-      {items.map((item) => (
-        <View style={styles.card} key={item.id}>
+      {items.map((item,i) => (
+        <View style={styles.card} key={item.id+i}>
           {/* Header Row */}
           <View style={[styles.row, { justifyContent: "space-between" }]}>
             <View style={styles.row}>
@@ -39,7 +40,7 @@ const UnloadingCardList: React.FC<Props> = ({ items, onCheck }) => {
 
           {/* Quantity Info */}
           <Text style={styles.quantityText}>
-           Quantity Plan: {item.quantityPlan}
+           Quantity Plan: {item.quantityPlan} {item.uom}
           </Text>
           {/* <Text style={styles.quantityText}>
             Scan: {item.quantityScan}

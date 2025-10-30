@@ -7,7 +7,7 @@ import { UnloadingPayload } from '../interface/inbound/unloadingInterface.ts';
 class InboundServices {
   static async getInboundList(statusInput: string): Promise<InboundMainResponse> {
     try {
-      const response = await axiosInstance.get('inbound', { params: { status: statusInput } });
+      const response = await axiosInstance.get('inbound', { params: { status: statusInput , limit:100} });
       return response.data;
     } catch (error: any) {
       throw error.response;

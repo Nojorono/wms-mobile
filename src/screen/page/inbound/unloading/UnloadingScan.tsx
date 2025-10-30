@@ -45,6 +45,7 @@ type PalletItem = {
   id: string;
   palletCode: string;
   qty: number;
+  uom: string;
   weekNumber: number;
   stagingArea: string;
   stagingAreaName: string;
@@ -74,18 +75,40 @@ const UnloadingScanScreen = () => {
         item.item.id
       );
       if (res?.data) {
-        const mapped: PalletItem[] = res.data.map((d: any) => ({
+        // const mapped: PalletItem[] = res.data.map((d: any) => ({
+        //   id: d.id,
+        //   palletCode: d.pallet?.pallet_code || "-",
+        //   qty: d.quantity,
+        //   uom: d.uom,
+        //   weekNumber: d.week_number,
+        //   status: d.status,
+        //   stagingArea: d.m_warehouse_sub_id || "-",
+        //   stagingAreaName: d.warehouseSub.name || "-",
+        //   productionDate: d.production_date || "-",
+        // }));
+        // console.log("Fetched Pallets:", mapped);
+        // setPallets(mapped);
+        // setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
+
+        const filteredData = res.data.filter((d: any) => d.uom === item.uom);
+
+        const mapped: PalletItem[] = filteredData.map((d: any) => ({
           id: d.id,
           palletCode: d.pallet?.pallet_code || "-",
           qty: d.quantity,
+          uom: d.uom,
           weekNumber: d.week_number,
           status: d.status,
           stagingArea: d.m_warehouse_sub_id || "-",
-          stagingAreaName: d.warehouseSub.name || "-",
+          stagingAreaName: d.warehouseSub?.name || "-",
           productionDate: d.production_date || "-",
         }));
-        console.log("Fetched Pallets:", mapped);
+
+        console.log("Fetched Pallets (filtered by UOM):", mapped);
+
         setPallets(mapped);
+
+        // Total scan hanya dijumlahkan dari uom yang sama
         setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
       }
     } catch (err) {
@@ -126,7 +149,7 @@ const UnloadingScanScreen = () => {
         ids: createdPallets.map(p => p.id),
       };
       showLoadingDialog("Sending...");
-      await InboundServices.postStatusBulkbyIdScan(userId ,"PENDING", payloadToSend);
+      await InboundServices.postStatusBulkbyIdScan(userId, "PENDING", payloadToSend);
 
       showDialog("success", "Status pallet OPEN berhasil diupdate!");
     } catch (error) {
@@ -206,7 +229,7 @@ const UnloadingScanScreen = () => {
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Qty Scan:</Text>
-                <Text style={styles.infoValue}>{item.qty}</Text>
+                <Text style={styles.infoValue}>{item.qty} {item.uom}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Code:</Text>

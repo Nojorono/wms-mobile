@@ -7,6 +7,7 @@ import { ItemDetail } from "../../screen/page/inbound/service/inboundService";
 interface Item {
   id: string;
   name: string;
+  quantities: Record<string, number>;
   quantityPlan: number;
   quantityScan: number;
   status?: string;
@@ -40,7 +41,7 @@ const UnloadingCardList: React.FC<Props> = ({ items, onCheck }) => {
 
           {/* Quantity Info */}
           <Text style={styles.quantityText}>
-           Quantity Plan: {item.quantityPlan} {item.uom}
+           Quantity Plan: {Object.entries(item.quantities).map(([uom, qty]) => `${qty} ${uom}`).join(", ")} {item.quantityPlan}
           </Text>
           {/* <Text style={styles.quantityText}>
             Scan: {item.quantityScan}

@@ -21,6 +21,7 @@ type ItemType = {
   inbound_id: string;
   uom: string;
   id: string;
+  quantities: Record<string, number>;
   name: string;
   quantityPlan: number;
   quantityScan: number;
@@ -55,7 +56,7 @@ type PalletItem = {
 
 const UnloadingScanScreen = () => {
   const [pallets, setPallets] = useState<PalletItem[]>([]);
-  const [totalScan, setTotalScan] = useState(0);
+  const [totalScanned, setTotalScanned] = useState<Record<string, number>>({});
   const { user } = useAuthStore();
   const userId = user?.id || "";
   const navigation = useNavigation<NavigationProp>();
@@ -75,23 +76,7 @@ const UnloadingScanScreen = () => {
         item.item.id
       );
       if (res?.data) {
-        // const mapped: PalletItem[] = res.data.map((d: any) => ({
-        //   id: d.id,
-        //   palletCode: d.pallet?.pallet_code || "-",
-        //   qty: d.quantity,
-        //   uom: d.uom,
-        //   weekNumber: d.week_number,
-        //   status: d.status,
-        //   stagingArea: d.m_warehouse_sub_id || "-",
-        //   stagingAreaName: d.warehouseSub.name || "-",
-        //   productionDate: d.production_date || "-",
-        // }));
-        // console.log("Fetched Pallets:", mapped);
-        // setPallets(mapped);
-        // setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
-
-        const filteredData = res.data.filter((d: any) => d.uom === item.uom);
-
+        const filteredData = res.data
         const mapped: PalletItem[] = filteredData.map((d: any) => ({
           id: d.id,
           palletCode: d.pallet?.pallet_code || "-",
@@ -105,11 +90,15 @@ const UnloadingScanScreen = () => {
         }));
 
         console.log("Fetched Pallets (filtered by UOM):", mapped);
-
+        const totals = mapped.reduce((acc, item) => {
+          const key = `total_${item.uom.toLowerCase()}`;
+          acc[key] = (acc[key] || 0) + item.qty;
+          return acc;
+        }, {} as Record<string, number>);
+        setTotalScanned(totals);
         setPallets(mapped);
 
-        // Total scan hanya dijumlahkan dari uom yang sama
-        setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
+
       }
     } catch (err) {
       showDialog('error', 'Error while Fetching Pallets!');
@@ -187,15 +176,15 @@ const UnloadingScanScreen = () => {
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Qty Plan</Text>
-          <Text style={styles.value}>{item.quantityPlan}</Text>
+          <Text style={styles.value}>{Object.entries(item.quantities)
+            .map(([uom, qty]) => `${qty} ${uom}`)
+            .join(", ")}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Total Qty Scan</Text>
-          <Text style={styles.value}>{totalScan}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>UoM</Text>
-          <Text style={styles.value}>{item.uom}</Text>
+          <Text style={styles.value}>{Object.entries(totalScanned)
+            .map(([key, qty]) => `${qty} ${key.replace("total_", "").toUpperCase()}`)
+            .join(", ")}</Text>
         </View>
       </View>
 

@@ -18,6 +18,7 @@ export type ItemDetail = {
 
 export type InboundItem = {
     id: string;
+    quantities?: Record<string, number>;
     createdAt: string;
     updatedAt: string;
     deletedAt: string | null;
@@ -107,44 +108,86 @@ export function mergeInboundDos(data: InboundDo[]): (Omit<InboundDo, 'inbound_it
     return Array.from(map.values());
 }
 
+
 export function mergeUnloadingData(data: InboundDo[]) {
-  // Map untuk menampung hasil merge per item_id + uom
   const itemMap = new Map<
     string,
     Omit<InboundItem, "quantity" | "inbound_do_id" | "createdAt" | "updatedAt"> & {
-      quantity: number;
+      quantities: Record<string, number>; // contoh: { bal: 10, dus: 20 }
     }
   >();
 
   for (const inbound of data) {
-    for (const item of inbound.inbound_items) {
-      // Gunakan kombinasi item_id + uom sebagai key unik
-      const key = `${item.item_id}_${item.uom}`;
+    for (const item of inbound.inbound_items || []) {
+      if (!item || !item.item_id || !item.uom) continue;
+
+      const key = item.item_id;
 
       if (itemMap.has(key)) {
-        // Jika sudah ada kombinasi item_id + uom tersebut, tambahkan quantity
         const existing = itemMap.get(key)!;
-        existing.quantity += item.quantity;
-        itemMap.set(key, existing);
+
+        // 🔹 Tambahkan quantity per UOM
+        existing.quantities[item.uom] = 
+          (existing.quantities[item.uom] || 0) + (item.quantity || 0);
+
       } else {
-        // Jika belum ada, simpan sebagai entry baru
+        // 🔹 Buat entri baru dengan quantities awal
         itemMap.set(key, {
           id: item.id,
           item_id: item.item_id,
           inbound_id: item.inbound_id,
           classification_id: item.classification_id,
           uom: item.uom,
-          quantity: item.quantity,
-          deletedAt: null,
+          quantities: { [item.uom]: item.quantity || 0 },
+          deletedAt: item.deletedAt ?? null,
           item: item.item,
         });
       }
     }
   }
 
-  // Kembalikan hasil sebagai array
   return Array.from(itemMap.values());
 }
+
+
+// export function mergeUnloadingData2(data: InboundDo[]) {
+//   // Map untuk menampung hasil merge per item_id + uom
+//   const itemMap = new Map<
+//     string,
+//     Omit<InboundItem, "quantity" | "inbound_do_id" | "createdAt" | "updatedAt"> & {
+//       quantity: number;
+//     }
+//   >();
+
+//   for (const inbound of data) {
+//     for (const item of inbound.inbound_items) {
+//       // Gunakan kombinasi item_id + uom sebagai key unik
+//       const key = `${item.item_id}_${item.uom}`;
+
+//       if (itemMap.has(key)) {
+//         // Jika sudah ada kombinasi item_id + uom tersebut, tambahkan quantity
+//         const existing = itemMap.get(key)!;
+//         existing.quantity += item.quantity;
+//         itemMap.set(key, existing);
+//       } else {
+//         // Jika belum ada, simpan sebagai entry baru
+//         itemMap.set(key, {
+//           id: item.id,
+//           item_id: item.item_id,
+//           inbound_id: item.inbound_id,
+//           classification_id: item.classification_id,
+//           uom: item.uom,
+//           quantity: item.quantity,
+//           deletedAt: null,
+//           item: item.item,
+//         });
+//       }
+//     }
+//   }
+
+//   // Kembalikan hasil sebagai array
+//   return Array.from(itemMap.values());
+// }
 
 
 export function transformInspectionResponse(inbound: any): any {

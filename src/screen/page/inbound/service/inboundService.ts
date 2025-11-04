@@ -196,10 +196,9 @@ export function transformInspectionResponse(inbound: any): any {
     {
       item_id: string;
       sku: string;
-      uom: string;
       description: string;
-      quantity_plan: number;
-      quantity_scan: number;
+      quantities_plan: Record<string, number>;
+      quantities_scan: Record<string, number>;
       latestStatus?: { status: string; updatedAt: string };
     }
   >();
@@ -207,39 +206,39 @@ export function transformInspectionResponse(inbound: any): any {
   // 🔹 Hitung quantity_plan per item_id + uom
   inbound.inbound_dos.forEach((doItem: any) => {
     doItem.inbound_items.forEach((item: any) => {
-      const key = `${item.item_id}_${item.uom}`; // <-- pisahkan berdasarkan UOM
+      const key = item.item_id;
       if (!planMap.has(key)) {
         planMap.set(key, {
           item_id: item.item_id,
           sku: item.item?.sku ?? "",
-          uom: item.uom,
           description: item.item?.description ?? "",
-          quantity_plan: 0,
-          quantity_scan: 0,
+          quantities_plan: {},
+          quantities_scan: {},
           latestStatus: undefined,
         });
       }
       const current = planMap.get(key)!;
-      current.quantity_plan += item.quantity;
+      current.quantities_plan[item.uom] =
+        (current.quantities_plan[item.uom] || 0) + item.quantity;
     });
   });
 
   // 🔹 Hitung quantity_scan per item_id + uom
   inbound.transaction_scan_inbounds.forEach((scan: any) => {
-    const key = `${scan.item_id}_${scan.uom}`; // <-- pisahkan berdasarkan UOM
+    const key = scan.item_id;
     if (!planMap.has(key)) {
       planMap.set(key, {
         item_id: scan.item_id,
         sku: "",
-        uom: scan.uom,
         description: "",
-        quantity_plan: 0,
-        quantity_scan: 0,
+        quantities_plan: {},
+        quantities_scan: {},
         latestStatus: undefined,
       });
     }
     const current = planMap.get(key)!;
-    current.quantity_scan += scan.quantity;
+    current.quantities_scan[scan.uom] =
+      (current.quantities_scan[scan.uom] || 0) + scan.quantity;
 
     // Ambil status terbaru
     if (scan.status) {
@@ -255,19 +254,28 @@ export function transformInspectionResponse(inbound: any): any {
     }
   });
 
+  // 🔹 Konversi ke array hasil akhir
   return {
     ...inbound,
     items_summary: Array.from(planMap.values()).map((item) => ({
       item_id: item.item_id,
       sku: item.sku,
-      uom: item.uom,
       description: item.description,
-      quantity_plan: item.quantity_plan,
-      quantity_scan: item.quantity_scan,
+      quantities: Object.keys({
+        ...item.quantities_plan,
+        ...item.quantities_scan,
+      }).reduce((acc, uom) => {
+        acc[uom] = {
+          plan: item.quantities_plan[uom] || 0,
+          scan: item.quantities_scan[uom] || 0,
+        };
+        return acc;
+      }, {} as Record<string, { plan: number; scan: number }>),
       status: item.latestStatus?.status ?? "UNSCANNED",
     })),
   };
 }
+
 
 
 export function transformInspectionResponse2(inbound: any): any {

@@ -135,20 +135,20 @@ const UnloadingScanScreen = () => {
       return;
     }
 
-    // try {
-    //   const payloadToSend = {
-    //     ids: createdPallets.map(p => p.id),
-    //   };
-    //   showLoadingDialog("Sending...");
-    //   await InboundServices.postStatusBulkbyIdScan(userId, "PENDING", payloadToSend);
+    try {
+      const payloadToSend = {
+        ids: createdPallets.map(p => p.id),
+      };
+      showLoadingDialog("Sending...");
+      await InboundServices.postStatusBulkbyIdScan(userId, "PENDING", payloadToSend);
 
-    //   showDialog("success", "Status pallet OPEN berhasil diupdate!");
-    // } catch (error) {
-    //   console.error("Error while updating:", error);
-    //   showDialog("error", "Error while Sending Status!");
-    // } finally {
-    //   await fetchData();
-    // }
+      showDialog("success", "Status pallet OPEN berhasil diupdate!");
+    } catch (error) {
+      console.error("Error while updating:", error);
+      showDialog("error", "Error while Sending Status!");
+    } finally {
+      await fetchData();
+    }
   };
 
   const handleRemove = (palletId: string) => {

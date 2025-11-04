@@ -10,7 +10,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useAuthStore } from "../../../../store/useAuthStore";
-import { ItemDetail } from "../service/inboundService";
+import {  compareScanWithReference, ItemDetail } from "../service/inboundService";
 import InboundServices from "../../../../service/inboundServices";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -91,11 +91,13 @@ const UnloadingScanScreen = () => {
 
         console.log("Fetched Pallets (filtered by UOM):", mapped);
         const totals = mapped.reduce((acc, item) => {
-          const key = `total_${item.uom.toLowerCase()}`;
+          const key = `${item.uom.toUpperCase()}`;
           acc[key] = (acc[key] || 0) + item.qty;
           return acc;
         }, {} as Record<string, number>);
         setTotalScanned(totals);
+        console.log("Total Scanned:", totals);
+        console.log ("Item Quantities Plan:", item.quantities);
         setPallets(mapped);
 
 
@@ -119,9 +121,9 @@ const UnloadingScanScreen = () => {
     const totalQtyScan = pallets.reduce((sum, p) => sum + p.qty, 0);
 
     // Cek apakah total qty melebihi plan
-    if (totalQtyScan > item.quantityPlan) {
-      showDialog("error", "Quantity melebihi jumlah plan!");
-      return;
+    const compare = compareScanWithReference(item.quantities,totalScanned)
+    if (!compare){
+      showDialog("error", `Total scanned melibihi qty plan!`);
     }
 
     // Ambil hanya pallet yang status-nya OPEN
@@ -133,20 +135,20 @@ const UnloadingScanScreen = () => {
       return;
     }
 
-    try {
-      const payloadToSend = {
-        ids: createdPallets.map(p => p.id),
-      };
-      showLoadingDialog("Sending...");
-      await InboundServices.postStatusBulkbyIdScan(userId, "PENDING", payloadToSend);
+    // try {
+    //   const payloadToSend = {
+    //     ids: createdPallets.map(p => p.id),
+    //   };
+    //   showLoadingDialog("Sending...");
+    //   await InboundServices.postStatusBulkbyIdScan(userId, "PENDING", payloadToSend);
 
-      showDialog("success", "Status pallet OPEN berhasil diupdate!");
-    } catch (error) {
-      console.error("Error while updating:", error);
-      showDialog("error", "Error while Sending Status!");
-    } finally {
-      await fetchData();
-    }
+    //   showDialog("success", "Status pallet OPEN berhasil diupdate!");
+    // } catch (error) {
+    //   console.error("Error while updating:", error);
+    //   showDialog("error", "Error while Sending Status!");
+    // } finally {
+    //   await fetchData();
+    // }
   };
 
   const handleRemove = (palletId: string) => {

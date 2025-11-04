@@ -439,6 +439,14 @@ export function mergeGoodReceive(inboundData: any) {
   }));
 }
 
+export function compareScanWithReference(reference: Record<string, number>, scan: Record<string, number>): boolean {
+  for (const uom in scan) {
+    const refQty = reference[uom] || 0;
+    const scanQty = scan[uom];
+    if (scanQty > refQty) return false;
+  }
+  return true;
+}
 
 
 

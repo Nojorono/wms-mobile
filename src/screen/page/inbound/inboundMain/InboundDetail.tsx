@@ -191,7 +191,6 @@ export default function InboundDetail() {
             setStatus(response.data.status); // Update status dari response
             const inbound_dos = response.data.inbound_dos;
             setMergedData(mergeInboundDos(inbound_dos));
-            console.log("Inbound Response:", response);
         } catch (error) {
             hideLoadingDialog()
             console.error('Error fetching inbound data:', error);

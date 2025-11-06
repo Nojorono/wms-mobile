@@ -447,6 +447,7 @@ export function mergeGoodReceive(inboundData: any) {
   }));
 }
 
+// COMPARE SCAN PADA UNLOADING SCAN
 export function compareScanWithReference(reference: Record<string, number>, scan: Record<string, number>): boolean {
   for (const uom in scan) {
     const refQty = reference[uom] || 0;
@@ -454,6 +455,17 @@ export function compareScanWithReference(reference: Record<string, number>, scan
     if (scanQty > refQty) return false;
   }
   return true;
+}
+
+
+//AMBIL SCAN UNTUK INSPECTION DETAIL
+export function getScanTotals(data:any) {
+  return data.reduce((acc:any, item:any) => {
+    const key = item.uom;
+    if (!acc[key]) acc[key] = { scan: 0 };
+    acc[key].scan += item.qty;
+    return acc;
+  }, {});
 }
 
 

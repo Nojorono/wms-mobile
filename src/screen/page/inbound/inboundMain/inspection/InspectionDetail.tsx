@@ -10,7 +10,7 @@ import {
     Pressable,
 } from "react-native";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
-import { ItemDetail } from "../../service/inboundService";
+import { getScanTotals, ItemDetail } from "../../service/inboundService";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import { useDialogStore } from "../../../../../store/useGlobalDialog";
@@ -77,7 +77,9 @@ const InspectionDetail = () => {
     const { item, payload } = route.params as RouteParams;
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const showDialog = useDialogStore((state) => state.showDialog);
-    const [totalScan, setTotalScan] = useState(0);
+    const [scanTotalQty, setScanTotalQty] = useState<{ [key: string]: { scan: number } }>({});
+
+    console.log("item:", item);
 
     const fetchData = async () => {
         try {
@@ -101,8 +103,8 @@ const InspectionDetail = () => {
                     status: d.status || "-",
                 }));
                 setPallets(mapped);
-
-                setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
+                setScanTotalQty(getScanTotals(mapped));
+                console.log("Fetched Pallets:", getScanTotals(mapped))
             }
         } catch (err) {
             showDialog("error", "Error while Fetching Pallets!");
@@ -130,7 +132,7 @@ const InspectionDetail = () => {
             palletCode !== editingItem.palletCode ||
             Number(editQty) !== Number(editingItem.qty) ||
             editCode !== editingItem.productionDate ||
-            editWeekNumber !== editingItem.weekNumber||
+            editWeekNumber !== editingItem.weekNumber ||
             editUom !== editingItem.uom;
 
         setIsDataChanged(hasChanged);
@@ -183,10 +185,10 @@ const InspectionDetail = () => {
             return
         }
 
-        if (Number(editQty) > totalScan) {
-            showDialog("error", "qty scan tidak boleh melebihi ");
-            return
-        }
+        // if (Number(editQty) > totalScan) {
+        //     showDialog("error", "qty scan tidak boleh melebihi ");
+        //     return
+        // }
 
         try {
             showLoadingDialog("Updating Pallet...");
@@ -215,7 +217,7 @@ const InspectionDetail = () => {
             } else {
                 await InboundServices.updateInspectionData(editingItem.id, {
                     quantity: editQty,
-                    uom:editUom,
+                    uom: editUom,
                     production_date: editCode,
                     week_number: Number(editWeekNumber),
                 });
@@ -244,10 +246,6 @@ const InspectionDetail = () => {
                     p.id === id ? { ...p, weekNumber: minggu || p.weekNumber } : p
                 )
             );
-            // setEditingItem((prev) =>
-            //     prev && prev.id === id ? { ...prev, weekNumber: minggu || prev.weekNumber } : prev
-            // );
-
             // simpan ke form state
             setEditWeekNumber(minggu);
         } catch (error) {
@@ -286,14 +284,15 @@ const InspectionDetail = () => {
                     <Text style={styles.label}>Qty Plan</Text>
                     <Text style={styles.value}>
                         {Object.entries(item.quantities)
+                            .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0)) // urutan: DUS dulu
                             .map(([uom, q]) => `${q.plan} ${uom}`)
-                            .join(', ')}
+                            .join(", ")}
                     </Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Qty Scan</Text>
                     <Text style={styles.value}>
-                        {Object.entries(item.quantities)
+                        {Object.entries(scanTotalQty)
                             .map(([uom, q]) => `${q.scan} ${uom}`)
                             .join(', ')}
                     </Text>
@@ -318,16 +317,16 @@ const InspectionDetail = () => {
                                 </Text>
                             </View>
                             <View style={styles.infoRow}>
-                                <Text style={styles.infoLabel}>Week:</Text>
-                                <Text style={styles.infoValue}>{item.weekNumber}</Text>
-                            </View>
-                            <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Qty Scan:</Text>
                                 <Text style={styles.infoValue}>{item.qty} {item.uom}</Text>
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Code:</Text>
                                 <Text style={styles.infoValue}>{item.productionDate}</Text>
+                            </View>
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Week:</Text>
+                                <Text style={styles.infoValue}>{item.weekNumber}</Text>
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Status:</Text>

@@ -1,8 +1,9 @@
 import { createStackNavigator } from '@react-navigation/stack';
-import Colors from '../../constants/Colors';
+import Colors from '../../../constants/Colors';
 import { Image, View } from 'react-native';
 import React from 'react';
-import OutboundIndex from '../page/Outbound.tsx';
+import OutboundIndex from '../../page/Outbound.tsx';
+import PickingNavigator from './PickingNavigator.tsx';
 
 
 
@@ -10,6 +11,8 @@ export type OutboundParamList = {
   OutboundIndex: undefined;
   OutboundMain: undefined;
   OutboundAssign: { item:any };
+  //Helper
+  OutboundPicking: undefined;
 };
 
 const OutboundStack = createStackNavigator<OutboundParamList>();
@@ -35,16 +38,16 @@ const OutboundStackNavigator = () => (
             }}
           >
             <Image
-              source={require('../../assets/images/icon-white-nna.png')}
+              source={require('../../../assets/images/icon-white-nna.png')}
               style={{ width: 100, height: 22, resizeMode: 'contain' }}
             />
           </View>
         ),
       }}
     />
-    {/* <OutboundStack.Screen
-      name="OutboundMain"
-      component={OutboundScreen}
+    <OutboundStack.Screen
+      name="OutboundPicking"
+      component={PickingNavigator}
       options={{
         headerShown: true,
         headerTintColor: '#fff',
@@ -52,7 +55,7 @@ const OutboundStackNavigator = () => (
           backgroundColor: Colors.secondaryColor,
         },
       }}
-    /> */}
+    />
   </OutboundStack.Navigator>
 );
 

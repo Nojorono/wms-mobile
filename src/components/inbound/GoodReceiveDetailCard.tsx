@@ -13,6 +13,7 @@ import { InspectionParamList } from "../../screen/navigation/inbound/InspectionN
 
 interface Detail {
     item_id_inbound: string;
+    inbound_do_id: string;
     do_number: string;
     po_number: string;
     quantity_plan: number;
@@ -59,7 +60,6 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
         setDetails(newDetails);
     };
 
-
     return (
         <View style={styles.card}>
             <View style={styles.row}>
@@ -76,15 +76,15 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                             .map(([uom, q]) => `${q.plan} ${uom}`)
                             .join(", ")}
                     </Text>
-                    
+
                 </View>
                 <View style={styles.infoBlock}>
                     <Text style={styles.label}>Inspec</Text>
                     {/* <Text style={styles.value}>{data.quantity_scanned}</Text> */}
                     <Text style={styles.value}> {Object.entries(data.quantities)
-                            .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0)) // urutan: DUS dulu
-                            .map(([uom, q]) => `${q.scan} ${uom}`)
-                            .join(", ")}</Text>
+                        .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0)) // urutan: DUS dulu
+                        .map(([uom, q]) => `${q.scan} ${uom}`)
+                        .join(", ")}</Text>
                 </View>
                 <View style={styles.infoBlock}>
                     <Text style={styles.label}>Sisa</Text>
@@ -115,7 +115,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                             <View style={styles.detailRow}>
                                 <View style={styles.infoBlock}>
                                     <Text style={styles.detailLabel}>Plan</Text>
-                                    <Text style={styles.detailValue}>{item.quantity_plan}</Text>
+                                    <Text style={styles.detailValue}>{item.quantity_plan} {item.uom}</Text>
                                 </View>
                                 <View style={styles.infoBlock}>
                                     <Text style={styles.detailLabel}>Inspected</Text>
@@ -140,7 +140,6 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
 
 
 
-
             {data.inspection_status?.toUpperCase() !== "APPROVED" && (
                 <TouchableOpacity
                     style={[styles.approveButton, { backgroundColor: Colors.secondaryColor }]}
@@ -148,19 +147,31 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                         try {
                             // Step 1: Update Good Receive Detail
                             showLoadingDialog("Updating Good Receive...");
-                            const payload = {
-                                inbound_do_id: data.do_id,
-                                items: details.map((d) => ({
-                                    id: d.item_id_inbound,
-                                    quantity_inspection: d.quantity_scanned,
-                                })),
-                            };
+                            // Asumsikan data berasal dari variabel bernama `dataArray`
+                            for (const [do_id, details] of Object.entries(
+                                data.details.reduce<Record<string, any[]>>((acc, item) => {
+                                    if (!acc[item.inbound_do_id]) acc[item.inbound_do_id] = [];
+                                    acc[item.inbound_do_id].push(item);
+                                    return acc;
+                                }, {})
+                            )) {
+                                const payload = {
+                                    inbound_do_id: do_id,
+                                    items: details.map((d) => ({
+                                        id: d.item_id_inbound,
+                                        quantity_inspection: d.quantity_scanned,
+                                    })),
+                                };
+                                const response = await InboundServices.updateGoodReceiveDetail(payload);
+                            }
 
-                            await InboundServices.updateGoodReceiveDetail(payload);
+
 
                             // Step 2: Ubah teks tanpa menutup loading
                             setLoadingMessage("Updating Status After Good Receive...");
                             await InboundServices.updateStatusAfterGoodReceive(inbound_id);
+
+
 
                             // Step 3: Selesai
                             hideLoadingDialog();

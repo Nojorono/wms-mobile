@@ -6,7 +6,7 @@ import Colors from '../../constants/Colors';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import MenuCard from "../../components/MenuCard.tsx";
-import { OutboundParamList } from '../navigation/OutboundNavigator.tsx';
+import { OutboundParamList } from '../navigation/outbound/OutboundNavigator.tsx';
 
 
 type NavigationProp = StackNavigationProp<OutboundParamList, 'OutboundMain'>;

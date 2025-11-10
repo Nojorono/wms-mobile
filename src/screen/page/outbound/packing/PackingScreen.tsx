@@ -9,7 +9,7 @@ import useOutboundStore from '../../../../store/useOutboundStore.ts';
 import OutboundService from '../../../../service/outboundService.ts';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { OutboundParamList } from '../../../navigation/OutboundNavigator.tsx';
+import { OutboundParamList } from '../../../navigation/outbound/OutboundNavigator.tsx';
 
 
 type NavigationProp = StackNavigationProp<OutboundParamList,'OutboundMain'>;

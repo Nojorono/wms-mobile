@@ -5,7 +5,7 @@ import Colors from "../../constants/Colors";
 import HomeStackNavigator, { HomeStackParamList } from "./HomeNavigator";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import InboundStackNavigator from './inbound/InboundNavigator.tsx';
-import OutboundNavigator from './OutboundNavigator.tsx';
+import OutboundNavigator from './outbound/OutboundNavigator.tsx';
 
 // Define the param list for MainTab
 export type MainTabParamList = {

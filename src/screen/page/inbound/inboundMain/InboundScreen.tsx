@@ -25,6 +25,7 @@ type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
 const FILTER_OPTIONS = [
   'CREATED',
   'UNLOADING',
+  'INSPECTION',
   'READY_INTEGRATION',
 ];
 

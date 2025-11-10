@@ -24,6 +24,7 @@ interface Detail {
 interface Item {
     item_id: string;
     inspection_status: string;
+    quantities: { [uom: string]: { plan: number; scan: number; inspected: number } };
     sku: string;
     do_id: string;
     description: string;
@@ -42,7 +43,6 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
     const navigation = useNavigation<NavigationProp>();
     const { showLoadingDialog, hideLoadingDialog, setLoadingMessage } = useLoadingDialogStore();
     const [details, setDetails] = useState(data.details);
-    console.log('inboundId data:', inbound_id);
 
     const handleScannedChange = (value: string, idx: number) => {
         const newDetails = [...details];
@@ -69,15 +69,22 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                 </View>
                 <View style={styles.infoBlock}>
                     <Text style={styles.label}>Plan</Text>
-                    <Text style={styles.value}>{data.quantity_plan}</Text>
+                    {/* <Text style={styles.value}>{data.quantity_plan}</Text> */}
+                    <Text style={styles.value}>
+                        {Object.entries(data.quantities)
+                            .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0)) // urutan: DUS dulu
+                            .map(([uom, q]) => `${q.plan} ${uom}`)
+                            .join(", ")}
+                    </Text>
+                    
                 </View>
                 <View style={styles.infoBlock}>
                     <Text style={styles.label}>Inspec</Text>
-                    <Text style={styles.value}>{data.quantity_scanned}</Text>
-                </View>
-                <View style={styles.infoBlock}>
-                    <Text style={styles.label}>UoM</Text>
-                    <Text style={styles.value}>{data.uom}</Text>
+                    {/* <Text style={styles.value}>{data.quantity_scanned}</Text> */}
+                    <Text style={styles.value}> {Object.entries(data.quantities)
+                            .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0)) // urutan: DUS dulu
+                            .map(([uom, q]) => `${q.scan} ${uom}`)
+                            .join(", ")}</Text>
                 </View>
                 <View style={styles.infoBlock}>
                     <Text style={styles.label}>Sisa</Text>

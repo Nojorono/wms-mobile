@@ -355,10 +355,136 @@ export function transformInspectionResponse2(inbound: any): any {
 }
 
 
-
 export function mergeGoodReceive(inboundData: any) {
   const resultMap = new Map();
+  const toFloat = (val: any) => parseFloat(val ?? 0) || 0.0;
 
+  // step 1: isi PLAN & INSPECTED
+  inboundData.inbound_dos.forEach((doEntry: any) => {
+    doEntry.inbound_items.forEach((item: any) => {
+      const key = item.item_id;
+      if (!resultMap.has(key)) {
+        resultMap.set(key, {
+          item_id: item.item_id,
+          sku: item.item?.sku ?? "",
+          do_id: doEntry.id,
+          inspection_status: item.inspection_status,
+          description: item.item?.description ?? "",
+          uom: item.uom,
+          quantity_plan: 0.0,
+          quantity_scanned: 0.0,
+          quantity_inspected: 0.0,
+          details: [],
+          quantities: {}, // 🔹 gabungan plan, scan, inspected
+        });
+      }
+
+      const existing = resultMap.get(key);
+      const qtyPlan = toFloat(item.quantity);
+      const qtyInspected = toFloat(item.quantity_inspection);
+
+      existing.quantity_plan += qtyPlan;
+      existing.quantity_inspected += qtyInspected;
+
+      // 🔹 Pastikan struktur per-UOM ada
+      if (!existing.quantities[item.uom]) {
+        existing.quantities[item.uom] = { plan: 0, scan: 0, inspected: 0 };
+      }
+
+      // 🔹 Tambahkan plan & inspected ke quantities
+      existing.quantities[item.uom].plan += qtyPlan;
+      existing.quantities[item.uom].inspected += qtyInspected;
+
+      existing.details.push({
+        item_id_inbound: item.id,
+        do_number: doEntry.inbound_do_number,
+        po_number: doEntry.inbound_po_number,
+        quantity_inspected: qtyInspected,
+        quantity_plan: qtyPlan,
+        quantity_scanned: 0.0,
+        uom: item.uom,
+      });
+    });
+  });
+
+  // step 2: distribusi SCAN ke detail plan
+  inboundData.transaction_scan_inbounds.forEach((scan: any) => {
+    const key = scan.item_id;
+    if (!resultMap.has(key)) return;
+
+    const existing = resultMap.get(key);
+    let remaining = toFloat(scan.quantity);
+
+    for (const detail of existing.details) {
+      const available = toFloat(detail.quantity_plan) - toFloat(detail.quantity_scanned);
+      if (available <= 0) continue;
+
+      const allocate = Math.min(available, remaining);
+      detail.quantity_scanned = toFloat(detail.quantity_scanned) + allocate;
+      existing.quantity_scanned += allocate;
+      remaining -= allocate;
+
+      // 🔹 Pastikan UOM ada
+      if (!existing.quantities[scan.uom]) {
+        existing.quantities[scan.uom] = { plan: 0, scan: 0, inspected: 0 };
+      }
+
+      // 🔹 Tambahkan ke scan
+      existing.quantities[scan.uom].scan += allocate;
+
+      if (remaining <= 0) break;
+    }
+
+    if (remaining > 0) {
+      existing.details.push({
+        do_number: null,
+        po_number: null,
+        quantity_plan: 0.0,
+        quantity_scanned: remaining,
+        quantity_inspected: 0.0,
+        uom: scan.uom,
+        note: "EXCESS_SCAN",
+      });
+      existing.quantity_scanned += remaining;
+
+      if (!existing.quantities[scan.uom]) {
+        existing.quantities[scan.uom] = { plan: 0, scan: 0, inspected: 0 };
+      }
+      existing.quantities[scan.uom].scan += remaining;
+    }
+  });
+
+  // step 3: bulatkan semua nilai ke 2 desimal
+  return Array.from(resultMap.values()).map((entry) => ({
+    ...entry,
+    quantity_plan: parseFloat(entry.quantity_plan.toFixed(2)),
+    quantity_scanned: parseFloat(entry.quantity_scanned.toFixed(2)),
+    quantity_inspected: parseFloat(entry.quantity_inspected.toFixed(2)),
+
+    quantities: Object.fromEntries(
+      Object.entries(entry.quantities || {}).map(([uom, q]: any) => [
+        uom,
+        {
+          plan: parseFloat((q.plan ?? 0).toFixed(2)),
+          scan: parseFloat((q.scan ?? 0).toFixed(2)),
+          inspected: parseFloat((q.inspected ?? 0).toFixed(2)),
+        },
+      ])
+    ),
+
+    details: entry.details.map((d: any) => ({
+      ...d,
+      quantity_plan: parseFloat(d.quantity_plan.toFixed(2)),
+      quantity_scanned: parseFloat(d.quantity_scanned.toFixed(2)),
+      quantity_inspected: parseFloat(d.quantity_inspected.toFixed(2)),
+    })),
+  }));
+}
+
+
+
+export function mergeGoodReceive2(inboundData: any) {
+  const resultMap = new Map();
   // Helper untuk memastikan float
   const toFloat = (val: any) => parseFloat(val ?? 0) || 0.0;
 

@@ -1,14 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, ScrollView, Text, TouchableOpacity, View, Image, Alert } from "react-native";
 import { useAuthStore } from "../store/useAuthStore";
 // import Ionicons from '@react-native-vector-icons/ionicons';
 
 import GlobalStyles from "../util/GlobalStyles.ts";
 import Colors from "../constants/Colors";
-import StatusCard from "../components/NameCard";
-import MenuGrid from "../components/MenuGrid";
-import { useDialogStore } from "../store/useGlobalDialog";
-import { useLoadingDialogStore } from "../store/useLoadingStore";
+
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';

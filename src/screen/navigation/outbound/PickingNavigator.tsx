@@ -2,22 +2,23 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors.ts';
 
 import React from 'react';
-import PickingScreen from '../../page/outbound/picking/PickingScreen.tsx';
+import PickingScreen from '../../page/outbound/picking/PickingDoScreen.tsx';
+import PickingDetailScreen from '../../page/outbound/picking/PikingMemoScreen.tsx';
 
 
 
 export type PickingParamList = {
-  PickingMain: undefined;
-  PickingDetail: { item: any };
+  PickingDoMain: undefined;
+  PickingMemo: { item: any };
   
 };
 
 const PickingStack = createStackNavigator<PickingParamList>();
 
 const PickingStackNavigator = () => (
-  <PickingStack.Navigator initialRouteName="PickingMain">
+  <PickingStack.Navigator initialRouteName="PickingDoMain">
     <PickingStack.Screen
-      name="PickingMain"
+      name="PickingDoMain"
       component={PickingScreen}
       options={{
         headerShown: true,
@@ -31,8 +32,8 @@ const PickingStackNavigator = () => (
       }}
     />
     <PickingStack.Screen
-      name="PickingMain"
-      component={PickingScreen}
+      name="PickingMemo"
+      component={PickingDetailScreen}
       options={{
         headerShown: true,
         headerTintColor: '#fff',

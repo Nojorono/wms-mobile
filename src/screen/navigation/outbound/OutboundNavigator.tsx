@@ -49,7 +49,7 @@ const OutboundStackNavigator = () => (
       name="OutboundPicking"
       component={PickingNavigator}
       options={{
-        headerShown: true,
+        headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,

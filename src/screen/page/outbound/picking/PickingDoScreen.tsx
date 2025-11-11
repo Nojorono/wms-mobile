@@ -18,14 +18,15 @@ import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import { PickingParamList } from '../../../navigation/outbound/PickingNavigator.tsx';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
+import { outboundData } from '../../../../dummy/outboundData.js';
 
-type NavigationProp = StackNavigationProp<PickingParamList, 'PickingMain'>;
+type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
 
-function PickingScreen() {
+function PickingDoScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [PickingList, setPickingList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<string | null>("CREATED");
+  const [selectedFilter, setSelectedFilter] = useState<string | null>();
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -38,7 +39,7 @@ function PickingScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking Planning');
     //   const response = await OutboundServices.getPickingList(selectedFilter || 'CREATED');
-    //   setPickingList(response?.data || []);
+      setPickingList(outboundData || []);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Picking!');
@@ -128,7 +129,7 @@ useFocusEffect(
                   date={item.arrival_date}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('PickingDetail', { item })}
+                  onClick={() => navigation.navigate('PickingMemo', { item })}
                 />
               );
             })
@@ -139,7 +140,7 @@ useFocusEffect(
   );
 }
 
-export default PickingScreen;
+export default PickingDoScreen;
 
 const localStyles = StyleSheet.create({
   searchInput: {

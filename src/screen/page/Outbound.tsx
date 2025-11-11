@@ -83,7 +83,7 @@ function OutboundIndex() {
               <>
                 <MenuCard
                   title={"PICKING"}
-                // onPress={() => navigationInbound.navigate("UnloadingNavigator")}
+                onPress={() => navigation.navigate("OutboundPicking")}
                 />
                 <MenuCard
                   title={"LOADING"}

@@ -27,9 +27,9 @@ const MainNavigator = () => (
       // Get the name of the currently focused route in nested navigator
       const routeName = getFocusedRouteNameFromRoute(route) ?? '';
 
-      // Hide tab bar if inside InboundStack (except index)
+      // Hide tab bar if inside InboundStack or OutbondStack (except index)
       const hideTabBar =
-        route.name === 'Inbound' &&
+        (route.name === 'Inbound' || route.name === 'Outbond') &&
         routeName &&
         routeName !== 'InboundIndex';
 

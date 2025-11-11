@@ -5,7 +5,7 @@ import Colors from "../../constants/Colors.ts";
 
 type OutboundCardProps = {
   title: string; // CWH02-IN-0625-0001
-  subTitle: string; // K 9985 AT
+  subTitle?: string; // K 9985 AT
   date: string; // 2025-01-02
   role?: string; // Warehouse Staff
   status?: string; // Draft

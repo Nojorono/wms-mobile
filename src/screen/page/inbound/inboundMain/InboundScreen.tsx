@@ -19,6 +19,7 @@ import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import InboundCard from '../../../../components/inbound/InboundListCard.tsx';
 import InboundServices from '../../../../service/inboundServices.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
+import { ROLES } from '../../../../constants/Roles.ts';
 
 type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
 
@@ -38,7 +39,7 @@ function InboundScreen() {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const availableFilters = useMemo(() => {
-    if (user?.role?.name === "HELPER") {
+    if (user?.role?.name === ROLES.HELPER) {
       // Hilangkan INSPECTION untuk HELPER
       return FILTER_OPTIONS.filter((f) => f !== "READY_INTEGRATION");
     }

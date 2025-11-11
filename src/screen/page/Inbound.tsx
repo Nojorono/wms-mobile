@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { InboundParamList } from '../navigation/inbound/InboundNavigator.tsx';
 import MenuCard from "../../components/MenuCard.tsx";
+import { ROLES } from '../../constants/Roles.ts';
 
 
 type NavigationPropInbound = StackNavigationProp<InboundParamList,'InboundMain'>;
@@ -55,21 +56,21 @@ function InboundIndex() {
             style={styles.scrollViewContent}
           >
             <View style={styles.menuCard}>
-              {roleName === "DRIVER FORKLIFT" && (
+              {roleName === ROLES.DRIVER_FORKLIFT && (
           <MenuCard
             title={"Put Away"}
             onPress={() => navigationInbound.navigate("ForkLiftNavigator")}
           />
         )}
 
-        {roleName === "WH STAFF" && (
+        {roleName === ROLES.WH_STAFF && (
           <MenuCard
             title={"Inbound"}
             onPress={() => navigationInbound.navigate("InboundMain")}
           />
         )}
 
-        {roleName === "HELPER" && (
+        {roleName === ROLES.HELPER && (
           <MenuCard
             title={"Unloading"}
             onPress={() => navigationInbound.navigate("UnloadingNavigator")}
@@ -77,7 +78,7 @@ function InboundIndex() {
         )}
 
         {/* 🔸 Optional: fallback jika role tidak dikenali */}
-        {!["DRIVER FORKLIFT", "WH STAFF", "HELPER"].includes(roleName) && (
+        {!Object.values(ROLES).includes(roleName as typeof ROLES[keyof typeof ROLES]) && (
           <Text style={{
               textAlign: "center",
               color: "#999",

@@ -129,7 +129,7 @@ useFocusEffect(
                   date={item.arrival_date}
                   status={item.status}
                   statusColor={statusColor}
-                //   onClick={() => navigation.navigate('PickingDetail', { item })}
+                  onClick={() => navigation.navigate('PickingActivity', { item })}
                 />
               );
             })

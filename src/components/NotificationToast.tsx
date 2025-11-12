@@ -44,7 +44,7 @@ export default function NotificationToast({
   if (!visible) return null;
 
   const backgroundColor =
-    priority === 'HIGH' ? "red" :
+    priority === 'HIGH' ? "green" :
     priority === 'MEDIUM' ? "orange" :
     Colors.primeColor;
 

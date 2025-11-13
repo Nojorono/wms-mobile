@@ -79,6 +79,9 @@ const CameraScreen = () => {
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const [showInput, setShowInput] = useState(false);
 
+  // console.log("Inbound Item:", item);
+  // console.log("Existing Data:", dataExist);
+
   // 🧠 QR / Barcode via kamera
   // const codeScanner = useCodeScanner({
   //   codeTypes: ["qr", "code-128", "ean-13"],

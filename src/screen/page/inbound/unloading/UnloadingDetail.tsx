@@ -15,6 +15,7 @@ type NavigationProp = StackNavigationProp<UnloadingParamList, 'UnloadingMain'>;
 function mapMergedToItem(merged: MergedItem): any {
   return {
     inbound_id: merged.inbound_id,
+    quantities: merged.quantities,
     uom: merged.uom,
     id: merged.item_id,
     name: merged.item_id, 
@@ -38,7 +39,7 @@ const UnloadingScreen = () => {
 
 
   const navigation = useNavigation<NavigationProp>();
-  const [mergedData, setMergedData] = useState<MergedItem[]>([]);
+  const [mergedData, setMergedData] = useState<any[]>([]);
   const route = useRoute();
   const payload = route.params as InboundDetailRouteParams;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
@@ -56,11 +57,9 @@ const UnloadingScreen = () => {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInboundDetail(payload.item.id);
       const inbound_dos = response.data.inbound_dos;
-      console.log("Inbound Dos:", inbound_dos);
       setMergedData(mergeUnloadingData(inbound_dos));
     } catch (error) {
       hideLoadingDialog()
-      console.error('Error fetching inbound data:', error);
       Alert.alert(
         'Error',
         'Failed to fetch inbound data. Please check your connection and try again.',

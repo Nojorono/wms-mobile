@@ -1,7 +1,7 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import HomeScreen from "../HomeScreen";
 import Colors from "../../constants/Colors";
-import { Alert, Image, View } from "react-native";
+import { Alert, Image, TouchableOpacity, View } from "react-native";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import React from "react";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -39,18 +39,25 @@ const HomeStackNavigator = () => {
                     }}>
                         <Image source={require('../../assets/images/icon-white-nna.png')}
                             style={{ width: 100, height: 22, resizeMode: 'contain' }} />
-                        <Ionicons
-                            name="sign-out-alt"
-                            size={24}
-                            color="#fff"
+                        
+                        <TouchableOpacity
                             style={{ marginRight: 15 }}
                             onPress={() => {
-                                    confirm.show("decline", "Are you sure want to sign out ?", () => {
-                                        clearAuth()
-                                    }, false
-                                    );
-                            }}
-                        />
+                                console.log("Sign out pressed"); 
+                                // clearAuth()   
+                                confirm.show("decline", "Are you sure want to sign out ?", () => {
+                                    clearAuth()
+                                }, false
+                                );
+                            }
+                        }
+                        >
+                            <Ionicons
+                                name="sign-out-alt"
+                                size={24}
+                                color="#fff"
+                            />
+                        </TouchableOpacity>
                     </View>
                 ),
             }} />

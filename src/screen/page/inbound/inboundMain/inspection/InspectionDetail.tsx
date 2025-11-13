@@ -10,7 +10,7 @@ import {
     Pressable,
 } from "react-native";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
-import { ItemDetail } from "../../service/inboundService";
+import { getScanTotals, ItemDetail } from "../../service/inboundService";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import { useDialogStore } from "../../../../../store/useGlobalDialog";
@@ -19,12 +19,16 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import DatePicker from "react-native-date-picker";
 import UserServices from "../../../../../service/userServices";
 import { useAuthStore } from "../../../../../store/useAuthStore";
+import { Picker } from "@react-native-picker/picker";
+import ConstantService from "../../../../../service/constantService";
+import useConstantStore from "../../../../../store/useConstantStore";
 
 type ItemType = {
     inbound_id: string;
     uom: string;
     item_id: string;
     sku: string;
+    quantities: { [uom: string]: { plan: number; scan: number } };
     quantity_plan: number;
     quantity_scan: number;
     item: ItemDetail;
@@ -43,6 +47,7 @@ type RouteParams = {
 type PalletItem = {
     id: string;
     palletCode: string;
+    uom: string;
     qty: number;
     weekNumber: string;
     stagingArea: string;
@@ -56,6 +61,7 @@ const InspectionDetail = () => {
     const [editingItem, setEditingItem] = useState<PalletItem | null>(null);
 
     const [editQty, setEditQty] = useState("");
+    const [editUom, setEditUom] = useState("");
     const [palletCode, setPalletCode] = useState("");
     const [editCode, setEditCode] = useState("");
     const [editDate, setEditDate] = useState<Date>(new Date());
@@ -63,19 +69,23 @@ const InspectionDetail = () => {
 
     const [openDatePicker, setOpenDatePicker] = useState(false);
     const { user } = useAuthStore();
+    const { uom } = useConstantStore()
     const [isDataChanged, setIsDataChanged] = useState(false);
-
 
     const navigation = useNavigation<StackNavigationProp<any>>();
     const route = useRoute();
     const { item, payload } = route.params as RouteParams;
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const showDialog = useDialogStore((state) => state.showDialog);
-    const [totalScan, setTotalScan] = useState(0);
+    const [scanTotalQty, setScanTotalQty] = useState<{ [key: string]: { scan: number } }>({});
+
+    console.log("item:", item);
 
     const fetchData = async () => {
         try {
             showLoadingDialog("Loading Pallets");
+            // const resUom = await ConstantService.getUom()
+            // setUom(resUom.data || []);
             const res = await InboundServices.getUnloadingScanList(
                 payload.id,
                 item.item_id
@@ -85,6 +95,7 @@ const InspectionDetail = () => {
                     id: d.id,
                     palletCode: d.pallet?.pallet_code || "-",
                     qty: d.quantity,
+                    uom: d.uom,
                     weekNumber: d.week_number,
                     stagingArea: d.m_warehouse_sub_id || "-",
                     stagingAreaName: d.warehouseSub?.name || "-",
@@ -92,8 +103,8 @@ const InspectionDetail = () => {
                     status: d.status || "-",
                 }));
                 setPallets(mapped);
-                
-        setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
+                setScanTotalQty(getScanTotals(mapped));
+                console.log("Fetched Pallets:", getScanTotals(mapped))
             }
         } catch (err) {
             showDialog("error", "Error while Fetching Pallets!");
@@ -102,11 +113,11 @@ const InspectionDetail = () => {
         }
     };
 
-        useFocusEffect(
-          useCallback(() => {
+    useFocusEffect(
+        useCallback(() => {
             fetchData();
-          }, [])
-        );
+        }, [])
+    );
 
     useEffect(() => {
         fetchData();
@@ -121,14 +132,16 @@ const InspectionDetail = () => {
             palletCode !== editingItem.palletCode ||
             Number(editQty) !== Number(editingItem.qty) ||
             editCode !== editingItem.productionDate ||
-            editWeekNumber !== editingItem.weekNumber;
+            editWeekNumber !== editingItem.weekNumber ||
+            editUom !== editingItem.uom;
 
         setIsDataChanged(hasChanged);
-    }, [palletCode, editQty, editCode, editWeekNumber, editingItem]);
+    }, [palletCode, editQty, editCode, editWeekNumber, editingItem, editUom]);
 
     const handleEdit = (pallet: PalletItem) => {
         setEditingItem(pallet);
         setEditQty(String(pallet.qty));
+        setEditUom(pallet.uom);
         setPalletCode(pallet.palletCode);
         setEditCode(pallet.productionDate);
         setEditWeekNumber(pallet.weekNumber);
@@ -151,9 +164,9 @@ const InspectionDetail = () => {
     }
 
     const handleSave = async () => {
-    if (!editingItem) return;
+        if (!editingItem) return;
 
-    // ✅ Validasi data kosong / tidak valid
+        // ✅ Validasi data kosong / tidak valid
         if (
             !palletCode ||
             palletCode === "" ||
@@ -164,61 +177,64 @@ const InspectionDetail = () => {
             editCode === undefined ||
             editWeekNumber === "" ||
             Number(editWeekNumber) === 0 ||
-            editWeekNumber === undefined
+            editWeekNumber === undefined ||
+            editUom === "" ||
+            editUom === undefined
         ) {
             showDialog("error", "Tolong lengkapi semua data!");
             return
         }
 
-        if (Number(editQty) > totalScan){
-            showDialog("error", "qty scan tidak boleh melebihi ");
-            return
-        }
+        // if (Number(editQty) > totalScan) {
+        //     showDialog("error", "qty scan tidak boleh melebihi ");
+        //     return
+        // }
 
-    try {
-        showLoadingDialog("Updating Pallet...");
+        try {
+            showLoadingDialog("Updating Pallet...");
 
-        // Jika palletCode berubah, gunakan updateInspectionWhenPalletChange
-        if (editingItem.palletCode !== palletCode) {
-            const palletInfo = await InboundServices.getPalletInfo(palletCode); // Validasi pallet code dulu
-            if (palletInfo?.data) {
-                await InboundServices.updateInspectionWhenPalletChange(editingItem.id, {
+            // Jika palletCode berubah, gunakan updateInspectionWhenPalletChange
+            if (editingItem.palletCode !== palletCode) {
+                const palletInfo = await InboundServices.getPalletInfo(palletCode); // Validasi pallet code dulu
+                if (palletInfo?.data) {
+                    await InboundServices.updateInspectionWhenPalletChange(editingItem.id, {
+                        production_date: editCode,
+                        week_number: Number(editWeekNumber),
+                        inbound_id: payload.id,
+                        item_id: item.item_id,
+                        quantity: editQty,
+                        uom: editUom,
+                        user_id: user?.id ?? "",
+                        user_name: user?.username ?? "",
+                        pallet_code: palletCode,
+                        m_warehouse_sub_id: editingItem.stagingArea,
+                        status: editingItem.status,
+                    });
+                } else {
+                    showDialog("error", "Pallet code tidak valid!");
+                    return;
+                }
+            } else {
+                await InboundServices.updateInspectionData(editingItem.id, {
+                    quantity: editQty,
+                    uom: editUom,
                     production_date: editCode,
                     week_number: Number(editWeekNumber),
-                    inbound_id: payload.id,
-                    item_id: item.item_id,
-                    quantity: editQty,
-                    uom: item.uom,
-                    user_id: user?.id ?? "",
-                    user_name: user?.username ?? "",
-                    pallet_code: palletCode,
-                    m_warehouse_sub_id: editingItem.stagingArea,
-                    status: editingItem.status,
                 });
-            } else {
-                showDialog("error", "Pallet code tidak valid!");
-                return;
             }
-        } else {
-            await InboundServices.updateInspectionData(editingItem.id, {
-                quantity: editQty,
-                production_date: editCode,
-                week_number: Number(editWeekNumber),
-            });
-        }
 
-        await fetchData();
-        setEditingItem(null);
-    } catch (error) {
-        const errorMessage =
-            typeof error === "object" && error !== null && "data" in error
-                ? (error as any).data?.error?.toString() || "Failed to Update Pallet!"
-                : "Failed to Update Pallet!";
-        showDialog("error", errorMessage);
-    } finally {
-        hideLoadingDialog();
-    }
-};
+            await fetchData();
+            setEditingItem(null);
+        } catch (error) {
+            const errorMessage =
+                typeof error === "object" && error !== null && "data" in error
+                    ? (error as any).data?.error?.toString() || "Failed to Update Pallet!"
+                    : "Failed to Update Pallet!";
+            showDialog("error", errorMessage);
+        } finally {
+            hideLoadingDialog();
+        }
+    };
 
 
     const fetchWeek = async (date: string, id: string) => {
@@ -230,10 +246,6 @@ const InspectionDetail = () => {
                     p.id === id ? { ...p, weekNumber: minggu || p.weekNumber } : p
                 )
             );
-            // setEditingItem((prev) =>
-            //     prev && prev.id === id ? { ...prev, weekNumber: minggu || prev.weekNumber } : prev
-            // );
-
             // simpan ke form state
             setEditWeekNumber(minggu);
         } catch (error) {
@@ -270,11 +282,20 @@ const InspectionDetail = () => {
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Qty Plan</Text>
-                    <Text style={styles.value}>{item.quantity_plan}</Text>
+                    <Text style={styles.value}>
+                        {Object.entries(item.quantities)
+                            .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0)) // urutan: DUS dulu
+                            .map(([uom, q]) => `${q.plan} ${uom}`)
+                            .join(", ")}
+                    </Text>
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>Qty Scan</Text>
-                    <Text style={styles.value}>{totalScan}</Text>
+                    <Text style={styles.value}>
+                        {Object.entries(scanTotalQty)
+                            .map(([uom, q]) => `${q.scan} ${uom}`)
+                            .join(', ')}
+                    </Text>
                 </View>
             </View>
 
@@ -296,16 +317,16 @@ const InspectionDetail = () => {
                                 </Text>
                             </View>
                             <View style={styles.infoRow}>
-                                <Text style={styles.infoLabel}>Week:</Text>
-                                <Text style={styles.infoValue}>{item.weekNumber}</Text>
-                            </View>
-                            <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Qty Scan:</Text>
-                                <Text style={styles.infoValue}>{item.qty}</Text>
+                                <Text style={styles.infoValue}>{item.qty} {item.uom}</Text>
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Code:</Text>
                                 <Text style={styles.infoValue}>{item.productionDate}</Text>
+                            </View>
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Week:</Text>
+                                <Text style={styles.infoValue}>{item.weekNumber}</Text>
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Status:</Text>
@@ -357,6 +378,29 @@ const InspectionDetail = () => {
                                 placeholder="Quantity"
                                 keyboardType="numeric"
                             />
+                        </View>
+
+                        {/* Uom */}
+                        <View style={styles.fieldRow}>
+                            <Text style={styles.fieldLabel}>Uom</Text>
+                            <View style={{ backgroundColor: "#fff", height: 50, borderRadius: 8, marginLeft: 8, width: 200 }}>
+                                <Picker
+                                    selectedValue={editUom ?? ""}
+                                    onValueChange={(itemValue) => setEditUom(itemValue)}
+                                    style={{ alignItems: "center", color: "#111" }}
+                                    itemStyle={{ fontSize: 16, color: "#111" }} // ✅ semua item sama besar
+                                    dropdownIconColor="#111"
+                                >
+                                    <Picker.Item label="Select Uom" value="" />
+                                    {uom.map((item: any) => (
+                                        <Picker.Item
+                                            key={item.code}
+                                            label={item.code}
+                                            value={item.code}
+                                        />
+                                    ))}
+                                </Picker>
+                            </View>
                         </View>
 
                         {/* Production Date */}

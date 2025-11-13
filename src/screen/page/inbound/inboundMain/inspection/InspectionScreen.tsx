@@ -48,7 +48,6 @@ const InspectionScreen = () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInspectionByInboundId(payload.item.id);
-      console.log("Inspection Response:", response);
       const inbound = response.data;
       const dataInspection: any = transformInspectionResponse(inbound);
       setResponseInbound(inbound);

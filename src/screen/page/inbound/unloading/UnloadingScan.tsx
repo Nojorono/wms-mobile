@@ -10,7 +10,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useAuthStore } from "../../../../store/useAuthStore";
-import { ItemDetail } from "../service/inboundService";
+import {  compareScanWithReference, ItemDetail } from "../service/inboundService";
 import InboundServices from "../../../../service/inboundServices";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -21,6 +21,7 @@ type ItemType = {
   inbound_id: string;
   uom: string;
   id: string;
+  quantities: Record<string, number>;
   name: string;
   quantityPlan: number;
   quantityScan: number;
@@ -55,7 +56,7 @@ type PalletItem = {
 
 const UnloadingScanScreen = () => {
   const [pallets, setPallets] = useState<PalletItem[]>([]);
-  const [totalScan, setTotalScan] = useState(0);
+  const [totalScanned, setTotalScanned] = useState<Record<string, number>>({});
   const { user } = useAuthStore();
   const userId = user?.id || "";
   const navigation = useNavigation<NavigationProp>();
@@ -75,23 +76,7 @@ const UnloadingScanScreen = () => {
         item.item.id
       );
       if (res?.data) {
-        // const mapped: PalletItem[] = res.data.map((d: any) => ({
-        //   id: d.id,
-        //   palletCode: d.pallet?.pallet_code || "-",
-        //   qty: d.quantity,
-        //   uom: d.uom,
-        //   weekNumber: d.week_number,
-        //   status: d.status,
-        //   stagingArea: d.m_warehouse_sub_id || "-",
-        //   stagingAreaName: d.warehouseSub.name || "-",
-        //   productionDate: d.production_date || "-",
-        // }));
-        // console.log("Fetched Pallets:", mapped);
-        // setPallets(mapped);
-        // setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
-
-        const filteredData = res.data.filter((d: any) => d.uom === item.uom);
-
+        const filteredData = res.data
         const mapped: PalletItem[] = filteredData.map((d: any) => ({
           id: d.id,
           palletCode: d.pallet?.pallet_code || "-",
@@ -105,11 +90,17 @@ const UnloadingScanScreen = () => {
         }));
 
         console.log("Fetched Pallets (filtered by UOM):", mapped);
-
+        const totals = mapped.reduce((acc, item) => {
+          const key = `${item.uom.toUpperCase()}`;
+          acc[key] = (acc[key] || 0) + item.qty;
+          return acc;
+        }, {} as Record<string, number>);
+        setTotalScanned(totals);
+        console.log("Total Scanned:", totals);
+        console.log ("Item Quantities Plan:", item.quantities);
         setPallets(mapped);
 
-        // Total scan hanya dijumlahkan dari uom yang sama
-        setTotalScan(mapped.reduce((sum, item) => sum + item.qty, 0));
+
       }
     } catch (err) {
       showDialog('error', 'Error while Fetching Pallets!');
@@ -130,9 +121,9 @@ const UnloadingScanScreen = () => {
     const totalQtyScan = pallets.reduce((sum, p) => sum + p.qty, 0);
 
     // Cek apakah total qty melebihi plan
-    if (totalQtyScan > item.quantityPlan) {
-      showDialog("error", "Quantity melebihi jumlah plan!");
-      return;
+    const compare = compareScanWithReference(item.quantities,totalScanned)
+    if (!compare){
+      showDialog("error", `Total scanned melibihi qty plan!`);
     }
 
     // Ambil hanya pallet yang status-nya OPEN
@@ -187,15 +178,15 @@ const UnloadingScanScreen = () => {
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Qty Plan</Text>
-          <Text style={styles.value}>{item.quantityPlan}</Text>
+          <Text style={styles.value}>{Object.entries(item.quantities)
+            .map(([uom, qty]) => `${qty} ${uom}`)
+            .join(", ")}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Total Qty Scan</Text>
-          <Text style={styles.value}>{totalScan}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>UoM</Text>
-          <Text style={styles.value}>{item.uom}</Text>
+          <Text style={styles.value}>{Object.entries(totalScanned)
+            .map(([key, qty]) => `${qty} ${key.replace("total_", "").toUpperCase()}`)
+            .join(", ")}</Text>
         </View>
       </View>
 

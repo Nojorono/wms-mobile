@@ -21,6 +21,13 @@ interface Item {
   quantity_plan: number;
   quantity_scanned: number;
   quantity_inspected?: number;
+  quantities: {
+  [uom: string]: {
+    plan: number;
+    scan: number;
+    inspected: number;
+  };
+}
   details: ItemDetail[];
 }
 
@@ -47,12 +54,18 @@ const GoodReceivedCardList: React.FC<Props> = ({ items, onCheck }) => {
             <View style={styles.quantityContainer}>
               <Text style={styles.quantityLabel}>Plan</Text>
               <Text style={styles.quantityValue}>
-                {item.quantity_plan} {item.uom}
+                {/* {item.quantity_plan} {item.uom} */}
+                {Object.entries(item.quantities)
+                            .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0)) // urutan: DUS dulu
+                            .map(([uom, q]) => `${q.plan} ${uom}`)
+                            .join(", ")}
               </Text>
-              <Text style={styles.quantityLabel}>Scanned</Text>
+              <Text style={styles.quantityLabel}>Approved</Text>
               <Text style={styles.quantityValue}>
-                {item.quantity_inspected ?? item.quantity_scanned} {item.uom}
-                {/* { item.quantity_scanned} {item.uom} */}
+                {Object.entries(item.quantities)
+                            .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0)) // urutan: DUS dulu
+                            .map(([uom, q]) => `${q.inspected} ${uom}`)
+                            .join(", ")}
               </Text>
             </View>
 

@@ -11,6 +11,7 @@ import { Picker } from "@react-native-picker/picker";
 import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import InboundServices from "../../../../../service/inboundServices";
 import UserServices from "../../../../../service/userServices";
+import { ROLES } from "../../../../../constants/Roles";
 
 type HelperModalProps = {
   visible: boolean;
@@ -79,7 +80,7 @@ export default function HelperModal({
     }
   };
 
-const fetchUserList = async (roleName = "HELPER") => {
+const fetchUserList = async (roleName = ROLES.HELPER) => {
   try {
     showLoadingDialog(`Loading Data Users (${roleName})`);
     const response = await UserServices.getUserList();

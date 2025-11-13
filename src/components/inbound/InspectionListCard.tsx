@@ -6,6 +6,7 @@ import Ionicons from "react-native-vector-icons/FontAwesome5";
 interface Item {
   id: string;
   sku: string;
+  quantities: { [uom: string]: { plan: number; scan: number } };
   quantity_plan: number;
   quantity_scan: number;
   status: string;
@@ -44,8 +45,19 @@ const InspectionCardList: React.FC<Props> = ({ items, onCheck }) => {
       </View>
 
       {/* Quantity Info */}
-      <Text style={styles.quantityText}>Quantity Plan: {item.quantity_plan}</Text>
-      <Text style={styles.quantityText}>Quantity Scan: {item.quantity_scan}</Text>
+<Text style={styles.quantityText}>
+  Quantity Plan:{' '}
+  {Object.entries(item.quantities)
+    .map(([uom, q]) => `${q.plan} ${uom}`)
+    .join(', ')}
+</Text>
+
+<Text style={styles.quantityText}>
+  Quantity Scan:{' '}
+  {Object.entries(item.quantities)
+    .map(([uom, q]) => `${q.scan} ${uom}`)
+    .join(', ')}
+</Text>
 
       <View style={styles.statusBadge}>
         <Text style={styles.statusText}>{item.status}</Text>

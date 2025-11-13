@@ -1,9 +1,9 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors.ts';
 import React from 'react';
-import ForkLiftScreen from '../../page/inbound/ForkLift/ForkLiftScreen.tsx';
-import ForkLiftDetailScreen from '../../page/inbound/ForkLift/ForkLiftDetailScreen.tsx';
-import CameraScreenForkLift from '../../page/inbound/ForkLift/CameraScanForkLift.tsx';
+import ForkLiftScreen from '../../page/inbound/forkLift/ForkLiftScreen.tsx';
+import ForkLiftDetailScreen from '../../page/inbound/forkLift/ForkLiftDetailScreen.tsx';
+import CameraScreenForkLift from '../../page/inbound/forkLift/CameraScanForkLift.tsx';
 
 
 

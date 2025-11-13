@@ -5,7 +5,7 @@ import Colors from "../../constants/Colors";
 import HomeStackNavigator, { HomeStackParamList } from "./HomeNavigator";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import InboundStackNavigator from './inbound/InboundNavigator.tsx';
-import OutboundNavigator from './OutboundNavigator.tsx';
+import OutboundNavigator from './outbound/OutboundNavigator.tsx';
 
 // Define the param list for MainTab
 export type MainTabParamList = {
@@ -27,11 +27,11 @@ const MainNavigator = () => (
       // Get the name of the currently focused route in nested navigator
       const routeName = getFocusedRouteNameFromRoute(route) ?? '';
 
-      // Hide tab bar if inside InboundStack (except index)
+      // Hide tab bar if inside InboundStack or OutbondStack (except index)
       const hideTabBar =
-        route.name === 'Inbound' &&
+        (route.name === 'Inbound' || route.name === 'Outbond') &&
         routeName &&
-        routeName !== 'InboundIndex';
+        routeName !== 'InboundIndex' && routeName !== 'OutbondIndex';
 
       return {
         tabBarIcon: ({ color, size }) => {

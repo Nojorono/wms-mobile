@@ -14,50 +14,35 @@ import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import Colors from '../../../../constants/Colors.ts';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
-import InboundCard from '../../../../components/inbound/InboundListCard.tsx';
-import InboundServices from '../../../../service/inboundServices.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
-import { ROLES } from '../../../../constants/Roles.ts';
+import { PickingParamList } from '../../../navigation/outbound/PickingNavigator.tsx';
+import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
+import { outboundData } from '../../../../dummy/outboundData.js';
 
-type NavigationProp = StackNavigationProp<InboundParamList, 'InboundMain'>;
+type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
 
-const FILTER_OPTIONS = [
-  'CREATED',
-  'UNLOADING',
-  'INSPECTION',
-  'READY_INTEGRATION',
-];
-
-function InboundScreen() {
+function PickingDoScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const [inboundList, setInboundList] = useState<any[]>([]);
+  const [PickingList, setPickingList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<string | null>("CREATED");
+  const [selectedFilter, setSelectedFilter] = useState<string | null>();
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
-  const availableFilters = useMemo(() => {
-    if (user?.role?.name === ROLES.HELPER) {
-      // Hilangkan INSPECTION untuk HELPER
-      return FILTER_OPTIONS.filter((f) => f !== "READY_INTEGRATION");
-    }
-    return FILTER_OPTIONS;
-  }, [user]);
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const fetchInbound = async () => {
+  const fetchPicking = async () => {
     try {
       setRefreshing(true);
-      showLoadingDialog('Loading List Inbound Planning');
-      const response = await InboundServices.getInboundList(selectedFilter || 'CREATED');
-      setInboundList(response?.data || []);
+      showLoadingDialog('Loading List Picking Planning');
+    //   const response = await OutboundServices.getPickingList(selectedFilter || 'CREATED');
+      setPickingList(outboundData || []);
     } catch (error) {
       hideLoadingDialog();
-      showDialog('error', 'Error while Fetching Data Inbound!');
+      showDialog('error', 'Error while Fetching Data Picking!');
     } finally {
       hideLoadingDialog();
       setRefreshing(false);
@@ -66,22 +51,22 @@ function InboundScreen() {
 
 useFocusEffect(
   useCallback(() => {
-    fetchInbound();
+    fetchPicking();
   }, [selectedFilter])
 );
 
   // filter & search data
   const filteredList = useMemo(() => {
-    return inboundList.filter((item) => {
+    return PickingList.filter((item) => {
       const matchSearch =
-        item.inbound_number?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.Picking_number?.toLowerCase().includes(searchText.toLowerCase()) ||
         item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
 
       const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
       return matchSearch && matchFilter;
     });
-  }, [inboundList, searchText, selectedFilter]);
+  }, [PickingList, searchText, selectedFilter]);
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -92,7 +77,7 @@ useFocusEffect(
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={fetchInbound}
+            onRefresh={fetchPicking}
             colors={[Colors.primeColor]}
           />
         }
@@ -105,7 +90,7 @@ useFocusEffect(
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List Inbound Planning
+              List Picking Planning
             </Text>
           </View>
 
@@ -113,41 +98,11 @@ useFocusEffect(
           <View style={{ marginVertical: 10 }}>
             <TextInput
               style={localStyles.searchInput}
-              placeholder="Search inbound number / plate"
+              placeholder="Search Picking number / plate"
               value={searchText}
               onChangeText={setSearchText}
               placeholderTextColor="#888"
             />
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginTop: 10 }}
-            >
-              {availableFilters.map((filter) => (
-                <TouchableOpacity
-                  key={filter}
-                  style={[
-                    localStyles.filterButton,
-                    selectedFilter === filter && { backgroundColor: Colors.primeColor },
-                  ]}
-                  onPress={() => {
-                    const newFilter = selectedFilter === filter ? null : filter;
-                    setSelectedFilter(newFilter);
-                  }}
-                >
-                  <Text
-                    style={[
-                      localStyles.filterText,
-                      selectedFilter === filter && { color: "#fff" },
-                    ]}
-                  >
-                    {filter}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
           </View>
 
           {/* 📦 List Card */}
@@ -167,15 +122,14 @@ useFocusEffect(
               }
 
               return (
-                <InboundCard
+                <OutboundCard
                   key={item.id}
-                  code={item.inbound_number}
-                  plate={item.license_plate}
+                  title={item.Picking_number}
+                  subTitle={item.license_plate}
                   date={item.arrival_date}
-                  role={'Warehouse Staff'}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('InboundDetail', { item })}
+                  onClick={() => navigation.navigate('PickingMemo', { item })}
                 />
               );
             })
@@ -186,7 +140,7 @@ useFocusEffect(
   );
 }
 
-export default InboundScreen;
+export default PickingDoScreen;
 
 const localStyles = StyleSheet.create({
   searchInput: {

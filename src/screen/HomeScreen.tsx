@@ -1,29 +1,46 @@
-import React, { useState } from 'react';
-import { StyleSheet, ScrollView, Text, TouchableOpacity, View, Image } from "react-native";
+import React, { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, ScrollView, Text, TouchableOpacity, View, Image, Alert } from "react-native";
 import { useAuthStore } from "../store/useAuthStore";
 // import Ionicons from '@react-native-vector-icons/ionicons';
 
 import GlobalStyles from "../util/GlobalStyles.ts";
 import Colors from "../constants/Colors";
-import StatusCard from "../components/NameCard";
-import MenuGrid from "../components/MenuGrid";
-import { useDialogStore } from "../store/useGlobalDialog";
-import { useLoadingDialogStore } from "../store/useLoadingStore";
+
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from './navigation/MainNavigator.tsx';
+import ConstantService from '../service/constantService.ts';
+import useConstantStore from '../store/useConstantStore.ts';
 type TabNavProp = BottomTabNavigationProp<MainTabParamList, 'Home'>;
 
 function HomeScreen() {
   const styles = GlobalStyles();
+  const {setUom, uom} = useConstantStore();
   const { user } = useAuthStore();
-   const roleName = user?.role?.name || "";
+  const roleName = user?.role?.name || "";
 
 
   const navigation = useNavigation<TabNavProp>();
+  const fetchConstants = async () => {
+    try {
+      const getUom = await ConstantService.getUom();
+      setUom(getUom.data);
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to fetch data. Please check your connection and try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  }
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchConstants();
+    }, [])
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -63,7 +80,7 @@ function HomeScreen() {
               <Ionicons name="arrow-up" size={32} color={Colors.primeColor} />
               <Text style={stylez.titlex}>Outbound</Text>
             </TouchableOpacity>
-           
+
           </View>
         </View>
       </ScrollView>

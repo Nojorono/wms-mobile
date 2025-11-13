@@ -18,11 +18,11 @@ import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import { PickingParamList } from '../../../navigation/outbound/PickingNavigator.tsx';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
-import { memoOutboundData, outboundData } from '../../../../dummy/outboundData.js';
+import { outboundData, skuOutboundData } from '../../../../dummy/outboundData.js';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
 
-function PickingMemoScreen() {
+function PickingSkuScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [PickingList, setPickingList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
@@ -39,7 +39,7 @@ function PickingMemoScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking Planning');
     //   const response = await OutboundServices.getPickingList(selectedFilter || 'CREATED');
-      setPickingList(memoOutboundData || []);
+      setPickingList(skuOutboundData || []);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Picking!');
@@ -90,7 +90,7 @@ useFocusEffect(
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List Picking Memo
+              List Picking Planning
             </Text>
           </View>
 
@@ -125,11 +125,11 @@ useFocusEffect(
                 <OutboundCard
                   key={item.id}
                   title={item.Picking_number}
-                  // subTitle={item.license_plate}
+                  subTitle={item.license_plate}
                   date={item.arrival_date}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('PickingSku', { item })}
+                  onClick={() => navigation.navigate('PickingActivity', { item })}
                 />
               );
             })
@@ -140,7 +140,7 @@ useFocusEffect(
   );
 }
 
-export default PickingMemoScreen;
+export default PickingSkuScreen;
 
 const localStyles = StyleSheet.create({
   searchInput: {

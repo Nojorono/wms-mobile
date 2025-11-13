@@ -46,6 +46,14 @@ export default function PickingDetailActivity() {
           style={styles.input}
         />
 
+         <View style={styles.dropdown}>
+          <Picker selectedValue={sku} onValueChange={(v) => setSku(v)}>
+            <Picker.Item label="CLM12" value="CLM12" />
+            <Picker.Item label="ARM12" value="ARM12" />
+            <Picker.Item label="AROS16" value="AROS16" />
+          </Picker>
+        </View>
+
         <TouchableOpacity style={styles.scanButton} onPress={() => handleScan('picking')}>
           <Text style={styles.scanText}>Pilih Pallet Picking</Text>
         </TouchableOpacity>
@@ -75,13 +83,7 @@ export default function PickingDetailActivity() {
           </View>
         )}
 
-        <View style={styles.dropdown}>
-          <Picker selectedValue={sku} onValueChange={(v) => setSku(v)}>
-            <Picker.Item label="CLM12" value="CLM12" />
-            <Picker.Item label="ARM12" value="ARM12" />
-            <Picker.Item label="AROS16" value="AROS16" />
-          </Picker>
-        </View>
+       
 
         <TextInput
           placeholder="Qty Picking"

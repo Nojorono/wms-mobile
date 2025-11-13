@@ -31,7 +31,7 @@ const MainNavigator = () => (
       const hideTabBar =
         (route.name === 'Inbound' || route.name === 'Outbond') &&
         routeName &&
-        routeName !== 'InboundIndex';
+        routeName !== 'InboundIndex' && routeName !== 'OutbondIndex';
 
       return {
         tabBarIcon: ({ color, size }) => {

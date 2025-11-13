@@ -32,3 +32,20 @@ export const memoOutboundData = [
     status: 'UNLOADING',
   },
 ];
+
+export const skuOutboundData = [
+  {
+    id: 1,
+    Picking_number: 'Class Mild 16',
+    license_plate: '20 DUS',
+    arrival_date: '2025-11-10 08:30:00',
+    status: 'CREATED',
+  },
+  {
+    id: 2,
+    Picking_number: 'Aroma Slim 12',
+    license_plate: '20 DUS',
+    arrival_date: '2025-11-11 09:15:00',
+    status: 'UNLOADING',
+  },
+];

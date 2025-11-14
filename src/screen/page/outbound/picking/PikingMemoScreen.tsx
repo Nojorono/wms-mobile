@@ -12,7 +12,7 @@ import {
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import Colors from '../../../../constants/Colors.ts';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
@@ -27,6 +27,8 @@ function PickingMemoScreen() {
   const [PickingList, setPickingList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string | null>();
+  const route = useRoute();
+  const itemBefore = route.params as any
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -39,7 +41,8 @@ function PickingMemoScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking Planning');
     //   const response = await OutboundServices.getPickingList(selectedFilter || 'CREATED');
-      setPickingList(memoOutboundData || []);
+      setPickingList(itemBefore.item.memo_id || []);
+      // console.log("item before picking memo: ", itemBefore.item);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Picking!');
@@ -59,8 +62,7 @@ useFocusEffect(
   const filteredList = useMemo(() => {
     return PickingList.filter((item) => {
       const matchSearch =
-        item.Picking_number?.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
+        item?.toLowerCase().includes(searchText.toLowerCase()) 
 
       const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
@@ -98,7 +100,7 @@ useFocusEffect(
           <View style={{ marginVertical: 10 }}>
             <TextInput
               style={localStyles.searchInput}
-              placeholder="Search Picking number / plate"
+              placeholder="Search Memo Id"
               value={searchText}
               onChangeText={setSearchText}
               placeholderTextColor="#888"
@@ -121,17 +123,18 @@ useFocusEffect(
                 statusColor = '#696969';
               }
 
-              return (
+                const index = filteredList.indexOf(item);
+                return (
                 <OutboundCard
                   key={item.id}
-                  title={item.Picking_number}
-                  // subTitle={item.license_plate}
-                  date={item.arrival_date}
-                  status={item.status}
+                  title={"Memo ID : "+item.slice(-20)}
+                  subTitle={"Memo with index : " + (index+1)}
+                  // origin={}
+                  // status={item.status}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('PickingSku', { item })}
                 />
-              );
+                );
             })
           )}
         </View>

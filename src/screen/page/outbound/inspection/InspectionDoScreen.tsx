@@ -19,6 +19,7 @@ import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
 import { outboundData } from '../../../../dummy/outboundData.js';
 import { InspectionParamList } from '../../../navigation/outbound/InspectionNavigator.tsx';
+import OutboundService from '../../../../service/outboundService.ts';
 
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
 
@@ -38,7 +39,7 @@ function InspectionDoScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Inspection Planning');
-    //   const response = await OutboundServices.getInspectionList(selectedFilter || 'CREATED');
+    //   const response = await OutboundService.getOutboundDoList(user?.id || '');
       setInspectionList(outboundData || []);
     } catch (error) {
       hideLoadingDialog();
@@ -126,7 +127,7 @@ useFocusEffect(
                   key={item.id}
                   title={item.Inspection_number}
                   subTitle={item.license_plate}
-                  date={item.arrival_date}
+                  origin={item.arrival_date}
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('InspectionMemo', { item })}

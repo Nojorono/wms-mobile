@@ -126,7 +126,7 @@ useFocusEffect(
                   key={item.id}
                   title={item.Picking_number}
                   // subTitle={item.license_plate}
-                  date={item.arrival_date}
+                  origin={item.arrival_date}
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('InspectionSku', { item })}

@@ -14,6 +14,16 @@ class UserServices {
     }
   }
 
+  static async getUserManagementList(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('user-manage/all');
+      return response.data;
+    } catch (error: any) {
+      console.error('User failed:', error);
+      throw error.response;
+    }
+  }
+
 }
 
 export default UserServices;

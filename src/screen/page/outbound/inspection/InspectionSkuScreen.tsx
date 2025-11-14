@@ -12,23 +12,21 @@ import {
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import Colors from '../../../../constants/Colors.ts';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
-import { PickingParamList } from '../../../navigation/outbound/PickingNavigator.tsx';
+import { InspectionParamList } from '../../../navigation/outbound/InspectionNavigator.tsx';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
-import { memoOutboundData, outboundData } from '../../../../dummy/outboundData.js';
+import { outboundData, skuOutboundData } from '../../../../dummy/outboundData.js';
 
-type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
+type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
 
-function PickingMemoScreen() {
+function InspectionSkuScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const [PickingList, setPickingList] = useState<any[]>([]);
+  const [InspectionList, setInspectionList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string | null>();
-  const route = useRoute();
-  const itemBefore = route.params as any
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -36,16 +34,15 @@ function PickingMemoScreen() {
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const fetchPicking = async () => {
+  const fetchInspection = async () => {
     try {
       setRefreshing(true);
-      showLoadingDialog('Loading List Picking Planning');
-    //   const response = await OutboundServices.getPickingList(selectedFilter || 'CREATED');
-      setPickingList(itemBefore.item.memo_id || []);
-      // console.log("item before picking memo: ", itemBefore.item);
+      showLoadingDialog('Loading List Inspection Planning');
+    //   const response = await OutboundServices.getInspectionList(selectedFilter || 'CREATED');
+      setInspectionList(skuOutboundData || []);
     } catch (error) {
       hideLoadingDialog();
-      showDialog('error', 'Error while Fetching Data Picking!');
+      showDialog('error', 'Error while Fetching Data Inspection!');
     } finally {
       hideLoadingDialog();
       setRefreshing(false);
@@ -54,21 +51,22 @@ function PickingMemoScreen() {
 
 useFocusEffect(
   useCallback(() => {
-    fetchPicking();
+    fetchInspection();
   }, [selectedFilter])
 );
 
   // filter & search data
   const filteredList = useMemo(() => {
-    return PickingList.filter((item) => {
+    return InspectionList.filter((item) => {
       const matchSearch =
-        item?.toLowerCase().includes(searchText.toLowerCase()) 
+        item.Inspection_number?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
 
       const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
       return matchSearch && matchFilter;
     });
-  }, [PickingList, searchText, selectedFilter]);
+  }, [InspectionList, searchText, selectedFilter]);
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -79,7 +77,7 @@ useFocusEffect(
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={fetchPicking}
+            onRefresh={fetchInspection}
             colors={[Colors.primeColor]}
           />
         }
@@ -92,7 +90,7 @@ useFocusEffect(
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List Picking Memo
+              List Inspection Planning
             </Text>
           </View>
 
@@ -100,7 +98,7 @@ useFocusEffect(
           <View style={{ marginVertical: 10 }}>
             <TextInput
               style={localStyles.searchInput}
-              placeholder="Search Memo Id"
+              placeholder="Search Inspection number / plate"
               value={searchText}
               onChangeText={setSearchText}
               placeholderTextColor="#888"
@@ -123,18 +121,17 @@ useFocusEffect(
                 statusColor = '#696969';
               }
 
-                const index = filteredList.indexOf(item);
-                return (
+              return (
                 <OutboundCard
                   key={item.id}
-                  title={"Memo ID : "+item.slice(-20)}
-                  subTitle={"Memo with index : " + (index+1)}
-                  // origin={}
-                  // status={item.status}
+                  title={item.Inspection_number}
+                  subTitle={item.license_plate}
+                  origin={item.arrival_date}
+                  status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('PickingSku', { item })}
+                  onClick={() => navigation.navigate('InspectionActivity', { item })}
                 />
-                );
+              );
             })
           )}
         </View>
@@ -143,7 +140,7 @@ useFocusEffect(
   );
 }
 
-export default PickingMemoScreen;
+export default InspectionSkuScreen;
 
 const localStyles = StyleSheet.create({
   searchInput: {

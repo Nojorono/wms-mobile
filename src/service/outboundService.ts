@@ -2,14 +2,23 @@ import axiosInstance from '../config/axiosInstance.ts';
 
 
 class OutboundService {
-  static async getOutboundList(userId:string): Promise<any> {
+  //PICKING SERVICES
+  static async getOutboundPickingDoList(userId:string): Promise<any> {
     try {
-      const response = await axiosInstance.get('checker-assign/user/' + userId);
+      const response = await axiosInstance.get(`/outbound-do/assigned-user/${userId}`);
       return response.data;
     } catch (error: any) {
-      console.error('Outbound failed:', error);
       throw error.response;
     }
+  }
+
+  static async getSkuByMemoId(memoId:string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/transaction-picking/memo/${memoId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    } 
   }
 }
 

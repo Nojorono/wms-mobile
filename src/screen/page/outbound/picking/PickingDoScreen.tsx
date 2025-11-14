@@ -19,6 +19,7 @@ import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import { PickingParamList } from '../../../navigation/outbound/PickingNavigator.tsx';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
 import { outboundData } from '../../../../dummy/outboundData.js';
+import OutboundService from '../../../../service/outboundService.ts';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
 
@@ -30,6 +31,7 @@ function PickingDoScreen() {
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
+  const userId = user?.id || '';
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -38,8 +40,9 @@ function PickingDoScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking Planning');
-    //   const response = await OutboundServices.getPickingList(selectedFilter || 'CREATED');
-      setPickingList(outboundData || []);
+      const response = await OutboundService.getOutboundPickingDoList(userId);
+      // console.log("response picking do list: ", response.data);
+      setPickingList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Picking!');
@@ -121,17 +124,19 @@ useFocusEffect(
                 statusColor = '#696969';
               }
 
-              return (
+                // Ambil 8 karakter terakhir dari Picking_number
+                const pickingNumberLast8 = item.id?.slice(-15) || '';
+                return (
                 <OutboundCard
                   key={item.id}
-                  title={item.Picking_number}
-                  subTitle={item.license_plate}
-                  date={item.arrival_date}
+                  title={`ID : ${pickingNumberLast8}`}
+                  subTitle={"Tipe Outbound :" + item.outbound_type}
+                  origin={"Origin: " + item.origin}
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('PickingMemo', { item })}
                 />
-              );
+                );
             })
           )}
         </View>

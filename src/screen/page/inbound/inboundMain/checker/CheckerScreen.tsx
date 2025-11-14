@@ -12,6 +12,8 @@ import Ionicons from "react-native-vector-icons/FontAwesome5";
 import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import InboundServices from "../../../../../service/inboundServices";
 import HelperModal from "./CheckerModal";
+import { useConfirmationStore } from "../../../../../store/useConfirmationStore";
+import inboundServices from "../../../../../service/inboundServices";
 
 type InboundDetailRouteParams = {
   item: {
@@ -29,6 +31,8 @@ export default function HelperListScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingHelper, setEditingHelper] = useState<any | null>(null);
   const [dataHelper, setDataHelper] = useState<any[]>([]);
+  
+      const confirm = useConfirmationStore();
 
   const fetchInbound = async () => {
     try {
@@ -87,7 +91,36 @@ export default function HelperListScreen() {
             <Text style={[styles.label, { width: 90 }]}>Contact</Text>
             <Text style={styles.value}>{item.contact ?? item.helper_phone}</Text>
           </View>
+       <View style={{ marginTop: 10 }}>
+  <TouchableOpacity
+    onPress={() =>  confirm.show("decline", "Are you sure want to Delete this helper?", async () => {
+                                   await inboundServices.deleteHelper(item.id)
+                                    fetchInbound()
+                                }, false
+                                )
+                              }
+    style={{
+      backgroundColor: "#DC2626",
+      borderRadius: 10,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      alignSelf: "flex-start",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    }}
+  >
+    <Ionicons name="trash" size={16} color="#fff" />
+    <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>
+      Remove
+    </Text>
+  </TouchableOpacity>
+</View>
+
         </View>
+
+
+
         <TouchableOpacity
           onPress={() => openEditModal(item)}
           style={{ marginLeft: 8 }}

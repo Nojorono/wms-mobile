@@ -4,6 +4,7 @@ import { Image, View } from 'react-native';
 import React from 'react';
 import OutboundIndex from '../../page/Outbound.tsx';
 import PickingNavigator from './PickingNavigator.tsx';
+import InspectionNavigator from './InspectionNavigator.tsx';
 
 
 
@@ -13,6 +14,8 @@ export type OutboundParamList = {
   OutboundAssign: { item:any };
   //Helper
   OutboundPicking: undefined;
+  //WH STAFF
+  OutboundInspection: undefined;
 };
 
 const OutboundStack = createStackNavigator<OutboundParamList>();
@@ -48,6 +51,18 @@ const OutboundStackNavigator = () => (
     <OutboundStack.Screen
       name="OutboundPicking"
       component={PickingNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+
+     <OutboundStack.Screen
+      name="OutboundInspection"
+      component={InspectionNavigator}
       options={{
         headerShown: false,
         headerTintColor: '#fff',

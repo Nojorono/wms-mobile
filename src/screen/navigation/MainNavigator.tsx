@@ -17,80 +17,68 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Define a union type for allowed icon names
-type IconNames = 'american-sign-language-interpreting' | 'home' | 'inventory' | 'user' | 'cog' | 'arrow-up' | 'arrow-down' | 'person-outline' | 'settings-outline' | 'alert-circle';
+// Define allowed icon names
+type IconNames =
+  | 'american-sign-language-interpreting'
+  | 'home'
+  | 'inventory'
+  | 'user'
+  | 'cog'
+  | 'arrow-up'
+  | 'arrow-down'
+  | 'person-outline'
+  | 'settings-outline'
+  | 'alert-circle';
 
 const MainNavigator = () => (
   <Tab.Navigator
     initialRouteName="Home"
     screenOptions={({ route }) => {
-      // Get the name of the currently focused route in nested navigator
-      const routeName = getFocusedRouteNameFromRoute(route) ?? '';
+      const routeName = getFocusedRouteNameFromRoute(route);
+      // '' atau undefined akan jadi null (AMAN)
+      const currentRoute = routeName || null;
 
-      // Hide tab bar if inside InboundStack or OutbondStack (except index)
-      const hideTabBar =
-        (route.name === 'Inbound' || route.name === 'Outbond') &&
-        routeName &&
-        routeName !== 'InboundIndex' && routeName !== 'OutbondIndex';
+      const isInboundHidden =
+        route.name === 'Inbound' &&
+        currentRoute !== null &&
+        currentRoute !== 'InboundIndex';
+
+      const isOutboundHidden =
+        route.name === 'Outbond' &&
+        currentRoute !== null &&
+        currentRoute !== 'OutboundIndex';
+
+      const hideTabBar = isInboundHidden || isOutboundHidden;
 
       return {
-        tabBarIcon: ({ color, size }) => {
-          // Specify the iconName as one of the valid icon names in the IconNames type
-          let iconName: IconNames = 'alert-circle'; // Default value
+        tabBarIcon: ({ color }) => {
+          let iconName: IconNames = 'alert-circle';
 
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Inbound') iconName = 'arrow-down';
           else if (route.name === 'Outbond') iconName = 'arrow-up';
-          // else if (route.name === 'inventory') iconName = 'american-sign-language-interpreting';
 
-          // Return the Ionicons component with the correct icon
           return <Ionicons name={iconName} size={22} color={color} />;
         },
+
         tabBarActiveTintColor: Colors.secondaryColor,
         tabBarInactiveTintColor: 'gray',
-        tabBarStyle: {
-          backgroundColor: '#fff',
-          paddingTop: 4,
-          height: hideTabBar ? 0 : 60, // Hide tab bar by setting height 0
-          display: hideTabBar ? 'none' : 'flex', // Also hide with display:none for Android/iOS
-        },
+
+        // IMPORTANT FIX → use undefined so RN does NOT cache hidden tab
+        tabBarStyle: hideTabBar ? { display: 'none' } : undefined,
+
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '700',
-          marginBottom: 0,
         },
+
         headerShown: false,
       };
     }}
   >
-    <Tab.Screen
-      name="Home"
-      component={HomeStackNavigator}
-      options={{
-        headerShown: false,
-      }}
-    />
-    <Tab.Screen
-      name="Inbound"
-      component={InboundStackNavigator}
-      options={{
-        headerShown: false,
-      }}
-    />
-    <Tab.Screen
-      name="Outbond"
-      component={OutboundNavigator}
-      options={{
-        headerShown: false,
-      }}
-    />
-    {/* <Tab.Screen
-      name="inventory"
-      component={HomeStackNavigator}
-      options={{
-        headerShown: false,
-      }}
-    /> */}
+    <Tab.Screen name="Home" component={HomeStackNavigator} />
+    <Tab.Screen name="Inbound" component={InboundStackNavigator} />
+    <Tab.Screen name="Outbond" component={OutboundNavigator} />
   </Tab.Navigator>
 );
 

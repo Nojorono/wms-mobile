@@ -6,7 +6,7 @@ import Colors from "../../constants/Colors.ts";
 type OutboundCardProps = {
   title: string; // CWH02-IN-0625-0001
   subTitle?: string; // K 9985 AT
-  date: string; // 2025-01-02
+  origin?: string; // 2025-01-02
   role?: string; // Warehouse Staff
   status?: string; // Draft
   statusColor?: string; // default abu-abu
@@ -16,9 +16,9 @@ type OutboundCardProps = {
 const OutboundCard: React.FC<OutboundCardProps> = ({
   title,
   subTitle,
-  date,
+  origin,
   role,
-  status = "Draft",
+  status,
   statusColor = "#D3D6D9",
   onClick,
 }) => {
@@ -39,7 +39,7 @@ const OutboundCard: React.FC<OutboundCardProps> = ({
         <Ionicons name="cube-outline" size={58} color="black" />
         <View style={{ marginLeft: 8 }}>
           <Text style={styles.plate}>{subTitle}</Text>
-          <Text style={styles.date}>{date}</Text>
+          <Text style={styles.date}>{origin}</Text>
           <Text style={styles.role}>{role}</Text>
         </View>
       </View>

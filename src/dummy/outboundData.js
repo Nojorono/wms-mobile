@@ -2,14 +2,14 @@ export const outboundData = [
   {
     id: 1,
     Picking_number: 'PK-OUT-24001',
-    license_plate: 'B 1234 XYZ',
+    license_plate: 'A33-001-XYZ',
     arrival_date: '2025-11-10 08:30:00',
     status: 'CREATED',
   },
   {
     id: 2,
     Picking_number: 'PK-OUT-24002',
-    license_plate: 'B 5678 ABC',
+    license_plate: 'A33-002-XYZ',
     arrival_date: '2025-11-11 09:15:00',
     status: 'UNLOADING',
   },

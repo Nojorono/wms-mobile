@@ -59,6 +59,15 @@ class InboundServices {
     }
   }
 
+  static async deleteHelper(helperId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete('assigned-helper/' + helperId);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   //UNLOADING SERVICES
   static async getUnloadingList(inboundId: string): Promise<any> {
     try {

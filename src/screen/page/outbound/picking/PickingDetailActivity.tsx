@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  Alert,
 } from 'react-native';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -62,6 +63,32 @@ export default function PickingDetailActivity() {
       setScanTarget(null);
     },
   });
+
+  const handleCheckPalletSumber = async () => {
+  if (!palletSumber.trim()) {
+    Alert.alert("Masukkan pallet sumber terlebih dahulu");
+    return;
+  }
+
+  try {
+    console.log("Checking pallet:", palletSumber);
+
+    const res = await fetch(`YOUR_API_URL_HERE?pallet=${palletSumber}`);
+    const data = await res.json();
+
+    console.log("Check pallet response:", data);
+
+    // contoh respons: { valid: true, message: "OK", pallet: {...} }
+    if (!data.valid) {
+      Alert.alert("Pallet tidak ditemukan atau tidak valid");
+      return;
+    }
+
+    Alert.alert("Pallet valid ✔");
+  } catch (err) {
+    Alert.alert("Gagal memeriksa pallet");
+  }
+};
 
   const handleSubmit = () => {
     // Example static user info, replace with actual user data if available
@@ -148,30 +175,46 @@ export default function PickingDetailActivity() {
         </View>
 
         {/* PALLET SUMBER */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginVertical: 4,
-          }}
-        >
-          <TextInput
-            placeholder="Pallet Sumber"
-            value={palletSumber}
-            onChangeText={setPalletSumber}
-            style={[styles.input, { flex: 1, marginVertical: 0 }]}
-          />
-          <TouchableOpacity
-            style={styles.scanBtn}
-            onPress={() => openScanner('sumber')}
-          >
-            <Ionicons
-              name="barcode"
-              size={22}
-              color={Colors.secondaryColor}
-            />
-          </TouchableOpacity>
-        </View>
+<View
+  style={{
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  }}
+>
+  <TextInput
+    placeholder="Pallet Sumber"
+    value={palletSumber}
+    onChangeText={setPalletSumber}
+    style={[styles.input, { flex: 1, marginVertical: 0 }]}
+  />
+
+  {/* Scan Button */}
+  <TouchableOpacity
+    style={styles.scanBtn}
+    onPress={() => openScanner('sumber')}
+  >
+    <Ionicons
+      name="barcode"
+      size={22}
+      color={Colors.secondaryColor}
+    />
+  </TouchableOpacity>
+
+  {/* CHECK Button */}
+  <TouchableOpacity
+    onPress={handleCheckPalletSumber}
+    style={{
+      marginLeft: 6,
+      backgroundColor: '#F26E1F',
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+    }}
+  >
+    <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
+  </TouchableOpacity>
+</View>
 
         {/* PALLET PICKING */}
         <View

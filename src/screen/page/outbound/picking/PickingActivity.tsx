@@ -1,50 +1,77 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PickingParamList } from '../../../navigation/outbound/PickingNavigator';
+import { OutboundItemParam } from '../../../../interface/outbound/outbound';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
 
 export default function PickingActivity() {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute();
+  const itemBefore = route.params as OutboundItemParam
 
   const handleAddActivity = () => {
-    navigation.navigate('PickingDetailActivity', { item: {} });
+    navigation.navigate('PickingDetailActivity', {item: itemBefore.item });
   };
 
   // 🔹 Dummy data (3 contoh)
   const activities = [
     {
-      preload: 'PRELOAD-06',
-      details: [
-        { label: 'Sumber', pallet: 'Pallet-003', location: 'JT 6 - D', qty: '25 DUS' },
-        { label: 'Picking', pallet: 'Pallet-003', location: 'JT 6 - D', qty: '20 DUS' },
-        { label: 'Switching', pallet: 'Pallet-303', location: 'JT 6 - D', qty: '5 DUS' },
-      ],
-      status: 'Inspection',
-    },
-    {
-      preload: 'PRELOAD-07',
+      preload: 'PRELOAD-07 DUMMY',
       details: [
         { label: 'Sumber', pallet: 'Pallet-101', location: 'JT 4 - A', qty: '30 DUS' },
         { label: 'Picking', pallet: 'Pallet-101', location: 'JT 4 - A', qty: '30 DUS' },
       ],
       status: 'Inspection',
     },
-    
+
   ];
+  console.log('Item Before:', itemBefore);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Picking Activity</Text>
-
       <View style={styles.card}>
-        <Text style={styles.label}>Clasmild - 12</Text>
-        <Text style={styles.subLabel}>
-          <Text style={{ fontStyle: 'italic' }}>Suggested Location</Text>{'\n'}
-          WEEK41 - JT6 - D - 0/40 DUS
+        <Text
+          style={{
+            fontSize: 22,
+            fontWeight: 'bold',
+            color: 'black',
+            textAlign: 'center',
+            marginBottom: 12,
+            backgroundColor: '#FFF5E6',
+            borderRadius: 8,
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            elevation: 2,
+            shadowColor: '#F26E1F',
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+          }}
+        >
+          {itemBefore.item.item.description}
         </Text>
+        <View style={{ alignItems: 'center', marginBottom: 12 }}>
+          <Text style={{ fontStyle: 'italic', fontSize: 14, color: '#F26E1F', fontWeight: '700' }}>
+            Suggested Destination Location
+          </Text>
+          <Text
+            style={{
+              textAlign: 'center',
+              fontSize: 16,
+              color: '#333',
+              fontWeight: '700',
+              marginTop: 4,
+              backgroundColor: '#FFF5E6',
+              borderRadius: 8,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+            }}
+          >
+            {itemBefore.item.destinationWarehouseSub?.name} - {itemBefore.item.destinationBin?.name} - {itemBefore.item.quantity} {itemBefore.item.uom} - Week-{itemBefore.item.week_number}
+          </Text>
+        </View>
 
         {activities.length === 0 ? (
           <Text style={styles.noActivityText}>

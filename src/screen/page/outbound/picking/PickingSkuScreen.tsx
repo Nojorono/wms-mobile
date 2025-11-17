@@ -39,9 +39,9 @@ function PickingSkuScreen() {
     const fetchPicking = async () => {
         try {
             setRefreshing(true);
-            showLoadingDialog('Loading List Picking Planning');
+            showLoadingDialog('Loading List Picking SKU');
             const response = await OutboundService.getSkuByMemoId(itemBefore.item);
-            console.log('Response Picking List:', response.data.data);
+            console.log('Picking SKU Response:', response);
             setPickingList(response.data.data || []);
         } catch (error) {
             hideLoadingDialog();
@@ -94,7 +94,7 @@ function PickingSkuScreen() {
                         ]}
                     >
                         <Text style={styles.activitiesHeaderText}>
-                            List Picking Planning
+                            List Picking SKU
                         </Text>
                     </View>
 

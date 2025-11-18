@@ -6,13 +6,14 @@ import HomeStackNavigator, { HomeStackParamList } from "./HomeNavigator";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import InboundStackNavigator from './inbound/InboundNavigator.tsx';
 import OutboundNavigator from './outbound/OutboundNavigator.tsx';
+import ScannerStackNavigator from './scanner/ScannerNavigator.tsx';
 
 // Define the param list for MainTab
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList>;
   Inbound: NavigatorScreenParams<HomeStackParamList>;
   Outbond: NavigatorScreenParams<HomeStackParamList>;
-  inventory: NavigatorScreenParams<HomeStackParamList>;
+  Scanner: NavigatorScreenParams<HomeStackParamList>;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -57,6 +58,7 @@ const MainNavigator = () => (
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Inbound') iconName = 'arrow-down';
           else if (route.name === 'Outbond') iconName = 'arrow-up';
+          else if (route.name === 'Scanner') iconName = 'american-sign-language-interpreting';
 
           return <Ionicons name={iconName} size={22} color={color} />;
         },
@@ -77,8 +79,24 @@ const MainNavigator = () => (
     }}
   >
     <Tab.Screen name="Home" component={HomeStackNavigator} />
-    <Tab.Screen name="Inbound" component={InboundStackNavigator} />
-    <Tab.Screen name="Outbond" component={OutboundNavigator} />
+    <Tab.Screen
+      name="Inbound"
+      component={InboundStackNavigator}
+      options={{
+        tabBarItemStyle: { display: 'none' },  // PATEN → Hilang tanpa sisa slot
+        tabBarStyle: { display: 'none' },      // Sembunyikan tab saat inside stack
+      }}
+    />
+
+    <Tab.Screen
+      name="Outbond"
+      component={OutboundNavigator}
+      options={{
+        tabBarItemStyle: { display: 'none' },  // PATEN → Hilang tanpa jarak kosong
+        tabBarStyle: { display: 'none' },
+      }}
+    />
+    <Tab.Screen name="Scanner" component={ScannerStackNavigator} />
   </Tab.Navigator>
 );
 

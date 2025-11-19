@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PickingParamList } from '../../../navigation/outbound/PickingNavigator';
 import { OutboundItemParam } from '../../../../interface/outbound/outbound';
+import { useLoadingDialogStore } from '../../../../store/useLoadingStore';
+import { useDialogStore } from '../../../../store/useGlobalDialog';
+import OutboundService from '../../../../service/outboundService';
+import { PickingMemoRecord } from '../../../../interface/outbound/pickingMemoTypes';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
 
@@ -11,24 +15,38 @@ export default function PickingActivity() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const itemBefore = route.params as OutboundItemParam
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+  const showDialog = useDialogStore((state) => state.showDialog);
+  const [refreshing, setRefreshing] = useState(false);
+const [pickingList, setPickingList] = useState<PickingMemoRecord[] | null>(null);
+
+
 
   const handleAddActivity = () => {
-    navigation.navigate('PickingDetailActivity', {item: itemBefore.item });
+    navigation.navigate('PickingDetailActivity', { item: itemBefore.item });
   };
 
-  // 🔹 Dummy data (3 contoh)
-  const activities = [
-    {
-      preload: 'PRELOAD-07 DUMMY',
-      details: [
-        { label: 'Sumber', pallet: 'Pallet-101', location: 'JT 4 - A', qty: '30 DUS' },
-        { label: 'Picking', pallet: 'Pallet-101', location: 'JT 4 - A', qty: '30 DUS' },
-      ],
-      status: 'Inspection',
-    },
+  const fetchPicking = async () => {
+    try {
+      setRefreshing(true);
+      showLoadingDialog('Loading List Picking SKU');
+      const response = await OutboundService.getSkuByMemoId(itemBefore.item.memo_id);
+      console.log('Picking SKU Response:', response.data.data);
+      setPickingList(response.data.data || []);
+    } catch (error) {
+      hideLoadingDialog();
+      showDialog('error', 'Error while Fetching Data Picking!');
+    } finally {
+      hideLoadingDialog();
+      setRefreshing(false);
+    }
+  };
 
-  ];
-  console.log('Item Before:', itemBefore);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPicking();
+    }, [])
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -73,36 +91,31 @@ export default function PickingActivity() {
           </Text>
         </View>
 
-        {activities.length === 0 ? (
+        {pickingList && pickingList[0]?.transactionScanPicking?.length === 0 ? (
           <Text style={styles.noActivityText}>
             Belum ada Activity, silahkan lakukan Activity Picking
           </Text>
         ) : (
-          activities.map((activity, index) => (
+          pickingList && pickingList[0]?.transactionScanPicking?.map((activity: any, index: number) => (
             <View key={index} style={styles.activityCard}>
-              <Text style={styles.headerText}>{activity.preload}</Text>
-
-              {activity.details.map((item, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.row,
-                    item.label === 'Switching' && styles.switchingRow, // 🔸 beda style
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.rowLabel,
-                      item.label === 'Switching' && styles.switchingLabel,
-                    ]}
-                  >
-                    {item.label}
+                <View style={styles.row}>
+                  <Text style={styles.rowLabel}>Quantity Picked</Text>
+                  <Text style={[styles.rowValue, { textAlign: 'left', color: 'green', fontWeight: '600' }]}>
+                  {activity.quantity_picked} {activity.uom}
                   </Text>
-                  <Text style={styles.rowValue}>{item.pallet}</Text>
-                  <Text style={styles.location}>{item.location}</Text>
-                  <Text style={styles.qty}>{item.qty}</Text>
                 </View>
-              ))}
+                <View style={styles.row}>
+                  <Text style={styles.rowLabel}>Week</Text>
+                  <Text style={styles.rowValue}>{activity.week_number}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.rowLabel}>User</Text>
+                  <Text style={styles.rowValue}>{activity.user_name}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.rowLabel}>Inspection By</Text>
+                  <Text style={styles.rowValue}>{activity.inspection_by}</Text>
+                </View>
 
               <View style={styles.statusBox}>
                 <Text style={styles.statusText}>{activity.status}</Text>

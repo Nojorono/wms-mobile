@@ -83,8 +83,8 @@ const MainNavigator = () => (
       name="Inbound"
       component={InboundStackNavigator}
       options={{
-        tabBarItemStyle: { display: 'none' },  // PATEN → Hilang tanpa sisa slot
-        tabBarStyle: { display: 'none' },      // Sembunyikan tab saat inside stack
+        tabBarItemStyle: { display: 'none' },  
+        tabBarStyle: { display: 'none' },      
       }}
     />
 
@@ -92,7 +92,7 @@ const MainNavigator = () => (
       name="Outbond"
       component={OutboundNavigator}
       options={{
-        tabBarItemStyle: { display: 'none' },  // PATEN → Hilang tanpa jarak kosong
+        tabBarItemStyle: { display: 'none' },  
         tabBarStyle: { display: 'none' },
       }}
     />

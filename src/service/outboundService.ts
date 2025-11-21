@@ -38,6 +38,16 @@ class OutboundService {
       throw error.response;
     }
   }
+
+  //update status picking to wh_staff
+  static async updateStatusPicking(inspection_by: string,pickingId: string, status: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/transaction-scan-picking/${pickingId}/${status}`, { inspection_by });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    } 
+  }
 }
 
 

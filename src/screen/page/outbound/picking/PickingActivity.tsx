@@ -1,38 +1,65 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+  RefreshControl,
+} from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { PickingParamList } from '../../../navigation/outbound/PickingNavigator';
-import { OutboundItemParam } from '../../../../interface/outbound/outbound';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore';
 import { useDialogStore } from '../../../../store/useGlobalDialog';
+import { PickingParamList } from '../../../navigation/outbound/PickingNavigator';
 import OutboundService from '../../../../service/outboundService';
-import { PickingMemoRecord } from '../../../../interface/outbound/pickingMemoTypes';
+import { useFocusEffect } from '@react-navigation/native';
+import { OutboundItemParam } from '../../../../interface/outbound/outbound';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
-type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
+type NavigationProp = StackNavigationProp<PickingParamList, 'PickingActivity'>;
 
 export default function PickingActivity() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
-  const itemBefore = route.params as OutboundItemParam
+  const itemBefore = route.params as OutboundItemParam;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
+
   const [refreshing, setRefreshing] = useState(false);
-const [pickingList, setPickingList] = useState<PickingMemoRecord[] | null>(null);
-
-
+  const [pickingList, setPickingList] = useState<any[] | null>(null);
 
   const handleAddActivity = () => {
     navigation.navigate('PickingDetailActivity', { item: itemBefore.item });
+  };
+
+  const handleSendToWH = async () => {
+    try {
+      showLoadingDialog("Sending to WH Staff...");
+      
+      // 🔥 GANTI DENGAN API SEBENARNYA
+      // const res = await OutboundService.updateStatusPicking(itemBefore.item.inspection_by, itemBefore.item.memo_id, "PENDING");
+
+      hideLoadingDialog();
+      showDialog("success", "Berhasil dikirim ke WH Staff!");
+    } catch (error) {
+      hideLoadingDialog();
+      showDialog("error", "Gagal mengirim ke WH Staff!");
+    }
   };
 
   const fetchPicking = async () => {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking SKU');
+
       const response = await OutboundService.getSkuByMemoId(itemBefore.item.memo_id);
-      console.log('Picking SKU Response:', response.data.data);
-      setPickingList(response.data.data || []);
+      const filtered = (response.data.data || []).filter(
+        (item: any) => item.item_id === itemBefore.item.item_id
+      );
+      console.log("filtered picking list: ", filtered);
+
+      setPickingList(filtered);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Picking!');
@@ -49,114 +76,132 @@ const [pickingList, setPickingList] = useState<PickingMemoRecord[] | null>(null)
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text
-          style={{
-            fontSize: 22,
-            fontWeight: 'bold',
-            color: 'black',
-            textAlign: 'center',
-            marginBottom: 12,
-            backgroundColor: '#FFF5E6',
-            borderRadius: 8,
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-            elevation: 2,
-            shadowColor: '#F26E1F',
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-          }}
-        >
-          {itemBefore.item.item.description}
-        </Text>
-        <View style={{ alignItems: 'center', marginBottom: 12 }}>
-          <Text style={{ fontStyle: 'italic', fontSize: 14, color: '#F26E1F', fontWeight: '700' }}>
-            Suggested Destination Location
-          </Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={fetchPicking} />
+        }
+      >
+        <View style={styles.card}>
           <Text
             style={{
+              fontSize: 22,
+              fontWeight: 'bold',
+              color: 'black',
               textAlign: 'center',
-              fontSize: 16,
-              color: '#333',
-              fontWeight: '700',
-              marginTop: 4,
+              marginBottom: 12,
               backgroundColor: '#FFF5E6',
               borderRadius: 8,
-              paddingVertical: 6,
-              paddingHorizontal: 12,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              elevation: 2,
+              shadowColor: '#F26E1F',
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
             }}
           >
-            {itemBefore.item.destinationWarehouseSub?.name} - {itemBefore.item.destinationBin?.name} - {itemBefore.item.quantity} {itemBefore.item.uom} - Week-{itemBefore.item.week_number}
+            {itemBefore.item.item.description}
           </Text>
-        </View>
 
-        {pickingList && pickingList[0]?.transactionScanPicking?.length === 0 ? (
-          <Text style={styles.noActivityText}>
-            Belum ada Activity, silahkan lakukan Activity Picking
-          </Text>
-        ) : (
-          pickingList && pickingList[0]?.transactionScanPicking?.map((activity: any, index: number) => (
-            <View key={index} style={styles.activityCard}>
+          <View style={{ alignItems: 'center', marginBottom: 12 }}>
+            <Text
+              style={{
+                fontStyle: 'italic',
+                fontSize: 14,
+                color: '#F26E1F',
+                fontWeight: '700',
+              }}
+            >
+              Suggested Destination Location
+            </Text>
+
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 16,
+                color: '#333',
+                fontWeight: '700',
+                marginTop: 4,
+                backgroundColor: '#FFF5E6',
+                borderRadius: 8,
+                paddingVertical: 6,
+                paddingHorizontal: 12,
+              }}
+            >
+              {itemBefore.item.destinationWarehouseSub?.name} -{' '}
+              {itemBefore.item.destinationBin?.name} -{' '}
+              {itemBefore.item.quantity} {itemBefore.item.uom} - Week-
+              {itemBefore.item.week_number}
+            </Text>
+          </View>
+
+          {/* 📌 LIST ACTIVITY */}
+          {pickingList && pickingList[0]?.transactionScanPicking?.length === 0 ? (
+            <Text style={styles.noActivityText}>
+              Belum ada Activity, silahkan lakukan Activity Picking
+            </Text>
+          ) : (
+            pickingList &&
+            pickingList[0]?.transactionScanPicking?.map((activity: any, index: number) => (
+              <View
+                key={activity?.id || `${activity.week_number}-${index}`}
+                style={styles.activityCard}
+              >
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Quantity Picked</Text>
-                  <Text style={[styles.rowValue, { textAlign: 'left', color: 'green', fontWeight: '600' }]}>
-                  {activity.quantity_picked} {activity.uom}
+                  <Text
+                    style={[
+                      styles.rowValue,
+                      { textAlign: 'left', color: 'green', fontWeight: '600' },
+                    ]}
+                  >
+                    {activity.quantity_picked} {activity.uom}
                   </Text>
                 </View>
+
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Week</Text>
                   <Text style={styles.rowValue}>{activity.week_number}</Text>
                 </View>
+
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>User</Text>
                   <Text style={styles.rowValue}>{activity.user_name}</Text>
                 </View>
-                <View style={styles.row}>
-                  <Text style={styles.rowLabel}>Inspection By</Text>
-                  <Text style={styles.rowValue}>{activity.inspection_by}</Text>
+
+                <View style={styles.statusBox}>
+                  <Text style={styles.statusText}>{activity.status}</Text>
                 </View>
-
-              <View style={styles.statusBox}>
-                <Text style={styles.statusText}>{activity.status}</Text>
               </View>
-            </View>
-          ))
-        )}
-      </View>
+            ))
+          )}
+        </View>
 
-      <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
-        <Text style={styles.addButtonText}>+ Add Activity</Text>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
+          <Text style={styles.addButtonText}>+ Add Activity</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+    {/* Floating Action Button */}
+      <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
+       <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: '#EDE8E3',
+    backgroundColor: '#fff',
     flexGrow: 1,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#F26E1F',
-    marginBottom: 20,
+    paddingBottom: 100, // supaya tidak ketutup tombol
   },
   card: {
     backgroundColor: '#F4F7FB',
     borderRadius: 12,
     padding: 16,
-  },
-  label: {
-    fontWeight: '700',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  subLabel: {
-    color: '#444',
-    marginBottom: 12,
   },
   noActivityText: {
     textAlign: 'center',
@@ -173,12 +218,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  headerText: {
-    fontWeight: '700',
-    fontSize: 15,
-    marginBottom: 8,
-    color: '#000',
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,32 +225,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
     paddingVertical: 6,
   },
-  switchingRow: {
-    backgroundColor: '#FFF5E6', // 🔸 warna khusus baris switching
-    borderRadius: 6,
-  },
   rowLabel: {
     flex: 1.2,
     fontWeight: '600',
     color: '#333',
   },
-  switchingLabel: {
-    color: '#E67E22', // 🔸 teks oranye agar beda
-  },
   rowValue: {
     flex: 1.5,
     color: '#333',
-  },
-  location: {
-    flex: 1.2,
-    color: '#F26E1F',
-    fontWeight: '600',
-  },
-  qty: {
-    flex: 1,
-    textAlign: 'right',
-    color: 'green',
-    fontWeight: '600',
   },
   statusBox: {
     backgroundColor: '#D6B4F0',
@@ -235,6 +256,22 @@ const styles = StyleSheet.create({
   addButtonText: {
     textAlign: 'center',
     fontWeight: '600',
-    color: '#333',
+    color: '#F26E1F',
+  },
+
+ fab: {
+    position: "absolute",
+    bottom: 30,
+    left: 25,
+    backgroundColor: "#F26E1F",
+    width: 100,
+    height: 60,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 3 },
   },
 });

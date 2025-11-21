@@ -162,7 +162,7 @@ export default function PickingDetailActivity() {
       quantity_picked: Number(qtyPicking),
       uom: itemBefore.item.uom,
       week_number: itemBefore.item.week_number,
-      status: 'PENDING',
+      status: 'OPEN',
       inspection_by: itemBefore.item.memo.requestor,
       user_id: userId,
       user_name: userName,

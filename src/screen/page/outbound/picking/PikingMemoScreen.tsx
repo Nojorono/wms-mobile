@@ -113,7 +113,7 @@ useFocusEffect(
               <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
             </View>
           ) : (
-            filteredList.map((item: any) => {
+            filteredList.map((item: any, i:number) => {
               let statusColor;
               if (item.status === 'CREATED') {
                 statusColor = '#228B22';
@@ -126,7 +126,7 @@ useFocusEffect(
                 const index = filteredList.indexOf(item);
                 return (
                 <OutboundCard
-                  key={item.id}
+                  key={i}
                   title={"Memo ID : "+item.slice(-20)}
                   subTitle={"Memo with index : " + (index+1)}
                   // origin={}

@@ -28,7 +28,6 @@ class ConstantService {
       const response = await axiosInstance.get(`/master-uom`);
       return response.data
     } catch (error: any) {
-      console.error('Get uom failed:', error);
       throw new Error('Get uom failed: ' + error.message);
     }
   }

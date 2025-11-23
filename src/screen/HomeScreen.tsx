@@ -17,7 +17,7 @@ type TabNavProp = BottomTabNavigationProp<MainTabParamList, 'Home'>;
 
 function HomeScreen() {
   const styles = GlobalStyles();
-  const {setUom, uom} = useConstantStore();
+  const { setUom, uom } = useConstantStore();
   const { user } = useAuthStore();
   const roleName = user?.role?.name || "";
 

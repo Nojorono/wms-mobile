@@ -1,11 +1,39 @@
-export interface OutboundItemParam {
-  item: OutboundItem;
+export interface PickingMemoRecord {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+
+  do_id: string;
+  do: DoDetail;
+
+  memo_id: string;
+  memo: MemoDetail;
+
+  item_id: string;
+  item: ItemDetail;
+
+  source_warehouse_sub_id: string | null;
+  sourceWarehouseSub: WarehouseSub | null;
+
+  source_bin_id: string | null;
+  sourceBin: BinDetail | null;
+
+  destination_warehouse_sub_id: string | null;
+  destinationWarehouseSub: WarehouseSub | null;
+
+  destination_bin_id: string | null;
+  destinationBin: BinDetail | null;
+
+  quantity: number;
+  uom: string;
+  week_number: number;
+  status: string;
+
+  transactionScanPicking: TransactionScanPicking[];
 }
 
-// =============================
-// DO (Delivery Order)
-// =============================
-export interface DO {
+export interface DoDetail {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -23,10 +51,7 @@ export interface DO {
   memo_sequence: string[];
 }
 
-// =============================
-// MEMO
-// =============================
-export interface Memo {
+export interface MemoDetail {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -41,9 +66,6 @@ export interface Memo {
   has_do: boolean;
 }
 
-// =============================
-// ITEM (SKU)
-// =============================
 export interface ItemDetail {
   id: string;
   createdAt: string;
@@ -61,9 +83,6 @@ export interface ItemDetail {
   organization_id: number | null;
 }
 
-// =============================
-// WAREHOUSE SUB
-// =============================
 export interface WarehouseSub {
   id: string;
   createdAt: string;
@@ -75,14 +94,12 @@ export interface WarehouseSub {
   code: string;
   description: string;
   capacity_bin: number | null;
-  barcode_image_url: string;
-  is_staging: string;
+  barcode_image_url: string | null;
+  is_staging: string | null; // "INBOUND" | "OUTBOUND" | null
+  is_good_stock: boolean;
 }
 
-// =============================
-// BIN (Warehouse Bin)
-// =============================
-export interface WarehouseBin {
+export interface BinDetail {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -92,52 +109,29 @@ export interface WarehouseBin {
   name: string;
   code: string;
   description: string;
-  capacity_pallet: number;
-  barcode_image_url: string;
-  current_pallet: number | null;
+  capacity_pallet: number | null;
+  barcode_image_url: string | null;
+  current_pallet: string | null;
 }
 
-// =============================
-// TRANSACTION SCAN PICKING
-// =============================
 export interface TransactionScanPicking {
-  // tambahkan tipe detail jika kamu tau struktur datanya
-}
-
-// =============================
-// MAIN OUTBOUND ITEM
-// =============================
-export interface OutboundItem {
   id: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
-
-  do_id: string;
-  do: DO;
-
-  memo_id: string;
-  memo: Memo;
-
+  transaction_picking_id: string;
+  pallet_source_id: string | null;
+  pallet_use_id: string | null;
+  pallet_switch_id: string | null;
   item_id: string;
-  item: ItemDetail;
-
-  source_warehouse_sub_id: string | null;
-  sourceWarehouseSub: WarehouseSub | null;
-
-  source_bin_id: string | null;
-  sourceBin: WarehouseBin | null;
-
-  destination_warehouse_sub_id: string | null;
-  destinationWarehouseSub: WarehouseSub | null;
-
-  destination_bin_id: string | null;
-  destinationBin: WarehouseBin | null;
-
-  quantity: number;
+  quantity_picked: number;
+  quantity_switch: number | null;
   uom: string;
   week_number: number;
   status: string;
-
-  transactionScanPicking: TransactionScanPicking[];
+  user_id: string;
+  user_name: string;
+  inspection_by: string | null;
 }
+
+export type PickingMemoList = PickingMemoRecord[];

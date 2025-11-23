@@ -39,9 +39,8 @@ function PickingSkuScreen() {
     const fetchPicking = async () => {
         try {
             setRefreshing(true);
-            showLoadingDialog('Loading List Picking Planning');
-            const response = await OutboundService.getSkuByMemoId(itemBefore.item);
-            console.log('Response Picking List:', response.data.data);
+            showLoadingDialog('Loading List Picking SKU');
+            const response = await OutboundService.getSkuByMemoId(itemBefore.item);;
             setPickingList(response.data.data || []);
         } catch (error) {
             hideLoadingDialog();
@@ -59,17 +58,17 @@ function PickingSkuScreen() {
     );
 
     // filter & search data
- const filteredList = useMemo(() => {
-    return PickingList.filter((item) => {
-        const matchSearch =
-            item.item?.sku?.toLowerCase().includes(searchText.toLowerCase()) ||
-            item.item?.description?.toLowerCase().includes(searchText.toLowerCase());
+    const filteredList = useMemo(() => {
+        return PickingList.filter((item) => {
+            const matchSearch =
+                item.item?.sku?.toLowerCase().includes(searchText.toLowerCase()) ||
+                item.item?.description?.toLowerCase().includes(searchText.toLowerCase());
 
-        const matchFilter = selectedFilter ? item.status === selectedFilter : true;
+            const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
-        return matchSearch && matchFilter;
-    });
-}, [PickingList, searchText, selectedFilter]);
+            return matchSearch && matchFilter;
+        });
+    }, [PickingList, searchText, selectedFilter]);
 
 
     return (
@@ -94,7 +93,7 @@ function PickingSkuScreen() {
                         ]}
                     >
                         <Text style={styles.activitiesHeaderText}>
-                            List Picking Planning
+                            List Picking SKU
                         </Text>
                     </View>
 
@@ -110,29 +109,34 @@ function PickingSkuScreen() {
                     </View>
 
                     {/* 📦 List Card */}
-                    {filteredList.map((item: any) => {
-                        let statusColor;
-                        if (item.status === 'CREATED') {
-                            statusColor = '#228B22';
-                        } else if (item.status === 'UNLOADING') {
-                            statusColor = '#FFB347';
-                        } else {
-                            statusColor = '#696969';
-                        }
+                    {filteredList.length === 0 ? (
+                        <View style={{ alignItems: 'center', marginTop: 40 }}>
+                            <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
+                        </View>
+                    ) : (
+                        filteredList.map((item: any) => {
+                            let statusColor;
+                            if (item.status === 'CREATED') {
+                                statusColor = '#228B22';
+                            } else if (item.status === 'UNLOADING') {
+                                statusColor = '#FFB347';
+                            } else {
+                                statusColor = '#696969';
+                            }
 
-                        return (
-                            <OutboundCard
-                                key={item.id}
-                                title={`${item.item.sku} - ${item.item.description}`}
-                                subTitle={`${item.sourceWarehouseSub?.code || '-'} → ${item.destinationWarehouseSub?.code || '-'}`}
-                                origin={`${item.quantity} ${item.uom}`}
-                                status={item.status}
-                                statusColor={statusColor}
-                                onClick={() => navigation.navigate('PickingActivity', { item })}
-                            />
-                        );
-                    })}
-
+                            return (
+                                <OutboundCard
+                                    key={item.id}
+                                    title={`${item.item.sku} - ${item.item.description}`}
+                                    subTitle={`${item.sourceWarehouseSub?.code || '-'} → ${item.destinationWarehouseSub?.code || '-'}`}
+                                    origin={`${item.quantity} ${item.uom}`}
+                                    status={item.status}
+                                    statusColor={statusColor}
+                                    onClick={() => navigation.navigate('PickingActivity', { item })}
+                                />
+                            );
+                        })
+                    )}
                 </View>
             </ScrollView>
         </View>

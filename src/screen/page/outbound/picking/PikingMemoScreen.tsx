@@ -42,7 +42,7 @@ function PickingMemoScreen() {
       showLoadingDialog('Loading List Picking Planning');
     //   const response = await OutboundServices.getPickingList(selectedFilter || 'CREATED');
       setPickingList(itemBefore.item.memo_id || []);
-      // console.log("item before picking memo: ", itemBefore.item);
+      console.log("item before picking memo: ", itemBefore);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Picking!');

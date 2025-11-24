@@ -41,7 +41,6 @@ function PickingDoScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking Planning');
       const response = await OutboundService.getOutboundPickingDoList(userId);
-      // console.log("response picking do list: ", response.data);
       setPickingList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
@@ -129,7 +128,7 @@ useFocusEffect(
                 return (
                 <OutboundCard
                   key={item.id}
-                  title={`ID : ${pickingNumberLast8}`}
+                  title={`NO : ${item.outbound_do_number}`}
                   subTitle={"Tipe Outbound :" + item.outbound_type}
                   origin={"Origin: " + item.origin}
                   status={item.status}

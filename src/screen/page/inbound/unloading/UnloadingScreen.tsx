@@ -48,7 +48,6 @@ function UnloadingScreen() {
       showLoadingDialog('Loading List Inbound Planning');
       const response = await InboundServices.getInboundList(selectedFilter || 'UNLOADING');
       setInboundList(response?.data || []);
-      console.log('Inbound data fetched successfully:', response.data);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Inbound!');

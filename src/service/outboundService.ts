@@ -20,6 +20,16 @@ class OutboundService {
       throw error.response;
     }
   }
+
+  static async getTransactionPickingDetail(transactionPickingId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/transaction-scan-picking/picking/${transactionPickingId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   static async getAssignPickingUser(memoId: string): Promise<any> {
     try {
       const response = await axiosInstance.get(`/assigned-picking/memo/${memoId}`);

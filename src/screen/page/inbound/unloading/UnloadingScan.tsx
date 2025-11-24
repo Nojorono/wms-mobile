@@ -88,16 +88,12 @@ const UnloadingScanScreen = () => {
           stagingAreaName: d.warehouseSub?.name || "-",
           productionDate: d.production_date || "-",
         }));
-
-        console.log("Fetched Pallets (filtered by UOM):", mapped);
         const totals = mapped.reduce((acc, item) => {
           const key = `${item.uom.toUpperCase()}`;
           acc[key] = (acc[key] || 0) + item.qty;
           return acc;
         }, {} as Record<string, number>);
         setTotalScanned(totals);
-        console.log("Total Scanned:", totals);
-        console.log ("Item Quantities Plan:", item.quantities);
         setPallets(mapped);
 
 
@@ -124,6 +120,7 @@ const UnloadingScanScreen = () => {
     const compare = compareScanWithReference(item.quantities,totalScanned)
     if (!compare){
       showDialog("error", `Total scanned melibihi qty plan!`);
+      return;
     }
 
     // Ambil hanya pallet yang status-nya OPEN

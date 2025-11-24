@@ -25,6 +25,7 @@ type IconNames =
   | 'inventory'
   | 'user'
   | 'cog'
+  | 'qrcode'
   | 'arrow-up'
   | 'arrow-down'
   | 'person-outline'
@@ -36,17 +37,18 @@ const MainNavigator = () => (
     initialRouteName="Home"
     screenOptions={({ route }) => {
       const routeName = getFocusedRouteNameFromRoute(route);
-      // '' atau undefined akan jadi null (AMAN)
       const currentRoute = routeName || null;
 
       const isInboundHidden =
         route.name === 'Inbound' &&
         currentRoute !== null &&
+        currentRoute !== "" &&
         currentRoute !== 'InboundIndex';
 
       const isOutboundHidden =
         route.name === 'Outbond' &&
         currentRoute !== null &&
+        currentRoute !== "" &&
         currentRoute !== 'OutboundIndex';
 
       const hideTabBar = isInboundHidden || isOutboundHidden;
@@ -58,7 +60,7 @@ const MainNavigator = () => (
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Inbound') iconName = 'arrow-down';
           else if (route.name === 'Outbond') iconName = 'arrow-up';
-          else if (route.name === 'Scanner') iconName = 'american-sign-language-interpreting';
+          else if (route.name === 'Scanner') iconName = 'qrcode';
 
           return <Ionicons name={iconName} size={22} color={color} />;
         },
@@ -78,25 +80,24 @@ const MainNavigator = () => (
       };
     }}
   >
-    <Tab.Screen name="Home" component={HomeStackNavigator} />
+   
     <Tab.Screen
       name="Inbound"
       component={InboundStackNavigator}
       options={{
-        tabBarItemStyle: { display: 'none' },  
-        tabBarStyle: { display: 'none' },      
+         tabBarButton: () => null,    
       }}
     />
-
+ <Tab.Screen name="Home" component={HomeStackNavigator} />
+ <Tab.Screen name="Scanner" component={ScannerStackNavigator} />
     <Tab.Screen
       name="Outbond"
       component={OutboundNavigator}
       options={{
-        tabBarItemStyle: { display: 'none' },  
-        tabBarStyle: { display: 'none' },
+          tabBarButton: () => null, 
       }}
     />
-    <Tab.Screen name="Scanner" component={ScannerStackNavigator} />
+    
   </Tab.Navigator>
 );
 

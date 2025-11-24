@@ -11,6 +11,7 @@ import {
     Linking,
     Modal,
     Pressable,
+    Image,
 } from "react-native";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
@@ -284,6 +285,7 @@ export default function InboundDetail() {
                     const url = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/testingcoba";
                     const url2 = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/test"
                     return (
+                        console.log("Attachment URL:", item.attachment),
                         <View style={styles.card}>
                             <TouchableOpacity
                                 style={styles.cardHeader}
@@ -300,7 +302,7 @@ export default function InboundDetail() {
 
                             {/* 📎 Attachment link */}
                             <TouchableOpacity
-                                onPress={() => handleOpenAttachment(url2)}
+                                onPress={() => handleOpenAttachment(item.attachment)}
                                 style={{ paddingHorizontal: 16, marginBottom: 4 }}
                             >
                                 <Text
@@ -340,34 +342,67 @@ export default function InboundDetail() {
                 }}
             />
 
-            {/* 🧾 PDF Viewer Modal */}
-            <Modal visible={pdfVisible} animationType="slide">
-                <View style={{ flex: 1, backgroundColor: "#000" }}>
-                    {/* Header Close Button */}
-                    <View
-                        style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: 12,
-                            backgroundColor: "#111",
-                        }}
-                    >
-                        <Text style={{ color: "#fff", fontSize: 16 }}>Attachment Viewer</Text>
-                        <Pressable onPress={handleClosePdf}>
-                            <Ionicons name="minus" size={24} color="#fff" />
-                        </Pressable>
-                    </View>
+    {/* 🧾 PDF Viewer Modal */}
+<Modal visible={pdfVisible} animationType="slide" transparent>
+    <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }}>
+        <View style={{ height: "50%", backgroundColor: "#000", borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: "hidden" }}>
 
-                    {/* PDF/Gambar Viewer */}
-                    <WebView
-                        source={{ uri: pdfUrl }}
-                        style={{ flex: 1 }}
-                        startInLoadingState={true}
-                        scalesPageToFit={true}
-                    />
+            {/* Header Close Button */}
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: 12,
+                    backgroundColor: "#111",
+                }}
+            >
+                <Text style={{ color: "#fff", fontSize: 16 }}>Attachment Viewer</Text>
+                <Pressable onPress={handleClosePdf}>
+                    <Ionicons name="minus" size={24} color="#fff" />
+                </Pressable>
+            </View>
+
+            {/* PDF / Image Viewer */}
+            {pdfUrl ? (
+                (() => {
+                    const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pdfUrl);
+
+                    if (isImage) {
+                        return (
+                            <Image
+                                source={{ uri: pdfUrl }}
+                                style={{
+                                    flex: 1,
+                                    resizeMode: "contain",
+                                    backgroundColor: "#000",
+                                }}
+                            />
+                        );
+                    }
+
+                    return (
+                        <WebView
+                            source={{
+                                uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+                                    pdfUrl
+                                )}`,
+                            }}
+                            style={{ flex: 1 }}
+                            startInLoadingState={true}
+                            scalesPageToFit={true}
+                        />
+                    );
+                })()
+            ) : (
+                <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                    <Text style={{ color: "#fff", fontSize: 18 }}>No attachment available.</Text>
                 </View>
-            </Modal>
+            )}
+        </View>
+    </View>
+</Modal>
+
 
             {status === "CREATED" && (
                 <View style={styles.actions}>

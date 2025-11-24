@@ -16,6 +16,7 @@ import OutboundService from '../../../../service/outboundService';
 import { useFocusEffect } from '@react-navigation/native';
 import { OutboundItemParam } from '../../../../interface/outbound/outbound';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
+import { set } from 'react-hook-form';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingActivity'>;
 
@@ -25,9 +26,9 @@ export default function PickingActivity() {
   const itemBefore = route.params as OutboundItemParam;
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
-
   const [refreshing, setRefreshing] = useState(false);
-  const [pickingList, setPickingList] = useState<any[] | null>(null);
+  const [pickingList, setPickingList] = useState<any[]>([]);
+  const [userIdNewest, setUserIdNewest] = useState('');
 
   const handleAddActivity = () => {
     navigation.navigate('PickingDetailActivity', { item: itemBefore.item });
@@ -36,11 +37,11 @@ export default function PickingActivity() {
   const handleSendToWH = async () => {
     try {
       showLoadingDialog("Sending to WH Staff...");
-      
-      // 🔥 GANTI DENGAN API SEBENARNYA
-      // const res = await OutboundService.updateStatusPicking(itemBefore.item.inspection_by, itemBefore.item.memo_id, "PENDING");
 
+      // 🔥 GANTI DENGAN API SEBENARNYA
+      const res = await OutboundService.updateStatusPicking(userIdNewest, itemBefore.item.id, "PENDING");
       hideLoadingDialog();
+      await fetchPicking();
       showDialog("success", "Berhasil dikirim ke WH Staff!");
     } catch (error) {
       hideLoadingDialog();
@@ -53,11 +54,13 @@ export default function PickingActivity() {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking SKU');
 
-      const response = await OutboundService.getSkuByMemoId(itemBefore.item.memo_id);
-      const filtered = (response.data.data || []).filter(
-        (item: any) => item.item_id === itemBefore.item.item_id
-      );
-      console.log("filtered picking list: ", filtered);
+      const response = await OutboundService.getTransactionPickingDetail(itemBefore.item.id);
+      const filtered = response.data.data || [];
+      const latestUserId = filtered.reduce((latest:any, item:any) =>
+        new Date(item.createdAt) > new Date(latest.createdAt) ? item : latest
+      ).user_id;
+
+      setUserIdNewest(latestUserId);
 
       setPickingList(filtered);
     } catch (error) {
@@ -137,13 +140,13 @@ export default function PickingActivity() {
           </View>
 
           {/* 📌 LIST ACTIVITY */}
-          {pickingList && pickingList[0]?.transactionScanPicking?.length === 0 ? (
+          {pickingList && pickingList.length === 0 ? (
             <Text style={styles.noActivityText}>
               Belum ada Activity, silahkan lakukan Activity Picking
             </Text>
           ) : (
-            pickingList &&
-            pickingList[0]?.transactionScanPicking?.map((activity: any, index: number) => (
+
+            pickingList.map((activity: any, index: number) => (
               <View
                 key={activity?.id || `${activity.week_number}-${index}`}
                 style={styles.activityCard}
@@ -183,9 +186,9 @@ export default function PickingActivity() {
         </TouchableOpacity>
       </ScrollView>
 
-    {/* Floating Action Button */}
+      {/* Floating Action Button */}
       <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
-       <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
+        <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
       </TouchableOpacity>
     </View>
   );
@@ -259,7 +262,7 @@ const styles = StyleSheet.create({
     color: '#F26E1F',
   },
 
- fab: {
+  fab: {
     position: "absolute",
     bottom: 30,
     left: 25,

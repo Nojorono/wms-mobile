@@ -284,6 +284,7 @@ export default function InboundDetail() {
                     const url = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/testingcoba";
                     const url2 = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/test"
                     return (
+                        console.log("Attachment URL:", item.attachment),
                         <View style={styles.card}>
                             <TouchableOpacity
                                 style={styles.cardHeader}
@@ -300,7 +301,7 @@ export default function InboundDetail() {
 
                             {/* 📎 Attachment link */}
                             <TouchableOpacity
-                                onPress={() => handleOpenAttachment(url2)}
+                                onPress={() => handleOpenAttachment(item.attachment)}
                                 style={{ paddingHorizontal: 16, marginBottom: 4 }}
                             >
                                 <Text
@@ -360,12 +361,18 @@ export default function InboundDetail() {
                     </View>
 
                     {/* PDF/Gambar Viewer */}
-                    <WebView
-                        source={{ uri: pdfUrl }}
-                        style={{ flex: 1 }}
-                        startInLoadingState={true}
-                        scalesPageToFit={true}
-                    />
+                    {pdfUrl ? (
+                        <WebView
+                            source={{ uri: pdfUrl }}
+                            style={{ flex: 1 }}
+                            startInLoadingState={true}
+                            scalesPageToFit={true}
+                        />
+                    ) : (
+                        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                            <Text style={{ color: "#fff", fontSize: 18 }}>No attachment available.</Text>
+                        </View>
+                    )}
                 </View>
             </Modal>
 

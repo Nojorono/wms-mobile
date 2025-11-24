@@ -41,7 +41,7 @@ function PickingSkuScreen() {
             setRefreshing(true);
             showLoadingDialog('Loading List Picking SKU');
             const response = await OutboundService.getSkuByMemoId(itemBefore.item);
-            setPickingList(response.data.data || []);
+            setPickingList(response.data || []);
         } catch (error) {
             hideLoadingDialog();
             showDialog('error', 'Error while Fetching Data Picking!');

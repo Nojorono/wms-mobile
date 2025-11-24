@@ -55,13 +55,11 @@ export default function PickingActivity() {
       showLoadingDialog('Loading List Picking SKU');
 
       const response = await OutboundService.getTransactionPickingDetail(itemBefore.item.id);
-      const filtered = response.data.data || [];
+      const filtered = response.data || [];
       const latestUserId = filtered.reduce((latest:any, item:any) =>
         new Date(item.createdAt) > new Date(latest.createdAt) ? item : latest
       ).user_id;
-
       setUserIdNewest(latestUserId);
-
       setPickingList(filtered);
     } catch (error) {
       hideLoadingDialog();

@@ -116,9 +116,9 @@ function PickingSkuScreen() {
                     ) : (
                         filteredList.map((item: any) => {
                             let statusColor;
-                            if (item.status === 'CREATED') {
+                            if (item.status === 'PENDING') {
                                 statusColor = '#228B22';
-                            } else if (item.status === 'UNLOADING') {
+                            } else if (item.status === 'OPEN') {
                                 statusColor = '#FFB347';
                             } else {
                                 statusColor = '#696969';
@@ -129,7 +129,7 @@ function PickingSkuScreen() {
                                     key={item.id}
                                     title={`${item.item.sku} - ${item.item.description}`}
                                     subTitle={`${item.sourceWarehouseSub?.code || '-'} → ${item.destinationWarehouseSub?.code || '-'}`}
-                                    origin={`${item.quantity} ${item.uom}`}
+                                    origin={`PLAN : ${item.quantity} ${item.uom}`}
                                     status={item.status}
                                     statusColor={statusColor}
                                     onClick={() => navigation.navigate('PickingActivity', { item })}

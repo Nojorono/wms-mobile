@@ -42,6 +42,11 @@ export default function PickingDetailActivity() {
   const [pickingPallet, setPickingPallet] = useState<any>(null);
   const [assignPicking, setAssignPicking] = useState<any>();
 
+  const [doneSumber, setDoneSumber] = useState(false);
+  const [donePicking, setDonePicking] = useState(false);
+  const [doneSwitch, setDoneSwitch] = useState(false);
+  const [switchInfo, setSwitchInfo] = useState<any>(null);
+
   // SCANNER STATES
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scanTarget, setScanTarget] =
@@ -106,20 +111,19 @@ export default function PickingDetailActivity() {
 
     try {
       const res = await ScannerService.getPalletByCode(palletSumber);
-      console.log("Check pallet response:", res.data);
       if (!res.success) {
         Alert.alert("Pallet tidak ditemukan atau tidak valid");
         return;
       }
       // res.data is an array, filter for matching item_id
       const found = res.data.find((item: any) => item.item_id === itemBefore.item.item_id);
-      console.log("Found item in pallet:", found);
       setFoundItem(found);
       if (!found) {
         Alert.alert("Pallet tidak memiliki item yang akan dipicking");
         return;
       }
-
+      setFoundItem(found);
+      setDoneSumber(true);
       Alert.alert("Pallet valid | Item:" + found.item_name + " \n Qty " + found.current_quantity + " " + found.uom);
     } catch (err) {
       Alert.alert("Gagal memeriksa pallet");
@@ -127,20 +131,38 @@ export default function PickingDetailActivity() {
   };
 
   const handleCheckPalletPicking = async () => {
-   if (!palletPicking.trim()) {
+    if (!palletPicking.trim()) {
       Alert.alert("Masukkan pallet picking terlebih dahulu");
       return;
     }
 
     try {
       const res = await ScannerService.getPalletByCode(palletPicking);
-      console.log("Check pallet response:", res.data);
       if (!res.success) {
         Alert.alert("Pallet tidak ditemukan atau tidak valid");
         return;
       }
-      console.log("Found item in pallet:", res.data);
       setPickingPallet(res.data[0]);
+      setDonePicking(true);
+      Alert.alert("Pallet valid | Week: " + res.data[0].week_number + "| Uom : " + res.data[0].uom);
+    } catch (err) {
+      Alert.alert("Gagal memeriksa pallet");
+    }
+  };
+
+  const handleCheckPalletSwitching = async () => {
+    if (!switchPallet.trim()) {
+      Alert.alert("Masukkan pallet switching terlebih dahulu");
+      return;
+    }
+    try {
+      const res = await ScannerService.getPalletByCode(switchPallet);
+      if (!res.success) {
+        Alert.alert("Pallet tidak ditemukan atau tidak valid");
+        return;
+      }
+      setSwitchInfo(res.data[0]);
+      setDoneSwitch(true);
 
       Alert.alert("Pallet valid | Item:" + res.data[0].item_name + " \n Qty " + res.data[0].current_quantity + " " + res.data[0].uom);
     } catch (err) {
@@ -150,7 +172,6 @@ export default function PickingDetailActivity() {
 
   const handleSubmit = async () => {
     // Example static user info, replace with actual user data if available
-    console.log("Assign Picking Data:", assignPicking);
     const userId = assignPicking.picking_user_id || 'test-user-123';
     const userName = assignPicking.picking_name || 'test user';
 
@@ -174,10 +195,9 @@ export default function PickingDetailActivity() {
     if (switchQty) {
       payload.quantity_switch = Number(switchQty);
     }
-    console.log('Submit Payload:', payload);
+    // console.log('Submit Payload:', payload);
     try {
       const response = await OutboundService.postTransactionPicking(payload);
-      console.log('Submit Response:', response);
       navigation.goBack();
     } catch (error) {
       console.error('Submit Error:', error);
@@ -263,7 +283,11 @@ export default function PickingDetailActivity() {
           <TextInput
             placeholder="Pallet Sumber"
             value={palletSumber}
-            onChangeText={setPalletSumber}
+            onChangeText={(v) => {
+              setPalletSumber(v);
+              setFoundItem(null);
+              setDoneSumber(false);
+            }}
             style={[styles.input, { flex: 1, marginVertical: 0 }]}
           />
 
@@ -279,19 +303,25 @@ export default function PickingDetailActivity() {
             />
           </TouchableOpacity>
 
-          {/* CHECK Button */}
-          <TouchableOpacity
-            onPress={handleCheckPalletSumber}
-            style={{
-              marginLeft: 6,
-              backgroundColor: '#F26E1F',
-              paddingVertical: 10,
-              paddingHorizontal: 14,
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
-          </TouchableOpacity>
+          {/* CHECK Button SUMBER*/}
+          {doneSumber ? (
+            <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
+              DONE
+            </Text>
+          ) : (
+            <TouchableOpacity
+              onPress={handleCheckPalletSumber}
+              style={{
+                marginLeft: 6,
+                backgroundColor: '#F26E1F',
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* PALLET PICKING */}
@@ -305,7 +335,11 @@ export default function PickingDetailActivity() {
           <TextInput
             placeholder="Pallet Picking"
             value={palletPicking}
-            onChangeText={setPalletPicking}
+            onChangeText={(v) => {
+              setPalletPicking(v);
+              setPickingPallet(null);
+              setDonePicking(false);
+            }}
             style={[styles.input, { flex: 1, marginVertical: 0 }]}
           />
           <TouchableOpacity
@@ -319,18 +353,24 @@ export default function PickingDetailActivity() {
             />
           </TouchableOpacity>
           {/* CHECK Button */}
-          <TouchableOpacity
-            onPress={handleCheckPalletPicking}
-            style={{
-              marginLeft: 6,
-              backgroundColor: '#1f5bf2ff',
-              paddingVertical: 10,
-              paddingHorizontal: 14,
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
-          </TouchableOpacity>
+          {donePicking ? (
+            <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
+              DONE
+            </Text>
+          ) : (
+            <TouchableOpacity
+              onPress={handleCheckPalletPicking}
+              style={{
+                marginLeft: 6,
+                backgroundColor: '#1f5bf2ff',
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 4 }}>
@@ -362,6 +402,12 @@ export default function PickingDetailActivity() {
           <View style={styles.switchSection}>
             <Text style={styles.switchTitle}>Pallet Switching</Text>
             {/* PALLET SWITCHING */}
+            {switchInfo && (
+              <Text style={{ color: '#888', fontSize: 14, marginVertical: 4 }}>
+                Uom: {switchInfo.uom} | Week:{' '}
+                {switchInfo.week_number}
+              </Text>
+            )}
             <View
               style={{
                 flexDirection: 'row',
@@ -369,12 +415,18 @@ export default function PickingDetailActivity() {
                 marginVertical: 4,
               }}
             >
+
               <TextInput
                 placeholder="Pallet Switching"
                 value={switchPallet}
-                onChangeText={setSwitchPallet}
+                onChangeText={(v) => {
+                  setSwitchPallet(v);
+                  setSwitchInfo(null);
+                  setDoneSwitch(false);
+                }}
                 style={[styles.input, { flex: 1, marginVertical: 0 }]}
               />
+
               <TouchableOpacity
                 style={styles.scanBtn}
                 onPress={() => openScanner('switching')}
@@ -385,14 +437,40 @@ export default function PickingDetailActivity() {
                   color={Colors.secondaryColor}
                 />
               </TouchableOpacity>
+              {/* CHECK Button SWITCHING*/}
+              {doneSwitch ? (
+                <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
+                  DONE
+                </Text>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleCheckPalletSwitching}
+                  style={{
+                    marginLeft: 6,
+                    backgroundColor: '#1f5bf2ff',
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
+                </TouchableOpacity>
+              )}
             </View>
-            <TextInput
-              placeholder="Qty Switching"
-              value={switchQty}
-              onChangeText={setSwitchQty}
-              keyboardType="numeric"
-              style={styles.input}
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 4 }}>
+              <TextInput
+                placeholder="Qty Switching"
+                value={switchQty}
+                onChangeText={setSwitchQty}
+                keyboardType="numeric"
+                style={[styles.input, { flex: 1, marginVertical: 0 }]}
+              />
+              {switchInfo && (
+              <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
+                {switchInfo.uom}
+              </Text>
+              )}
+            </View>
             <TouchableOpacity
               style={[styles.cancelButton]}
               onPress={() => setIsSwitching(false)}

@@ -161,6 +161,11 @@ export default function PickingActivity() {
                   </Text>
                 </View>
 
+                 <View style={styles.row}>
+                  <Text style={styles.rowLabel}>Pallet Use</Text>
+                  <Text style={styles.rowValue}>{activity.palletUse.pallet_code}</Text>
+                </View>
+
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Week</Text>
                   <Text style={styles.rowValue}>{activity.week_number}</Text>

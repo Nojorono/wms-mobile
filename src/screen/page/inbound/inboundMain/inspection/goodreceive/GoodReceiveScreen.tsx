@@ -112,7 +112,6 @@ const GoodReceiveScreen = () => {
       </View>
 
       {/* Floating Button "meta" */}
-      {console.log("payload:", payload)}
       {mergedData.every((item: any) => item.inspection_status === "APPROVED") && (
         <TouchableOpacity
           style={{

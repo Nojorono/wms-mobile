@@ -38,7 +38,7 @@ export default function PickingDetailActivity() {
   const [isSwitching, setIsSwitching] = useState(false);
   const [switchPallet, setSwitchPallet] = useState('');
   const [switchQty, setSwitchQty] = useState('');
-  const [fouundItem, setFoundItem] = useState<any>(null);
+  const [foundItem, setFoundItem] = useState<any>(null);
   const [pickingPallet, setPickingPallet] = useState<any>(null);
   const [assignPicking, setAssignPicking] = useState<any>();
 
@@ -81,10 +81,10 @@ export default function PickingDetailActivity() {
   const fetchAssign = async () => {
     try {
       showLoadingDialog('Loading List Picking SKU');
-      const response = await OutboundService.getAssignPickingUser(itemBefore.item.memo_id);;
+      const response = await OutboundService.getAssignPickingUser(itemBefore.item.memo_id);
       // Ambil item dengan createdAt paling baru
-      if (Array.isArray(response.data.data) && response.data.data.length > 0) {
-        const latest = response.data.data.reduce((prev: any, curr: any) =>
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        const latest = response.data.reduce((prev: any, curr: any) =>
           new Date(curr.createdAt) > new Date(prev.createdAt) ? curr : prev
         );
         setAssignPicking(latest);
@@ -170,40 +170,57 @@ export default function PickingDetailActivity() {
     }
   };
 
-  const handleSubmit = async () => {
-    // Example static user info, replace with actual user data if available
-    const userId = assignPicking.picking_user_id || 'test-user-123';
-    const userName = assignPicking.picking_name || 'test user';
+const handleSubmit = async () => {
+  console.log("Submitting Picking Activity");
 
-    const payload: any = {
-      transaction_picking_id: itemBefore.item.id,
-      pallet_source_id: fouundItem.id,
-      pallet_use_id: pickingPallet.id,
-      item_id: itemBefore.item.item_id,
-      quantity_picked: Number(qtyPicking),
-      uom: itemBefore.item.uom,
-      week_number: itemBefore.item.week_number,
-      status: 'OPEN',
-      inspection_by: itemBefore.item.memo.requestor,
-      user_id: userId,
-      user_name: userName,
-    };
+  if (!foundItem) {
+    Alert.alert("Pallet sumber belum dicek!");
+    return;
+  }
 
-    if (switchPallet) {
-      payload.pallet_switch_id = switchPallet;
-    }
-    if (switchQty) {
-      payload.quantity_switch = Number(switchQty);
-    }
-    // console.log('Submit Payload:', payload);
-    try {
+  if (!pickingPallet) {
+    Alert.alert("Pallet picking belum dicek!");
+    return;
+  }
+
+  const userId = assignPicking?.picking_user_id || 'test-user-123';
+  const userName = assignPicking?.picking_name || 'test user';
+
+  const payload: any = {
+    transaction_picking_id: itemBefore.item.id,
+    pallet_source_id: foundItem?.id,
+    pallet_use_id: pickingPallet?.id,
+    item_id: itemBefore.item.item_id,
+    quantity_picked: Number(qtyPicking),
+    uom: itemBefore.item.uom,
+    week_number: itemBefore.item.week_number,
+    status: "OPEN",
+    inspection_by: itemBefore.item.memo.requestor,
+    user_id: userId,
+    user_name: userName,
+  };
+
+  if (switchPallet) {
+    payload.pallet_switch_id = switchPallet;
+  }
+
+  if (switchQty) {
+    payload.quantity_switch = Number(switchQty);
+  }
+
+  console.log("Submit Payload:", payload);
+      try {
+       showLoadingDialog('Submitting Picking Activity');
       const response = await OutboundService.postTransactionPicking(payload);
       navigation.goBack();
     } catch (error) {
       console.error('Submit Error:', error);
       Alert.alert('Gagal submit picking');
+    }finally {
+      hideLoadingDialog();
     }
-  };
+};
+
 
   const isSamePallet = palletSumber && palletPicking && palletSumber === palletPicking;
 
@@ -264,10 +281,10 @@ export default function PickingDetailActivity() {
         </View>
 
         {/* FOUND ITEM INFO */}
-        {fouundItem && (
+        {foundItem && (
           <View style={{ marginBottom: 4 }}>
             <Text style={{ color: '#888', fontSize: 14 }}>
-              {fouundItem.item_name} | Qty: {fouundItem.current_quantity} {fouundItem.uom} | Week: {fouundItem.week_number}
+              {foundItem.item_name} | Qty: {foundItem.current_quantity} {foundItem.uom} | Week: {foundItem.week_number}
             </Text>
           </View>
         )}
@@ -466,9 +483,9 @@ export default function PickingDetailActivity() {
                 style={[styles.input, { flex: 1, marginVertical: 0 }]}
               />
               {switchInfo && (
-              <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
-                {switchInfo.uom}
-              </Text>
+                <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
+                  {switchInfo.uom}
+                </Text>
               )}
             </View>
             <TouchableOpacity
@@ -482,7 +499,7 @@ export default function PickingDetailActivity() {
       </View>
 
       {/* SUBMIT */}
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+      <TouchableOpacity style={styles.submitButton} onPress={ handleSubmit}>
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
 

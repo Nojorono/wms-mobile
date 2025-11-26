@@ -12,7 +12,7 @@ import {
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import Colors from '../../../../constants/Colors.ts';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
@@ -24,9 +24,11 @@ type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain
 
 function InspectionMemoScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const [InspectionList, setInspectionList] = useState<any[]>([]);
+  const [InspectionList, setInspectionList] = useState<any>([]);
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string | null>();
+  const route = useRoute();
+  const itemBefore = route.params as any
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -37,9 +39,8 @@ function InspectionMemoScreen() {
   const fetchInspection = async () => {
     try {
       setRefreshing(true);
-      showLoadingDialog('Loading List Inspection Planning');
-    //   const response = await OutboundServices.getInspectionList(selectedFilter || 'CREATED');
-      setInspectionList(memoOutboundData || []);
+      showLoadingDialog('Loading List Inspection Memo Planning');
+      setInspectionList(itemBefore.item?.outbound_memos || []);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Inspection!');
@@ -57,9 +58,9 @@ useFocusEffect(
 
   // filter & search data
   const filteredList = useMemo(() => {
-    return InspectionList.filter((item) => {
+    return InspectionList.filter((item:any) => {
       const matchSearch =
-        item.Inspection_number?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.outbound_memo_number?.toLowerCase().includes(searchText.toLowerCase()) ||
         item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
 
       const matchFilter = selectedFilter ? item.status === selectedFilter : true;
@@ -124,12 +125,12 @@ useFocusEffect(
               return (
                 <OutboundCard
                   key={item.id}
-                  title={item.Picking_number}
-                  // subTitle={item.license_plate}
-                  origin={item.arrival_date}
+                  title={item.outbound_memo_number}
+                  subTitle={item.ship_to}
+                  origin={item.type}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('InspectionSku', { item })}
+                  onClick={() => navigation.navigate('InspectionSku', { data:item , dataBefore:itemBefore})}
                 />
               );
             })

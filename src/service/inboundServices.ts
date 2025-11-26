@@ -219,6 +219,15 @@ static async postStatusBulkbyIdScan(inspection_by: string, status: string, data:
     }
   }
 
+  static async postIntegrationToOracle(inboundId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/inbound/integration-to-oracle/${inboundId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   //FORKLIFT SERVICES
   static async getForkLiftList(userId: string): Promise<any> {
     try {

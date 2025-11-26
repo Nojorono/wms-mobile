@@ -18,8 +18,8 @@ type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionMain'>
 
 const GoodReceiveScreen = () => {
   // Ambil payload dari route params
-   type InboundDetailRouteParams = {
-    payload: { 
+  type InboundDetailRouteParams = {
+    payload: {
       id: string;
       inbound_number: string;
       license_plate: string;
@@ -41,11 +41,11 @@ const GoodReceiveScreen = () => {
     });
   };
 
-    useFocusEffect(
-          React.useCallback(() => {
-              fetchInspectionById();
-          }, [])
-      );
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchInspectionById();
+    }, [])
+  );
 
   const fetchInspectionById = async () => {
     try {
@@ -53,7 +53,7 @@ const GoodReceiveScreen = () => {
       const response = await InboundServices.getInspectionByInboundId(payload.payload.id);
       const inbound = response.data;
       const dataInspection: any = mergeGoodReceive(inbound);
-     
+
       setMergedData(dataInspection);
     } catch (error) {
       hideLoadingDialog()
@@ -101,16 +101,54 @@ const GoodReceiveScreen = () => {
         </View>
       </View>
 
-        {/* Scrollable Dynamic Card List */}
+      {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <GoodReceivedCardList
             items={mergedData}
             onCheck={handleCheck}
           />
-      
         </ScrollView>
       </View>
+
+      {/* Floating Button "meta" */}
+      {console.log("payload:", payload)}
+      {mergedData.every((item: any) => item.inspection_status === "APPROVED") && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            right: 100,
+            bottom: 32,
+            backgroundColor: "#421dfaff",
+            borderRadius: 28,
+            paddingVertical: 14,
+            paddingHorizontal: 28,
+            elevation: 4,
+          }}
+          onPress={async () => {
+            // TODO: handle meta button press
+            try {
+              showLoadingDialog("Integrating to META...")
+              const response = await InboundServices.postIntegrationToOracle(payload.payload.id);
+              Alert.alert("Success", "Integrated to META successfully.", [
+                                              {
+                                                  text: "OK",
+                                                  onPress: () => {
+                                                      navigation.pop(2);
+                                                  },
+                                              },
+                                          ]);
+            } catch (error) {
+              console.error('Integration error:', error);
+              Alert.alert('Error', 'Failed to integrate to META.');
+            } finally {
+              hideLoadingDialog()
+            }
+          }}
+        >
+          <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>INTEGRATE TO META</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

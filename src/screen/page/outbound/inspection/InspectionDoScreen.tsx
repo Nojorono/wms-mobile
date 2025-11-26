@@ -39,8 +39,13 @@ function InspectionDoScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Inspection Planning');
-    //   const response = await OutboundService.getOutboundDoList(user?.id || '');
-      setInspectionList(outboundData || []);
+      const data:any= {
+        limit:100,
+        status:"PENDING"
+      }
+      const response = await OutboundService.getOutboundDoList(data);
+      console.log("Inspection DO Response:", response);
+      setInspectionList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Inspection!');
@@ -60,8 +65,8 @@ useFocusEffect(
   const filteredList = useMemo(() => {
     return InspectionList.filter((item) => {
       const matchSearch =
-        item.Inspection_number?.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
+        item.outbound_do_number?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.origin?.toLowerCase().includes(searchText.toLowerCase());
 
       const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
@@ -91,7 +96,7 @@ useFocusEffect(
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List Inspection Planning
+              List Inspection Outbound
             </Text>
           </View>
 
@@ -99,7 +104,7 @@ useFocusEffect(
           <View style={{ marginVertical: 10 }}>
             <TextInput
               style={localStyles.searchInput}
-              placeholder="Search Inspection number / plate"
+              placeholder="Search Inspection Outbound number"
               value={searchText}
               onChangeText={setSearchText}
               placeholderTextColor="#888"
@@ -114,7 +119,7 @@ useFocusEffect(
           ) : (
             filteredList.map((item: any) => {
               let statusColor;
-              if (item.status === 'CREATED') {
+              if (item.status === 'PENDING') {
                 statusColor = '#228B22';
               } else if (item.status === 'UNLOADING') {
                 statusColor = '#FFB347';
@@ -125,9 +130,9 @@ useFocusEffect(
               return (
                 <OutboundCard
                   key={item.id}
-                  title={item.Inspection_number}
-                  subTitle={item.license_plate}
-                  origin={item.arrival_date}
+                  title={item.outbound_do_number}
+                  subTitle={item.origin}
+                  origin={item.delivery_date}
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('InspectionMemo', { item })}

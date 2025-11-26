@@ -5,6 +5,7 @@ import React from 'react';
 import InspectionScreen from '../../page/outbound/inspection/InspectionDoScreen.tsx';
 import InspectionMemoScreen from '../../page/outbound/inspection/InspectionMemoScreen.tsx';
 import InspectionSkuScreen from '../../page/outbound/inspection/InspectionSkuScreen.tsx';
+import InspectionActivity from '../../page/outbound/inspection/InspectionActivity.tsx';
 
 
 
@@ -12,8 +13,8 @@ import InspectionSkuScreen from '../../page/outbound/inspection/InspectionSkuScr
 export type InspectionParamList = {
   InspectionDoMain: undefined;
   InspectionMemo: { item: any };
-  InspectionSku: { item: any };
-  InspectionActivity: { item: any };
+  InspectionSku: { data: any , dataBefore:any };
+  InspectionActivity: { data: any , dataBefore:any};
   InspectionDetailActivity: { item: any };
 };
 
@@ -63,7 +64,7 @@ const InspectionStackNavigator = () => (
         },
       }}
     />
-  {/*  <InspectionStack.Screen
+    <InspectionStack.Screen
       name="InspectionActivity"
       component={InspectionActivity}
       options={{
@@ -77,7 +78,7 @@ const InspectionStackNavigator = () => (
         },
       }}
     />
-    <InspectionStack.Screen
+  {/*  <InspectionStack.Screen
       name="InspectionDetailActivity"
       component={InspectionDetailActivity}
       options={{

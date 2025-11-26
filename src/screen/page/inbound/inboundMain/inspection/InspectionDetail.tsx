@@ -293,6 +293,7 @@ const InspectionDetail = () => {
                     <Text style={styles.label}>Qty Scan</Text>
                     <Text style={styles.value}>
                         {Object.entries(scanTotalQty)
+                            .sort(([a], [b]) => (a === "DUS" ? -1 : b === "DUS" ? 1 : 0))
                             .map(([uom, q]) => `${q.scan} ${uom}`)
                             .join(', ')}
                     </Text>

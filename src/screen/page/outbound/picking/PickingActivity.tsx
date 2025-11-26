@@ -53,13 +53,15 @@ export default function PickingActivity() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking SKU');
-
       const response = await OutboundService.getTransactionPickingDetail(itemBefore.item.id);
       const filtered = response.data || [];
-      const latestUserId = filtered.reduce((latest:any, item:any) =>
-        new Date(item.createdAt) > new Date(latest.createdAt) ? item : latest
-      ).user_id;
-      setUserIdNewest(latestUserId);
+      if (filtered.length > 1) {
+        const latestUserId = filtered.reduce((latest: any, item: any) =>
+          new Date(item.createdAt) > new Date(latest.createdAt) ? item : latest
+        ).user_id;
+
+        setUserIdNewest(latestUserId);
+      }
       setPickingList(filtered);
     } catch (error) {
       hideLoadingDialog();
@@ -161,7 +163,7 @@ export default function PickingActivity() {
                   </Text>
                 </View>
 
-                 <View style={styles.row}>
+                <View style={styles.row}>
                   <Text style={styles.rowLabel}>Pallet Use</Text>
                   <Text style={styles.rowValue}>{activity.palletUse.pallet_code}</Text>
                 </View>
@@ -190,9 +192,11 @@ export default function PickingActivity() {
       </ScrollView>
 
       {/* Floating Action Button */}
+        {pickingList && pickingList.length === 0 ? (null) : (
       <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
         <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
       </TouchableOpacity>
+        )}
     </View>
   );
 }

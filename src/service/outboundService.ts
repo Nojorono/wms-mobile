@@ -49,7 +49,7 @@ class OutboundService {
     }
   }
 
-  //update status picking to wh_staff
+  //update status picking to wh_staff or wh_staff approved it
   static async updateStatusPicking(inspection_by: string,pickingId: string, status: any): Promise<any> {
     try {
       const response = await axiosInstance.post(`/transaction-scan-picking/${pickingId}/${status}`, { inspection_by });
@@ -58,7 +58,25 @@ class OutboundService {
       throw error.response;
     } 
   }
-}
 
+  //INSPECTION SERVICES
+  static async getOutboundDoList(data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/outbound-do/`, { params: data });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    } 
+  }
+
+  static async updateTransactionPickingDetail(transactionPickingId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/transaction-scan-picking/${transactionPickingId}`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+}
 
 export default OutboundService;

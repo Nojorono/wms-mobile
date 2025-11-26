@@ -12,7 +12,7 @@ import {
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
 import Colors from '../../../../constants/Colors.ts';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
@@ -31,6 +31,10 @@ function InspectionSkuScreen() {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
+    const route = useRoute();
+    const { data, dataBefore } = route.params as any;
+    console.log("data transaction", data.transaction_pickings)
+   
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
 
@@ -39,7 +43,7 @@ function InspectionSkuScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List Inspection Planning');
     //   const response = await OutboundServices.getInspectionList(selectedFilter || 'CREATED');
-      setInspectionList(skuOutboundData || []);
+      setInspectionList(data.transaction_pickings || []);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Inspection!');
@@ -59,8 +63,8 @@ useFocusEffect(
   const filteredList = useMemo(() => {
     return InspectionList.filter((item) => {
       const matchSearch =
-        item.Inspection_number?.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
+        item.uom?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.status?.toLowerCase().includes(searchText.toLowerCase());
 
       const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
@@ -124,12 +128,12 @@ useFocusEffect(
               return (
                 <OutboundCard
                   key={item.id}
-                  title={item.Inspection_number}
-                  subTitle={item.license_plate}
-                  origin={item.arrival_date}
+                  title={item.quantity + ' ' + item.uom}
+                  subTitle={'Week = '+item.week_number}
+                  origin={item.createdAt}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('InspectionActivity', { item })}
+                  onClick={() => navigation.navigate('InspectionActivity', { data:item ,dataBefore:[]})}
                 />
               );
             })

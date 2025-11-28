@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { use, useCallback, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -35,11 +35,26 @@ export default function PickingActivity() {
   };
 
   const handleSendToWH = async () => {
+
+
+    // Ambil hanya pallet yang status-nya OPEN
+    const createdPallets = pickingList.filter(p => p.status === "OPEN");
+
+    // Kalau tidak ada pallet dengan status OPEN
+    if (createdPallets.length === 0) {
+      showDialog("success", "Semua data sudah dikirim ke WH STAFF!");
+      return;
+    }
+
     try {
       showLoadingDialog("Sending to WH Staff...");
-
-      // 🔥 GANTI DENGAN API SEBENARNYA
-      const res = await OutboundService.updateStatusPicking(userIdNewest, itemBefore.item.id, "PENDING");
+      const payload = {
+        status: "PENDING",
+        inspection_by: userIdNewest,
+        ids: createdPallets.map((item) => item.id),
+      };
+      console.log("payload send to wh staff", payload);
+      const res = await OutboundService.updateStatusPickingBulk(payload);
       hideLoadingDialog();
       await fetchPicking();
       showDialog("success", "Berhasil dikirim ke WH Staff!");
@@ -55,7 +70,8 @@ export default function PickingActivity() {
       showLoadingDialog('Loading List Picking SKU');
       const response = await OutboundService.getTransactionPickingDetail(itemBefore.item.id);
       const filtered = response.data || [];
-      if (filtered.length > 1) {
+      console.log("filtered picking", filtered);
+      if (filtered.length > 0) {
         const latestUserId = filtered.reduce((latest: any, item: any) =>
           new Date(item.createdAt) > new Date(latest.createdAt) ? item : latest
         ).user_id;
@@ -145,12 +161,25 @@ export default function PickingActivity() {
               Belum ada Activity, silahkan lakukan Activity Picking
             </Text>
           ) : (
-
+            console.log("pickingList", pickingList),
             pickingList.map((activity: any, index: number) => (
               <View
                 key={activity?.id || `${activity.week_number}-${index}`}
                 style={styles.activityCard}
               >
+                {/* 🔹 Title Section */}
+                <Text style={{
+                  fontSize: 18,
+                  backgroundColor: '#FFF5E6',
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 8,
+                  fontWeight: '800',
+                  marginBottom: 12,
+                  color: '#333',
+                }}>
+                  Picking - {index + 1}
+                </Text>
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Quantity Picked</Text>
                   <Text
@@ -185,18 +214,28 @@ export default function PickingActivity() {
             ))
           )}
         </View>
+        {/* 🔥 Hitung total quantity picked */}
+        {(() => {
+          const totalPicked = pickingList?.reduce(
+            (sum: number, item: any) => sum + item.quantity_picked,
+            0
+          );
 
-        <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
-          <Text style={styles.addButtonText}>+ Add Activity</Text>
-        </TouchableOpacity>
+          return totalPicked >= itemBefore.item.quantity ? null : (
+            <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
+              <Text style={styles.addButtonText}>+ Add Activity</Text>
+            </TouchableOpacity>
+          );
+        })()}
+
       </ScrollView>
 
       {/* Floating Action Button */}
-        {pickingList && pickingList.length === 0 ? (null) : (
-      <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
-        <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
-      </TouchableOpacity>
-        )}
+      {pickingList && pickingList.length === 0 ? (null) : (
+        <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
+          <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

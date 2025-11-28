@@ -20,7 +20,6 @@ import {
   useCodeScanner,
 } from 'react-native-vision-camera';
 import ScannerService from '../../../../service/palletServices';
-import { set } from 'react-hook-form';
 import OutboundService from '../../../../service/outboundService';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore';
 import { useDialogStore } from '../../../../store/useGlobalDialog';
@@ -103,6 +102,18 @@ export default function PickingDetailActivity() {
     }, [])
   );
 
+  useEffect(() => {
+    if (foundItem && qtyPicking) {
+      const picked = Number(qtyPicking);
+      const sourceQty = Number(foundItem.current_quantity);
+
+      if (picked < sourceQty) {
+        setIsSwitching(true);
+        setSwitchQty(String(sourceQty - picked));
+      }
+    }
+  }, [qtyPicking, foundItem]);
+
   const handleCheckPalletSumber = async () => {
     if (!palletSumber.trim()) {
       Alert.alert("Masukkan pallet sumber terlebih dahulu");
@@ -170,56 +181,87 @@ export default function PickingDetailActivity() {
     }
   };
 
-const handleSubmit = async () => {
-  console.log("Submitting Picking Activity");
+  const isSubmitValid = (() => {
+    // --- VALIDASI DASAR ---
+    const sourceOk = palletSumber && doneSumber && foundItem;
+    const pickingOk = palletPicking && donePicking && pickingPallet;
+    const qtyOk = qtyPicking && Number(qtyPicking) > 0;
 
-  if (!foundItem) {
-    Alert.alert("Pallet sumber belum dicek!");
-    return;
-  }
+    // --- JIKA ADA SWITCHING ---
+    if (isSwitching) {
 
-  if (!pickingPallet) {
-    Alert.alert("Pallet picking belum dicek!");
-    return;
-  }
+      const switchOk = switchPallet && doneSwitch && switchInfo;
+      const switchQtyOk = switchQty && Number(switchQty) > 0;
 
-  const userId = assignPicking?.picking_user_id || 'test-user-123';
-  const userName = assignPicking?.picking_name || 'test user';
+      // Semua field switching + sumber + picking wajib lengkap
+      return sourceOk && pickingOk && qtyOk && switchOk && switchQtyOk;
+    }
 
-  const payload: any = {
-    transaction_picking_id: itemBefore.item.id,
-    pallet_source_id: foundItem?.id,
-    pallet_use_id: pickingPallet?.id,
-    item_id: itemBefore.item.item_id,
-    quantity_picked: Number(qtyPicking),
-    uom: itemBefore.item.uom,
-    week_number: itemBefore.item.week_number,
-    status: "OPEN",
-    inspection_by: itemBefore.item.memo.requestor,
-    user_id: userId,
-    user_name: userName,
-  };
+    // --- TANPA SWITCHING ---
+    return sourceOk && pickingOk && qtyOk;
+  })();
 
-  if (switchPallet) {
-    payload.pallet_switch_id = switchPallet;
-  }
+  const handleSubmit = async () => {
+    console.log("Submitting Picking Activity");
 
-  if (switchQty) {
-    payload.quantity_switch = Number(switchQty);
-  }
+    if (!foundItem) {
+      Alert.alert("Pallet sumber belum dicek!");
+      return;
+    }
 
-  console.log("Submit Payload:", payload);
-      try {
-       showLoadingDialog('Submitting Picking Activity');
+    if (!pickingPallet) {
+      Alert.alert("Pallet picking belum dicek!");
+      return;
+    }
+
+    const userId = assignPicking?.picking_user_id || 'test-user-123';
+    const userName = assignPicking?.picking_name || 'test user';
+
+    const payload: any = {
+      transaction_picking_id: itemBefore.item.id,
+      pallet_source_id: foundItem?.id,
+      pallet_use_id: pickingPallet?.id,
+      item_id: itemBefore.item.item_id,
+      quantity_picked: Number(qtyPicking),
+      uom: itemBefore.item.uom,
+      week_number: itemBefore.item.week_number,
+      status: "OPEN",
+      inspection_by: itemBefore.item.memo.requestor,
+      user_id: userId,
+      user_name: userName,
+    };
+
+    if (switchPallet) {
+      payload.pallet_switch_id = switchInfo?.id;
+    }
+
+    if (switchQty) {
+      payload.quantity_switch = Number(switchQty);
+    }
+
+    console.log("Submit Payload:", payload);
+    try {
+      showLoadingDialog('Submitting Picking Activity');
       const response = await OutboundService.postTransactionPicking(payload);
       navigation.goBack();
     } catch (error) {
       console.error('Submit Error:', error);
       Alert.alert('Gagal submit picking');
-    }finally {
+    } finally {
       hideLoadingDialog();
     }
-};
+  };
+
+  const onChangeQtyPicking = (v: string) => {
+    const qty = Number(v);
+
+    if (qty > Number(itemBefore.item.quantity)) {
+      Alert.alert("Qty picking tidak boleh lebih besar dari qty permintaan");
+      return;
+    }
+
+    setQtyPicking(v);
+  };
 
 
   const isSamePallet = palletSumber && palletPicking && palletSumber === palletPicking;
@@ -394,10 +436,11 @@ const handleSubmit = async () => {
           <TextInput
             placeholder="Qty Picking"
             value={qtyPicking}
-            onChangeText={setQtyPicking}
+            onChangeText={onChangeQtyPicking}
             keyboardType="numeric"
             style={[styles.input, { flex: 1, marginVertical: 0 }]}
           />
+
           <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
             {itemBefore.item.uom}
           </Text>
@@ -406,14 +449,32 @@ const handleSubmit = async () => {
         {/* SWITCHING */}
         {isSamePallet && !isSwitching && (
           <TouchableOpacity
-            style={[styles.cancelButton, { backgroundColor: '#F26E1F' }]}
+            disabled={foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)}
+            style={[
+              styles.cancelButton,
+              {
+                backgroundColor: foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)
+                  ? '#ccc'
+                  : '#F26E1F'
+              }
+            ]}
             onPress={() => setIsSwitching(true)}
           >
-            <Text style={[styles.cancelText, { color: '#fff' }]}>
+            <Text
+              style={[
+                styles.cancelText,
+                {
+                  color: foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)
+                    ? '#666'
+                    : '#fff'
+                }
+              ]}
+            >
               Use Pallet Switch
             </Text>
           </TouchableOpacity>
         )}
+
 
         {isSamePallet && isSwitching && (
           <View style={styles.switchSection}>
@@ -480,7 +541,8 @@ const handleSubmit = async () => {
                 value={switchQty}
                 onChangeText={setSwitchQty}
                 keyboardType="numeric"
-                style={[styles.input, { flex: 1, marginVertical: 0 }]}
+                editable={false}
+                style={[styles.input, { flex: 1, marginVertical: 0, backgroundColor: '#eee' }]}
               />
               {switchInfo && (
                 <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
@@ -499,7 +561,14 @@ const handleSubmit = async () => {
       </View>
 
       {/* SUBMIT */}
-      <TouchableOpacity style={styles.submitButton} onPress={ handleSubmit}>
+      <TouchableOpacity
+        style={[
+          styles.submitButton,
+          { backgroundColor: isSubmitValid ? '#F26E1F' : '#bfbfbf' }
+        ]}
+        disabled={!isSubmitValid}
+        onPress={handleSubmit}
+      >
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
 

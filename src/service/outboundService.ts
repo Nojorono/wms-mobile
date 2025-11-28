@@ -59,6 +59,15 @@ class OutboundService {
     } 
   }
 
+  static async updateStatusPickingBulk(payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/transaction-scan-picking/update-status`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   //INSPECTION SERVICES
   static async getOutboundDoList(data: any): Promise<any> {
     try {

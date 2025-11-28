@@ -1,4 +1,4 @@
-import React, { use, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -15,8 +15,6 @@ import { PickingParamList } from '../../../navigation/outbound/PickingNavigator'
 import OutboundService from '../../../../service/outboundService';
 import { useFocusEffect } from '@react-navigation/native';
 import { OutboundItemParam } from '../../../../interface/outbound/outbound';
-import Ionicons from 'react-native-vector-icons/FontAwesome5';
-import { set } from 'react-hook-form';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingActivity'>;
 

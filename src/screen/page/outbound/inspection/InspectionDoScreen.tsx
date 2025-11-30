@@ -44,7 +44,6 @@ function InspectionDoScreen() {
         status:"PENDING"
       }
       const response = await OutboundService.getOutboundDoList(data);
-      console.log("Inspection DO Response:", response);
       setInspectionList(response.data || []);
     } catch (error) {
       hideLoadingDialog();

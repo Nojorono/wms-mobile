@@ -86,6 +86,24 @@ class OutboundService {
       throw error.response;
     }
   }
+
+  static async cancelMemo(memoId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/transaction-picking/memo/${memoId}/detach`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateStatusWhenCompleteInspection(doId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/outbound-do/${doId}`,{payload});
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
 }
 
 export default OutboundService;

@@ -19,6 +19,7 @@ import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import { InspectionParamList } from '../../../navigation/outbound/InspectionNavigator.tsx';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
 import { memoOutboundData } from '../../../../dummy/outboundData.js';
+import OutboundService from '../../../../service/outboundService.ts';
 
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
 
@@ -40,7 +41,18 @@ function InspectionMemoScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Inspection Memo Planning');
-      setInspectionList(itemBefore.item?.outbound_memos || []);
+      const data: any = {
+        limit: 100,
+        status: "PENDING"
+      }
+      const response = await OutboundService.getOutboundDoList(data);
+
+      const list = response?.data || [];
+      const matched = list.find((item: any) => item.id === itemBefore.item.id);
+      const memos = matched?.outbound_memos || [];
+
+      // 🔄 Set state pakai hasil filter dari fetch
+      setInspectionList(memos);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Inspection!');
@@ -50,15 +62,15 @@ function InspectionMemoScreen() {
     }
   };
 
-useFocusEffect(
-  useCallback(() => {
-    fetchInspection();
-  }, [selectedFilter])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchInspection();
+    }, [selectedFilter])
+  );
 
   // filter & search data
   const filteredList = useMemo(() => {
-    return InspectionList.filter((item:any) => {
+    return InspectionList.filter((item: any) => {
       const matchSearch =
         item.outbound_memo_number?.toLowerCase().includes(searchText.toLowerCase()) ||
         item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
@@ -130,7 +142,7 @@ useFocusEffect(
                   origin={item.type}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('InspectionSku', { data:item , dataBefore:itemBefore})}
+                  onClick={() => navigation.navigate('InspectionSku', { data: item, dataBefore: itemBefore })}
                 />
               );
             })

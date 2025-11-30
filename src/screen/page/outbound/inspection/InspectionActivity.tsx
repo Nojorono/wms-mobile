@@ -126,10 +126,7 @@ export default function InspectionActivity() {
               inspection_by: userId,
               ids: [selectedItem.id],
             };
-
             const res = await OutboundService.updateStatusPickingBulk(payload);
-            console.log("response approve", res);
-
             hideLoadingDialog();
             await fetchInspection();
             showDialog("success", "Berhasil dikirim ke WH Staff!");

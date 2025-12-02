@@ -29,7 +29,7 @@ export default function PickingActivity() {
   const [userIdNewest, setUserIdNewest] = useState('');
 
   const handleAddActivity = () => {
-    navigation.navigate('PickingDetailActivity', { item: itemBefore.item });
+    navigation.navigate('PickingDetailActivity', { mode: "add", itemBefore: itemBefore.item });
   };
 
   const handleSendToWH = async () => {
@@ -205,10 +205,34 @@ export default function PickingActivity() {
                   <Text style={styles.rowValue}>{activity.user_name}</Text>
                 </View>
 
-                <View style={styles.statusBox}>
-                  <Text style={styles.statusText}>{activity.status}</Text>
+                <View style={styles.row}>
+                  <Text style={styles.rowLabel}>Status</Text>
+                  <View style={[styles.statusBox]}>
+                    <Text style={styles.statusText}>{activity.status}</Text>
+                  </View>
                 </View>
+
+
+
+                <TouchableOpacity
+                  style={{
+                    marginTop: 10,
+                    backgroundColor: '#1F5BF2',
+                    paddingVertical: 8,
+                    borderRadius: 8,
+                  }}
+                  onPress={() => navigation.navigate("PickingDetailActivity", {
+                    mode: "edit",
+                    activity: activity,   // kirim data item yang mau diedit
+                    itemBefore: itemBefore // kirim itemBefore (kalau masih dipakai)
+                  })}
+                >
+                  <Text style={{ color: "white", textAlign: "center", fontWeight: "700" }}>
+                    Edit
+                  </Text>
+                </TouchableOpacity>
               </View>
+
             ))
           )}
         </View>

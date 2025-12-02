@@ -135,6 +135,7 @@ useFocusEffect(
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('InspectionMemo', { item })}
+                  // onClick={() => navigation.navigate('NewInspectionMemo', { item })}
                 />
               );
             })

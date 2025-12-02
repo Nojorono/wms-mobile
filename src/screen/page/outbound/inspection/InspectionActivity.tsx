@@ -317,10 +317,10 @@ export default function InspectionActivity() {
                 style={[
                   styles.approveButton,
                   { flex: 1, backgroundColor: '#f57f1eff' },
-                  selectedItem?.status === 'PENDING' && { backgroundColor: '#ccc' },
+                  (selectedItem?.status === 'PENDING' || selectedItem?.status === 'OPEN') ? { backgroundColor: '#ccc' } : undefined,
                 ]}
-                onPress={selectedItem?.status === 'PENDING' ? undefined : () => handleApproveAction("FINAL")}
-                disabled={selectedItem?.status === 'PENDING'}
+                onPress={(selectedItem?.status === 'PENDING' || selectedItem?.status === 'OPEN') ? undefined : () => handleApproveAction("FINAL")}
+                disabled={selectedItem?.status === 'PENDING' || selectedItem?.status === 'OPEN'}
                 >
                 <Text style={styles.approveText}>Final Approve</Text>
                 </TouchableOpacity>

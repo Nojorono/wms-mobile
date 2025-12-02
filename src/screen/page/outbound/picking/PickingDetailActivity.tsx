@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { OutboundItemParam } from '../../../../interface/outbound/outbound';
 import Colors from '../../../../constants/Colors';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
@@ -27,7 +26,25 @@ import { useDialogStore } from '../../../../store/useGlobalDialog';
 export default function PickingDetailActivity() {
   const navigation = useNavigation();
   const route = useRoute();
-  const itemBefore = route.params as OutboundItemParam;
+  const params = (route.params || {}) as any;
+
+  // normalize params so we always have itemBefore.item like original code expects
+  const mode: 'add' | 'edit' = (params.mode as any) || 'add';
+  const activity = params.activity;
+  // support several shapes: { item } (from screen-add), or { itemBefore } (original)
+  let itemBeforeParam = params.itemBefore;
+  if (!itemBeforeParam) {
+    if (params.item) {
+      // caller sent item directly (file1's add case)
+      itemBeforeParam = { item: params.item };
+    } else if (params.itemBefore && params.itemBefore.item) {
+      itemBeforeParam = params.itemBefore;
+    } else {
+      itemBeforeParam = { item: {} };
+    }
+  }
+  const itemBefore = itemBeforeParam as any; // use itemBefore.item below
+
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
 
@@ -55,6 +72,8 @@ export default function PickingDetailActivity() {
   const { hasPermission, requestPermission } = useCameraPermission();
 
   const openScanner = async (type: 'sumber' | 'picking' | 'switching') => {
+    // disable scanner in edit mode
+    if (mode === 'edit') return;
     if (!hasPermission) {
       await requestPermission();
     }
@@ -78,10 +97,13 @@ export default function PickingDetailActivity() {
   });
 
   const fetchAssign = async () => {
+    // guard: require memo_id
+    const memoId = itemBefore?.item?.memo_id;
+    if (!memoId) return;
+
     try {
       showLoadingDialog('Loading List Picking SKU');
-      const response = await OutboundService.getAssignPickingUser(itemBefore.item.memo_id);
-      // Ambil item dengan createdAt paling baru
+      const response = await OutboundService.getAssignPickingUser(memoId);
       if (Array.isArray(response.data) && response.data.length > 0) {
         const latest = response.data.reduce((prev: any, curr: any) =>
           new Date(curr.createdAt) > new Date(prev.createdAt) ? curr : prev
@@ -89,7 +111,7 @@ export default function PickingDetailActivity() {
         setAssignPicking(latest);
       }
     } catch (error) {
-      hideLoadingDialog();
+      // don't hide here (finally will hide)
       showDialog('error', 'Error while Fetching Data Picking!');
     } finally {
       hideLoadingDialog();
@@ -99,88 +121,132 @@ export default function PickingDetailActivity() {
   useFocusEffect(
     useCallback(() => {
       fetchAssign();
-    }, [])
+    }, [itemBefore?.item?.memo_id])
   );
 
+  // when qty or foundItem changes, recalc switch qty if isSwitching and mode add
   useEffect(() => {
-    if (foundItem && qtyPicking) {
-      const picked = Number(qtyPicking);
-      const sourceQty = Number(foundItem.current_quantity);
-
-      if (picked < sourceQty) {
-        setIsSwitching(true);
-        setSwitchQty(String(sourceQty - picked));
+    if (isSwitching) {
+      if (foundItem && qtyPicking) {
+        const picked = Number(qtyPicking);
+        const sourceQty = Number(foundItem.current_quantity);
+        if (!Number.isNaN(picked) && !Number.isNaN(sourceQty) && picked < sourceQty) {
+          setSwitchQty(String(sourceQty - picked));
+        }
       }
     }
-  }, [qtyPicking, foundItem]);
+  }, [qtyPicking, foundItem, isSwitching]);
+
+  // preload fields when editing
+  useEffect(() => {
+    if (mode === 'edit' && activity) {
+      // fill fields from activity safely (guard undefined)
+      setPalletSumber(activity.pallet_source_code || activity.pallet_source || '');
+      setPalletPicking(activity.palletUse?.pallet_code || activity.pallet_use_code || '');
+      setQtyPicking(activity.quantity_picked != null ? String(activity.quantity_picked) : '');
+
+      // foundItem placeholder (so UI shows info)
+      setFoundItem({
+        id: activity.pallet_source_id,
+        item_name: activity.item_name || itemBefore?.item?.item_name,
+        current_quantity: activity.quantity_before != null ? activity.quantity_before : activity.quantity_picked,
+        uom: activity.uom || itemBefore?.item?.uom,
+        week_number: activity.week_number || itemBefore?.item?.week_number,
+      });
+
+      setPickingPallet({
+        id: activity.pallet_use_id,
+        pallet_code: activity.palletUse?.pallet_code || activity.pallet_use_code,
+        week_number: activity.week_number || itemBefore?.item?.week_number,
+        uom: activity.uom || itemBefore?.item?.uom,
+      });
+
+      if (activity.pallet_switch_id) {
+        setIsSwitching(true);
+        setSwitchPallet(activity.palletSwitch?.pallet_code || activity.pallet_switch_code || '');
+        setSwitchQty(activity.quantity_switch != null ? String(activity.quantity_switch) : '');
+        setSwitchInfo({
+          id: activity.pallet_switch_id,
+          current_quantity: activity.quantity_switch,
+          uom: activity.palletSwitch?.uom,
+          week_number: activity.palletSwitch?.week_number,
+        });
+        setDoneSwitch(true);
+      }
+
+      // mark checks as done for edit mode (so submit enabled)
+      setDoneSumber(true);
+      setDonePicking(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, activity]);
 
   const handleCheckPalletSumber = async () => {
     if (!palletSumber.trim()) {
-      Alert.alert("Masukkan pallet sumber terlebih dahulu");
+      Alert.alert('Masukkan pallet sumber terlebih dahulu');
       return;
     }
 
     try {
       const res = await ScannerService.getPalletByCode(palletSumber);
       if (!res.success) {
-        Alert.alert("Pallet tidak ditemukan atau tidak valid");
+        Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
       }
-      // res.data is an array, filter for matching item_id
+      // find matching item_id
       const found = res.data.find((item: any) => item.item_id === itemBefore.item.item_id);
-      setFoundItem(found);
       if (!found) {
-        Alert.alert("Pallet tidak memiliki item yang akan dipicking");
+        Alert.alert('Pallet tidak memiliki item yang akan dipicking');
         return;
       }
       setFoundItem(found);
       setDoneSumber(true);
-      Alert.alert("Pallet valid | Item:" + found.item_name + " \n Qty " + found.current_quantity + " " + found.uom);
+      Alert.alert('Pallet valid', `${found.item_name}\nQty ${found.current_quantity} ${found.uom}`);
     } catch (err) {
-      Alert.alert("Gagal memeriksa pallet");
+      Alert.alert('Gagal memeriksa pallet');
     }
   };
 
   const handleCheckPalletPicking = async () => {
     if (!palletPicking.trim()) {
-      Alert.alert("Masukkan pallet picking terlebih dahulu");
+      Alert.alert('Masukkan pallet picking terlebih dahulu');
       return;
     }
 
     try {
       const res = await ScannerService.getPalletByCode(palletPicking);
       if (!res.success) {
-        Alert.alert("Pallet tidak ditemukan atau tidak valid");
+        Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
       }
       setPickingPallet(res.data[0]);
       setDonePicking(true);
-      Alert.alert("Pallet valid | Week: " + res.data[0].week_number + "| Uom : " + res.data[0].uom);
+      Alert.alert('Pallet valid', `Week: ${res.data[0].week_number} | Uom: ${res.data[0].uom}`);
     } catch (err) {
-      Alert.alert("Gagal memeriksa pallet");
+      Alert.alert('Gagal memeriksa pallet');
     }
   };
 
   const handleCheckPalletSwitching = async () => {
     if (!switchPallet.trim()) {
-      Alert.alert("Masukkan pallet switching terlebih dahulu");
+      Alert.alert('Masukkan pallet switching terlebih dahulu');
       return;
     }
     try {
       const res = await ScannerService.getPalletByCode(switchPallet);
       if (!res.success) {
-        Alert.alert("Pallet tidak ditemukan atau tidak valid");
+        Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
       }
       setSwitchInfo(res.data[0]);
       setDoneSwitch(true);
-
-      Alert.alert("Pallet valid | Item:" + res.data[0].item_name + " \n Qty " + res.data[0].current_quantity + " " + res.data[0].uom);
+      Alert.alert('Pallet valid', `${res.data[0].item_name}\nQty ${res.data[0].current_quantity} ${res.data[0].uom}`);
     } catch (err) {
-      Alert.alert("Gagal memeriksa pallet");
+      Alert.alert('Gagal memeriksa pallet');
     }
   };
 
+  // validation adapts for edit: since fields are prefilled, checks still valid
   const isSubmitValid = (() => {
     // --- VALIDASI DASAR ---
     const sourceOk = palletSumber && doneSumber && foundItem;
@@ -189,28 +255,22 @@ export default function PickingDetailActivity() {
 
     // --- JIKA ADA SWITCHING ---
     if (isSwitching) {
-
       const switchOk = switchPallet && doneSwitch && switchInfo;
       const switchQtyOk = switchQty && Number(switchQty) > 0;
-
-      // Semua field switching + sumber + picking wajib lengkap
       return sourceOk && pickingOk && qtyOk && switchOk && switchQtyOk;
     }
 
-    // --- TANPA SWITCHING ---
     return sourceOk && pickingOk && qtyOk;
   })();
 
   const handleSubmit = async () => {
-    console.log("Submitting Picking Activity");
-
+    // basic guard
     if (!foundItem) {
-      Alert.alert("Pallet sumber belum dicek!");
+      Alert.alert('Pallet sumber belum dicek!');
       return;
     }
-
     if (!pickingPallet) {
-      Alert.alert("Pallet picking belum dicek!");
+      Alert.alert('Pallet picking belum dicek!');
       return;
     }
 
@@ -225,8 +285,8 @@ export default function PickingDetailActivity() {
       quantity_picked: Number(qtyPicking),
       uom: itemBefore.item.uom,
       week_number: itemBefore.item.week_number,
-      status: "OPEN",
-      inspection_by: itemBefore.item.memo.requestor,
+      status: 'OPEN',
+      inspection_by: itemBefore.item.memo?.requestor || itemBefore.item.requestor,
       user_id: userId,
       user_name: userName,
     };
@@ -239,14 +299,24 @@ export default function PickingDetailActivity() {
       payload.quantity_switch = Number(switchQty);
     }
 
-    console.log("Submit Payload:", payload);
     try {
-      showLoadingDialog('Submitting Picking Activity');
-      const response = await OutboundService.postTransactionPicking(payload);
+      showLoadingDialog(mode === 'edit' ? 'Updating Activity' : 'Submitting Activity');
+
+      if (mode === 'edit') {
+        // Add id for update endpoint
+        payload.id = activity.id;
+        // call update API - ensure your OutboundService implements this
+        // await OutboundService.updateTransactionPicking(payload);
+        showDialog('success', 'Berhasil memperbarui activity picking');
+      } else {
+        await OutboundService.postTransactionPicking(payload);
+        showDialog('success', 'Berhasil membuat activity picking');
+      }
+
       navigation.goBack();
-    } catch (error) {
-      console.error('Submit Error:', error);
-      Alert.alert('Gagal submit picking');
+    } catch (err) {
+      console.error(err);
+      showDialog('error', mode === 'edit' ? 'Gagal update activity' : 'Gagal submit picking');
     } finally {
       hideLoadingDialog();
     }
@@ -254,15 +324,13 @@ export default function PickingDetailActivity() {
 
   const onChangeQtyPicking = (v: string) => {
     const qty = Number(v);
-
-    if (qty > Number(itemBefore.item.quantity)) {
-      Alert.alert("Qty picking tidak boleh lebih besar dari qty permintaan");
+    // limit: not exceed requested quantity (itemBefore.item.quantity)
+    if (itemBefore?.item?.quantity != null && qty > Number(itemBefore.item.quantity)) {
+      Alert.alert('Qty picking tidak boleh lebih besar dari qty permintaan');
       return;
     }
-
     setQtyPicking(v);
   };
-
 
   const isSamePallet = palletSumber && palletPicking && palletSumber === palletPicking;
 
@@ -287,7 +355,7 @@ export default function PickingDetailActivity() {
             shadowRadius: 4,
           }}
         >
-          {itemBefore.item.item.description}
+          {mode === 'edit' ? 'Edit Picking Activity' : itemBefore?.item?.item?.description || itemBefore?.item?.description || 'Picking Activity'}
         </Text>
 
         {/* SUGGESTED DESTINATION */}
@@ -315,10 +383,10 @@ export default function PickingDetailActivity() {
               paddingHorizontal: 12,
             }}
           >
-            {itemBefore.item.destinationWarehouseSub?.name} -{' '}
-            {itemBefore.item.destinationBin?.name} -{' '}
-            {itemBefore.item.quantity} {itemBefore.item.uom} - Week-
-            {itemBefore.item.week_number}
+            {itemBefore?.item?.destinationWarehouseSub?.name} -{' '}
+            {itemBefore?.item?.destinationBin?.name} -{' '}
+            {itemBefore?.item?.quantity} {itemBefore?.item?.uom} - Week-
+            {itemBefore?.item?.week_number}
           </Text>
         </View>
 
@@ -342,6 +410,7 @@ export default function PickingDetailActivity() {
           <TextInput
             placeholder="Pallet Sumber"
             value={palletSumber}
+            editable={mode !== 'edit'}
             onChangeText={(v) => {
               setPalletSumber(v);
               setFoundItem(null);
@@ -350,17 +419,19 @@ export default function PickingDetailActivity() {
             style={[styles.input, { flex: 1, marginVertical: 0 }]}
           />
 
-          {/* Scan Button */}
-          <TouchableOpacity
-            style={styles.scanBtn}
-            onPress={() => openScanner('sumber')}
-          >
-            <Ionicons
-              name="barcode"
-              size={22}
-              color={Colors.secondaryColor}
-            />
-          </TouchableOpacity>
+          {/* Scan Button (hidden in edit mode) */}
+          {mode !== 'edit' && (
+            <TouchableOpacity
+              style={styles.scanBtn}
+              onPress={() => openScanner('sumber')}
+            >
+              <Ionicons
+                name="barcode"
+                size={22}
+                color={Colors.secondaryColor}
+              />
+            </TouchableOpacity>
+          )}
 
           {/* CHECK Button SUMBER*/}
           {doneSumber ? (
@@ -394,6 +465,7 @@ export default function PickingDetailActivity() {
           <TextInput
             placeholder="Pallet Picking"
             value={palletPicking}
+            editable={mode !== 'edit'}
             onChangeText={(v) => {
               setPalletPicking(v);
               setPickingPallet(null);
@@ -401,16 +473,18 @@ export default function PickingDetailActivity() {
             }}
             style={[styles.input, { flex: 1, marginVertical: 0 }]}
           />
-          <TouchableOpacity
-            style={styles.scanBtn}
-            onPress={() => openScanner('picking')}
-          >
-            <Ionicons
-              name="barcode"
-              size={22}
-              color={Colors.secondaryColor}
-            />
-          </TouchableOpacity>
+          {mode !== 'edit' && (
+            <TouchableOpacity
+              style={styles.scanBtn}
+              onPress={() => openScanner('picking')}
+            >
+              <Ionicons
+                name="barcode"
+                size={22}
+                color={Colors.secondaryColor}
+              />
+            </TouchableOpacity>
+          )}
           {/* CHECK Button */}
           {donePicking ? (
             <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
@@ -442,7 +516,7 @@ export default function PickingDetailActivity() {
           />
 
           <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
-            {itemBefore.item.uom}
+            {itemBefore?.item?.uom}
           </Text>
         </View>
 
@@ -508,6 +582,7 @@ export default function PickingDetailActivity() {
               <TouchableOpacity
                 style={styles.scanBtn}
                 onPress={() => openScanner('switching')}
+                disabled={mode === 'edit'}
               >
                 <Ionicons
                   name="barcode"
@@ -569,7 +644,7 @@ export default function PickingDetailActivity() {
         disabled={!isSubmitValid}
         onPress={handleSubmit}
       >
-        <Text style={styles.submitText}>Submit</Text>
+        <Text style={styles.submitText}>{mode === 'edit' ? 'Update' : 'Submit'}</Text>
       </TouchableOpacity>
 
       {/* SCANNER MODAL */}

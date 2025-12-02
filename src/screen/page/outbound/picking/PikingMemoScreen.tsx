@@ -25,6 +25,7 @@ type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
 function PickingMemoScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [PickingList, setPickingList] = useState<any[]>([]);
+  const [dataItem, setDataItem] = useState<any>(null);
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string | null>();
   const route = useRoute();
@@ -40,7 +41,8 @@ function PickingMemoScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking Planning');
-      setPickingList(itemBefore.item.memo_id || []);
+      setPickingList(itemBefore.item.outbound_memos || []);
+      setDataItem(itemBefore.item);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Picking!');
@@ -57,16 +59,16 @@ useFocusEffect(
 );
 
   // filter & search data
-  const filteredList = useMemo(() => {
-    return PickingList.filter((item) => {
-      const matchSearch =
-        item?.toLowerCase().includes(searchText.toLowerCase()) 
+  // const filteredList = useMemo(() => {
+  //   return PickingList.filter((item) => {
+  //     const matchSearch =
+  //       item.outbound_memo_number?.toLowerCase().includes(searchText.toLowerCase()) 
 
-      const matchFilter = selectedFilter ? item.status === selectedFilter : true;
+  //     const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
-      return matchSearch && matchFilter;
-    });
-  }, [PickingList, searchText, selectedFilter]);
+  //     return matchSearch && matchFilter;
+  //   });
+  // }, [PickingList, searchText, selectedFilter]);
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -95,7 +97,7 @@ useFocusEffect(
           </View>
 
           {/* 🔍 Search + Filter Row */}
-          <View style={{ marginVertical: 10 }}>
+          {/* <View style={{ marginVertical: 10 }}>
             <TextInput
               style={localStyles.searchInput}
               placeholder="Search Memo Id"
@@ -103,15 +105,15 @@ useFocusEffect(
               onChangeText={setSearchText}
               placeholderTextColor="#888"
             />
-          </View>
+          </View> */}
 
           {/* 📦 List Card */}
-          {filteredList.length === 0 ? (
+          {PickingList.length === 0 ? (
             <View style={{ alignItems: 'center', marginTop: 40 }}>
               <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
             </View>
           ) : (
-            filteredList.map((item: any, i:number) => {
+            PickingList.map((item: any, i:number) => {
               let statusColor;
               if (item.status === 'CREATED') {
                 statusColor = '#228B22';
@@ -121,12 +123,14 @@ useFocusEffect(
                 statusColor = '#696969';
               }
 
-                const index = filteredList.indexOf(item);
+                const index = PickingList.indexOf(item);
+                console.log('Rendering OutboundCard for item:', item);
                 return (
                 <OutboundCard
+            
                   key={i}
-                  title={"Memo ID : "+item.slice(-20)}
-                  subTitle={"Memo with index : " + (index+1)}
+                  title={"No: "+ item.outbound_memo_number}
+                  subTitle={ item.destination}
                   // origin={}
                   // status={item.status}
                   statusColor={statusColor}

@@ -134,8 +134,8 @@ useFocusEffect(
                   origin={item.delivery_date}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('InspectionMemo', { item })}
-                  // onClick={() => navigation.navigate('NewInspectionMemo', { item })}
+                  // onClick={() => navigation.navigate('InspectionMemo', { item })}
+                  onClick={() => navigation.navigate('NewInspectionMemo', { item })}
                 />
               );
             })

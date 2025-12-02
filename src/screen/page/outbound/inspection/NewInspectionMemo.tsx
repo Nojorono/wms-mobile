@@ -50,6 +50,7 @@ function NewInspectionMemo() {
       const matched = list.find((i: any) => i.id === itemBefore.item.id);
       const memos = matched?.outbound_memos || [];
 
+
       // Proses memo items + picking scan
       const processed = memos.map((memo: any) => {
         const memoItems = memo?.outbound_memo_items || [];
@@ -68,7 +69,6 @@ function NewInspectionMemo() {
 
         return { memo, items: mergedItems };
       });
-
       setMemoList(processed);
     } catch (e) {
       showDialog("error", "Error while fetching data!");
@@ -112,6 +112,7 @@ function NewInspectionMemo() {
                 key={`${m.memo.outbound_memo_number}-${index}`}
                 memo={m.memo}
                 items={m.items}
+                onRefresh={fetchInspection}
               />
             ))
           )}
@@ -123,12 +124,25 @@ function NewInspectionMemo() {
         style={stylesLocal.fab}
         onPress={() =>
           Alert.alert(
-            "Approve All",
-            "Are you sure you want to approve all tasks?",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "OK", onPress: () => navigation.goBack() },
-            ]
+        "Approve All",
+        "Are you sure you want to approve all tasks?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "OK",
+            onPress: async () => {
+          try {
+            console.log("Approving all tasks for DO ID:", itemBefore.item.id);
+            // const res = await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, { status: "APPROVED" });
+            // console.log("Approve Response:", res);
+            showDialog("success", "All tasks approved successfully!");
+            navigation.goBack();
+          } catch (error) {
+            showDialog("error", "Failed to approve tasks!");
+          }
+            },
+          },
+        ]
           )
         }
       >

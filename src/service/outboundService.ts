@@ -98,7 +98,7 @@ class OutboundService {
 
   static async updateStatusWhenCompleteInspection(doId: string, payload: any): Promise<any> {
     try {
-      const response = await axiosInstance.post(`/outbound-do/${doId}`,{payload});
+      const response = await axiosInstance.patch(`/outbound-do/${doId}`,{payload});
       return response.data;
     } catch (error: any) {
       throw error.response;

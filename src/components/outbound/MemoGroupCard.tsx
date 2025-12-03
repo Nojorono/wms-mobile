@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import MemoItemCard from "./MemoItemCard";
 
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
+
 
 const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRefresh: () => void }) => {
   const [expanded, setExpanded] = useState(false);
@@ -28,25 +30,47 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
         borderColor: "#ddd",
       }}
     >
-      {/* HEADER MEMO */}
-      <TouchableOpacity onPress={toggleExpand}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-            Memo: {memo.outbound_memo_number}
-          </Text>
+     {/* HEADER */}
+      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        {/* LEFT: TEXT + EXPAND */}
+        <TouchableOpacity
+          onPress={toggleExpand}
+          style={{ flex: 1, marginRight: 8 }}
+        >
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+              Memo: {memo.outbound_memo_number}
+            </Text>
 
-          <Text style={{ fontSize: 14, fontWeight: "600", color: "#F26E1F" }}>
-            {expanded ? "▲" : "▼"}
-          </Text>
-        </View>
+            
+              {expanded ? <Ionicons name="angle-up" size={25} color="#F26E1F" /> : <Ionicons name="angle-down" size={25} color="#F26E1F" />}
+            
+          </View>
 
-        <Text style={{ marginTop: 4, color: "#555" }}>
-          Tipe: {memo.type}
-        </Text>
-        <Text style={{ marginTop: 4, color: "#555" }}>
-          Ship To: {memo.ship_to}
-        </Text>
-      </TouchableOpacity>
+          <Text style={{ marginTop: 4, color: "#555" }}>
+            Tipe: {memo.type}
+          </Text>
+          <Text style={{ marginTop: 4, color: "#555" }}>
+            Ship To: {memo.ship_to}
+          </Text>
+        </TouchableOpacity>
+
+        {/* RIGHT: DELETE BUTTON */}
+        <TouchableOpacity
+          onPress={() => {}}
+          style={{
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 8,
+            backgroundColor: "#FF3B30",
+            alignSelf: "flex-start",
+            height: 32,
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="times" size={14} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       {/* LIST ITEM MEMO */}
       {expanded && (

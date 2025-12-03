@@ -15,11 +15,11 @@ export type PickingParamList = {
   PickingMemo: { item: any };
   PickingSku: { item: any };
   PickingActivity: { item: any };
-  PickingDetailActivity: { 
-  mode: "add" | "edit";
-  itemBefore?: any;
-  activity?: any;
-};
+  PickingDetailActivity: {
+    mode: "add" | "edit";
+    itemBefore?: any;
+    activity?: any;
+  };
 };
 
 const PickingStack = createStackNavigator<PickingParamList>();
@@ -54,7 +54,7 @@ const PickingStackNavigator = () => (
         },
       }}
     />
-      <PickingStack.Screen
+    <PickingStack.Screen
       name="PickingSku"
       component={PickingSkuScreen}
       options={{
@@ -96,7 +96,7 @@ const PickingStackNavigator = () => (
         },
       }}
     />
-   
+
 
   </PickingStack.Navigator>
 );

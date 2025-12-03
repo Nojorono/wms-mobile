@@ -4,6 +4,9 @@ import OutboundService from "../../service/outboundService";
 import { useLoadingDialogStore } from "../../store/useLoadingStore";
 import { useDialogStore } from "../../store/useGlobalDialog";
 import { useAuthStore } from "../../store/useAuthStore";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "@react-navigation/native";
+import { InspectionParamList } from "../../screen/navigation/outbound/InspectionNavigator";
 
 interface MemoItemCardProps {
     item: {
@@ -23,8 +26,10 @@ interface MemoItemCardProps {
     };
     onRefresh: () => Promise<void> | void;
 }
+type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
 
 const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
+      const navigation = useNavigation<NavigationProp>();
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [weekNumber, setWeekNumber] = useState('');
@@ -54,47 +59,47 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
     };
 
     const handleSubmitEdit = async () => {
-    if (!selectedItem) return;
+        if (!selectedItem) return;
 
-    if (weekNumber.trim() === "") {
-        return showDialog("error", "Week wajib diisi");
-    }
+        if (weekNumber.trim() === "") {
+            return showDialog("error", "Week wajib diisi");
+        }
 
-    if (quantityPicked.trim() === "") {
-        return showDialog("error", "Quantity picked wajib diisi");
-    }
+        if (quantityPicked.trim() === "") {
+            return showDialog("error", "Quantity picked wajib diisi");
+        }
 
-    try {
-        showLoadingDialog("Updating...");
+        try {
+            showLoadingDialog("Updating...");
 
-        const payload = {
-            transaction_picking_id: selectedItem?.transaction_picking_id,
-            pallet_source_id: selectedItem?.pallet_source_id,
-            pallet_use_id: selectedItem?.pallet_use_id,
-            pallet_switch_id: selectedItem?.pallet_switch_id || null,
-            item_id: selectedItem?.item_id,
-            quantity_picked: Number(quantityPicked),
-            quantity_switch: quantitySwitch ? Number(quantitySwitch) : 0,
-            uom: selectedItem?.uom,
-            week_number: Number(weekNumber),
-            status: selectedItem?.status,
-            // inspection_by: user?.name,
-            // user_id: user?.id,
-            // user_name: user?.name,
-        };
+            const payload = {
+                transaction_picking_id: selectedItem?.transaction_picking_id,
+                pallet_source_id: selectedItem?.pallet_source_id,
+                pallet_use_id: selectedItem?.pallet_use_id,
+                pallet_switch_id: selectedItem?.pallet_switch_id || null,
+                item_id: selectedItem?.item_id,
+                quantity_picked: Number(quantityPicked),
+                quantity_switch: quantitySwitch ? Number(quantitySwitch) : 0,
+                uom: selectedItem?.uom,
+                week_number: Number(weekNumber),
+                status: selectedItem?.status,
+                // inspection_by: user?.name,
+                // user_id: user?.id,
+                // user_name: user?.name,
+            };
 
-        await OutboundService.updateTransactionPickingDetail(selectedItem.id, payload);
+            await OutboundService.updateTransactionPickingDetail(selectedItem.id, payload);
 
-        await onRefresh();
-        showDialog("success", "Update berhasil!");
-        setModalVisible(false);
+            await onRefresh();
+            showDialog("success", "Update berhasil!");
+            setModalVisible(false);
 
-    } catch (err: any) {
-        showDialog("error", err?.message ?? "Gagal update");
-    } finally {
-        hideLoadingDialog();
-    }
-};
+        } catch (err: any) {
+            showDialog("error", err?.message ?? "Gagal update");
+        } finally {
+            hideLoadingDialog();
+        }
+    };
 
 
     const handleApproveAction = async (type: "APPROVE" | "FINAL") => {
@@ -234,7 +239,14 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                                                 paddingVertical: 8,
                                                 borderRadius: 8,
                                             }}
-                                            onPress={() => openDetailModal(detail)}
+                                            onPress={() => {
+                                                // openDetailModal(detail)
+                                                navigation.navigate("InspectionEditActivity", {
+                                                    mode: "edit",
+                                                    activity: detail,
+                                                    itemBefore: item,   // kirim data item yang mau diedit
+                                                })
+                                            }}
                                         >
                                             <Text style={{ color: "white", textAlign: "center", fontWeight: "600" }}>
                                                 Go To Detail
@@ -375,6 +387,7 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
 
                     </KeyboardAvoidingView>
                 </Modal>
+
 
             </View>
         </TouchableOpacity>

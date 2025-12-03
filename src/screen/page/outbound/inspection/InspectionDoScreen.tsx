@@ -41,7 +41,7 @@ function InspectionDoScreen() {
       showLoadingDialog('Loading List Inspection Planning');
       const data:any= {
         limit:100,
-        status:"PENDING"
+        // status:"PENDING"
       }
       const response = await OutboundService.getOutboundDoList(data);
       setInspectionList(response.data || []);

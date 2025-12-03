@@ -62,6 +62,7 @@ export default function PickingDetailActivity() {
   const [donePicking, setDonePicking] = useState(false);
   const [doneSwitch, setDoneSwitch] = useState(false);
   const [switchInfo, setSwitchInfo] = useState<any>(null);
+  console.log('Rendering PickingDetailActivity with mode:', itemBefore);
 
   // SCANNER STATES
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -189,12 +190,13 @@ export default function PickingDetailActivity() {
 
     try {
       const res = await ScannerService.getPalletByCode(palletSumber);
+      console.log('Pallet Sumber Check Response:', res);
       if (!res.success) {
         Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
       }
       // find matching item_id
-      const found = res.data.find((item: any) => item.item_id === itemBefore.item.item_id);
+      const found = res.data.find((item: any) => item.item_id === itemBefore.item_id);
       if (!found) {
         Alert.alert('Pallet tidak memiliki item yang akan dipicking');
         return;
@@ -278,15 +280,15 @@ export default function PickingDetailActivity() {
     const userName = assignPicking?.picking_name || 'test user';
 
     const payload: any = {
-      transaction_picking_id: itemBefore.item.id,
+      transaction_picking_id: itemBefore.id,
       pallet_source_id: foundItem?.id,
       pallet_use_id: pickingPallet?.id,
-      item_id: itemBefore.item.item_id,
+      item_id: itemBefore.item_id,
       quantity_picked: Number(qtyPicking),
-      uom: itemBefore.item.uom,
-      week_number: itemBefore.item.week_number,
+      uom: itemBefore.uom,
+      week_number: itemBefore.week_number,
       status: 'OPEN',
-      inspection_by: itemBefore.item.memo?.requestor || itemBefore.item.requestor,
+      inspection_by: itemBefore.memo?.requestor || itemBefore.requestor,
       user_id: userId,
       user_name: userName,
     };
@@ -383,10 +385,26 @@ export default function PickingDetailActivity() {
               paddingHorizontal: 12,
             }}
           >
-            {itemBefore?.item?.destinationWarehouseSub?.name} -{' '}
-            {itemBefore?.item?.destinationBin?.name} -{' '}
-            {itemBefore?.item?.quantity} {itemBefore?.item?.uom} - Week-
-            {itemBefore?.item?.week_number}
+            
+            {itemBefore?.quantity} {itemBefore?.uom} - Week-
+            {itemBefore?.week_number}
+          </Text>
+          <Text
+            style={{
+              textAlign: 'center',
+              fontSize: 12,
+              color: '#333',
+              fontWeight: '700',
+              marginTop: 4,
+              backgroundColor: '#FFF5E6',
+              borderRadius: 8,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+            }}
+          >
+           From {itemBefore?.sourceWarehouseSub?.name} Bin {itemBefore?.sourceBin?.name} to {itemBefore?.destinationWarehouseSub?.name} -{' '}
+            {itemBefore?.destinationBin?.name}
+            
           </Text>
         </View>
 

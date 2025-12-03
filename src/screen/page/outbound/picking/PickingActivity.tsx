@@ -51,7 +51,6 @@ export default function PickingActivity() {
         inspection_by: userIdNewest,
         ids: createdPallets.map((item) => item.id),
       };
-      console.log("payload send to wh staff", payload);
       const res = await OutboundService.updateStatusPickingBulk(payload);
       hideLoadingDialog();
       await fetchPicking();
@@ -68,7 +67,6 @@ export default function PickingActivity() {
       showLoadingDialog('Loading List Picking SKU');
       const response = await OutboundService.getTransactionPickingDetail(itemBefore.item.id);
       const filtered = response.data || [];
-      console.log("filtered picking", filtered);
       if (filtered.length > 0) {
         const latestUserId = filtered.reduce((latest: any, item: any) =>
           new Date(item.createdAt) > new Date(latest.createdAt) ? item : latest
@@ -159,7 +157,6 @@ export default function PickingActivity() {
               Belum ada Activity, silahkan lakukan Activity Picking
             </Text>
           ) : (
-            console.log("pickingList", pickingList),
             pickingList.map((activity: any, index: number) => (
               <View
                 key={activity?.id || `${activity.week_number}-${index}`}
@@ -207,30 +204,31 @@ export default function PickingActivity() {
 
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Status</Text>
-                  <View style={[styles.statusBox]}>
-                    <Text style={styles.statusText}>{activity.status}</Text>
-                  </View>
+                  <Text style={[styles.rowValue, { color: 'green' }]}>{activity.status}</Text>
                 </View>
 
 
+                {activity.status === "INSPECTION_APPROVED" ? null : (
+                  <TouchableOpacity
+                    style={{
+                      marginTop: 10,
+                      backgroundColor: '#1F5BF2',
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                    }}
+                    onPress={() => navigation.navigate("PickingDetailActivity", {
+                      mode: "edit",
+                      activity: activity,   // kirim data item yang mau diedit
+                      itemBefore: itemBefore // kirim itemBefore (kalau masih dipakai)
+                    })}
+                  >
 
-                <TouchableOpacity
-                  style={{
-                    marginTop: 10,
-                    backgroundColor: '#1F5BF2',
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                  }}
-                  onPress={() => navigation.navigate("PickingDetailActivity", {
-                    mode: "edit",
-                    activity: activity,   // kirim data item yang mau diedit
-                    itemBefore: itemBefore // kirim itemBefore (kalau masih dipakai)
-                  })}
-                >
-                  <Text style={{ color: "white", textAlign: "center", fontWeight: "700" }}>
-                    Edit
-                  </Text>
-                </TouchableOpacity>
+                    <Text style={{ color: "white", textAlign: "center", fontWeight: "700" }}>
+                      Edit
+                    </Text>
+
+                  </TouchableOpacity>
+                )}
               </View>
 
             ))

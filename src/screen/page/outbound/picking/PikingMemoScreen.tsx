@@ -124,15 +124,14 @@ useFocusEffect(
               }
 
                 const index = PickingList.indexOf(item);
-                console.log('Rendering OutboundCard for item:', item);
                 return (
                 <OutboundCard
             
                   key={i}
-                  title={"No: "+ item.outbound_memo_number}
+                  title={ item.outbound_memo_number}
                   subTitle={ item.destination}
-                  // origin={}
-                  // status={item.status}
+                  origin={item.type}
+                  status={item.delivery_date}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('PickingSku', { item })}
                 />

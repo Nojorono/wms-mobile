@@ -115,9 +115,9 @@ useFocusEffect(
           ) : (
             filteredList.map((item: any) => {
               let statusColor;
-              if (item.status === 'CREATED') {
+              if (item.status === 'IN_PROGRESS') {
                 statusColor = '#228B22';
-              } else if (item.status === 'UNLOADING') {
+              } else if (item.status === 'PENDING') {
                 statusColor = '#FFB347';
               } else {
                 statusColor = '#696969';
@@ -128,9 +128,9 @@ useFocusEffect(
                 return (
                 <OutboundCard
                   key={item.id}
-                  title={`NO : ${item.outbound_do_number}`}
-                  subTitle={"Tipe Outbound :" + item.outbound_type}
-                  origin={"Origin: " + item.origin}
+                  title={`${item.outbound_do_number}`}
+                  subTitle={ item.outbound_type}
+                  origin={  item.origin}
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('PickingMemo', { item })}

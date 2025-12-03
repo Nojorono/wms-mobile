@@ -62,8 +62,6 @@ export default function PickingDetailActivity() {
   const [donePicking, setDonePicking] = useState(false);
   const [doneSwitch, setDoneSwitch] = useState(false);
   const [switchInfo, setSwitchInfo] = useState<any>(null);
-  console.log('Rendering PickingDetailActivity with mode:', itemBefore);
-
   // SCANNER STATES
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scanTarget, setScanTarget] =
@@ -142,24 +140,25 @@ export default function PickingDetailActivity() {
   useEffect(() => {
     if (mode === 'edit' && activity) {
       // fill fields from activity safely (guard undefined)
-      setPalletSumber(activity.pallet_source_code || activity.pallet_source || '');
-      setPalletPicking(activity.palletUse?.pallet_code || activity.pallet_use_code || '');
+      setPalletSumber(activity.palletSource.pallet_code || '');
+      setPalletPicking(activity.palletUse?.pallet_code || '');
       setQtyPicking(activity.quantity_picked != null ? String(activity.quantity_picked) : '');
 
       // foundItem placeholder (so UI shows info)
       setFoundItem({
-        id: activity.pallet_source_id,
+        id: activity.palletSource.id,
         item_name: activity.item_name || itemBefore?.item?.item_name,
-        current_quantity: activity.quantity_before != null ? activity.quantity_before : activity.quantity_picked,
-        uom: activity.uom || itemBefore?.item?.uom,
-        week_number: activity.week_number || itemBefore?.item?.week_number,
+        current_quantity: activity.palletSource.currentQuantity,
+        uom: activity.palletSource.uom || itemBefore?.item?.uom,
+        week_number: activity.palletSource.currentWeekNumber || itemBefore?.item?.week_number,
       });
 
       setPickingPallet({
-        id: activity.pallet_use_id,
+        id: activity.palletUse?.id || activity.pallet_use_id,
         pallet_code: activity.palletUse?.pallet_code || activity.pallet_use_code,
-        week_number: activity.week_number || itemBefore?.item?.week_number,
-        uom: activity.uom || itemBefore?.item?.uom,
+        week_number: activity.palletUse?.currentWeekNumber || activity.week_number || itemBefore?.item?.week_number,
+        uom: activity.palletUse?.uom || activity.uom || itemBefore?.item?.uom,
+        current_quantity: activity.palletUse?.currentQuantity,
       });
 
       if (activity.pallet_switch_id) {
@@ -167,7 +166,7 @@ export default function PickingDetailActivity() {
         setSwitchPallet(activity.palletSwitch?.pallet_code || activity.pallet_switch_code || '');
         setSwitchQty(activity.quantity_switch != null ? String(activity.quantity_switch) : '');
         setSwitchInfo({
-          id: activity.pallet_switch_id,
+          id: activity.palletSwitch.id,
           current_quantity: activity.quantity_switch,
           uom: activity.palletSwitch?.uom,
           week_number: activity.palletSwitch?.week_number,
@@ -306,9 +305,10 @@ export default function PickingDetailActivity() {
 
       if (mode === 'edit') {
         // Add id for update endpoint
-        payload.id = activity.id;
+        const idActivity = activity.id;
+        console.log('Update Payload:', payload);
         // call update API - ensure your OutboundService implements this
-        // await OutboundService.updateTransactionPicking(payload);
+        await OutboundService.updateTransactionPickingDetail(idActivity, payload);
         showDialog('success', 'Berhasil memperbarui activity picking');
       } else {
         await OutboundService.postTransactionPicking(payload);
@@ -357,7 +357,7 @@ export default function PickingDetailActivity() {
             shadowRadius: 4,
           }}
         >
-          {mode === 'edit' ? 'Edit Picking Activity' : itemBefore?.item?.item?.description || itemBefore?.item?.description || 'Picking Activity'}
+          {mode === 'edit' ? itemBefore?.item?.description : itemBefore?.item?.item?.description || itemBefore?.item?.description || 'Picking Activity'}
         </Text>
 
         {/* SUGGESTED DESTINATION */}
@@ -534,7 +534,7 @@ export default function PickingDetailActivity() {
           />
 
           <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
-            {itemBefore?.item?.uom}
+            {itemBefore?.uom}
           </Text>
         </View>
 

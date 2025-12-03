@@ -219,7 +219,7 @@ export default function PickingActivity() {
                     onPress={() => navigation.navigate("PickingDetailActivity", {
                       mode: "edit",
                       activity: activity,   // kirim data item yang mau diedit
-                      itemBefore: itemBefore // kirim itemBefore (kalau masih dipakai)
+                      itemBefore: itemBefore.item // kirim itemBefore (kalau masih dipakai)
                     })}
                   >
 

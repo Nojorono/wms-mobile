@@ -176,6 +176,7 @@ export default function ForkLiftScreen() {
         onChangeText={setScannedCode}
         onSubmitEditing={handleSubmitEditing}
         blurOnSubmit={false}
+        showSoftInputOnFocus={false}
         autoFocus
         style={hiddenInputStyle.input}
       />

@@ -5,11 +5,6 @@ import { useLoadingDialogStore } from "../../store/useLoadingStore";
 import { useDialogStore } from "../../store/useGlobalDialog";
 import { useAuthStore } from "../../store/useAuthStore";
 
-// enable animation on Android
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 interface MemoItemCardProps {
     item: {
         item_id: string;
@@ -33,18 +28,22 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [weekNumber, setWeekNumber] = useState('');
+    const [quantityPicked, setQuantityPicked] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const showDialog = useDialogStore((state) => state.showDialog);
     const { user } = useAuthStore();
     const userId = user?.id || "";
+    const [quantitySwitch, setQuantitySwitch] = useState("");
 
-    console.log('Rendering MemoItemCard for item:', item);
 
-
+    // Gabungkan data detail ke satu state (selectedItem) agar lebih mudah dikelola
     const openDetailModal = (detail: any) => {
+        console.log("Opening detail modal for:", detail);
         setSelectedItem(detail);
         setWeekNumber(String(detail?.week_number ?? ""));
+        setQuantityPicked(String(detail?.quantity_picked ?? ""));
+        setQuantitySwitch(String(item.quantity_switch || ""));
         setIsEditing(false);
         setModalVisible(true);
     };
@@ -55,28 +54,48 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
     };
 
     const handleSubmitEdit = async () => {
-        if (!selectedItem) return;
+    if (!selectedItem) return;
 
-        if (weekNumber.trim() === "") {
-            return showDialog("error", "Week wajib diisi");
-        }
+    if (weekNumber.trim() === "") {
+        return showDialog("error", "Week wajib diisi");
+    }
 
-        try {
-            showLoadingDialog("Submitting...");
-            const payload = {
-                week_number: Number(weekNumber),
-            };
+    if (quantityPicked.trim() === "") {
+        return showDialog("error", "Quantity picked wajib diisi");
+    }
 
-            // await OutboundService.updateScanDetail(selectedItem.id, payload);
-            await onRefresh();
-            showDialog("success", "Update berhasil!");
-            setModalVisible(false);
-        } catch (err: any) {
-            showDialog("error", err?.message ?? "Gagal update");
-        } finally {
-            hideLoadingDialog();
-        }
-    };
+    try {
+        showLoadingDialog("Updating...");
+
+        const payload = {
+            transaction_picking_id: selectedItem?.transaction_picking_id,
+            pallet_source_id: selectedItem?.pallet_source_id,
+            pallet_use_id: selectedItem?.pallet_use_id,
+            pallet_switch_id: selectedItem?.pallet_switch_id || null,
+            item_id: selectedItem?.item_id,
+            quantity_picked: Number(quantityPicked),
+            quantity_switch: quantitySwitch ? Number(quantitySwitch) : 0,
+            uom: selectedItem?.uom,
+            week_number: Number(weekNumber),
+            status: selectedItem?.status,
+            // inspection_by: user?.name,
+            // user_id: user?.id,
+            // user_name: user?.name,
+        };
+
+        await OutboundService.updateTransactionPickingDetail(selectedItem.id, payload);
+
+        await onRefresh();
+        showDialog("success", "Update berhasil!");
+        setModalVisible(false);
+
+    } catch (err: any) {
+        showDialog("error", err?.message ?? "Gagal update");
+    } finally {
+        hideLoadingDialog();
+    }
+};
+
 
     const handleApproveAction = async (type: "APPROVE" | "FINAL") => {
         if (!selectedItem) return;
@@ -115,17 +134,17 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
     };
 
 
-// status flag
-const isStatusOpen = item.scan_detail?.status?.toUpperCase() === "OPEN";
+    // status flag
+    const isStatusOpen = item.scan_detail?.status?.toUpperCase() === "OPEN";
 
-// Indicator warna
-let statusColor = "#FF3B30"; 
+    // Indicator warna
+    let statusColor = "#FF3B30";
 
-if (item.is_scanned) statusColor = "#4CAF50";
-if (item.picked_quantity > 0 && item.picked_quantity < item.quantity_plan) statusColor = "#2196F3";
+    if (item.is_scanned) statusColor = "#4CAF50";
+    if (item.picked_quantity > 0 && item.picked_quantity < item.quantity_plan) statusColor = "#2196F3";
 
-// force red if status open
-if (isStatusOpen) statusColor = "#FF3B30";
+    // force red if status open
+    if (isStatusOpen) statusColor = "#FF3B30";
     return (
         <TouchableOpacity
             //   onPress={handleToggle}
@@ -142,7 +161,7 @@ if (isStatusOpen) statusColor = "#FF3B30";
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <View>
                     <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                        Item: ...{item.item_id.slice(-12)}
+                        Item: {item.item.sku}
                     </Text>
                     <Text style={{ marginTop: 4 }}>
                         Plan: {item.quantity_plan} {item.uom}
@@ -165,68 +184,69 @@ if (isStatusOpen) statusColor = "#FF3B30";
             </View>
 
             <View style={{ marginTop: 12 }}>
-                {!item.is_scanned ? (
+                {(!item.is_scanned || !Array.isArray(item.scan_detail) || item.scan_detail.length === 0) ? (
                     <Text style={{ color: "#FF3B30", fontWeight: "bold" }}>
                         Belum ada scan.
                     </Text>
                 ) : (
                     <View style={{ marginBottom: 10 }}>
                         <Text style={{ fontWeight: "700", marginBottom: 6 }}>Detail Scan</Text>
-
-                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                            <Text style={{ fontWeight: "600" }}>User</Text>
-                            <Text>{item.scan_detail?.user_name ?? "-"}</Text>
-                        </View>
-
-                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                            <Text style={{ fontWeight: "600" }}>Status</Text>
-                            <Text style={{ color: isStatusOpen ? "red" : "black" }}>
-                                {item.scan_detail?.status ?? "-"}
-                            </Text>
-                        </View>
-
-                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                            <Text style={{ fontWeight: "600" }}>Week</Text>
-                            <Text>{item.scan_detail?.week_number ?? "-"}</Text>
-                        </View>
-
-                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                            <Text style={{ fontWeight: "600" }}>Pallet Source</Text>
-                            <Text>
-                                {item.scan_detail?.pallet_source_id
-                                    ? `...${item.scan_detail.pallet_source_id.slice(-12)}`
-                                    : "-"}
-                            </Text>
-                        </View>
-
-                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                            <Text style={{ fontWeight: "600" }}>Pallet Use</Text>
-                            <Text>
-                                {item.scan_detail?.pallet_use_id
-                                    ? `...${item.scan_detail.pallet_use_id.slice(-12)}`
-                                    : "-"}
-                            </Text>
-                        </View>
-
-                        {/* Tombol buka modal edit */}
-                        {!isStatusOpen && (
-                            <TouchableOpacity
-                                style={{
-                                    marginTop: 12,
-                                    backgroundColor: "#F26E1F",
-                                    paddingVertical: 8,
-                                    borderRadius: 8,
-                                }}
-                                onPress={() => openDetailModal(item.scan_detail)}
-                            >
-                                <Text style={{ color: "white", textAlign: "center", fontWeight: "600" }}>
-                                    Go To Detail
-                                </Text>
-                            </TouchableOpacity>
-                        )}
-
+                        {item.scan_detail.map((detail: any, idx: number) => {
+                            const isStatusOpen = detail?.status?.toUpperCase() === "OPEN";
+                            return (
+                                <View key={detail.id ?? idx} style={{ marginBottom: 12, paddingBottom: 8, borderBottomWidth: 1, borderColor: "#eee" }}>
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <Text style={{ fontWeight: "600" }}>User</Text>
+                                        <Text>{detail.user_name ?? "-"}</Text>
+                                    </View>
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <Text style={{ fontWeight: "600" }}>Status</Text>
+                                        <Text style={{ color: isStatusOpen ? "red" : "black" }}>
+                                            {detail.status ?? "-"}
+                                        </Text>
+                                    </View>
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <Text style={{ fontWeight: "600" }}>Week</Text>
+                                        <Text>{detail.week_number ?? "-"}</Text>
+                                    </View>
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <Text style={{ fontWeight: "600" }}>Pallet Source</Text>
+                                        <Text>
+                                            {detail.pallet_source_id
+                                                ? `${detail.palletSource.pallet_code}`
+                                                : "-"}
+                                        </Text>
+                                    </View>
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <Text style={{ fontWeight: "600" }}>Pallet Use</Text>
+                                        <Text>
+                                            {detail.pallet_use_id
+                                                ? `${detail.palletUse.pallet_code}`
+                                                : "-"}
+                                        </Text>
+                                    </View>
+                                    {/* Tombol buka modal edit */}
+                                    {!isStatusOpen && (
+                                        <TouchableOpacity
+                                            style={{
+                                                marginTop: 12,
+                                                backgroundColor: "#F26E1F",
+                                                paddingVertical: 8,
+                                                borderRadius: 8,
+                                            }}
+                                            onPress={() => openDetailModal(detail)}
+                                        >
+                                            <Text style={{ color: "white", textAlign: "center", fontWeight: "600" }}>
+                                                Go To Detail
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            );
+                        })}
                     </View>
                 )}
+
 
                 <Modal
                     visible={modalVisible}
@@ -241,7 +261,7 @@ if (isStatusOpen) statusColor = "#FF3B30";
                         <View style={styles.modalContainer}>
                             <Text style={styles.modalTitle}>Edit Scan Detail</Text>
 
-                            {/* Status */}
+                            {/* STATUS */}
                             <Text style={styles.inputLabel}>Status</Text>
                             <TextInput
                                 value={selectedItem?.status || ""}
@@ -249,28 +269,84 @@ if (isStatusOpen) statusColor = "#FF3B30";
                                 style={[styles.inputBox, { backgroundColor: '#e6e6e6' }]}
                             />
 
-                            {/* Week */}
+                            {/* WEEK NUMBER */}
                             <Text style={styles.inputLabel}>Week Number</Text>
                             <TextInput
-                                value={weekNumber}
-                                onChangeText={onChangeWeek}
-                                style={styles.inputBox}
-                                placeholder="Masukkan week number"
+                                value={String(selectedItem?.week_number || "")}
+                                editable={false}
+                                style={[styles.inputBox, { backgroundColor: '#e6e6e6' }]}
                             />
 
-                            {/* Submit */}
-                            <TouchableOpacity
-                                style={styles.submitButton}
-                                onPress={handleSubmitEdit}
-                            >
+                            {/* ITEM INFO */}
+                            <Text style={styles.inputLabel}>Item</Text>
+                            <View style={[styles.inputBox, { backgroundColor: '#e6e6e6', paddingVertical: 8 }]}>
+                                <Text style={{ fontWeight: "600" }}>{selectedItem?.item?.sku || "-"}</Text>
+                                <Text style={{ fontSize: 12 }}>{selectedItem?.item?.description || "-"}</Text>
+                            </View>
+
+                            {/* PALLET SOURCE */}
+                            <Text style={styles.inputLabel}>Pallet Source</Text>
+                            <View style={[styles.inputBox, { backgroundColor: '#e6e6e6', paddingVertical: 6 }]}>
+                                <Text style={{ fontWeight: "600" }}>{selectedItem?.palletSource?.pallet_code || "-"}</Text>
+                                <Text style={{ fontSize: 12 }}>Qty: {selectedItem?.palletSource?.currentQuantity || 0}</Text>
+                            </View>
+
+                            {/* PALLET USE */}
+                            <Text style={styles.inputLabel}>Pallet Use</Text>
+                            <View style={[styles.inputBox, { backgroundColor: '#e6e6e6', paddingVertical: 6 }]}>
+                                <Text style={{ fontWeight: "600" }}>{selectedItem?.palletUse?.pallet_code || "-"}</Text>
+                                <Text style={{ fontSize: 12 }}>Qty: {selectedItem?.palletUse?.currentQuantity || 0}</Text>
+                            </View>
+
+                            {/* PALLET SWITCH (optional) */}
+                            {selectedItem?.pallet_switch_id && (
+                                <>
+                                    <Text style={styles.inputLabel}>Pallet Switch</Text>
+                                    <View style={[styles.inputBox, { backgroundColor: '#e6e6e6', paddingVertical: 6 }]}>
+                                        <Text style={{ fontWeight: "600" }}>{selectedItem?.palletSwitch?.pallet_code || "-"}</Text>
+                                        <Text style={{ fontSize: 12 }}>Qty: {selectedItem?.palletSwitch?.currentQuantity || 0}</Text>
+                                    </View>
+                                </>
+                            )}
+
+                            {/* QUANTITY PICKED */}
+                            <Text style={styles.inputLabel}>Quantity Picked</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                                <TextInput
+                                    value={String(quantityPicked)}
+                                    onChangeText={setQuantityPicked}
+                                    style={[styles.inputBox, { flex: 1 }]}
+                                    keyboardType="numeric"
+                                    placeholder="Masukan quantity picked"
+                                />
+                                <Text style={styles.inputLabel}>{selectedItem?.uom || ""}</Text>
+                            </View>
+
+                            {/* QUANTITY SWITCH (optional input) */}
+                            {selectedItem?.quantity_switch !== null && (
+                                <>
+                                    <Text style={styles.inputLabel}>Quantity Switch</Text>
+                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                                        <TextInput
+                                            value={String(quantitySwitch)}
+                                            onChangeText={setQuantitySwitch}
+                                            style={[styles.inputBox, { flex: 1 }]}
+                                            keyboardType="numeric"
+                                            placeholder="Masukan quantity switch"
+                                        />
+                                        <Text style={styles.inputLabel}>{selectedItem?.uom || ""}</Text>
+                                    </View>
+                                </>
+                            )}
+
+                            {/* SUBMIT */}
+                            <TouchableOpacity style={styles.submitButton} onPress={handleSubmitEdit}>
                                 <Text style={styles.submitText}>Submit</Text>
                             </TouchableOpacity>
 
-                            {/* Approve Buttons */}
+                            {/* APPROVE BUTTONS */}
                             {!isEditing && (
                                 <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-
-                                    {/* APPROVE */}
                                     <TouchableOpacity
                                         style={[styles.approveButton, { flex: 1 }]}
                                         onPress={() => handleApproveAction("APPROVE")}
@@ -278,13 +354,9 @@ if (isStatusOpen) statusColor = "#FF3B30";
                                         <Text style={styles.approveText}>Approve</Text>
                                     </TouchableOpacity>
 
-                                    {/* FINAL */}
                                     {selectedItem?.status !== "APPROVED" && (
                                         <TouchableOpacity
-                                            style={[
-                                                styles.approveButton,
-                                                { flex: 1, backgroundColor: "#f57f1eff" },
-                                            ]}
+                                            style={[styles.approveButton, { flex: 1, backgroundColor: "#f57f1e" }]}
                                             onPress={() => handleApproveAction("FINAL")}
                                         >
                                             <Text style={styles.approveText}>Final</Text>
@@ -299,8 +371,8 @@ if (isStatusOpen) statusColor = "#FF3B30";
                             >
                                 <Text style={styles.closeText}>Close</Text>
                             </TouchableOpacity>
-
                         </View>
+
                     </KeyboardAvoidingView>
                 </Modal>
 

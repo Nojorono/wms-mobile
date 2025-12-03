@@ -131,24 +131,40 @@ export default function PickingActivity() {
               Suggested Destination Location
             </Text>
 
-            <Text
-              style={{
-                textAlign: 'center',
-                fontSize: 16,
-                color: '#333',
-                fontWeight: '700',
-                marginTop: 4,
-                backgroundColor: '#FFF5E6',
-                borderRadius: 8,
-                paddingVertical: 6,
-                paddingHorizontal: 12,
-              }}
-            >
-              {itemBefore.item.destinationWarehouseSub?.name} -{' '}
-              {itemBefore.item.destinationBin?.name} -{' '}
-              {itemBefore.item.quantity} {itemBefore.item.uom} - Week-
-              {itemBefore.item.week_number}
-            </Text>
+           <Text
+                      style={{
+                        textAlign: 'center',
+                        fontSize: 16,
+                        color: '#333',
+                        fontWeight: '700',
+                        marginTop: 4,
+                        backgroundColor: '#FFF5E6',
+                        borderRadius: 8,
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                      }}
+                    >
+                      
+                      {itemBefore?.item.quantity} {itemBefore?.item.uom} - Week {' '} 
+                      {itemBefore?.item.week_number}
+                    </Text>
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        fontSize: 14,
+                        color: '#333',
+                        fontWeight: '700',
+                        marginTop: 4,
+                        backgroundColor: '#FFF5E6',
+                        borderRadius: 8,
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                      }}
+                    >
+                     From {itemBefore?.item.sourceWarehouseSub?.name} Bin {itemBefore?.item.sourceBin?.name} to {itemBefore?.item.destinationWarehouseSub?.name} -{' '}
+                      {itemBefore?.item.destinationBin?.name}
+                      
+                    </Text>
           </View>
 
           {/* 📌 LIST ACTIVITY */}
@@ -208,7 +224,7 @@ export default function PickingActivity() {
                 </View>
 
 
-                {activity.status === "INSPECTION_APPROVED" ? null : (
+                {activity.status === "INSPECTION_APPROVED" || activity.status === "PENDING" ? null : (
                   <TouchableOpacity
                     style={{
                       marginTop: 10,
@@ -222,7 +238,6 @@ export default function PickingActivity() {
                       itemBefore: itemBefore.item // kirim itemBefore (kalau masih dipakai)
                     })}
                   >
-
                     <Text style={{ color: "white", textAlign: "center", fontWeight: "700" }}>
                       Edit
                     </Text>

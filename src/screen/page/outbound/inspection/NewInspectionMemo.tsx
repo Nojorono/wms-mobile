@@ -42,32 +42,45 @@ function NewInspectionMemo() {
     try {
       setRefreshing(true);
       showLoadingDialog("Loading...");
-      
+
       const data = { limit: 100 };
       const response = await OutboundService.getOutboundDoList(data);
 
       const list = response?.data || [];
       const matched = list.find((i: any) => i.id === itemBefore.item.id);
       const memos = matched?.outbound_memos || [];
-
-
       // Proses memo items + picking scan
       const processed = memos.map((memo: any) => {
         const memoItems = memo?.outbound_memo_items || [];
         const pickings = memo?.transaction_pickings || [];
 
         const mergedItems = memoItems.map((itm: any) => {
+          // cari picking untuk item ini
           const picking = pickings.find((p: any) => p.item_id === itm.item_id);
+
+          // ambil scan array
+          const scans = picking?.transactionScanPicking || [];
+          const transcation = picking
+
+          // total qty dari semua scan
+          const totalQtyPicked = scans.reduce(
+            (sum: number, s: any) => sum + (s.quantity_picked || 0),
+            0
+          );
 
           return {
             ...itm,
-            is_scanned: !!picking,
-            picked_quantity: picking ? picking.quantity : 0,
-            scan_detail: picking?.transactionScanPicking?.[0] ?? null,
+            is_scanned: scans.length > 0,
+            picked_quantity: totalQtyPicked,
+            transcation_pickig: transcation,
+            scan_detail: scans, // simpan semua scan
           };
         });
 
-        return { memo, items: mergedItems };
+        return {
+          memo,
+          items: mergedItems,
+        };
       });
       setMemoList(processed);
     } catch (e) {
@@ -124,25 +137,25 @@ function NewInspectionMemo() {
         style={stylesLocal.fab}
         onPress={() =>
           Alert.alert(
-        "Approve All",
-        "Are you sure you want to approve all tasks?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "OK",
-            onPress: async () => {
-          try {
-            console.log("Approving all tasks for DO ID:", itemBefore.item.id);
-            const res = await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "IN_PROGRESS");
-            console.log("Approve Response:", res);
-            showDialog("success", "All tasks approved successfully!");
-            navigation.goBack();
-          } catch (error) {
-            showDialog("error", "Failed to approve tasks!");
-          }
-            },
-          },
-        ]
+            "Approve All",
+            "Are you sure you want to approve all tasks?",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "OK",
+                onPress: async () => {
+                  try {
+                    console.log("Approving all tasks for DO ID:", itemBefore.item.id);
+                    const res = await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "IN_PROGRESS");
+                    console.log("Approve Response:", res);
+                    showDialog("success", "All tasks approved successfully!");
+                    navigation.goBack();
+                  } catch (error) {
+                    showDialog("error", "Failed to approve tasks!");
+                  }
+                },
+              },
+            ]
           )
         }
       >

@@ -9,9 +9,6 @@ import {
 } from "react-native";
 import MemoItemCard from "./MemoItemCard";
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRefresh: () => void }) => {
   const [expanded, setExpanded] = useState(false);

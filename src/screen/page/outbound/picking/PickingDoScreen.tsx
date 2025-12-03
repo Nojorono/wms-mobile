@@ -32,6 +32,7 @@ function PickingDoScreen() {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const userId = user?.id || '';
+  console.log('User ID:', userId);
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -41,6 +42,7 @@ function PickingDoScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List Picking Planning');
       const response = await OutboundService.getOutboundPickingDoList(userId);
+      console.log('Fetched Picking DO List:', response);
       setPickingList(response.data || []);
     } catch (error) {
       hideLoadingDialog();

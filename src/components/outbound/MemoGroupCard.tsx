@@ -6,14 +6,45 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Alert,
 } from "react-native";
 import MemoItemCard from "./MemoItemCard";
 
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
+import OutboundService from "../../service/outboundService";
+import { useLoadingDialogStore } from "../../store/useLoadingStore";
+import { useDialogStore } from "../../store/useGlobalDialog";
 
 
 const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRefresh: () => void }) => {
   const [expanded, setExpanded] = useState(false);
+  // const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+  const showDialog = useDialogStore((state) => state.showDialog);
+  const handleLepasMemo = () => {
+    try {
+      Alert.alert(
+        'Confirm',
+        'Are you sure you want to release the memo?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'OK',
+            onPress: async () => {
+              await OutboundService.cancelMemo(memo.id);
+              showDialog('success', 'Memo released successfully!');
+              await onRefresh
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    } catch (error) {
+      console.error('Error releasing memo:', error);
+    }
+  };
 
   const toggleExpand = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -30,7 +61,7 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
         borderColor: "#ddd",
       }}
     >
-     {/* HEADER */}
+      {/* HEADER */}
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         {/* LEFT: TEXT + EXPAND */}
         <TouchableOpacity
@@ -42,9 +73,9 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
               Memo: {memo.outbound_memo_number}
             </Text>
 
-            
-              {expanded ? <Ionicons name="angle-up" size={25} color="#F26E1F" /> : <Ionicons name="angle-down" size={25} color="#F26E1F" />}
-            
+
+            {expanded ? <Ionicons name="angle-up" size={25} color="#F26E1F" /> : <Ionicons name="angle-down" size={25} color="#F26E1F" />}
+
           </View>
 
           <Text style={{ marginTop: 4, color: "#555" }}>
@@ -57,7 +88,7 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
 
         {/* RIGHT: DELETE BUTTON */}
         <TouchableOpacity
-          onPress={() => {}}
+          onPress={() => { handleLepasMemo() }}
           style={{
             paddingHorizontal: 10,
             paddingVertical: 4,
@@ -81,7 +112,7 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
             </Text>
           ) : (
             items.map((item: any) => (
-              <MemoItemCard key={item.item_id} item={item}  onRefresh={onRefresh} />
+              <MemoItemCard key={item.item_id} item={item} onRefresh={onRefresh} />
             ))
           )}
         </View>

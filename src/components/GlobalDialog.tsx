@@ -22,20 +22,20 @@ const GlobalDialog = () => {
             : require('../assets/error-animation.json');
 
     return (
-        <Modal visible={visible} transparent onRequestClose={hideDialog}>
-            <View style={styles.overlay}>
-                <View style={styles.card}>
-                    <LottieView
-                        ref={animation}
-                        source={source}
-                        style={styles.animation}
-                        autoPlay
-                        loop={type === 'error'}
-                    />
-                    <Text style={styles.title}>{title}</Text>
-                </View>
-            </View>
-        </Modal>
+      <Modal visible={visible} transparent={true} onRequestClose={hideDialog}>
+        <View style={styles.overlay}>
+          <View style={styles.card}>
+            <LottieView
+              ref={animation}
+              source={source}
+              style={styles.animation}
+              autoPlay
+              loop={type === 'error'}
+            />
+            <Text style={styles.title}>{title}</Text>
+          </View>
+        </View>
+      </Modal>
     );
 };
 

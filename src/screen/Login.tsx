@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Dimensions,
     Image,
@@ -11,104 +11,103 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {Controller, useForm} from 'react-hook-form';
-import {StackNavigationProp} from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+import { Controller, useForm } from 'react-hook-form';
+import { StackNavigationProp } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import {loadAuthState, useAuthStore} from '../store/useAuthStore.ts';
+import { loadAuthState, useAuthStore } from '../store/useAuthStore.ts';
 import AuthServices from '../service/authService';
 import Colors from '../../src/constants/Colors';
-import Ionicons from '@react-native-vector-icons/ionicons';
-import {AuthStackParamList} from "./navigation/AuthNavigator";
-import {useLoadingDialogStore} from "../store/useLoadingStore.ts";
+import Ionicons from "react-native-vector-icons/FontAwesome5";
+import { AuthStackParamList } from "./navigation/AuthNavigator";
+import { useLoadingDialogStore } from "../store/useLoadingStore.ts";
 import CustomButton from "../../src/components/CustomButton";
+import { useDialogStore } from '../store/useGlobalDialog.ts';
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 type FormData = {
-    employee_id: string; password: string;
+    username: string; password: string;
 };
 
 type NavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen() {
     const navigation = useNavigation<NavigationProp>();
-    const {setAuthenticated, setUser, setToken} = useAuthStore();
-    const {showLoadingDialog, hideLoadingDialog} = useLoadingDialogStore();
+    const { setAuthenticated, setUser, setToken } = useAuthStore();
+    const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
     const {
-        control, handleSubmit, formState: {errors}, setValue,
+        control, handleSubmit, formState: { errors }, setValue,
     } = useForm<FormData>();
 
     const [passwordVisible, setPasswordVisible] = useState(false);
-    const [email, setEmail] = useState('farid.rafi@limamail.net');
+    const [username, setUsername] = useState('superadmin');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const [deviceId, setDeviceId] = useState('');
     const [ipAddress, setIpAddress] = useState('');
     const platform = 'mobile';
+    const showDialog = useDialogStore((state) => state.showDialog);
 
     useEffect(() => {
-      const initialize = async () => {
-        showLoadingDialog('Loading...');
-        try {
-          const ip = 'network-dw-1234';
-          const id = 'sdsd';
-          const savedEmail = await AsyncStorage.getItem('rememberedEmail');
-          const savedPassword = await AsyncStorage.getItem(
-            'rememberedPassword',
-          );
-          const savedRemember = await AsyncStorage.getItem('rememberMe');
+        const initialize = async () => {
+            showLoadingDialog('Loading...');
+            try {
+                const ip = 'network-dw-1234';
+                const id = 'sdsd';
+                const savedUsername = await AsyncStorage.getItem('rememberedEmail');
+                const savedPassword = await AsyncStorage.getItem(
+                    'rememberedPassword',
+                );
+                const savedRemember = await AsyncStorage.getItem('rememberMe');
 
-          setIpAddress(ip);
-          setDeviceId(id);
+                setIpAddress(ip);
+                setDeviceId(id);
 
-          if (savedRemember === 'true') {
-            setEmail(savedEmail || '');
-            setValue('employee_id', savedEmail || '');
-            setPassword(savedPassword || '');
-            setValue('password', savedPassword || '');
-            setRememberMe(true);
-          }
+                if (savedRemember === 'true') {
+                    setUsername(savedUsername || '');
+                    setValue('username', savedUsername || '');
+                    setPassword(savedPassword || '');
+                    setValue('password', savedPassword || '');
+                    setRememberMe(true);
+                }
 
-          await loadAuthState(useAuthStore.setState);
-        } catch (e) {
-          console.error(e);
-        } finally {
-          hideLoadingDialog();
-        }
-      };
-      initialize();
+                await loadAuthState(useAuthStore.setState);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                hideLoadingDialog();
+            }
+        };
+        initialize();
     }, []);
 
     const handleLogin = async (data: FormData) => {
-        const {employee_id, password} = data;
-        if (!employee_id || !password) return;
+        const { username, password } = data;
+        if (!username || !password) return;
 
         try {
             showLoadingDialog('Loading...');
-            const res = await AuthServices.login(email, password, ipAddress, deviceId, platform);
-            console.log(res)
+            const res = await AuthServices.login(username, password,);
 
-            if (res.statusCode === 200) {
+            if (res.success) {
                 if (rememberMe) {
-                    await AsyncStorage.setItem('rememberedEmail', employee_id);
+                    await AsyncStorage.setItem('rememberedEmail', username);
                     await AsyncStorage.setItem('rememberedPassword', password);
                     await AsyncStorage.setItem('rememberMe', 'true');
                 } else {
                     await AsyncStorage.multiRemove(['rememberedEmail', 'rememberedPassword', 'rememberMe',]);
                 }
 
-                setToken(res.data.accessToken);
+                setToken(res.data.token);
                 setUser(res.data.user);
                 setAuthenticated(true);
-
-                Toast.show({type: 'success', text1: 'Login Successful'});
+                Toast.show({ type: 'success', text1: 'Login Successful' });
             }
         } catch (error: any) {
-            const message = error?.response?.data?.message || 'Login failed';
-            Toast.show({type: 'error', text1: 'Error', text2: message});
+            showDialog("error", error?.response?.data?.error || 'Login failed');
         } finally {
             hideLoadingDialog();
         }
@@ -116,23 +115,25 @@ export default function LoginScreen() {
 
     return (<KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}>
+
         <ScrollView
             contentContainerStyle={styles.container}
             keyboardShouldPersistTaps="handled">
-            <Text style={styles.label}>NIK</Text>
+            <Image style={{ width: 150, height: 80, marginBottom: 50 }} source={require("../assets/images/nna.png")} />
+            <Text style={styles.label}>Username</Text>
             <Controller
                 control={control}
-                name="employee_id"
-                defaultValue={email}
-                render={({field: {onChange, onBlur, value}}) => (
+                name="username"
+                defaultValue={username}
+                render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                        style={[styles.input, errors.employee_id && styles.errorInput]}
+                        style={[styles.input, errors.username && styles.errorInput]}
                         placeholder="NIK"
                         onBlur={onBlur}
                         onChangeText={text => {
                             onChange(text);
-                            setEmail(text);
+                            setUsername(text);
                         }}
                         keyboardType="default"
                         autoCapitalize="none"
@@ -140,12 +141,12 @@ export default function LoginScreen() {
                     />)}
             />
             <Text style={styles.label}>Password</Text>
-            <View style={{width: '100%'}}>
+            <View style={{ width: '100%' }}>
                 <Controller
                     control={control}
                     name="password"
-                    rules={{required: 'Password is required'}}
-                    render={({field: {onChange, onBlur, value}}) => (<TextInput
+                    rules={{ required: 'Password is required' }}
+                    render={({ field: { onChange, onBlur, value } }) => (<TextInput
                         style={[styles.input, errors.password && styles.errorInput]}
                         placeholder="Password"
                         secureTextEntry={!passwordVisible}
@@ -158,14 +159,14 @@ export default function LoginScreen() {
                 <TouchableOpacity
                     style={styles.eyeIcon}
                     onPress={() => setPasswordVisible(!passwordVisible)}>
-                    <Ionicons name={passwordVisible ? 'eye-off-outline' : 'eye-outline'} size={24}/>
+                    <Ionicons name={passwordVisible ? 'eye' : 'eye-slash'} size={24} />
                 </TouchableOpacity>
             </View>
 
             <View style={styles.rememberContainer}>
                 <TouchableOpacity onPress={() => setRememberMe(!rememberMe)}>
                     <View style={[styles.checkbox, rememberMe && styles.checkedBox]}>
-                        {rememberMe && (<Ionicons name="checkmark" size={16} color="#fff"/>)}
+                        {rememberMe && (<Ionicons name="check" size={12} color="#fff" />)}
                     </View>
                 </TouchableOpacity>
                 <Text style={styles.rememberText}>Remember Me</Text>
@@ -181,7 +182,7 @@ export default function LoginScreen() {
                 <Text style={styles.forgot}>Lupa Password?</Text>
             </TouchableOpacity>
 
-            <Toast/>
+            <Toast />
             <Image
                 source={require('../assets/images/background-login.png')}
                 style={styles.backgroundImage}

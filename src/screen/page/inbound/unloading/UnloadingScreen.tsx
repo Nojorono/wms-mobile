@@ -1,0 +1,218 @@
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  RefreshControl,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
+import { useAuthStore } from '../../../../store/useAuthStore.ts';
+import GlobalStyles from '../../../../util/GlobalStyles.ts';
+import Colors from '../../../../constants/Colors.ts';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { InboundParamList } from '../../../navigation/inbound/InboundNavigator.tsx';
+import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
+import InboundCard from '../../../../components/inbound/InboundListCard.tsx';
+import InboundServices from '../../../../service/inboundServices.ts';
+import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
+import { UnloadingParamList } from '../../../navigation/inbound/UnloadingNavigator.tsx';
+
+type NavigationProp = StackNavigationProp<UnloadingParamList, 'UnloadingMain'>;
+
+const FILTER_OPTIONS = [
+  'UNLOADING',
+  'WAITING TO RECEIVED',
+  'RECEIVED',
+  'WAITING FOR REVISION',
+];
+
+function UnloadingScreen() {
+  const [refreshing, setRefreshing] = useState(false);
+  const [inboundList, setInboundList] = useState<any[]>([]);
+  const [searchText, setSearchText] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+
+  const styles = GlobalStyles();
+  const { user } = useAuthStore();
+  const navigation = useNavigation<NavigationProp>();
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+  const showDialog = useDialogStore((state) => state.showDialog);
+
+  const fetchInbound = async () => {
+    try {
+      setRefreshing(true);
+      showLoadingDialog('Loading List Inbound Planning');
+      const response = await InboundServices.getInboundList(selectedFilter || 'UNLOADING');
+      setInboundList(response?.data || []);
+    } catch (error) {
+      hideLoadingDialog();
+      showDialog('error', 'Error while Fetching Data Inbound!');
+    } finally {
+      hideLoadingDialog();
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInbound();
+  }, []);
+
+    useFocusEffect(
+      useCallback(() => {
+        fetchInbound();
+      }, [])
+    );
+
+  // ✅ fetch data lagi kalau filter berubah
+  useEffect(() => {
+    if (selectedFilter !== null) {
+      fetchInbound();
+    }
+  }, [selectedFilter]);
+
+  // filter & search data
+  const filteredList = useMemo(() => {
+    return inboundList.filter((item) => {
+      const matchSearch =
+        item.inbound_number?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
+
+      const matchFilter = selectedFilter ? item.status === selectedFilter : true;
+
+      return matchSearch && matchFilter;
+    });
+  }, [inboundList, searchText, selectedFilter]);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
+      <ScrollView
+        contentContainerStyle={styles.menuContainer}
+        stickyHeaderIndices={[2]}
+        style={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={fetchInbound}
+            colors={[Colors.primeColor]}
+          />
+        }
+      >
+        <View style={styles.menuCard}>
+          <View
+            style={[
+              styles.activitiesHeader,
+              { borderBottomWidth: 2, borderBottomColor: '#ccc' },
+            ]}
+          >
+            <Text style={styles.activitiesHeaderText}>
+              List Unloading Planning
+            </Text>
+          </View>
+
+          {/* 🔍 Search + Filter Row */}
+          <View style={{ marginVertical: 10 }}>
+            <TextInput
+              style={localStyles.searchInput}
+              placeholder="Search inbound number / plate"
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholderTextColor="#888"
+            />
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginTop: 10 }}
+            >
+              {FILTER_OPTIONS.map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  style={[
+                    localStyles.filterButton,
+                    selectedFilter === filter && {
+                      backgroundColor: Colors.primeColor,
+                    },
+                  ]}
+                  onPress={() =>
+                    setSelectedFilter(
+                      selectedFilter === filter ? null : filter,
+                    )
+                  }
+                >
+                  <Text
+                    style={[
+                      localStyles.filterText,
+                      selectedFilter === filter && { color: '#fff' },
+                    ]}
+                  >
+                    {filter}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* 📦 List Card */}
+          {filteredList.length === 0 ? (
+            <View style={{ alignItems: 'center', marginTop: 40 }}>
+              <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
+            </View>
+          ) : (
+            filteredList.map((item: any) => {
+              let statusColor;
+              if (item.status === 'CREATED') {
+                statusColor = '#228B22';
+              } else if (item.status === 'UNLOADING') {
+                statusColor = '#228B22';
+              } else {
+                statusColor = '#696969';
+              }
+              return (
+                <InboundCard
+                  key={item.id}
+                  code={item.inbound_number}
+                  plate={item.license_plate}
+                  date={item.arrival_date}
+                  role={'Warehouse Staff'}
+                  status={item.status}
+                  statusColor={statusColor}
+                  onClick={() => navigation.navigate('UnloadingDetail', { item })}
+                />
+              );
+            })
+          )}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+export default UnloadingScreen;
+
+const localStyles = StyleSheet.create({
+  searchInput: {
+    backgroundColor: '#f2f2f2',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: '#333',
+  },
+  filterButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginRight: 8,
+    backgroundColor: '#fff',
+  },
+  filterText: {
+    fontSize: 13,
+    color: '#333',
+  },
+});

@@ -1,30 +1,27 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+interface Role {
+    id: number;
+    name: string;
+    description: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
 interface User {
-    id:            number;
-    email:         string;
-    role_id:       number;
-    created_at:    Date;
-    updated_at:    Date;
-    deleted_at:    null;
-    created_by:    string;
-    employee_id:   string;
-    is_active:     boolean;
-    join_date:     Date;
-    updated_by:    string;
-    valid_from:    Date;
-    valid_to:      Date;
-    last_login:    Date;
-    phone:         string;
-    user_uuid:     string;
-    branch_id:     number;
-    region_code:   string;
-    non_employee:  boolean;
-    is_sales:      boolean;
-    employee_name: null;
-    salesrep_name: null;
-    sales_name:    string;
+    id: string;
+    username: string;
+    organizationId: number;
+    password: string;
+    firstName: string;
+    lastName: string;
+    isActive: boolean;
+    role: Role;
+    roleId: number;
+    createdAt: string;
+    updatedAt: string;
 }
 
 interface AuthState {

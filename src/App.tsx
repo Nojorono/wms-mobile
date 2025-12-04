@@ -1,23 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { enableScreens } from 'react-native-screens';
 import GlobalDialog from './components/GlobalDialog';
 import LoadingDialog from './components/LoadingDialog';
 import AppNavigator from './AppNavigator';
+import "react-native-get-random-values";
 import { StatusBar, StyleSheet, View } from 'react-native';
 import Colors from './constants/Colors.ts';  // Your color constants file
+import GlobalConfirmation from './components/GlobalConfirmation.tsx';
+import socket from './util/socket.ts';
+import NotificationConnector from './util/notificationConnector.tsx';
 
 // Enable screens for better performance with navigation
 enableScreens();
 
 const Main = () => {
+
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeAreaBackground}>
         <NavigationContainer theme={DefaultTheme}>
+          <GlobalConfirmation />
           <GlobalDialog />
           <LoadingDialog />
+          <NotificationConnector />
           <AppNavigator />
         </NavigationContainer>
       </SafeAreaView>

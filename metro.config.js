@@ -6,6 +6,14 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
  *
  * @type {import('@react-native/metro-config').MetroConfig}
  */
-const config = {};
+const defaultConfig = getDefaultConfig(__dirname);
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+defaultConfig.resolver.sourceExts.push('cjs', 'mjs');
+
+const config = {
+  resolver: {
+    sourceExts: defaultConfig.resolver.sourceExts,
+  },
+};
+
+module.exports = mergeConfig(defaultConfig, config);

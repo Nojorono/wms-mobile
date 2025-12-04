@@ -5,9 +5,12 @@ import { useAuthStore } from '../store/useAuthStore.ts';
 
 const axiosInstance = axios.create({
     // baseURL: BASE_URL,
-    baseURL: "https://api.koneksi.co.id/api/v1",
+    // baseURL: "https://api.koneksi.co.id/api/v1",
+    baseURL: "http://10.0.29.47:9005/",
     timeout: 10000,
 });
+
+
 
 // You can add interceptors here if needed
 axiosInstance.interceptors.request.use(

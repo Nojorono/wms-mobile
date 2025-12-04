@@ -45,7 +45,6 @@ export default function InspectionUpdateActivity() {
     }
   }
   const itemBefore = itemBeforeParam as any;
-  console.log('InspectionEditActivity Params:', { activity });
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -198,7 +197,6 @@ export default function InspectionUpdateActivity() {
 
     try {
       const res = await ScannerService.getPalletByCode(palletSumber);
-      console.log('Pallet Sumber Check Response:', res);
       if (!res.success) {
         Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
@@ -315,7 +313,6 @@ export default function InspectionUpdateActivity() {
       if (mode === 'edit') {
         // Add id for update endpoint
         const idActivity = activity.id;
-        console.log('Update Payload:', payload);
         // call update API - ensure your OutboundService implements this
         await OutboundService.updateTransactionPickingDetail(idActivity, payload);
         showDialog('success', 'Berhasil memperbarui activity picking');

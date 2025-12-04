@@ -173,7 +173,6 @@ static async postStatusBulkbyIdScan(inspection_by: string, status: string, data:
   static async updateInspectionData(itemId: string, data: any): Promise<any> {
     try {
       const response = await axiosInstance.patch(`transaction-scan-inbound/${itemId}`, data);
-      console.log("Response from updateInspectionData:", response);
       return response.data;
     } catch (error: any) {
       console.error("Error updating inspection data:", error);

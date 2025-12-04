@@ -145,9 +145,7 @@ function NewInspectionMemo() {
                 text: "OK",
                 onPress: async () => {
                   try {
-                    console.log("Approving all tasks for DO ID:", itemBefore.item.id);
                     const res = await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "IN_PROGRESS");
-                    console.log("Approve Response:", res);
                     showDialog("success", "All tasks approved successfully!");
                     navigation.goBack();
                   } catch (error) {

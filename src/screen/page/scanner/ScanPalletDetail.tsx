@@ -82,7 +82,6 @@ export default function EditItemForm({ route }: any) {
         };
         try {
             const res = await ScannerService.postPalletAdjustment(payload);
-            console.log("Adjustment response:", res);
             if (res && res.success) {
                 // Kembali ke halaman sebelumnya jika sukses
                 navigation.goBack();

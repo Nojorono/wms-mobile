@@ -79,7 +79,6 @@ const InspectionDetail = () => {
     const showDialog = useDialogStore((state) => state.showDialog);
     const [scanTotalQty, setScanTotalQty] = useState<{ [key: string]: { scan: number } }>({});
 
-    console.log("item:", item);
 
     const fetchData = async () => {
         try {
@@ -104,7 +103,6 @@ const InspectionDetail = () => {
                 }));
                 setPallets(mapped);
                 setScanTotalQty(getScanTotals(mapped));
-                console.log("Fetched Pallets:", getScanTotals(mapped))
             }
         } catch (err) {
             showDialog("error", "Error while Fetching Pallets!");

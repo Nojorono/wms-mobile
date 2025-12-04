@@ -285,7 +285,6 @@ export default function InboundDetail() {
                     const url = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/testingcoba";
                     const url2 = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/test"
                     return (
-                        console.log("Attachment URL:", item.attachment),
                         <View style={styles.card}>
                             <TouchableOpacity
                                 style={styles.cardHeader}

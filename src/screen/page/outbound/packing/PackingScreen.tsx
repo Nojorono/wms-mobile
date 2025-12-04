@@ -25,9 +25,9 @@ function PackingScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog("Loading List Outbound Planning")
-      const outboundList = await OutboundService.getOutboundList(user?.id ?? '');
-      setOutbound(outboundList)
-      console.log("outbound List",outboundList)
+      // const outboundList = await OutboundService.getOutboundList(user?.id ?? '');
+      // setOutbound(outboundList)
+      // console.log("outbound List",outboundList)
     } catch (error) {
       hideLoadingDialog()
       console.error('Error fetching outbound data:', error);

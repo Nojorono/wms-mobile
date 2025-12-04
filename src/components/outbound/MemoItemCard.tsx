@@ -44,7 +44,6 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
 
     // Gabungkan data detail ke satu state (selectedItem) agar lebih mudah dikelola
     const openDetailModal = (detail: any) => {
-        console.log("Opening detail modal for:", detail);
         setSelectedItem(detail);
         setWeekNumber(String(detail?.week_number ?? ""));
         setQuantityPicked(String(detail?.quantity_picked ?? ""));

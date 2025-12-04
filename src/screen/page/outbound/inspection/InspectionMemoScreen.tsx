@@ -63,7 +63,6 @@ function InspectionMemoScreen() {
           scan_detail: picking?.transactionScanPicking?.[0] ?? null,
         };
       }));
-      console.log('Fetched Inspection Memos:', memos);
 
       // 🔄 Set state pakai hasil filter dari fetch
       setInspectionList(memos);

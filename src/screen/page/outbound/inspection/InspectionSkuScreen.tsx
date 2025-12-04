@@ -34,7 +34,6 @@ function InspectionSkuScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const { data, dataBefore } = route.params as any;
-  console.log("data transaction", data.transaction_pickings)
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);

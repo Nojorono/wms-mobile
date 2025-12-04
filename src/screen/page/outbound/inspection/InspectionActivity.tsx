@@ -91,7 +91,6 @@ export default function InspectionActivity() {
 
       // TODO: ganti nama method jika service mu berbeda
       const response = await OutboundService.updateTransactionPickingDetail(selectedItem.id, payload);
-      console.log('update response', response);
       await fetchInspection();
 
       showDialog('success', 'Update berhasil');

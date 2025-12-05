@@ -338,25 +338,64 @@ export default function PickingDetailActivity() {
     <View style={styles.container}>
       {/* MAIN CARD */}
       <View style={styles.card}>
-        <Text
-          style={{
-            fontSize: 22,
-            fontWeight: 'bold',
-            color: 'black',
-            textAlign: 'center',
-            marginBottom: 12,
-            backgroundColor: '#FFF5E6',
-            borderRadius: 8,
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-            elevation: 2,
-            shadowColor: '#F26E1F',
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-          }}
-        >
-          {mode === 'edit' ? itemBefore?.item?.description : itemBefore?.item?.item?.description || itemBefore?.item?.description || 'Picking Activity'}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+          <Text
+            style={{
+              fontSize: 22,
+              fontWeight: 'bold',
+              color: 'black',
+              textAlign: 'center',
+              backgroundColor: '#FFF5E6',
+              borderRadius: 8,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              elevation: 2,
+              shadowColor: '#F26E1F',
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              flex: 1,
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {mode === 'edit'
+              ? itemBefore?.item?.description
+              : itemBefore?.item?.item?.description ||
+          itemBefore?.item?.description ||
+          'Picking Activity'}
+          </Text>
+          <TouchableOpacity
+            onPress={async () => {
+              Alert.alert(
+          'Delete Activity',
+          'Are you sure you want to delete this picking activity?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+            showLoadingDialog('Deleting...');
+            console.log('Deleting activity with id:', activity);
+            // await OutboundService.deleteTranscationScan(activity?.id);
+            showDialog('success', 'Berhasil menghapus activity picking');
+            navigation.goBack();
+                } catch (err) {
+            showDialog('error', 'Gagal menghapus activity picking');
+                } finally {
+            hideLoadingDialog();
+                }
+              },
+            },
+          ]
+              );
+            }}
+            disabled={mode !== 'edit'}
+          >
+            <Ionicons name="times" size={20} color={"red"} style={{ marginLeft: 12 }} />
+          </TouchableOpacity>
+        </View>
 
         {/* SUGGESTED DESTINATION */}
         <View style={{ alignItems: 'center', marginBottom: 12 }}>

@@ -346,25 +346,30 @@ export default function InspectionUpdateActivity() {
     <View style={styles.container}>
       {/* MAIN CARD */}
       <View style={styles.card}>
-        <Text
-          style={{
-            fontSize: 22,
-            fontWeight: 'bold',
-            color: 'black',
-            textAlign: 'center',
-            marginBottom: 12,
-            backgroundColor: '#FFF5E6',
-            borderRadius: 8,
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-            elevation: 2,
-            shadowColor: '#F26E1F',
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-          }}
-        >
-          {mode === 'edit' ? itemBefore?.item?.description : itemBefore?.item?.item?.description || itemBefore?.item?.description || 'Picking Activity'}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+          <Text
+            style={{
+              fontSize: 22,
+              fontWeight: 'bold',
+              color: 'black',
+              textAlign: 'center',
+              backgroundColor: '#FFF5E6',
+              borderRadius: 8,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              elevation: 2,
+              shadowColor: '#F26E1F',
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              flex: 1,
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {mode === 'edit' ? itemBefore?.item?.description : itemBefore?.item?.item?.description || itemBefore?.item?.description || 'Picking Activity'}
+          </Text>
+          {/* <Ionicons name="times" size={20} color={"red"} style={{ marginLeft: 12 }} /> */}
+        </View>
 
         {/* SUGGESTED DESTINATION */}
         <View style={{ alignItems: 'center', marginBottom: 12 }}>
@@ -679,7 +684,7 @@ export default function InspectionUpdateActivity() {
         
           <TouchableOpacity
             style={[styles.approveButton, { flex: 1 , backgroundColor:  activity.status !== "INSPECTION" ? "green" : "#ccc" }]}
-            disabled={ activity.status !== "INSPECTION"}
+            // disabled={ activity.status !== "INSPECTION"}
             onPress={() => handleApproveAction("APPROVE")}
           >
             <Text style={styles.approveText}>Approve</Text>
@@ -688,7 +693,7 @@ export default function InspectionUpdateActivity() {
 
         <TouchableOpacity
           style={[styles.approveButton, { flex: 1, backgroundColor:  activity.status !== "INSPECTION_APPROVED" || activity.status === "PENDING" ? "#f57f1e" : "#ccc"  }]}
-          disabled={ activity.status !== "INSPECTION_APPROVED" || activity.status === "PENDING"}
+          // disabled={ activity.status !== "INSPECTION_APPROVED" || activity.status === "PENDING"}
           onPress={() => handleApproveAction("FINAL")}
         >
           <Text style={styles.approveText}>Final</Text>

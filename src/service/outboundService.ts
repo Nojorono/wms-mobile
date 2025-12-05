@@ -50,13 +50,13 @@ class OutboundService {
   }
 
   //update status picking to wh_staff or wh_staff approved it
-  static async updateStatusPicking(inspection_by: string,pickingId: string, status: any): Promise<any> {
+  static async updateStatusPicking(inspection_by: string, pickingId: string, status: any): Promise<any> {
     try {
       const response = await axiosInstance.post(`/transaction-scan-picking/${pickingId}/${status}`, { inspection_by });
       return response.data;
     } catch (error: any) {
       throw error.response;
-    } 
+    }
   }
 
   static async updateStatusPickingBulk(payload: any): Promise<any> {
@@ -75,7 +75,7 @@ class OutboundService {
       return response.data;
     } catch (error: any) {
       throw error.response;
-    } 
+    }
   }
 
   static async updateTransactionPickingDetail(transactionPickingId: string, payload: any): Promise<any> {
@@ -98,7 +98,16 @@ class OutboundService {
 
   static async updateStatusWhenCompleteInspection(doId: string, statusPayload: string): Promise<any> {
     try {
-      const response = await axiosInstance.patch(`/outbound-do/${doId}`,{status: statusPayload});
+      const response = await axiosInstance.patch(`/outbound-do/${doId}`, { status: statusPayload });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async deleteTranscationScan(transactionPickingId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete(`/transaction-scan-picking/${transactionPickingId}`);
       return response.data;
     } catch (error: any) {
       throw error.response;

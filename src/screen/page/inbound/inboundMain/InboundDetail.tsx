@@ -149,6 +149,11 @@ export default function InboundDetail() {
     const showDialog = useDialogStore((state) => state.showDialog);
     const confirm = useConfirmationStore();
     const [refreshing, setRefreshing] = useState(false);
+    const [photos, setPhotos] = useState({
+        segel: null,
+        barang: null,
+        nopol: null,
+    });
 
     const onRefresh = async () => {
         try {
@@ -192,6 +197,11 @@ export default function InboundDetail() {
             setStatus(response.data.status); // Update status dari response
             const inbound_dos = response.data.inbound_dos;
             setMergedData(mergeInboundDos(inbound_dos));
+            setPhotos({
+                segel: response.data.photos_segel || null,
+                barang: response.data.photos_barang || null,
+                nopol: response.data.photos_nopol || null,
+            });
         } catch (error) {
             hideLoadingDialog()
             console.error('Error fetching inbound data:', error);
@@ -274,6 +284,11 @@ export default function InboundDetail() {
                 </View>
             )}
 
+            {/* add upload photo here */}
+            {/* sediakan 3 kotak foto in 1 row
+            get from api photos_segel , photos_barang , photos_nopol
+            if belom ada photo tampilkan text no photo yet, tombol upload photo akan membuka kamera dan melkukan hit api menggunakan multiplepart/form data */}
+
             {/* List Delivery Orders */}
             <FlatList
                 data={mergedData}
@@ -282,8 +297,6 @@ export default function InboundDetail() {
                 onRefresh={onRefresh}
                 renderItem={({ item }) => {
                     const expanded = expandedIds.includes(item.id);
-                    const url = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/testingcoba";
-                    const url2 = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/test"
                     return (
                         <View style={styles.card}>
                             <TouchableOpacity
@@ -341,66 +354,66 @@ export default function InboundDetail() {
                 }}
             />
 
-    {/* 🧾 PDF Viewer Modal */}
-<Modal visible={pdfVisible} animationType="slide" transparent>
-    <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }}>
-        <View style={{ height: "50%", backgroundColor: "#000", borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: "hidden" }}>
+            {/* 🧾 PDF Viewer Modal */}
+            <Modal visible={pdfVisible} animationType="slide" transparent>
+                <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }}>
+                    <View style={{ height: "50%", backgroundColor: "#000", borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: "hidden" }}>
 
-            {/* Header Close Button */}
-            <View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: 12,
-                    backgroundColor: "#111",
-                }}
-            >
-                <Text style={{ color: "#fff", fontSize: 16 }}>Attachment Viewer</Text>
-                <Pressable onPress={handleClosePdf}>
-                    <Ionicons name="minus" size={24} color="#fff" />
-                </Pressable>
-            </View>
-
-            {/* PDF / Image Viewer */}
-            {pdfUrl ? (
-                (() => {
-                    const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pdfUrl);
-
-                    if (isImage) {
-                        return (
-                            <Image
-                                source={{ uri: pdfUrl }}
-                                style={{
-                                    flex: 1,
-                                    resizeMode: "contain",
-                                    backgroundColor: "#000",
-                                }}
-                            />
-                        );
-                    }
-
-                    return (
-                        <WebView
-                            source={{
-                                uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-                                    pdfUrl
-                                )}`,
+                        {/* Header Close Button */}
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: 12,
+                                backgroundColor: "#111",
                             }}
-                            style={{ flex: 1 }}
-                            startInLoadingState={true}
-                            scalesPageToFit={true}
-                        />
-                    );
-                })()
-            ) : (
-                <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                    <Text style={{ color: "#fff", fontSize: 18 }}>No attachment available.</Text>
+                        >
+                            <Text style={{ color: "#fff", fontSize: 16 }}>Attachment Viewer</Text>
+                            <Pressable onPress={handleClosePdf}>
+                                <Ionicons name="minus" size={24} color="#fff" />
+                            </Pressable>
+                        </View>
+
+                        {/* PDF / Image Viewer */}
+                        {pdfUrl ? (
+                            (() => {
+                                const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pdfUrl);
+
+                                if (isImage) {
+                                    return (
+                                        <Image
+                                            source={{ uri: pdfUrl }}
+                                            style={{
+                                                flex: 1,
+                                                resizeMode: "contain",
+                                                backgroundColor: "#000",
+                                            }}
+                                        />
+                                    );
+                                }
+
+                                return (
+                                    <WebView
+                                        source={{
+                                            uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+                                                pdfUrl
+                                            )}`,
+                                        }}
+                                        style={{ flex: 1 }}
+                                        startInLoadingState={true}
+                                        scalesPageToFit={true}
+                                    />
+                                );
+                            })()
+                        ) : (
+                            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                                <Text style={{ color: "#fff", fontSize: 18 }}>No attachment available.</Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
-            )}
-        </View>
-    </View>
-</Modal>
+            </Modal>
 
 
             {status === "CREATED" && (

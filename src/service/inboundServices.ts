@@ -245,6 +245,35 @@ static async postStatusBulkbyIdScan(inspection_by: string, status: string, data:
       throw error.response;
     }
   }
+
+  static async postdPhotoToS3(file: any, folder: string) {
+  const formData = new FormData();
+
+  // bucket name hardcode atau dari env
+  formData.append("bucket", "mybucket");
+  // folder + filename
+  formData.append("key", `${folder}/${file.fileName}`);
+
+  formData.append("file", {
+    uri: file.uri,
+    type: file.type,
+    name: file.fileName,
+  });
+
+  formData.append("acl", "public-read");
+
+  const res = await axiosInstance.post(
+    "/s3/upload",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return res.data;
+}
 }
 
 export default InboundServices;

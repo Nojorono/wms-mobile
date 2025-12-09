@@ -209,10 +209,34 @@ export default function InboundDetail() {
             setStatus(response.data.status); // Update status dari response
             const inbound_dos = response.data.inbound_dos;
             setMergedData(mergeInboundDos(inbound_dos));
+            console.log('Fetched inbound data:', response.data);
             setPhotos({
-                segel: response.data.photos_segel || null,
-                barang: response.data.photos_barang || null,
-                nopol: response.data.photos_nopol || null,
+                segel: response.data.photo_seal
+                    ? {
+                        url: response.data.photo_seal,
+                        bucket: "mybucket",
+                        key: "",
+                        size: 0,
+                    }
+                    : null,
+
+                barang: response.data.photo_condition
+                    ? {
+                        url: response.data.photo_condition,
+                        bucket: "mybucket",
+                        key: "",
+                        size: 0,
+                    }
+                    : null,
+
+                nopol: response.data.photo_license_plate
+                    ? {
+                        url: response.data.photo_license_plate,
+                        bucket: "mybucket",
+                        key: "",
+                        size: 0,
+                    }
+                    : null,
             });
         } catch (error) {
             hideLoadingDialog()
@@ -289,7 +313,7 @@ export default function InboundDetail() {
 
             const s3 = await InboundServices.postdPhotoToS3(
                 file,
-                `inbound/${payload.item.inbound_number}/${type}`
+                `${type}`
             );
 
             const data = s3.data;
@@ -345,19 +369,25 @@ export default function InboundDetail() {
     };
 
     const handleSubmit = async () => {
-    try {
-        showLoadingDialog("Submitting photos...");
+        try {
+            showLoadingDialog("Submitting photos...");
 
-        // TODO: API upload
-        console.log("Uploading photos:", photos);
+            // TODO: API upload
+            console.log("Uploading photos:", photos);
+            const res = await InboundServices.updatePhotoToInbound(payload.item.id, {
+                photo_seal: photos.segel?.url,
+                photo_condition: photos.barang?.url,
+                photo_license_plate: photos.nopol?.url,
+            });
+            console.log("Submit response:", res);
 
-        // success ...
-    } catch (err) {
-        console.error(err);
-    } finally {
-        hideLoadingDialog();
-    }
-};
+            // success ...
+        } catch (err) {
+            console.error(err);
+        } finally {
+            hideLoadingDialog();
+        }
+    };
 
     useEffect(() => {
         const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {
@@ -482,24 +512,24 @@ export default function InboundDetail() {
                 })}
 
             </View>
-             {/* Submit button */}
-                            <TouchableOpacity
-                                onPress={handleSubmit}
-                                disabled={!photos.segel || !photos.barang || !photos.nopol}
-                                style={{
-                                    backgroundColor: !photos.segel || !photos.barang || !photos.nopol
-                                        ? "#9CA3AF" // disabled
-                                        : "#2563EB", // blue
-                                    paddingVertical: 14,
-                                    borderRadius: 12,
-                                    alignItems: "center",
-                                    opacity: 1,
-                                }}
-                            >
-                                <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-                                    Submit
-                                </Text>
-                            </TouchableOpacity>
+            {/* Submit button */}
+            <TouchableOpacity
+                onPress={handleSubmit}
+                disabled={!photos.segel || !photos.barang || !photos.nopol}
+                style={{
+                    backgroundColor: !photos.segel || !photos.barang || !photos.nopol
+                        ? "#9CA3AF" // disabled
+                        : "#2563EB", // blue
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    alignItems: "center",
+                    opacity: 1,
+                }}
+            >
+                <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+                    Submit
+                </Text>
+            </TouchableOpacity>
 
 
             {/* List Delivery Orders */}

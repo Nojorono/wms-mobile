@@ -38,9 +38,9 @@ function AssignGateDoScreen() {
   const fetchAssignGate = async () => {
     try {
       setRefreshing(true);
-      showLoadingDialog('Loading List AssignGate Planning'); const data:any= {
-        limit:100,
-        has_transaction_scan_picking:true,
+      showLoadingDialog('Loading List AssignGate Planning'); const data: any = {
+        limit: 100,
+        has_transaction_scan_picking: true,
       }
       const response = await OutboundService.getOutboundDoList(data);
       setAssignGateList(response.data || []);
@@ -53,11 +53,11 @@ function AssignGateDoScreen() {
     }
   };
 
-useFocusEffect(
-  useCallback(() => {
-    fetchAssignGate();
-  }, [selectedFilter])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchAssignGate();
+    }, [selectedFilter])
+  );
 
   // filter & search data
   const filteredList = useMemo(() => {
@@ -125,18 +125,17 @@ useFocusEffect(
                 statusColor = '#696969';
               }
 
-                return (
+              return (
                 <OutboundCard
                   key={item.id}
                   title={`${item.outbound_do_number}`}
-                  subTitle={ item.outbound_type}
-                  origin={  item.origin}
+                  subTitle={item.outbound_type}
+                  origin={item.origin}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('AssignGateActivity', { item })}
-                //   onClick={() => {}}
+                  onClick={() => navigation.navigate('AssignGateVehicle', { item })}
                 />
-                );
+              );
             })
           )}
         </View>

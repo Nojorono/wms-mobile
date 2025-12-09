@@ -1,3 +1,4 @@
+import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -9,22 +10,34 @@ import {
   ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
+import UserServices from "../../../../service/userServices";
+import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
+import { ROLES } from "../../../../constants/Roles";
+
+interface AssignForm {
+  name: string;
+  contact: string;
+  deviceId: string;
+}
 
 export default function AssignGateActivity() {
   const [gates, setGates] = useState<any[]>([]);
   const [loadingGate, setLoadingGate] = useState(false);
-
+  const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+  const [userManageList, setUserManageList] = useState<any[]>([]);
   const [selectedGate, setSelectedGate] = useState("");
+  const [showGateDropdown, setShowGateDropdown] = useState(false);
+const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const [userList, setUserList] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    contact: "",
-    deviceId: "",
-  });
+const [formData, setFormData] = useState<AssignForm>({
+  name: "",
+  contact: "",
+  deviceId: "",
+});
 
   // ============================
   // FETCH GATE LIST
@@ -46,34 +59,87 @@ export default function AssignGateActivity() {
     fetchGateList();
   }, []);
 
+  // === FETCH USERS ===
+  const fetchUserList = async (roleName = ROLES.DRIVER_FORKLIFT) => {
+    try {
+      showLoadingDialog("Loading Data Users");
+
+      const response = await UserServices.getUserList();
+      const responseManage = await UserServices.getUserManagementList();
+      console.log("User List Response:", response);
+      console.log("User Management List Response:", responseManage);
+      setUserManageList(responseManage?.data || []);
+
+      const filteredUsers = (response?.data || []).filter(
+        (user: any) =>
+          user?.role?.name?.toUpperCase() === roleName.toUpperCase()
+      );
+
+      setUserList(filteredUsers);
+    } catch (error) {
+      console.log("Error:", error);
+    } finally {
+      hideLoadingDialog();
+    }
+  };
+
+  useEffect(() => {
+    fetchUserList();
+  }, []);
+
   // ============================
   // AUTOCOMPLETE SEARCH
   // ============================
-  const handleNameChange = (text: string) => {
-    setFormData((prev) => ({ ...prev, name: text }));
-    setShowDropdown(true);
+ const handleNameChange = (text: string) => {
+  setFormData((prev) => ({ ...prev, name: text }));
+  setShowUserDropdown(true);
 
-    if (!text.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  if (!text.trim()) {
+    setSearchResults([]);
+    return;
+  }
 
-    const filtered = userList.filter((u) =>
-      u.name?.toLowerCase().includes(text.toLowerCase())
-    );
+  // === AUTOCOMPLETE DARI USER MANAGEMENT ===
+  const filtered = userManageList.filter((u) =>
+    u.name?.toLowerCase().includes(text.toLowerCase())
+  );
 
-    setSearchResults(filtered);
-  };
+  setSearchResults(filtered);
+};
 
-  const handleSelectUser = (user: any) => {
+
+
+const handleSelectUser = (user: any) => {
+  setFormData(prev => ({
+    ...prev,
+    name: user.name,
+    contact: user.phone,
+  }));
+
+  setSearchResults([]);
+  setShowUserDropdown(false);
+};
+
+  // === PICKER (DEVICE ID) CHANGE ===
+const handlePickerChange = (selectedId: string) => {
+  setFormData((prev) => ({ ...prev, deviceId: selectedId }));
+
+  if (!selectedId) return;
+
+  const foundInUserList = userList.find((u) => u.id === selectedId);
+  const foundInManage = userManageList.find((u) => u.id === selectedId);
+  const found = foundInUserList || foundInManage;
+
+  if (found) {
     setFormData((prev) => ({
       ...prev,
-      name: user.name,
-      contact: user.phone,
+      name: found.name || prev.name,
+      contact: found.phone || prev.contact,
     }));
-    setShowDropdown(false);
-    setSearchResults([]);
-  };
+  }
+};
+
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -121,21 +187,35 @@ export default function AssignGateActivity() {
         )}
       </View>
 
-      {/* ============================
-        AUTOCOMPLETE USER INPUT
-      ============================ */}
+      {/* DEVICE ID */}
+      <Text style={styles.label}>Device ID</Text>
+      <Picker
+        selectedValue={formData.deviceId}
+        onValueChange={(itemValue) => handlePickerChange(String(itemValue))}
+        style={styles.picker}
+      >
+        <Picker.Item label="Select Device" value="" />
+        {userList.map((user) => (
+          <Picker.Item
+            key={user.id}
+            label={user.username || user.name || "-"}
+            value={user.id}
+          />
+        ))}
+      </Picker>
+
       <Text style={styles.label}>User</Text>
 
-      <View style={{ zIndex: 10 }}>
+      <View style={{ zIndex: 100 }}>
         <TextInput
           style={styles.input}
           placeholder="Search or type name..."
           value={formData.name}
           onChangeText={handleNameChange}
-          onFocus={() => setShowDropdown(true)}
+          onFocus={() => setShowUserDropdown(true)}
         />
 
-        {showDropdown && searchResults.length > 0 && (
+        {showUserDropdown && searchResults.length > 0 && (
           <View style={styles.dropdown}>
             <ScrollView style={{ maxHeight: 200 }}>
               {searchResults.map((item) => (
@@ -217,6 +297,13 @@ const styles = StyleSheet.create({
   selectText: {
     fontSize: 15,
     color: "#333",
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginTop: 4,
+    backgroundColor: "#fafafa",
   },
 
   // DROPDOWN

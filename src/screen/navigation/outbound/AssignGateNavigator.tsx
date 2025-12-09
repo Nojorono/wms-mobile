@@ -4,12 +4,14 @@ import { Image, View } from 'react-native';
 import React from 'react';
 import AssignGateDoScreen from '../../page/outbound/assignGate/AssignGateDo.tsx';
 import AssignGateActivity from '../../page/outbound/assignGate/AssignGateActivity.tsx';
+import AssignGateVehicle from '../../page/outbound/assignGate/AssignGateVehicle.tsx';
 
 
 
 export type AssignGateParamList = {
   AssignGateMain: undefined;
   AssignGateActivity: {item:any};
+  AssignGateVehicle: {item:any};
 }
 const AssignGateStack = createStackNavigator<AssignGateParamList>();
 
@@ -42,16 +44,28 @@ const AssignGateStackNavigator = () => (
       }}
     />
     <AssignGateStack.Screen
-      name="AssignGateActivity"
-      component={AssignGateActivity}
+      name="AssignGateVehicle"
+      component={AssignGateVehicle}
       options={{
-        headerShown: false,
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
       }}
     />
+    <AssignGateStack.Screen
+      name="AssignGateActivity"
+      component={AssignGateActivity}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+
 
     
   </AssignGateStack.Navigator>

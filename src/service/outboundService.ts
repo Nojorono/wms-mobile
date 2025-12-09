@@ -113,6 +113,24 @@ class OutboundService {
       throw error.response;
     }
   }
+  //for assign gate
+  static async getOutboundDetailById(outboundDoId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/outbound-do/${outboundDoId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateOutboundDoVehicleInfo(outboundDoId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/outbound-do/${outboundDoId}`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
 }
 
 export default OutboundService;

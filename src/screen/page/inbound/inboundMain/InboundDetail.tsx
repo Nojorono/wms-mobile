@@ -335,7 +335,6 @@ export default function InboundDetail() {
             );
 
             const data = s3.data;
-            console.log("Upload success:", data);
 
             // simpan metadata
             setPhotos((prev) => ({

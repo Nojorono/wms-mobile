@@ -23,6 +23,7 @@ import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import WebView from "react-native-webview";
 import { launchCamera } from "react-native-image-picker";
+import { extractBucketPath } from "../service/inboundService";
 
 /* ========================
    1. Type & Merge Function
@@ -166,6 +167,14 @@ export default function InboundDetail() {
         barang: null,
         nopol: null,
     });
+    const [initialPhotos, setInitialPhotos] = useState({
+        segel: false,
+        barang: false,
+        nopol: false
+    });
+
+    const [dirty, setDirty] = useState(false);
+    // dirty = true = ada perubahan → button jadi EDIT
 
     const onRefresh = async () => {
         try {
@@ -215,7 +224,7 @@ export default function InboundDetail() {
                     ? {
                         url: response.data.photo_seal,
                         bucket: "mybucket",
-                        key: "",
+                        key: extractBucketPath(response.data.photo_seal),
                         size: 0,
                     }
                     : null,
@@ -224,7 +233,7 @@ export default function InboundDetail() {
                     ? {
                         url: response.data.photo_condition,
                         bucket: "mybucket",
-                        key: "",
+                        key: extractBucketPath(response.data.photo_condition),
                         size: 0,
                     }
                     : null,
@@ -233,11 +242,20 @@ export default function InboundDetail() {
                     ? {
                         url: response.data.photo_license_plate,
                         bucket: "mybucket",
-                        key: "",
+                        key: extractBucketPath(response.data.photo_license_plate),
                         size: 0,
                     }
                     : null,
             });
+
+            // simpan kondisi awal apakah foto sudah ada
+            setInitialPhotos({
+                segel: !!response.data.photo_seal,
+                barang: !!response.data.photo_condition,
+                nopol: !!response.data.photo_license_plate,
+            });
+
+            setDirty(false); // data fresh dari backend = tidak dirty
         } catch (error) {
             hideLoadingDialog()
             console.error('Error fetching inbound data:', error);
@@ -329,7 +347,7 @@ export default function InboundDetail() {
                     size: data.size,
                 },
             }));
-
+            setDirty(true);
             showDialog("success", `Photo ${type} uploaded`);
         } catch (error) {
             console.error(error);
@@ -357,6 +375,7 @@ export default function InboundDetail() {
                     ...prev,
                     [type]: null,
                 }));
+                setDirty(true);
 
                 showDialog("success", "Photo deleted");
                 hideLoadingDialog();
@@ -371,15 +390,13 @@ export default function InboundDetail() {
     const handleSubmit = async () => {
         try {
             showLoadingDialog("Submitting photos...");
-
             // TODO: API upload
-            console.log("Uploading photos:", photos);
             const res = await InboundServices.updatePhotoToInbound(payload.item.id, {
                 photo_seal: photos.segel?.url,
                 photo_condition: photos.barang?.url,
                 photo_license_plate: photos.nopol?.url,
             });
-            console.log("Submit response:", res);
+            showDialog("success", "Photos submitted successfully");
 
             // success ...
         } catch (err) {
@@ -389,37 +406,47 @@ export default function InboundDetail() {
         }
     };
 
-    useEffect(() => {
-        const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {
-            const hasPhoto =
-                photos.segel || photos.barang || photos.nopol;
+    const allUploaded = photos.segel && photos.barang && photos.nopol;
+    const hadInitial = initialPhotos.segel && initialPhotos.barang && initialPhotos.nopol;
 
-            if (!hasPhoto) return;
+    const shouldShowSubmit = !hadInitial || dirty;
+    const submitLabel = dirty ? "Edit" : "Submit";
 
-            e.preventDefault();
+ useEffect(() => {
+  const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {
 
-            confirm.show(
-                "decline",
-                "You have uploaded photos. Going back will delete them. Continue?",
-                async () => {
-                    // delete all
-                    for (const key of ["segel", "barang", "nopol"] as Array<keyof typeof photos>) {
-                        const p = photos[key];
-                        if (p) {
-                            await InboundServices.deletePhotoFromS3(
-                                p.bucket,
-                                p.key
-                            );
-                        }
-                    }
+      const initialEmpty =
+          !initialPhotos.segel &&
+          !initialPhotos.barang &&
+          !initialPhotos.nopol;
 
-                    navigationInbound.dispatch(e.data.action);
-                }
-            );
-        });
+      const hasNewPhotos =
+          photos.segel || photos.barang || photos.nopol;
 
-        return unsubscribe;
-    }, [navigationInbound, photos]);
+      // tidak ada upload baru → boleh back
+      if (!initialEmpty || !hasNewPhotos || !dirty) return;
+
+      // block back
+      e.preventDefault();
+
+      confirm.show(
+          "decline",
+          "You uploaded photos but haven't submitted. Going back will delete them. Continue?",
+          async () => {
+              for (const key of ["segel", "barang", "nopol"] as Array<keyof typeof photos>) {
+                  const p = photos[key];
+                  if (p) {
+                      await InboundServices.deletePhotoFromS3(p.bucket, p.key);
+                  }
+              }
+
+              navigationInbound.dispatch(e.data.action);
+          }
+      );
+  });
+
+  return unsubscribe;
+}, [photos, initialPhotos, dirty]);
 
 
 
@@ -512,24 +539,26 @@ export default function InboundDetail() {
                 })}
 
             </View>
+
             {/* Submit button */}
-            <TouchableOpacity
-                onPress={handleSubmit}
-                disabled={!photos.segel || !photos.barang || !photos.nopol}
-                style={{
-                    backgroundColor: !photos.segel || !photos.barang || !photos.nopol
-                        ? "#9CA3AF" // disabled
-                        : "#2563EB", // blue
-                    paddingVertical: 14,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    opacity: 1,
-                }}
-            >
-                <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-                    Submit
-                </Text>
-            </TouchableOpacity>
+
+            {shouldShowSubmit && (
+                <TouchableOpacity
+                    onPress={handleSubmit}
+                    disabled={!allUploaded}
+                    style={{
+                        backgroundColor: allUploaded ? "#2563EB" : "#9CA3AF",
+                        paddingVertical: 14,
+                        borderRadius: 12,
+                        alignItems: "center",
+                    }}
+                >
+                    <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+                        {submitLabel}
+                    </Text>
+                </TouchableOpacity>
+            )}
+
 
 
             {/* List Delivery Orders */}

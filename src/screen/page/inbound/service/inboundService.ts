@@ -728,5 +728,10 @@ export function getScanTotals(data:any) {
   }, {});
 }
 
+export function extractBucketPath(url: string) {
+  const index = url.indexOf("mybucket/");
+  return index !== -1 ? url.substring(index) : url;
+}
+
 
 

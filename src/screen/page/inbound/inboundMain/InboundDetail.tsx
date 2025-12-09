@@ -22,6 +22,7 @@ import { InboundParamList } from "../../../navigation/inbound/InboundNavigator";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import WebView from "react-native-webview";
+import { launchCamera } from "react-native-image-picker";
 
 /* ========================
    1. Type & Merge Function
@@ -149,7 +150,18 @@ export default function InboundDetail() {
     const showDialog = useDialogStore((state) => state.showDialog);
     const confirm = useConfirmationStore();
     const [refreshing, setRefreshing] = useState(false);
-    const [photos, setPhotos] = useState({
+    type PhotoMeta = {
+        url: string;
+        bucket: string;
+        key: string;
+        size: number;
+    } | null;
+
+    const [photos, setPhotos] = useState<{
+        segel: PhotoMeta;
+        barang: PhotoMeta;
+        nopol: PhotoMeta;
+    }>({
         segel: null,
         barang: null,
         nopol: null,
@@ -259,6 +271,135 @@ export default function InboundDetail() {
         );
     };
 
+    const handleUpload = async (type: "segel" | "barang" | "nopol") => {
+        try {
+            const result = await launchCamera({
+                mediaType: "photo",
+                quality: 0.4,
+                cameraType: "back",
+                saveToPhotos: false,
+            });
+
+            if (result.didCancel) return;
+
+            const file = result.assets?.[0];
+            if (!file) return;
+
+            showLoadingDialog("Uploading photo...");
+
+            const s3 = await InboundServices.postdPhotoToS3(
+                file,
+                `inbound/${payload.item.inbound_number}/${type}`
+            );
+
+            const data = s3.data;
+            console.log("Upload success:", data);
+
+            // simpan metadata
+            setPhotos((prev) => ({
+                ...prev,
+                [type]: {
+                    url: data.url,
+                    bucket: data.bucket,
+                    key: data.key,
+                    size: data.size,
+                },
+            }));
+
+            showDialog("success", `Photo ${type} uploaded`);
+        } catch (error) {
+            console.error(error);
+            showDialog("error", "Upload failed");
+        } finally {
+            hideLoadingDialog();
+        }
+    };
+
+    const handleDelete = async (type: "segel" | "barang" | "nopol") => {
+        try {
+            const target = photos[type];
+            if (!target) return;
+
+            confirm.show("decline", "Delete this photo?", async () => {
+                showLoadingDialog("Deleting photo...");
+
+                await InboundServices.deletePhotoFromS3(
+                    target.bucket,
+                    target.key
+                );
+
+                // reset UI
+                setPhotos((prev) => ({
+                    ...prev,
+                    [type]: null,
+                }));
+
+                showDialog("success", "Photo deleted");
+                hideLoadingDialog();
+            });
+        } catch (error) {
+            console.error(error);
+            hideLoadingDialog();
+            showDialog("error", "Delete failed");
+        }
+    };
+
+    const handleSubmit = async () => {
+    try {
+        showLoadingDialog("Submitting photos...");
+
+        // TODO: API upload
+        console.log("Uploading photos:", photos);
+
+        // success ...
+    } catch (err) {
+        console.error(err);
+    } finally {
+        hideLoadingDialog();
+    }
+};
+
+    useEffect(() => {
+        const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {
+            const hasPhoto =
+                photos.segel || photos.barang || photos.nopol;
+
+            if (!hasPhoto) return;
+
+            e.preventDefault();
+
+            confirm.show(
+                "decline",
+                "You have uploaded photos. Going back will delete them. Continue?",
+                async () => {
+                    // delete all
+                    for (const key of ["segel", "barang", "nopol"] as Array<keyof typeof photos>) {
+                        const p = photos[key];
+                        if (p) {
+                            await InboundServices.deletePhotoFromS3(
+                                p.bucket,
+                                p.key
+                            );
+                        }
+                    }
+
+                    navigationInbound.dispatch(e.data.action);
+                }
+            );
+        });
+
+        return unsubscribe;
+    }, [navigationInbound, photos]);
+
+
+
+
+    if (status !== "CREATED") {
+        showDialog("error", "Can only upload while CREATED");
+        return;
+    }
+
+
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
@@ -285,9 +426,81 @@ export default function InboundDetail() {
             )}
 
             {/* add upload photo here */}
-            {/* sediakan 3 kotak foto in 1 row
-            get from api photos_segel , photos_barang , photos_nopol
-            if belom ada photo tampilkan text no photo yet, tombol upload photo akan membuka kamera dan melkukan hit api menggunakan multiplepart/form data */}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 16 }}>
+                {(["segel", "barang", "nopol"] as Array<keyof typeof photos>).map((key) => {
+                    const img = photos[key];
+
+                    return (
+                        <View
+                            key={key}
+                            style={{
+                                flex: 1,
+                                height: 110,
+                                backgroundColor: "#E5E7EB",
+                                borderRadius: 12,
+                                marginHorizontal: 4,
+                                overflow: "hidden",
+                            }}
+                        >
+                            {img ? (
+                                <>
+                                    <Image
+                                        source={{ uri: img.url }}
+                                        style={{ width: "100%", height: "100%" }}
+                                        resizeMode="cover"
+                                    />
+
+                                    {/* Delete button - floating at top right */}
+                                    <TouchableOpacity
+                                        onPress={() => handleDelete(key)}
+                                        style={{
+                                            position: "absolute",
+                                            top: 6,
+                                            right: 6,
+                                            backgroundColor: "rgba(255,255,255,0.8)",
+                                            borderRadius: 16,
+                                            padding: 4,
+                                            zIndex: 10,
+                                        }}
+                                    >
+                                        <Ionicons name="trash" size={20} color="#DC2626" />
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <TouchableOpacity
+                                    style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+                                    onPress={() => handleUpload(key)}
+                                >
+                                    <Text style={{ textAlign: "center", color: "#6B7280" }}>
+                                        No Photo{'\n'}({key})
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                    );
+                })}
+
+            </View>
+             {/* Submit button */}
+                            <TouchableOpacity
+                                onPress={handleSubmit}
+                                disabled={!photos.segel || !photos.barang || !photos.nopol}
+                                style={{
+                                    backgroundColor: !photos.segel || !photos.barang || !photos.nopol
+                                        ? "#9CA3AF" // disabled
+                                        : "#2563EB", // blue
+                                    paddingVertical: 14,
+                                    borderRadius: 12,
+                                    alignItems: "center",
+                                    opacity: 1,
+                                }}
+                            >
+                                <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+                                    Submit
+                                </Text>
+                            </TouchableOpacity>
+
 
             {/* List Delivery Orders */}
             <FlatList

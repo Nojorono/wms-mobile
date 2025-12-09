@@ -274,6 +274,17 @@ static async postStatusBulkbyIdScan(inspection_by: string, status: string, data:
 
   return res.data;
 }
+
+static async deletePhotoFromS3(bucket: string, path: string) {
+    try {
+      const response = await axiosInstance.delete(`/s3/${bucket}/${path}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+
 }
 
 export default InboundServices;

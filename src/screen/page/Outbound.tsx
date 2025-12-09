@@ -58,8 +58,8 @@ function OutboundIndex() {
           <View style={styles.menuCard}>
             {roleName === ROLES.DRIVER_FORKLIFT && (
               <MenuCard
-                title={"Put Away"}
-              // onPress={() => navigationInbound.navigate("ForkLiftNavigator")}
+                title={"Line to Gate"}
+              onPress={() => navigation.navigate("OutboundForkliftGate")}
               />
             )}
 

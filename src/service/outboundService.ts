@@ -138,12 +138,21 @@ class OutboundService {
       return response.data;
     } catch (error: any) {
       throw error.response;
-    }     
+    }
   }
 
   static async getAssignedGate(): Promise<any> {
     try {
       const response = await axiosInstance.get('/assigned-gate');
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async getAssignedGateByUserId(userId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/assigned-gate', { params: { user_id: userId } });
       return response.data;
     } catch (error: any) {
       throw error.response;

@@ -131,6 +131,33 @@ class OutboundService {
       throw error.response;
     }
   }
+
+  static async getGateList(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/master-warehouse-sub', { params: { is_gate: true } });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }     
+  }
+
+  static async getAssignedGate(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/assigned-gate');
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async postAssignGate(payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post('/assigned-gate', payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
 }
 
 export default OutboundService;

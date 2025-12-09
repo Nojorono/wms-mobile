@@ -13,63 +13,107 @@ import Icon from "react-native-vector-icons/Feather";
 import UserServices from "../../../../service/userServices";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import { ROLES } from "../../../../constants/Roles";
+import OutboundService from "../../../../service/outboundService";
+import { set } from "react-hook-form";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { combine } from "zustand/middleware";
+import { useDialogStore } from "../../../../store/useGlobalDialog";
+import { AssignGateParamList } from "../../../navigation/outbound/AssignGateNavigator";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 interface AssignForm {
   name: string;
   contact: string;
   deviceId: string;
+  gateId: string;
 }
 
+
+type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>;
+
 export default function AssignGateActivity() {
-  const [gates, setGates] = useState<any[]>([]);
-  const [loadingGate, setLoadingGate] = useState(false);
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const [userManageList, setUserManageList] = useState<any[]>([]);
-  const [selectedGate, setSelectedGate] = useState("");
-  const [showGateDropdown, setShowGateDropdown] = useState(false);
-const [showUserDropdown, setShowUserDropdown] = useState(false);
-
+  const navigation = useNavigation<NavigationProp>();
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+const showDialog = useDialogStore((state) => state.showDialog);
+  const route = useRoute();
+  const params = (route.params || {}) as any;
   const [userList, setUserList] = useState<any[]>([]);
+  const [gateList, setGateList] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
 
-const [formData, setFormData] = useState<AssignForm>({
-  name: "",
-  contact: "",
-  deviceId: "",
-});
+  const [formData, setFormData] = useState<AssignForm>({
+    gateId: "",
+    name: "",
+    contact: "",
+    deviceId: "",
+  });
 
-  // ============================
-  // FETCH GATE LIST
-  // ============================
-  const fetchGateList = async () => {
+  function getPickedWithScan(data: any) {
+    const memos = data.item?.outbound_memos ?? [];
+
+    let result: any[] = [];
+
+    memos.forEach((memo: any) => {
+      memo.transaction_pickings.forEach((tp: any) => {
+
+        // hanya ambil yang punya scan
+        if (tp.transactionScanPicking && tp.transactionScanPicking.length > 0) {
+          result.push({
+            picking: tp,                            // parent
+            scans: tp.transactionScanPicking        // array scan item
+          });
+        }
+
+      });
+    });
+
+    return result;
+  }
+
+
+  const pickedWithScan = getPickedWithScan(params);
+ 
+const handleSubmit = async () => {
     try {
-      setLoadingGate(true);
-      const res = await fetch("https://api.example.com/gates");
-      const json = await res.json();
-      setGates(json.data || []);
-    } catch (err) {
-      console.log("Gate API Error:", err);
-    } finally {
-      setLoadingGate(false);
+      showLoadingDialog("Saving Assignment...");  
+      const payload = {
+        gate_id: formData.gateId,
+        outbound_do_id: params.item.id,
+        users: [
+          {
+        user_id: formData.deviceId,
+        user_name: formData.name,
+        user_phone: formData.contact,
+          },
+        ],
+        pallets: pickedWithScan.flatMap(entry =>
+          entry.scans.map((scan: any) => ({
+        pallet_id: scan.palletUse?.id,
+        status: "ASSIGNED",
+          }))
+        ),
+      };
+      await OutboundService.postAssignGate(payload);
+      showDialog("success", "Gate assignment saved successfully.");
+      hideLoadingDialog();
+      navigation.goBack();
+    } catch (error) {
+      showDialog("error", "Failed to save gate assignment.");
+      hideLoadingDialog();
     }
-  };
+  }
 
-  useEffect(() => {
-    fetchGateList();
-  }, []);
-
-  // === FETCH USERS ===
   const fetchUserList = async (roleName = ROLES.DRIVER_FORKLIFT) => {
     try {
       showLoadingDialog("Loading Data Users");
 
       const response = await UserServices.getUserList();
       const responseManage = await UserServices.getUserManagementList();
-      console.log("User List Response:", response);
-      console.log("User Management List Response:", responseManage);
+      const responseGate = await OutboundService.getGateList();
+      setGateList(responseGate?.data || []);
       setUserManageList(responseManage?.data || []);
-
       const filteredUsers = (response?.data || []).filter(
         (user: any) =>
           user?.role?.name?.toUpperCase() === roleName.toUpperCase()
@@ -87,57 +131,71 @@ const [formData, setFormData] = useState<AssignForm>({
     fetchUserList();
   }, []);
 
-  // ============================
-  // AUTOCOMPLETE SEARCH
-  // ============================
- const handleNameChange = (text: string) => {
-  setFormData((prev) => ({ ...prev, name: text }));
-  setShowUserDropdown(true);
+  const handleNameChange = (text: string) => {
+    setFormData((prev) => ({ ...prev, name: text }));
+    setShowUserDropdown(true);
 
-  if (!text.trim()) {
+    if (!text.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const filtered = userManageList.filter((u) =>
+      u.name?.toLowerCase().includes(text.toLowerCase())
+    );
+
+    setSearchResults(filtered);
+  };
+
+
+
+  const handleSelectUser = (user: any) => {
+    setFormData(prev => ({
+      ...prev,
+      name: user.name,
+      contact: user.phone,
+    }));
+
     setSearchResults([]);
-    return;
-  }
-
-  // === AUTOCOMPLETE DARI USER MANAGEMENT ===
-  const filtered = userManageList.filter((u) =>
-    u.name?.toLowerCase().includes(text.toLowerCase())
-  );
-
-  setSearchResults(filtered);
-};
-
-
-
-const handleSelectUser = (user: any) => {
-  setFormData(prev => ({
-    ...prev,
-    name: user.name,
-    contact: user.phone,
-  }));
-
-  setSearchResults([]);
-  setShowUserDropdown(false);
-};
+    setShowUserDropdown(false);
+  };
 
   // === PICKER (DEVICE ID) CHANGE ===
-const handlePickerChange = (selectedId: string) => {
-  setFormData((prev) => ({ ...prev, deviceId: selectedId }));
+  const handlePickerChange = (selectedId: string) => {
+    setFormData((prev) => ({ ...prev, deviceId: selectedId }));
 
-  if (!selectedId) return;
+    if (!selectedId) return;
 
-  const foundInUserList = userList.find((u) => u.id === selectedId);
-  const foundInManage = userManageList.find((u) => u.id === selectedId);
-  const found = foundInUserList || foundInManage;
+    const foundInUserList = userList.find((u) => u.id === selectedId);
+    const foundInManage = userManageList.find((u) => u.id === selectedId);
+    const found = foundInUserList || foundInManage;
 
-  if (found) {
-    setFormData((prev) => ({
-      ...prev,
-      name: found.name || prev.name,
-      contact: found.phone || prev.contact,
-    }));
-  }
-};
+    if (found) {
+      setFormData((prev) => ({
+        ...prev,
+        name: found.name || prev.name,
+        contact: found.phone || prev.contact,
+      }));
+    }
+  };
+
+  const handlePickerGateChange = (selectedId: string) => {
+    setFormData((prev) => ({ ...prev, gateId: selectedId }));
+
+    if (!selectedId) return;
+
+    const foundInUserList = userList.find((u) => u.id === selectedId);
+    const foundInManage = userManageList.find((u) => u.id === selectedId);
+    const found = foundInUserList || foundInManage;
+
+    if (found) {
+      setFormData((prev) => ({
+        ...prev,
+        name: found.name || prev.name,
+        contact: found.phone || prev.contact,
+      }));
+    }
+  };
 
 
 
@@ -145,47 +203,22 @@ const handlePickerChange = (selectedId: string) => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Assign Gate</Text>
 
-      {/* ============================
-        SELECT GATE
-      ============================ */}
       <Text style={styles.label}>Select Gate</Text>
+      <Picker
+        selectedValue={formData.gateId}
+        onValueChange={(itemValue) => handlePickerGateChange(String(itemValue))}
+        style={styles.picker}
+      >
+        <Picker.Item label="Select Gate" value="" />
+        {gateList.map((gate) => (
+          <Picker.Item
+            key={gate.id}
+            label={gate.name || " -"}
+            value={gate.id}
+          />
+        ))}
+      </Picker>
 
-      <View style={styles.selectBox}>
-        {loadingGate ? (
-          <ActivityIndicator size="small" />
-        ) : (
-          <>
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={() => setShowDropdown((prev) => !prev)}
-            >
-              <Text style={styles.selectText}>
-                {selectedGate
-                  ? gates.find((g) => g.id === selectedGate)?.name
-                  : "Choose gate..."}
-              </Text>
-              <Icon name="chevron-down" size={18} />
-            </TouchableOpacity>
-
-            {showDropdown && (
-              <View style={styles.dropdown}>
-                {gates.map((gate) => (
-                  <TouchableOpacity
-                    key={gate.id}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setSelectedGate(gate.id);
-                      setShowDropdown(false);
-                    }}
-                  >
-                    <Text style={styles.dropdownName}>{gate.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </>
-        )}
-      </View>
 
       {/* DEVICE ID */}
       <Text style={styles.label}>Device ID</Text>
@@ -241,11 +274,52 @@ const handlePickerChange = (selectedId: string) => {
         value={formData.contact}
         placeholder="Auto-filled"
       />
+      {pickedWithScan.map((entry, index) => (
+        <View style={{ margin: 10 }} key={index}>
+          {entry.scans.map((scan: any, idx: number) => (
+            <View
+              key={`${index}-${idx}`}
+              style={{
+                backgroundColor: "#fff",
+                padding: 18,
+                borderRadius: 16,
+                marginBottom: 14,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 5,
+                elevation: 3,
+              }}
+            >
+              {/* Header */}
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: "#222",
+                  marginBottom: 6,
+                }}
+              >
+                Pallet to Pick: {scan.palletUse?.pallet_code ?? "-"}
+              </Text>
+              {/* From / To → gunakan parent */}
+              <View style={{ marginBottom: 12 }}>
 
-      {/* ============================
-         SUBMIT
-      ============================ */}
-      <TouchableOpacity style={styles.submitButton}>
+                <Text style={{ fontSize: 13, color: "#444", marginTop: 2 }}>
+                  Pick From :
+                  {" "}
+                  <Text style={{ fontWeight: "600" }}>
+                    {entry.picking.destinationWarehouseSub?.name ?? "-"} {' - '}
+                    {entry.picking.destinationBin?.name ?? "-"}
+                  </Text>
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      ))}
+
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Save Assignment</Text>
       </TouchableOpacity>
     </ScrollView>

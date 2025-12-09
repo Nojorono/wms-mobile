@@ -26,6 +26,7 @@ type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>
 
 export default function AssignGateVehicle() {
     const [data, setData] = useState<Payload | null>(null);
+    const [dataAssigned, setDataAssigned] = useState<any>(null);
     const [isEdit, setIsEdit] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -33,7 +34,7 @@ export default function AssignGateVehicle() {
     const showDialog = useDialogStore((state) => state.showDialog);
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const params = (route.params || {}) as any;
-      const navigation = useNavigation<NavigationProp>();
+    const navigation = useNavigation<NavigationProp>();
 
     const {
         control,
@@ -51,6 +52,9 @@ export default function AssignGateVehicle() {
 
     async function fetchData() {
         const response = await OutboundService.getOutboundDetailById(params.item.id);
+        const assignedGate = await OutboundService.getAssignedGate();
+        console.log("Assigned Gate Data:", assignedGate.data);
+        setDataAssigned(assignedGate.data)
 
         const newData = {
             expedition: response?.data?.expedition ?? "",
@@ -172,7 +176,54 @@ export default function AssignGateVehicle() {
                         </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity style={styles.assignButton}  onPress={() => navigation.navigate('AssignGateActivity', { item: params.item})}>
+                    {/* Assigned Gate Compact */}
+                    {dataAssigned && dataAssigned.length > 0 && (
+    <View style={{ marginBottom: 16 }}>
+        <Text style={styles.assignedHeader}>List Assigned Gate</Text>
+
+        {dataAssigned.map((ag: any, index: number) => {
+            
+            // --- Ambil user terbaru (createdAt terbesar) ---
+            const sortedUsers = [...(ag.assigned_gate_users ?? [])].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            const latestUser = sortedUsers[0];
+
+            // --- Tampilkan semua pallet code ---
+            const pallets = (ag.assigned_gate_pallets ?? []).map(
+                (p: any) => p?.pallet?.pallet_code
+            );
+
+            return (
+                <View key={ag.id} style={styles.compactCard}>
+                    <Text style={styles.indexNumber}>{index + 1})</Text>
+
+                    <Text style={styles.compactText}>
+                        <Text style={styles.bold}>Gate:</Text> {ag.gate_id}
+                    </Text>
+
+                    <Text style={styles.divider}>•</Text>
+
+                    <Text style={styles.compactText}>
+                        <Text style={styles.bold}>User:</Text> {latestUser?.user_name ?? "-"}
+                    </Text>
+
+                    <Text style={styles.divider}>•</Text>
+
+                    <Text style={styles.compactText}>
+                        <Text style={styles.bold}>Pallet:</Text>{" "}
+                        {pallets.length > 0 ? pallets.join(", ") : "-"}
+                    </Text>
+                </View>
+            );
+        })}
+    </View>
+)}
+
+
+
+
+                    <TouchableOpacity style={styles.assignButton} onPress={() => navigation.navigate('AssignGateActivity', { item: params.item })}>
                         <Text style={styles.assignButtonText}>Assign Gate</Text>
                     </TouchableOpacity>
                 </>
@@ -259,5 +310,42 @@ const styles = StyleSheet.create({
         color: "white",
         fontSize: 16,
         fontWeight: "600",
-    }
+    },
+    compactCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        elevation: 2,
+        marginBottom: 8,
+        flexWrap: "wrap",
+    },
+    compactText: {
+        fontSize: 13,
+        color: "#333",
+        marginHorizontal: 4,
+        flexShrink: 1,
+    },
+    bold: {
+        fontWeight: "600",
+    },
+    divider: {
+        marginHorizontal: 6,
+        color: "#999",
+    },
+    assignedHeader: {
+        fontSize: 16,
+        fontWeight: "600",
+        marginBottom: 6,
+    },
+    indexNumber: {
+    fontSize: 13,
+    fontWeight: "700",
+    marginRight: 6,
+    color: "#000",
+},
+
+
 });

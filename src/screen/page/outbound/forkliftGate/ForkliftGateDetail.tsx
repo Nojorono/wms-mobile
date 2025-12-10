@@ -104,8 +104,8 @@ export const ForkliftGateDetail = () => {
         if (!canSubmit) return;
 
         const payload = {
-            id: "uuid-assigned-gate-pallet-123",
-            pallet_id: selectedTask?.pallet_id, // sesuaikan jika berbeda
+            id: item.id,
+            pallet_id: selectedTask.transactionScanPicking[0].pallet_use_id, // sesuaikan jika berbeda
             status: "ASSIGNED",
         };
 

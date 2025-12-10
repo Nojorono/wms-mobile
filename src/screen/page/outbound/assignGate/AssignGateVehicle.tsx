@@ -196,10 +196,10 @@ export default function AssignGateVehicle() {
 
             return (
                 <View key={ag.id} style={styles.compactCard}>
-                    <Text style={styles.indexNumber}>{index + 1})</Text>
+                    <Text style={styles.indexNumber}>{index + 1}</Text>
 
                     <Text style={styles.compactText}>
-                        <Text style={styles.bold}>Gate:</Text> {ag.gate_id}
+                        <Text style={styles.bold}>Gate:</Text> {ag.gate.code ?? "-"}
                     </Text>
 
                     <Text style={styles.divider}>•</Text>

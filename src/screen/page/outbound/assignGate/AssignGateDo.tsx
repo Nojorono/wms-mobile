@@ -40,7 +40,7 @@ function AssignGateDoScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List AssignGate Planning'); const data: any = {
         limit: 100,
-        has_transaction_scan_picking: true,
+        status: "APPROVED",
       }
       const response = await OutboundService.getOutboundDoList(data);
       setAssignGateList(response.data || []);

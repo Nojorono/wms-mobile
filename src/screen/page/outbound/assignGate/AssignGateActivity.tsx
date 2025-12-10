@@ -88,12 +88,6 @@ const handleSubmit = async () => {
         user_phone: formData.contact,
           },
         ],
-        pallets: pickedWithScan.flatMap(entry =>
-          entry.scans.map((scan: any) => ({
-        pallet_id: scan.palletUse?.id,
-        status: "ASSIGNED",
-          }))
-        ),
       };
       await OutboundService.postAssignGate(payload);
       showDialog("success", "Gate assignment saved successfully.");
@@ -274,51 +268,7 @@ const handleSubmit = async () => {
         value={formData.contact}
         placeholder="Auto-filled"
       />
-      {pickedWithScan.map((entry, index) => (
-        <View style={{ margin: 10 }} key={index}>
-          {entry.scans.map((scan: any, idx: number) => (
-            <View
-              key={`${index}-${idx}`}
-              style={{
-                backgroundColor: "#fff",
-                padding: 18,
-                borderRadius: 16,
-                marginBottom: 14,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.08,
-                shadowRadius: 5,
-                elevation: 3,
-              }}
-            >
-              {/* Header */}
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: "700",
-                  color: "#222",
-                  marginBottom: 6,
-                }}
-              >
-                Pallet to Pick: {scan.palletUse?.pallet_code ?? "-"}
-              </Text>
-              {/* From / To → gunakan parent */}
-              <View style={{ marginBottom: 12 }}>
-
-                <Text style={{ fontSize: 13, color: "#444", marginTop: 2 }}>
-                  Pick From :
-                  {" "}
-                  <Text style={{ fontWeight: "600" }}>
-                    {entry.picking.destinationWarehouseSub?.name ?? "-"} {' - '}
-                    {entry.picking.destinationBin?.name ?? "-"}
-                  </Text>
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      ))}
-
+    
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Save Assignment</Text>
       </TouchableOpacity>

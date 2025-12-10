@@ -6,9 +6,14 @@ import {
     StyleSheet,
     ActivityIndicator,
     RefreshControl,
+    TouchableOpacity,
 } from "react-native";
 import OutboundService from "../../../../service/outboundService";
 import { useAuthStore } from "../../../../store/useAuthStore";
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
+import { StackNavigationProp } from "@react-navigation/stack";
+import { ForkliftGateParamList } from "../../../navigation/outbound/ForkliftGateNavigator";
+import { useNavigation } from "@react-navigation/native";
 
 type Pallet = {
     pallet: {
@@ -27,24 +32,33 @@ type OutboundDO = {
 
 type GateTask = {
     id: string | number;
-    gate_name?: string;
+    gate: { name: string };
     gate_id?: string;
     outbound_do: OutboundDO;
     assigned_gate_pallets?: Pallet[];
     // add other GateTask properties if needed
 };
+type NavigationProp = StackNavigationProp<
+  ForkliftGateParamList,
+  "ForkliftGateMain"
+>;
+
 
 function ForkliftGateScreen() {
     const [data, setData] = useState<GateTask[]>([]);
+    const [outbound, setOutbound] = useState<any[] | null>(null);
     const { user } = useAuthStore();
     const userId = user?.id || "";
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+     const navigation = useNavigation<NavigationProp>();
+    
 
     const fetchData = async () => {
         try {
             const res = await OutboundService.getAssignedGateByUserId(userId);
             setData(res.data);
+            console.log("Fetched gate tasks:", res.data);
         } catch (err) {
             console.log("Fetch error:", err);
         } finally {
@@ -80,20 +94,22 @@ function ForkliftGateScreen() {
             <Text style={styles.title}>Assigned Gate Tasks</Text>
 
             {data.map((item, index) => {
-                const doData = item.outbound_do;
                 const pallets = item.assigned_gate_pallets || [];
-                console.log("Pallets for item " + item.id + ": ", pallets);
-                const gateName = item.gate_name || item.gate_id || "Unknown Gate";
+                const gateName = item.gate.name || "Unknown Gate";
 
                 return (
                     <View key={item.id} style={styles.card}>
                         {/* GATE TUJUAN */}
-                        <View style={styles.gateBanner}>
+                        <View style={[styles.gateBanner, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
                             <Text style={styles.gateTitle}>Gate: {gateName}</Text>
+                            <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
+                                <Ionicons name="chevron-right" size={24} color="#FFF" />
+                            </TouchableOpacity>
+
                         </View>
 
                         {/* PALLET HIGHLIGHT */}
-                        <Text style={styles.palletHeader}>Pallet to Pick</Text>
+                        <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
 
                         <View style={styles.palletWrapper}>
                             {pallets.length === 0 && (

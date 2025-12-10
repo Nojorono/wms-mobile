@@ -3,13 +3,14 @@ import Colors from '../../../constants/Colors';
 import { Image, View } from 'react-native';
 import React from 'react';
 import ForkliftGateScreen from '../../page/outbound/forkliftGate/ForkliftGateScreen';
+import { ForkliftGateDetail } from '../../page/outbound/forkliftGate/ForkliftGateDetail';
 
 
 
 
 export type ForkliftGateParamList = {
   ForkliftGateMain: undefined;
-  ForkliftGateActivity: {item:any};
+  ForkliftGateDetail: { item: any };
 }
 const ForkliftGateStack = createStackNavigator<ForkliftGateParamList>();
 
@@ -20,26 +21,18 @@ const ForkliftGateStackNavigator = () => (
       component={ForkliftGateScreen}
       options={{
         headerShown: true,
+        headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
           elevation: 0, // Remove shadow on Android
           shadowOpacity: 0, // Remove shadow on iOS
           borderBottomWidth: 0, // Remove any border
         },
-        headerTitle: () => (
-          <View
-            style={{
-              width: '100%',
-              alignItems: 'center',
-            }}
-          >
-          </View>
-        ),
       }}
     />
-    {/* <ForkliftGateStack.Screen
-      name="ForkliftGateVehicle"
-      component={ForkliftGateVehicle}
+    <ForkliftGateStack.Screen
+      name="ForkliftGateDetail"
+      component={ForkliftGateDetail}
       options={{
         headerShown: true,
         headerTintColor: '#fff',
@@ -47,7 +40,7 @@ const ForkliftGateStackNavigator = () => (
           backgroundColor: Colors.secondaryColor,
         },
       }}
-    /> */}
+    />
   </ForkliftGateStack.Navigator>
 );
 

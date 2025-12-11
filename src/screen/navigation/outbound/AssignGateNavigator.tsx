@@ -10,7 +10,11 @@ import AssignGateVehicle from '../../page/outbound/assignGate/AssignGateVehicle.
 
 export type AssignGateParamList = {
   AssignGateMain: undefined;
-  AssignGateActivity: {item:any};
+   AssignGateActivity: {
+    item: any;
+    mode?: "add" | "edit";
+    assignedGate?: any;
+  };
   AssignGateVehicle: {item:any};
 }
 const AssignGateStack = createStackNavigator<AssignGateParamList>();

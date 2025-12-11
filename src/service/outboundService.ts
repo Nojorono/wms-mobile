@@ -141,9 +141,9 @@ class OutboundService {
     }
   }
 
-  static async getAssignedGate(): Promise<any> {
+  static async getAssignedGateByDoId(outboundDoId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('/assigned-gate');
+      const response = await axiosInstance.get('/assigned-gate', { params: { outbound_do_id: outboundDoId } });
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -166,6 +166,15 @@ class OutboundService {
     } catch (error: any) {
       throw error.response;
     }
+  }
+
+  static async deleteAssignedGate(assignedGateId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    } 
   }
 }
 

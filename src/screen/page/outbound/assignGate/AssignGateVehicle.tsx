@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -10,11 +10,13 @@ import {
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import OutboundService from "../../../../service/outboundService";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { AssignGateParamList } from "../../../navigation/outbound/AssignGateNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
+import Icon from "react-native-vector-icons/FontAwesome5";
+import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 
 interface Payload {
     expedition: string;
@@ -33,6 +35,7 @@ export default function AssignGateVehicle() {
     const route = useRoute();
     const showDialog = useDialogStore((state) => state.showDialog);
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+    const confirm = useConfirmationStore();
     const params = (route.params || {}) as any;
     const navigation = useNavigation<NavigationProp>();
 
@@ -52,8 +55,7 @@ export default function AssignGateVehicle() {
 
     async function fetchData() {
         const response = await OutboundService.getOutboundDetailById(params.item.id);
-        const assignedGate = await OutboundService.getAssignedGate();
-        console.log("Assigned Gate Data:", assignedGate.data);
+        const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
         setDataAssigned(assignedGate.data)
 
         const newData = {
@@ -69,9 +71,12 @@ export default function AssignGateVehicle() {
         reset(newData);
     }
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [])
+    );
+
 
     // Refresh control
     const onRefresh = async () => {
@@ -86,10 +91,7 @@ export default function AssignGateVehicle() {
     const onSubmit = async (values: Payload) => {
         try {
             showLoadingDialog("Updating vehicle information...");
-            console.log("Submitting values:", values);
             const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, values);
-            console.log("Update response:", response);
-
             showDialog("success", "Vehicle information updated successfully!");
             await fetchData();
             setIsEdit(false);
@@ -176,56 +178,86 @@ export default function AssignGateVehicle() {
                         </TouchableOpacity>
                     </View>
 
+                    <Text style={styles.header}>List Assign Gate</Text>
+
                     {/* Assigned Gate Compact */}
-                    {dataAssigned && dataAssigned.length > 0 && (
-    <View style={{ marginBottom: 16 }}>
-        <Text style={styles.assignedHeader}>List Assigned Gate</Text>
+                    {dataAssigned.map((ag: any, index: number) => {
+                        // --- Ambil user terbaru (createdAt terbesar) ---
+                        const sortedUsers = [...(ag.assigned_gate_users ?? [])].sort(
+                            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                        );
+                        const latestUser = sortedUsers[0];
 
-        {dataAssigned.map((ag: any, index: number) => {
-            
-            // --- Ambil user terbaru (createdAt terbesar) ---
-            const sortedUsers = [...(ag.assigned_gate_users ?? [])].sort(
-                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-            const latestUser = sortedUsers[0];
+                        // --- Tampilkan semua pallet code ---
+                        const pallets = (ag.assigned_gate_pallets ?? []).map(
+                            (p: any) => p?.pallet?.pallet_code
+                        );
 
-            // --- Tampilkan semua pallet code ---
-            const pallets = (ag.assigned_gate_pallets ?? []).map(
-                (p: any) => p?.pallet?.pallet_code
-            );
+                        const handleDelete = () => {
+                            confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
+                                try {
+                                    showLoadingDialog("Deleting...");
+                                    const res = await OutboundService.deleteAssignedGate(ag.id);
+                                    showDialog("success", "Assigned gate deleted!");
+                                    fetchData();
+                                } catch (err) {
+                                    showDialog("error", "Failed to delete assigned gate.");
+                                } finally {
+                                    hideLoadingDialog();
+                                }
+                            }, false
+                            );
+                        };
 
-            return (
-                <View key={ag.id} style={styles.compactCard}>
-                    <Text style={styles.indexNumber}>{index + 1}</Text>
+                        const handleEdit = () => {
+                            navigation.navigate('AssignGateActivity', {
+                                item: params.item,
+                                mode: "edit",
+                                assignedGate: ag,   // kirim data lengkap
+                            });
+                        };
 
-                    <Text style={styles.compactText}>
-                        <Text style={styles.bold}>Gate:</Text> {ag.gate.code ?? "-"}
-                    </Text>
+                        return (
+                            <View key={ag.id} style={styles.compactCard}>
+                                <Text style={styles.indexNumber}>{index + 1}</Text>
 
-                    <Text style={styles.divider}>•</Text>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.compactText}>
+                                        <Text style={styles.bold}>Gate:</Text> {ag.gate.code ?? "-"}
+                                    </Text>
 
-                    <Text style={styles.compactText}>
-                        <Text style={styles.bold}>User:</Text> {latestUser?.user_name ?? "-"}
-                    </Text>
+                                    <Text style={styles.compactText}>
+                                        <Text style={styles.bold}>User:</Text> {latestUser?.user_name ?? "-"}
+                                    </Text>
 
-                    <Text style={styles.divider}>•</Text>
+                                    <Text style={styles.compactText}>
+                                        <Text style={styles.bold}>Device :</Text>{" "}
+                                        {/* {pallets.length > 0 ? pallets.join(", ") : "-"} */}
+                                        {latestUser?.user.username ?? "-"}
+                                    </Text>
+                                </View>
 
-                    <Text style={styles.compactText}>
-                        <Text style={styles.bold}>Pallet:</Text>{" "}
-                        {pallets.length > 0 ? pallets.join(", ") : "-"}
-                    </Text>
-                </View>
-            );
-        })}
-    </View>
-)}
+                                {/* BUTTON EDIT */}
+                                <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+                                    <Icon name="edit" size={16} color="#007AFF" />
+                                </TouchableOpacity>
 
+                                {/* BUTTON DELETE */}
+                                <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
+                                    <Icon name="trash" size={16} color="red" />
+                                </TouchableOpacity>
+                            </View>
+                        );
+                    })}
 
-
-
-                    <TouchableOpacity style={styles.assignButton} onPress={() => navigation.navigate('AssignGateActivity', { item: params.item })}>
-                        <Text style={styles.assignButtonText}>Assign Gate</Text>
-                    </TouchableOpacity>
+                    {dataAssigned.length < 1 && (
+                        <TouchableOpacity
+                            style={styles.assignButton}
+                            onPress={() => navigation.navigate('AssignGateActivity', { item: params.item })}
+                        >
+                            <Text style={styles.assignButtonText}>Assign Gate</Text>
+                        </TouchableOpacity>
+                    )}
                 </>
             )}
         </ScrollView>
@@ -242,6 +274,10 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "600",
         marginBottom: 16,
+    },
+    actionButton: {
+        padding: 6,
+        marginLeft: 6,
     },
     card: {
         backgroundColor: "white",
@@ -341,11 +377,11 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     indexNumber: {
-    fontSize: 13,
-    fontWeight: "700",
-    marginRight: 6,
-    color: "#000",
-},
+        fontSize: 13,
+        fontWeight: "700",
+        marginRight: 6,
+        color: "#000",
+    },
 
 
 });

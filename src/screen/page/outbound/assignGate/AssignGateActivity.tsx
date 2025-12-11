@@ -36,9 +36,12 @@ export default function AssignGateActivity() {
   const [userManageList, setUserManageList] = useState<any[]>([]);
   const navigation = useNavigation<NavigationProp>();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-const showDialog = useDialogStore((state) => state.showDialog);
+  
+  const showDialog = useDialogStore((state) => state.showDialog);
   const route = useRoute();
   const params = (route.params || {}) as any;
+  const isEdit = params?.mode === "edit";
+  const assignedGate = params?.assignedGate || null;
   const [userList, setUserList] = useState<any[]>([]);
   const [gateList, setGateList] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -50,54 +53,39 @@ const showDialog = useDialogStore((state) => state.showDialog);
     deviceId: "",
   });
 
-  function getPickedWithScan(data: any) {
-    const memos = data.item?.outbound_memos ?? [];
-
-    let result: any[] = [];
-
-    memos.forEach((memo: any) => {
-      memo.transaction_pickings.forEach((tp: any) => {
-
-        // hanya ambil yang punya scan
-        if (tp.transactionScanPicking && tp.transactionScanPicking.length > 0) {
-          result.push({
-            picking: tp,                            // parent
-            scans: tp.transactionScanPicking        // array scan item
-          });
-        }
-
-      });
-    });
-
-    return result;
-  }
-
-
-  const pickedWithScan = getPickedWithScan(params);
- 
 const handleSubmit = async () => {
     try {
-      showLoadingDialog("Saving Assignment...");  
+      showLoadingDialog(isEdit ? "Updating Assignment..." : "Saving Assignment...");
+
       const payload = {
         gate_id: formData.gateId,
         outbound_do_id: params.item.id,
         users: [
           {
-        user_id: formData.deviceId,
-        user_name: formData.name,
-        user_phone: formData.contact,
+            user_id: formData.deviceId,
+            user_name: formData.name,
+            user_phone: formData.contact,
           },
         ],
       };
-      await OutboundService.postAssignGate(payload);
-      showDialog("success", "Gate assignment saved successfully.");
-      hideLoadingDialog();
+
+      if (isEdit) {
+        // EDIT MODE
+        // await OutboundService.updateAssignedGate(assignedGate.id, payload);
+        showDialog("success", "Assignment updated successfully.");
+      } else {
+        // ADD MODE
+        await OutboundService.postAssignGate(payload);
+        showDialog("success", "Gate assignment saved successfully.");
+      }
+
       navigation.goBack();
     } catch (error) {
-      showDialog("error", "Failed to save gate assignment.");
+      showDialog("error", isEdit ? "Failed to update assignment." : "Failed to save assignment.");
+    } finally {
       hideLoadingDialog();
     }
-  }
+};
 
   const fetchUserList = async (roleName = ROLES.DRIVER_FORKLIFT) => {
     try {
@@ -124,6 +112,18 @@ const handleSubmit = async () => {
   useEffect(() => {
     fetchUserList();
   }, []);
+
+  useEffect(() => {
+    if (isEdit && assignedGate) {
+        setFormData({
+            gateId: assignedGate.gate_id,
+            name: assignedGate.assigned_gate_users?.[0]?.user_name || "",
+            contact: assignedGate.assigned_gate_users?.[0]?.user_phone || "",
+            deviceId: assignedGate.assigned_gate_users?.[0]?.user_id || "",
+        });
+    }
+}, [assignedGate]);
+
 
   const handleNameChange = (text: string) => {
     setFormData((prev) => ({ ...prev, name: text }));
@@ -268,7 +268,7 @@ const handleSubmit = async () => {
         value={formData.contact}
         placeholder="Auto-filled"
       />
-    
+
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Save Assignment</Text>
       </TouchableOpacity>

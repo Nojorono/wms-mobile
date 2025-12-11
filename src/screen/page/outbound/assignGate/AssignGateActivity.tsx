@@ -9,14 +9,11 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import Icon from "react-native-vector-icons/Feather";
 import UserServices from "../../../../service/userServices";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import { ROLES } from "../../../../constants/Roles";
 import OutboundService from "../../../../service/outboundService";
-import { set } from "react-hook-form";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { combine } from "zustand/middleware";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { AssignGateParamList } from "../../../navigation/outbound/AssignGateNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -36,7 +33,7 @@ export default function AssignGateActivity() {
   const [userManageList, setUserManageList] = useState<any[]>([]);
   const navigation = useNavigation<NavigationProp>();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  
+
   const showDialog = useDialogStore((state) => state.showDialog);
   const route = useRoute();
   const params = (route.params || {}) as any;
@@ -45,6 +42,9 @@ export default function AssignGateActivity() {
   const [userList, setUserList] = useState<any[]>([]);
   const [gateList, setGateList] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [existingUsers, setExistingUsers] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [userMode, setUserMode] = useState<"add" | "edit">("add");
 
   const [formData, setFormData] = useState<AssignForm>({
     gateId: "",
@@ -53,10 +53,12 @@ export default function AssignGateActivity() {
     deviceId: "",
   });
 
-const handleSubmit = async () => {
-    try {
-      showLoadingDialog(isEdit ? "Updating Assignment..." : "Saving Assignment...");
+  const handleSubmit = async () => {
+  try {
+    showLoadingDialog("Processing...");
 
+    if (!isEdit) {
+      // CREATE MODE
       const payload = {
         gate_id: formData.gateId,
         outbound_do_id: params.item.id,
@@ -69,23 +71,47 @@ const handleSubmit = async () => {
         ],
       };
 
-      if (isEdit) {
-        // EDIT MODE
-        // await OutboundService.updateAssignedGate(assignedGate.id, payload);
-        showDialog("success", "Assignment updated successfully.");
-      } else {
-        // ADD MODE
-        await OutboundService.postAssignGate(payload);
-        showDialog("success", "Gate assignment saved successfully.");
-      }
-
+      await OutboundService.postAssignGate(payload);
+      showDialog("success", "Gate assignment saved.");
       navigation.goBack();
-    } catch (error) {
-      showDialog("error", isEdit ? "Failed to update assignment." : "Failed to save assignment.");
-    } finally {
-      hideLoadingDialog();
+      return;
     }
+
+    // EDIT MODE ----------------------------------
+
+    if (userMode === "add") {
+      // ➕ ADD NEW USER
+      const res = await OutboundService.postUserToAssignedGate(
+        assignedGate.id,
+        {
+          user_id: formData.deviceId,
+          user_name: formData.name,
+          user_phone: formData.contact,
+        }
+      );
+      console.log("Add User Response:", res);
+
+      showDialog("success", "User added to assigned gate.");
+    } else if (userMode === "edit" && selectedUser) {
+      // ✏️ UPDATE EXISTING
+      console.log("Updating user:", selectedUser);
+      await OutboundService.updateAssignedGateUser(
+        assignedGate.id,
+        selectedUser.id
+      );
+
+      showDialog("success", "User updated.");
+    }
+
+    navigation.goBack();
+  } catch (err) {
+    console.log(err);
+    showDialog("error", "Failed processing request.");
+  } finally {
+    hideLoadingDialog();
+  }
 };
+
 
   const fetchUserList = async (roleName = ROLES.DRIVER_FORKLIFT) => {
     try {
@@ -115,14 +141,19 @@ const handleSubmit = async () => {
 
   useEffect(() => {
     if (isEdit && assignedGate) {
-        setFormData({
-            gateId: assignedGate.gate_id,
-            name: assignedGate.assigned_gate_users?.[0]?.user_name || "",
-            contact: assignedGate.assigned_gate_users?.[0]?.user_phone || "",
-            deviceId: assignedGate.assigned_gate_users?.[0]?.user_id || "",
-        });
+      // setFormData({
+      //     gateId: assignedGate.gate_id,
+      //     name: assignedGate.assigned_gate_users?.[0]?.user_name || "",
+      //     contact: assignedGate.assigned_gate_users?.[0]?.user_phone || "",
+      //     deviceId: assignedGate.assigned_gate_users?.[0]?.user_id || "",
+      // });
+      setExistingUsers(assignedGate.assigned_gate_users || []);
+      setUserMode("add"); // default add user baru
+      setSelectedUser(null);
+
+      
     }
-}, [assignedGate]);
+  }, [assignedGate]);
 
 
   const handleNameChange = (text: string) => {
@@ -272,6 +303,62 @@ const handleSubmit = async () => {
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Save Assignment</Text>
       </TouchableOpacity>
+      {isEdit && (
+  <>
+
+  <View style={{ height: 1, backgroundColor: "#acacacff", marginVertical: 10 }} />
+    <Text style={styles.sectionTitle}>Existing Users</Text>
+
+    {existingUsers.length === 0 && (
+      <Text style={styles.addUserText}>No users assigned yet.</Text>
+    )}
+
+    {existingUsers.map((u) => (
+      <View key={u.id} style={styles.userCard}>
+        <View>
+          <Text style={styles.userName}>{u.user_name}</Text>
+          <Text style={styles.userPhone}>{u.user_phone}</Text>
+          <Text style={styles.userPhone}>{u.user.username}</Text>
+        </View>
+
+        <View style={{ flexDirection: "row" }}>
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => {
+              setUserMode("edit");
+              setSelectedUser(u);
+              setFormData({
+                gateId: assignedGate.gate_id,
+                name: u.user_name,
+                contact: u.user_phone,
+                deviceId: u.user_id,
+              });
+            }}
+          >
+            <Text style={styles.editText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    ))}
+
+    <TouchableOpacity
+      style={styles.addUserButton}
+      onPress={() => {
+        setUserMode("add");
+        setSelectedUser(null);
+        setFormData({
+          gateId: assignedGate.gate_id,
+          name: "",
+          contact: "",
+          deviceId: "",
+        });
+      }}
+    >
+      <Text style={styles.addUserText}>+ Add New User</Text>
+    </TouchableOpacity>
+  </>
+)}
+
     </ScrollView>
   );
 }
@@ -373,4 +460,46 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
+  sectionTitle: {
+  fontSize: 18,
+  fontWeight: "700",
+  marginTop: 20,
+  marginBottom: 10,
+},
+
+userCard: {
+  padding: 12,
+  borderWidth: 1,
+  borderColor: "#ddd",
+  borderRadius: 12,
+  marginBottom: 10,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  backgroundColor: "#fafafa",
+},
+
+userName: { fontSize: 15, fontWeight: "600" },
+userPhone: { fontSize: 12, color: "#666" },
+
+editBtn: {
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  backgroundColor: "#007AFF33",
+  borderRadius: 8,
+  marginRight: 6,
+},
+
+editText: { color: "#007AFF", fontWeight: "600" },
+
+addUserButton: {
+  marginTop: 14,
+  padding: 14,
+  borderRadius: 12,
+  backgroundColor: "#111",
+  alignItems: "center",
+},
+
+addUserText: { color: "#fff", fontWeight: "700" },
+
 });

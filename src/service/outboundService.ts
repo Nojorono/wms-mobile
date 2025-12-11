@@ -168,6 +168,24 @@ class OutboundService {
     }
   }
 
+  static async postUserToAssignedGate(assignedGateId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/assigned-gate/${assignedGateId}/users`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateAssignedGateUser(assignedGateId: string, assignedUserId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`); 
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   static async deleteAssignedGate(assignedGateId: string): Promise<any> {
     try {
       const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}`);

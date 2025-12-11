@@ -118,10 +118,12 @@ useFocusEffect(
           ) : (
             filteredList.map((item: any) => {
               let statusColor;
-              if (item.status === 'PENDING') {
+              if (item.status === 'APPROVED') {
                 statusColor = '#228B22';
-              } else if (item.status === 'UNLOADING') {
+              } else if (item.status === 'PENDING') {
                 statusColor = '#FFB347';
+              }  else if (item.status === 'IN_PROGRESS') {
+                statusColor = '#477bffff';
               } else {
                 statusColor = '#696969';
               }

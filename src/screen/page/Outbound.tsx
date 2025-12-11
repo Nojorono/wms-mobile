@@ -73,10 +73,10 @@ function OutboundIndex() {
                   title={"Assign Gate"}
                 onPress={() => navigation.navigate("OutboundAssignGate")}
                 />
-                <MenuCard
+                {/* <MenuCard
                   title={"Update Inventory"}
                 // onPress={() => navigationInbound.navigate("InboundMain")}
-                />
+                /> */}
               </>
             )}
 

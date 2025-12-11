@@ -450,10 +450,10 @@ export default function InboundDetail() {
 
 
 
-    if (status !== "CREATED") {
-        showDialog("error", "Can only upload while CREATED");
-        return;
-    }
+    // if (status !== "CREATED") {
+    //     showDialog("error", "Can only upload while CREATED");
+    //     return;
+    // }
 
 
     return (

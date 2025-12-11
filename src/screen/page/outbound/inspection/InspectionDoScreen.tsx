@@ -41,10 +41,9 @@ function InspectionDoScreen() {
       showLoadingDialog('Loading List Inspection Planning');
       const data:any= {
         limit:100,
-        status:"PENDING"
+        // status:"PENDING"
       }
       const response = await OutboundService.getOutboundDoList(data);
-      console.log("Inspection DO Response:", response);
       setInspectionList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
@@ -119,10 +118,12 @@ useFocusEffect(
           ) : (
             filteredList.map((item: any) => {
               let statusColor;
-              if (item.status === 'PENDING') {
+              if (item.status === 'APPROVED') {
                 statusColor = '#228B22';
-              } else if (item.status === 'UNLOADING') {
+              } else if (item.status === 'PENDING') {
                 statusColor = '#FFB347';
+              }  else if (item.status === 'IN_PROGRESS') {
+                statusColor = '#477bffff';
               } else {
                 statusColor = '#696969';
               }
@@ -135,7 +136,8 @@ useFocusEffect(
                   origin={item.delivery_date}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('InspectionMemo', { item })}
+                  // onClick={() => navigation.navigate('InspectionMemo', { item })}
+                  onClick={() => navigation.navigate('NewInspectionMemo', { item })}
                 />
               );
             })

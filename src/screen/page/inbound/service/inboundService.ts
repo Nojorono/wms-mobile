@@ -104,7 +104,6 @@ export function mergeInboundDos(data: InboundDo[]): (Omit<InboundDo, 'inbound_it
             map.set(key, { ...rest, inbound_items: itemsWithPo });
         }
     });
-    console.log("Merged Data:", Array.from(map.values()));
     return Array.from(map.values());
 }
 
@@ -727,6 +726,11 @@ export function getScanTotals(data:any) {
     acc[key].scan += item.qty;
     return acc;
   }, {});
+}
+
+export function extractBucketPath(url: string) {
+  const index = url.indexOf("mybucket/");
+  return index !== -1 ? url.substring(index) : url;
 }
 
 

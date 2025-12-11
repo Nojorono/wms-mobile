@@ -58,8 +58,8 @@ function OutboundIndex() {
           <View style={styles.menuCard}>
             {roleName === ROLES.DRIVER_FORKLIFT && (
               <MenuCard
-                title={"Put Away"}
-              // onPress={() => navigationInbound.navigate("ForkLiftNavigator")}
+                title={"Line to Gate"}
+              onPress={() => navigation.navigate("OutboundForkliftGate")}
               />
             )}
 
@@ -71,12 +71,12 @@ function OutboundIndex() {
                 />
                 <MenuCard
                   title={"Assign Gate"}
-                // onPress={() => navigationInbound.navigate("InboundMain")}
+                onPress={() => navigation.navigate("OutboundAssignGate")}
                 />
-                <MenuCard
+                {/* <MenuCard
                   title={"Update Inventory"}
                 // onPress={() => navigationInbound.navigate("InboundMain")}
-                />
+                /> */}
               </>
             )}
 
@@ -86,10 +86,10 @@ function OutboundIndex() {
                   title={"PICKING"}
                 onPress={() => navigation.navigate("OutboundPicking")}
                 />
-                <MenuCard
+                {/* <MenuCard
                   title={"LOADING"}
                 // onPress={() => navigationInbound.navigate("UnloadingNavigator")}
-                />
+                /> */}
               </>
 
             )}

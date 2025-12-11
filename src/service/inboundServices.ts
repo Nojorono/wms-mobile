@@ -7,7 +7,7 @@ import { UnloadingPayload } from '../interface/inbound/unloadingInterface.ts';
 class InboundServices {
   static async getInboundList(statusInput: string): Promise<InboundMainResponse> {
     try {
-      const response = await axiosInstance.get('inbound', { params: { status: statusInput , limit:100} });
+      const response = await axiosInstance.get('inbound', { params: { status: statusInput, limit: 100 } });
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -132,23 +132,23 @@ class InboundServices {
     }
   }
 
-static async postStatusBulkbyIdScan(inspection_by: string, status: string, data: any): Promise<any> {
-  try {
-    const response = await axiosInstance.post(
-      `transaction-scan-inbound/update-many-status-to`,
-      data,
-      {
-        params: {
-          status,
-          inspection_by,
-        },
-      }
-    );
-    return response.data;
-  } catch (error: any) {
-    throw error.response;
+  static async postStatusBulkbyIdScan(inspection_by: string, status: string, data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(
+        `transaction-scan-inbound/update-many-status-to`,
+        data,
+        {
+          params: {
+            status,
+            inspection_by,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
   }
-}
 
   //INSPECTION SERVICES
   static async getInspectionList(status: string): Promise<any> {
@@ -173,7 +173,6 @@ static async postStatusBulkbyIdScan(inspection_by: string, status: string, data:
   static async updateInspectionData(itemId: string, data: any): Promise<any> {
     try {
       const response = await axiosInstance.patch(`transaction-scan-inbound/${itemId}`, data);
-      console.log("Response from updateInspectionData:", response);
       return response.data;
     } catch (error: any) {
       console.error("Error updating inspection data:", error);
@@ -246,6 +245,54 @@ static async postStatusBulkbyIdScan(inspection_by: string, status: string, data:
       throw error.response;
     }
   }
+
+  static async postdPhotoToS3(file: any, folder: string) {
+    const formData = new FormData();
+
+    // bucket name hardcode atau dari env
+    formData.append("bucket", "mybucket");
+    // folder + filename
+    formData.append("key", `${folder}/${file.fileName}`);
+
+    formData.append("file", {
+      uri: file.uri,
+      type: file.type,
+      name: file.fileName,
+    });
+
+    formData.append("acl", "public-read");
+
+    const res = await axiosInstance.post(
+      "/s3/upload",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return res.data;
+  }
+
+  static async deletePhotoFromS3(bucket: string, path: string) {
+    try {
+      const response = await axiosInstance.delete(`/s3/${bucket}/${path}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updatePhotoToInbound(inboundId: string, data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`inbound/${inboundId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
 }
 
 export default InboundServices;

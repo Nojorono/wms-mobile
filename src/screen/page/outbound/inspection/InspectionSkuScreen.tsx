@@ -19,6 +19,7 @@ import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import { InspectionParamList } from '../../../navigation/outbound/InspectionNavigator.tsx';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
 import { outboundData, skuOutboundData } from '../../../../dummy/outboundData.js';
+import OutboundService from '../../../../service/outboundService.ts';
 
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
 
@@ -31,10 +32,9 @@ function InspectionSkuScreen() {
   const styles = GlobalStyles();
   const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
-    const route = useRoute();
-    const { data, dataBefore } = route.params as any;
-    console.log("data transaction", data.transaction_pickings)
-   
+  const route = useRoute();
+  const { data, dataBefore } = route.params as any;
+
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
 
@@ -42,7 +42,7 @@ function InspectionSkuScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Inspection Planning');
-    //   const response = await OutboundServices.getInspectionList(selectedFilter || 'CREATED');
+      //   const response = await OutboundServices.getInspectionList(selectedFilter || 'CREATED');
       setInspectionList(data.transaction_pickings || []);
     } catch (error) {
       hideLoadingDialog();
@@ -53,11 +53,11 @@ function InspectionSkuScreen() {
     }
   };
 
-useFocusEffect(
-  useCallback(() => {
-    fetchInspection();
-  }, [selectedFilter])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchInspection();
+    }, [selectedFilter])
+  );
 
   // filter & search data
   const filteredList = useMemo(() => {
@@ -71,6 +71,32 @@ useFocusEffect(
       return matchSearch && matchFilter;
     });
   }, [InspectionList, searchText, selectedFilter]);
+
+  const handleLepasMemo = () => {
+    try {
+      Alert.alert(
+        'Confirm',
+        'Are you sure you want to release the memo?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'OK',
+            onPress: async () => {
+              await OutboundService.cancelMemo(data.id);
+              showDialog('success', 'Memo released successfully!');
+              navigation.goBack();
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    } catch (error) {
+      console.error('Error releasing memo:', error);
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -129,17 +155,23 @@ useFocusEffect(
                 <OutboundCard
                   key={item.id}
                   title={item.quantity + ' ' + item.uom}
-                  subTitle={'Week = '+item.week_number}
+                  subTitle={'Week = ' + item.week_number}
                   origin={item.createdAt}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('InspectionActivity', { data:item ,dataBefore:[]})}
+                  onClick={() => navigation.navigate('InspectionActivity', { data: item, dataBefore: [] })}
                 />
+
+
               );
             })
           )}
         </View>
       </ScrollView>
+       {/* FLOATING BUTTON */}
+        <TouchableOpacity style={localStyles.floatingButton} onPress={handleLepasMemo}>
+          <Text style={localStyles.floatingText}>Lepas Memo</Text>
+        </TouchableOpacity>
     </View>
   );
 }
@@ -167,5 +199,29 @@ const localStyles = StyleSheet.create({
   filterText: {
     fontSize: 13,
     color: '#333',
+  },
+  container: {
+    flex: 1,
+  },
+
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    backgroundColor: '#F26E1F', // orange
+    paddingHorizontal: 30,
+    paddingVertical: 14,
+    borderRadius: 30,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+
+  floatingText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

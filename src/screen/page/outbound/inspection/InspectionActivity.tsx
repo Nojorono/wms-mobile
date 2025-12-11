@@ -91,54 +91,55 @@ export default function InspectionActivity() {
 
       // TODO: ganti nama method jika service mu berbeda
       const response = await OutboundService.updateTransactionPickingDetail(selectedItem.id, payload);
-      console.log('update response', response);
       await fetchInspection();
 
       showDialog('success', 'Update berhasil');
       setIsEditing(false);
       setModalVisible(false);
     } catch (error: any) {
-      console.log('update error', error);
       showDialog('error', error?.message || 'Gagal update item');
     } finally {
       hideLoadingDialog();
     }
   };
 
-  // approve action
-  const handleApprove = async () => {
-    if (!selectedItem) return;
-    Alert.alert(
-      'Confirm Approve',
-      'Apakah Anda yakin ingin meng-approve item ini?',
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Approve',
-          onPress: async () => {
-            try {
-              showLoadingDialog('Approving...');
-              // TODO: ganti nama method jika service mu berbeda
-              const payload = {
-                status: 'APPROVED',
-              };
+ const handleApproveAction = async (type: "APPROVE" | "FINAL") => {
+  if (!selectedItem) return;
 
-              // TODO: ganti nama method jika service mu berbeda
-              const response = await OutboundService.updateTransactionPickingDetail(selectedItem.id, payload);
-              console.log('update response', response);
-              await fetchInspection();
-              showDialog('success', 'Item berhasil di-approve');
-              setModalVisible(false);
-            } catch (error: any) {
-              showDialog('error', error?.message || 'Gagal approve item');
-            } finally {
-              hideLoadingDialog();
-            }
+  const nextStatus =
+    type === "APPROVE" ? "INSPECTION" : "INSPECTION_APPROVED";
+
+  Alert.alert(
+    "Confirm Approve",
+    "Apakah Anda yakin ingin meng-approve item ini?",
+    [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "Approve",
+        onPress: async () => {
+          try {
+            showLoadingDialog("Approving...");
+
+            const payload = {
+              status: nextStatus,
+              inspection_by: userId,
+              ids: [selectedItem.id],
+            };
+            const res = await OutboundService.updateStatusPickingBulk(payload);
+            hideLoadingDialog();
+            await fetchInspection();
+            showDialog("success", "Berhasil dikirim ke WH Staff!");
+            setModalVisible(false);
+          } catch (error) {
+            hideLoadingDialog();
+            showDialog("error", "Gagal mengirim ke WH Staff!");
           }
-        }
-      ]
-    );
-  };
+        },
+      },
+    ]
+  );
+};
+
 
   // when any input changes, set isEditing true (to hide approve button)
   const onChangeQuantity = (text: string) => {
@@ -296,14 +297,34 @@ export default function InspectionActivity() {
               <Text style={styles.submitText}>Submit</Text>
             </TouchableOpacity>
 
-            {/* Approve button hidden ketika sedang edit */}
-            {!isEditing && selectedItem?.status !== 'APPROVED' && (
+            {/* APPROVE & FINAL APPROVE BUTTONS IN 1 ROW */}
+            {!isEditing && (
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
               <TouchableOpacity
-                style={styles.approveButton}
-                onPress={handleApprove}
+                style={[
+                styles.approveButton,
+                { flex: 1 },
+                selectedItem?.status === 'INSPECTION' && { backgroundColor: '#ccc' },
+                ]}
+                onPress={selectedItem?.status === 'INSPECTION' ? undefined : () => handleApproveAction("APPROVE")}
+                disabled={selectedItem?.status === 'INSPECTION'}
               >
                 <Text style={styles.approveText}>Approve</Text>
               </TouchableOpacity>
+              {selectedItem?.status !== 'APPROVED' && (
+                <TouchableOpacity
+                style={[
+                  styles.approveButton,
+                  { flex: 1, backgroundColor: '#f57f1eff' },
+                  (selectedItem?.status === 'PENDING' || selectedItem?.status === 'OPEN') ? { backgroundColor: '#ccc' } : undefined,
+                ]}
+                onPress={(selectedItem?.status === 'PENDING' || selectedItem?.status === 'OPEN') ? undefined : () => handleApproveAction("FINAL")}
+                disabled={selectedItem?.status === 'PENDING' || selectedItem?.status === 'OPEN'}
+                >
+                <Text style={styles.approveText}>Final Approve</Text>
+                </TouchableOpacity>
+              )}
+              </View>
             )}
 
             <TouchableOpacity

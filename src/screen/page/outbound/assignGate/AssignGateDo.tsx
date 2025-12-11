@@ -16,16 +16,15 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
-import { PickingParamList } from '../../../navigation/outbound/PickingNavigator.tsx';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
-import { outboundData } from '../../../../dummy/outboundData.js';
 import OutboundService from '../../../../service/outboundService.ts';
+import { AssignGateParamList } from '../../../navigation/outbound/AssignGateNavigator.tsx';
 
-type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
+type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>;
 
-function PickingDoScreen() {
+function AssignGateDoScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const [PickingList, setPickingList] = useState<any[]>([]);
+  const [AssignGateList, setAssignGateList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string | null>();
 
@@ -36,39 +35,42 @@ function PickingDoScreen() {
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const fetchPicking = async () => {
+  const fetchAssignGate = async () => {
     try {
       setRefreshing(true);
-      showLoadingDialog('Loading List Picking Planning');
-      const response = await OutboundService.getOutboundPickingDoList(userId);
-      setPickingList(response.data || []);
+      showLoadingDialog('Loading List AssignGate Planning'); const data: any = {
+        limit: 100,
+        status: "APPROVED",
+      }
+      const response = await OutboundService.getOutboundDoList(data);
+      setAssignGateList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
-      showDialog('error', 'Error while Fetching Data Picking!');
+      showDialog('error', 'Error while Fetching Data AssignGate!');
     } finally {
       hideLoadingDialog();
       setRefreshing(false);
     }
   };
 
-useFocusEffect(
-  useCallback(() => {
-    fetchPicking();
-  }, [selectedFilter])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchAssignGate();
+    }, [selectedFilter])
+  );
 
   // filter & search data
   const filteredList = useMemo(() => {
-    return PickingList.filter((item) => {
+    return AssignGateList.filter((item) => {
       const matchSearch =
-        item.Picking_number?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.AssignGate_number?.toLowerCase().includes(searchText.toLowerCase()) ||
         item.license_plate?.toLowerCase().includes(searchText.toLowerCase());
 
       const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
       return matchSearch && matchFilter;
     });
-  }, [PickingList, searchText, selectedFilter]);
+  }, [AssignGateList, searchText, selectedFilter]);
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -79,7 +81,7 @@ useFocusEffect(
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={fetchPicking}
+            onRefresh={fetchAssignGate}
             colors={[Colors.primeColor]}
           />
         }
@@ -92,7 +94,7 @@ useFocusEffect(
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List Picking Planning
+              List AssignGate Planning
             </Text>
           </View>
 
@@ -100,7 +102,7 @@ useFocusEffect(
           <View style={{ marginVertical: 10 }}>
             <TextInput
               style={localStyles.searchInput}
-              placeholder="Search Picking number / plate"
+              placeholder="Search AssignGate number / plate"
               value={searchText}
               onChangeText={setSearchText}
               placeholderTextColor="#888"
@@ -115,27 +117,25 @@ useFocusEffect(
           ) : (
             filteredList.map((item: any) => {
               let statusColor;
-              if (item.status === 'IN_PROGRESS') {
+              if (item.status === 'APPROVED') {
                 statusColor = '#228B22';
-              } else if (item.status === 'PENDING') {
-                statusColor = '#FFB347';
+              } else if (item.status === 'IN_PROGRESS') {
+                statusColor = '#477bffff';
               } else {
                 statusColor = '#696969';
               }
 
-                // Ambil 8 karakter terakhir dari Picking_number
-                const pickingNumberLast8 = item.id?.slice(-15) || '';
-                return (
+              return (
                 <OutboundCard
                   key={item.id}
                   title={`${item.outbound_do_number}`}
-                  subTitle={ item.outbound_type}
-                  origin={  item.origin}
+                  subTitle={item.outbound_type}
+                  origin={item.origin}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('PickingMemo', { item })}
+                  onClick={() => navigation.navigate('AssignGateVehicle', { item })}
                 />
-                );
+              );
             })
           )}
         </View>
@@ -144,7 +144,7 @@ useFocusEffect(
   );
 }
 
-export default PickingDoScreen;
+export default AssignGateDoScreen;
 
 const localStyles = StyleSheet.create({
   searchInput: {

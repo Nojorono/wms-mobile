@@ -91,7 +91,6 @@ export default function LoginScreen() {
         try {
             showLoadingDialog('Loading...');
             const res = await AuthServices.login(username, password,);
-            console.log('Login response:', res);
 
             if (res.success) {
                 if (rememberMe) {

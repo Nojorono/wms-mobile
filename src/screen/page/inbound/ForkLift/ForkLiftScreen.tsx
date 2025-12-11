@@ -54,7 +54,6 @@ export default function ForkLiftScreen() {
       const response = await InboundServices.getForkLiftList(
         user?.id || ''
       );
-      console.log('ForkLift data fetched successfully:', response.data);
       setForkLiftList(response?.data || []);
     } catch (error) {
       showDialog('error', 'Error while fetching ForkLift data!');
@@ -87,7 +86,6 @@ export default function ForkLiftScreen() {
 
   // 🎯 Fungsi pencocokan data forklift
   const handleMatch = (code: string) => {
-    console.log('Scanned Code:', code);
     const matchedItem = forkLiftList.find(
       (item) => item?.inventoryTracking?.pallet?.pallet_code === code
     );
@@ -176,6 +174,7 @@ export default function ForkLiftScreen() {
         onChangeText={setScannedCode}
         onSubmitEditing={handleSubmitEditing}
         blurOnSubmit={false}
+        showSoftInputOnFocus={false}
         autoFocus
         style={hiddenInputStyle.input}
       />

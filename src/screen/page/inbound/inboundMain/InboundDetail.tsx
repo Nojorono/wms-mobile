@@ -22,6 +22,8 @@ import { InboundParamList } from "../../../navigation/inbound/InboundNavigator";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import WebView from "react-native-webview";
+import { launchCamera } from "react-native-image-picker";
+import { extractBucketPath } from "../service/inboundService";
 
 /* ========================
    1. Type & Merge Function
@@ -149,6 +151,30 @@ export default function InboundDetail() {
     const showDialog = useDialogStore((state) => state.showDialog);
     const confirm = useConfirmationStore();
     const [refreshing, setRefreshing] = useState(false);
+    type PhotoMeta = {
+        url: string;
+        bucket: string;
+        key: string;
+        size: number;
+    } | null;
+
+    const [photos, setPhotos] = useState<{
+        segel: PhotoMeta;
+        barang: PhotoMeta;
+        nopol: PhotoMeta;
+    }>({
+        segel: null,
+        barang: null,
+        nopol: null,
+    });
+    const [initialPhotos, setInitialPhotos] = useState({
+        segel: false,
+        barang: false,
+        nopol: false
+    });
+
+    const [dirty, setDirty] = useState(false);
+    // dirty = true = ada perubahan → button jadi EDIT
 
     const onRefresh = async () => {
         try {
@@ -192,6 +218,44 @@ export default function InboundDetail() {
             setStatus(response.data.status); // Update status dari response
             const inbound_dos = response.data.inbound_dos;
             setMergedData(mergeInboundDos(inbound_dos));
+            console.log('Fetched inbound data:', response.data);
+            setPhotos({
+                segel: response.data.photo_seal
+                    ? {
+                        url: response.data.photo_seal,
+                        bucket: "mybucket",
+                        key: extractBucketPath(response.data.photo_seal),
+                        size: 0,
+                    }
+                    : null,
+
+                barang: response.data.photo_condition
+                    ? {
+                        url: response.data.photo_condition,
+                        bucket: "mybucket",
+                        key: extractBucketPath(response.data.photo_condition),
+                        size: 0,
+                    }
+                    : null,
+
+                nopol: response.data.photo_license_plate
+                    ? {
+                        url: response.data.photo_license_plate,
+                        bucket: "mybucket",
+                        key: extractBucketPath(response.data.photo_license_plate),
+                        size: 0,
+                    }
+                    : null,
+            });
+
+            // simpan kondisi awal apakah foto sudah ada
+            setInitialPhotos({
+                segel: !!response.data.photo_seal,
+                barang: !!response.data.photo_condition,
+                nopol: !!response.data.photo_license_plate,
+            });
+
+            setDirty(false); // data fresh dari backend = tidak dirty
         } catch (error) {
             hideLoadingDialog()
             console.error('Error fetching inbound data:', error);
@@ -249,6 +313,149 @@ export default function InboundDetail() {
         );
     };
 
+    const handleUpload = async (type: "segel" | "barang" | "nopol") => {
+        try {
+            const result = await launchCamera({
+                mediaType: "photo",
+                quality: 0.4,
+                cameraType: "back",
+                saveToPhotos: false,
+            });
+
+            if (result.didCancel) return;
+
+            const file = result.assets?.[0];
+            if (!file) return;
+
+            showLoadingDialog("Uploading photo...");
+
+            const s3 = await InboundServices.postdPhotoToS3(
+                file,
+                `${type}`
+            );
+
+            const data = s3.data;
+
+            // simpan metadata
+            setPhotos((prev) => ({
+                ...prev,
+                [type]: {
+                    url: data.url,
+                    bucket: data.bucket,
+                    key: data.key,
+                    size: data.size,
+                },
+            }));
+            setDirty(true);
+            showDialog("success", `Photo ${type} uploaded`);
+        } catch (error) {
+            console.error(error);
+            showDialog("error", "Upload failed");
+        } finally {
+            hideLoadingDialog();
+        }
+    };
+
+    const handleDelete = async (type: "segel" | "barang" | "nopol") => {
+        try {
+            const target = photos[type];
+            if (!target) return;
+
+            confirm.show("decline", "Delete this photo?", async () => {
+                showLoadingDialog("Deleting photo...");
+
+                await InboundServices.deletePhotoFromS3(
+                    target.bucket,
+                    target.key
+                );
+
+                // reset UI
+                setPhotos((prev) => ({
+                    ...prev,
+                    [type]: null,
+                }));
+                setDirty(true);
+
+                showDialog("success", "Photo deleted");
+                hideLoadingDialog();
+            });
+        } catch (error) {
+            console.error(error);
+            hideLoadingDialog();
+            showDialog("error", "Delete failed");
+        }
+    };
+
+    const handleSubmit = async () => {
+        try {
+            showLoadingDialog("Submitting photos...");
+            // TODO: API upload
+            const res = await InboundServices.updatePhotoToInbound(payload.item.id, {
+                photo_seal: photos.segel?.url,
+                photo_condition: photos.barang?.url,
+                photo_license_plate: photos.nopol?.url,
+            });
+            showDialog("success", "Photos submitted successfully");
+
+            // success ...
+        } catch (err) {
+            console.error(err);
+        } finally {
+            hideLoadingDialog();
+        }
+    };
+
+    const allUploaded = photos.segel && photos.barang && photos.nopol;
+    const hadInitial = initialPhotos.segel && initialPhotos.barang && initialPhotos.nopol;
+
+    const shouldShowSubmit = !hadInitial || dirty;
+    const submitLabel = dirty ? "Edit" : "Submit";
+
+ useEffect(() => {
+  const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {
+
+      const initialEmpty =
+          !initialPhotos.segel &&
+          !initialPhotos.barang &&
+          !initialPhotos.nopol;
+
+      const hasNewPhotos =
+          photos.segel || photos.barang || photos.nopol;
+
+      // tidak ada upload baru → boleh back
+      if (!initialEmpty || !hasNewPhotos || !dirty) return;
+
+      // block back
+      e.preventDefault();
+
+      confirm.show(
+          "decline",
+          "You uploaded photos but haven't submitted. Going back will delete them. Continue?",
+          async () => {
+              for (const key of ["segel", "barang", "nopol"] as Array<keyof typeof photos>) {
+                  const p = photos[key];
+                  if (p) {
+                      await InboundServices.deletePhotoFromS3(p.bucket, p.key);
+                  }
+              }
+
+              navigationInbound.dispatch(e.data.action);
+          }
+      );
+  });
+
+  return unsubscribe;
+}, [photos, initialPhotos, dirty]);
+
+
+
+
+    // if (status !== "CREATED") {
+    //     showDialog("error", "Can only upload while CREATED");
+    //     return;
+    // }
+
+
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
@@ -274,6 +481,85 @@ export default function InboundDetail() {
                 </View>
             )}
 
+            {/* add upload photo here */}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 16 }}>
+                {(["segel", "barang", "nopol"] as Array<keyof typeof photos>).map((key) => {
+                    const img = photos[key];
+
+                    return (
+                        <View
+                            key={key}
+                            style={{
+                                flex: 1,
+                                height: 110,
+                                backgroundColor: "#E5E7EB",
+                                borderRadius: 12,
+                                marginHorizontal: 4,
+                                overflow: "hidden",
+                            }}
+                        >
+                            {img ? (
+                                <>
+                                    <Image
+                                        source={{ uri: img.url }}
+                                        style={{ width: "100%", height: "100%" }}
+                                        resizeMode="cover"
+                                    />
+
+                                    {/* Delete button - floating at top right */}
+                                    <TouchableOpacity
+                                        onPress={() => handleDelete(key)}
+                                        style={{
+                                            position: "absolute",
+                                            top: 6,
+                                            right: 6,
+                                            backgroundColor: "rgba(255,255,255,0.8)",
+                                            borderRadius: 16,
+                                            padding: 4,
+                                            zIndex: 10,
+                                        }}
+                                    >
+                                        <Ionicons name="trash" size={20} color="#DC2626" />
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <TouchableOpacity
+                                    style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+                                    onPress={() => handleUpload(key)}
+                                >
+                                    <Text style={{ textAlign: "center", color: "#6B7280" }}>
+                                        No Photo{'\n'}({key})
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                    );
+                })}
+
+            </View>
+
+            {/* Submit button */}
+
+            {shouldShowSubmit && (
+                <TouchableOpacity
+                    onPress={handleSubmit}
+                    disabled={!allUploaded}
+                    style={{
+                        backgroundColor: allUploaded ? "#2563EB" : "#9CA3AF",
+                        paddingVertical: 14,
+                        borderRadius: 12,
+                        alignItems: "center",
+                    }}
+                >
+                    <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+                        {submitLabel}
+                    </Text>
+                </TouchableOpacity>
+            )}
+
+
+
             {/* List Delivery Orders */}
             <FlatList
                 data={mergedData}
@@ -282,10 +568,7 @@ export default function InboundDetail() {
                 onRefresh={onRefresh}
                 renderItem={({ item }) => {
                     const expanded = expandedIds.includes(item.id);
-                    const url = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/testingcoba";
-                    const url2 = "https://nna-app-s3.s3.ap-southeast-3.amazonaws.com/my-bucket/test"
                     return (
-                        console.log("Attachment URL:", item.attachment),
                         <View style={styles.card}>
                             <TouchableOpacity
                                 style={styles.cardHeader}
@@ -342,66 +625,66 @@ export default function InboundDetail() {
                 }}
             />
 
-    {/* 🧾 PDF Viewer Modal */}
-<Modal visible={pdfVisible} animationType="slide" transparent>
-    <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }}>
-        <View style={{ height: "50%", backgroundColor: "#000", borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: "hidden" }}>
+            {/* 🧾 PDF Viewer Modal */}
+            <Modal visible={pdfVisible} animationType="slide" transparent>
+                <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }}>
+                    <View style={{ height: "50%", backgroundColor: "#000", borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: "hidden" }}>
 
-            {/* Header Close Button */}
-            <View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: 12,
-                    backgroundColor: "#111",
-                }}
-            >
-                <Text style={{ color: "#fff", fontSize: 16 }}>Attachment Viewer</Text>
-                <Pressable onPress={handleClosePdf}>
-                    <Ionicons name="minus" size={24} color="#fff" />
-                </Pressable>
-            </View>
-
-            {/* PDF / Image Viewer */}
-            {pdfUrl ? (
-                (() => {
-                    const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pdfUrl);
-
-                    if (isImage) {
-                        return (
-                            <Image
-                                source={{ uri: pdfUrl }}
-                                style={{
-                                    flex: 1,
-                                    resizeMode: "contain",
-                                    backgroundColor: "#000",
-                                }}
-                            />
-                        );
-                    }
-
-                    return (
-                        <WebView
-                            source={{
-                                uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-                                    pdfUrl
-                                )}`,
+                        {/* Header Close Button */}
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: 12,
+                                backgroundColor: "#111",
                             }}
-                            style={{ flex: 1 }}
-                            startInLoadingState={true}
-                            scalesPageToFit={true}
-                        />
-                    );
-                })()
-            ) : (
-                <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                    <Text style={{ color: "#fff", fontSize: 18 }}>No attachment available.</Text>
+                        >
+                            <Text style={{ color: "#fff", fontSize: 16 }}>Attachment Viewer</Text>
+                            <Pressable onPress={handleClosePdf}>
+                                <Ionicons name="minus" size={24} color="#fff" />
+                            </Pressable>
+                        </View>
+
+                        {/* PDF / Image Viewer */}
+                        {pdfUrl ? (
+                            (() => {
+                                const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pdfUrl);
+
+                                if (isImage) {
+                                    return (
+                                        <Image
+                                            source={{ uri: pdfUrl }}
+                                            style={{
+                                                flex: 1,
+                                                resizeMode: "contain",
+                                                backgroundColor: "#000",
+                                            }}
+                                        />
+                                    );
+                                }
+
+                                return (
+                                    <WebView
+                                        source={{
+                                            uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+                                                pdfUrl
+                                            )}`,
+                                        }}
+                                        style={{ flex: 1 }}
+                                        startInLoadingState={true}
+                                        scalesPageToFit={true}
+                                    />
+                                );
+                            })()
+                        ) : (
+                            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                                <Text style={{ color: "#fff", fontSize: 18 }}>No attachment available.</Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
-            )}
-        </View>
-    </View>
-</Modal>
+            </Modal>
 
 
             {status === "CREATED" && (

@@ -44,7 +44,6 @@ const HomeStackNavigator = () => {
                         <TouchableOpacity
                             style={{ marginRight: 15 }}
                             onPress={() => {
-                                console.log("Sign out pressed"); 
                                 // clearAuth()   
                                 confirm.show("decline", "Are you sure want to sign out ?", () => {
                                     clearAuth()

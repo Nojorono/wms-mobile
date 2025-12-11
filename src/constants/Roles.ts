@@ -4,6 +4,7 @@ export const ROLES = {
   HELPER: "HELPER",
   SUPERVISOR: "SUPERVISOR",
   ADMIN: "ADMIN",
+  DRIVER: "DRIVER",
 } as const;
 
 // optional: array versi list untuk looping atau validasi

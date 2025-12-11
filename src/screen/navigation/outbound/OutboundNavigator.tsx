@@ -5,6 +5,8 @@ import React from 'react';
 import OutboundIndex from '../../page/Outbound.tsx';
 import PickingNavigator from './PickingNavigator.tsx';
 import InspectionNavigator from './InspectionNavigator.tsx';
+import AssignGateNavigator from './AssignGateNavigator.tsx';
+import ForkliftGateNavigator from './ForkliftGateNavigator.tsx';
 
 
 
@@ -16,6 +18,9 @@ export type OutboundParamList = {
   OutboundPicking: undefined;
   //WH STAFF
   OutboundInspection: undefined;
+  OutboundAssignGate: undefined;
+  //Driver Forklift
+  OutboundForkliftGate: undefined;
 };
 
 const OutboundStack = createStackNavigator<OutboundParamList>();
@@ -63,6 +68,28 @@ const OutboundStackNavigator = () => (
      <OutboundStack.Screen
       name="OutboundInspection"
       component={InspectionNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+     <OutboundStack.Screen
+      name="OutboundAssignGate"
+      component={AssignGateNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+       <OutboundStack.Screen
+      name="OutboundForkliftGate"
+      component={ForkliftGateNavigator}
       options={{
         headerShown: false,
         headerTintColor: '#fff',

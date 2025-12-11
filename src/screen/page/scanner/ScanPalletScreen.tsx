@@ -84,7 +84,6 @@ const ScanPalletScreen = () => {
         try {
             setLoading(true);
             const res: any = await ScannerService.getPalletByCode(id);
-            console.log("Pallet data fetched:", res);
             setPalletData(res.data || []);
         } catch (err) {
             Alert.alert("Error", "Failed to get pallet data");

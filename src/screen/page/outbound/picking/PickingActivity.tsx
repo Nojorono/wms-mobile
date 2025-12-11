@@ -15,8 +15,6 @@ import { PickingParamList } from '../../../navigation/outbound/PickingNavigator'
 import OutboundService from '../../../../service/outboundService';
 import { useFocusEffect } from '@react-navigation/native';
 import { OutboundItemParam } from '../../../../interface/outbound/outbound';
-import Ionicons from 'react-native-vector-icons/FontAwesome5';
-import { set } from 'react-hook-form';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingActivity'>;
 
@@ -31,15 +29,29 @@ export default function PickingActivity() {
   const [userIdNewest, setUserIdNewest] = useState('');
 
   const handleAddActivity = () => {
-    navigation.navigate('PickingDetailActivity', { item: itemBefore.item });
+    navigation.navigate('PickingDetailActivity', { mode: "add", itemBefore: itemBefore.item });
   };
 
   const handleSendToWH = async () => {
+
+
+    // Ambil hanya pallet yang status-nya OPEN
+    const createdPallets = pickingList.filter(p => p.status === "OPEN");
+
+    // Kalau tidak ada pallet dengan status OPEN
+    if (createdPallets.length === 0) {
+      showDialog("success", "Semua data sudah dikirim ke WH STAFF!");
+      return;
+    }
+
     try {
       showLoadingDialog("Sending to WH Staff...");
-
-      // 🔥 GANTI DENGAN API SEBENARNYA
-      const res = await OutboundService.updateStatusPicking(userIdNewest, itemBefore.item.id, "PENDING");
+      const payload = {
+        status: "PENDING",
+        inspection_by: userIdNewest,
+        ids: createdPallets.map((item) => item.id),
+      };
+      const res = await OutboundService.updateStatusPickingBulk(payload);
       hideLoadingDialog();
       await fetchPicking();
       showDialog("success", "Berhasil dikirim ke WH Staff!");
@@ -55,7 +67,7 @@ export default function PickingActivity() {
       showLoadingDialog('Loading List Picking SKU');
       const response = await OutboundService.getTransactionPickingDetail(itemBefore.item.id);
       const filtered = response.data || [];
-      if (filtered.length > 1) {
+      if (filtered.length > 0) {
         const latestUserId = filtered.reduce((latest: any, item: any) =>
           new Date(item.createdAt) > new Date(latest.createdAt) ? item : latest
         ).user_id;
@@ -119,24 +131,40 @@ export default function PickingActivity() {
               Suggested Destination Location
             </Text>
 
-            <Text
-              style={{
-                textAlign: 'center',
-                fontSize: 16,
-                color: '#333',
-                fontWeight: '700',
-                marginTop: 4,
-                backgroundColor: '#FFF5E6',
-                borderRadius: 8,
-                paddingVertical: 6,
-                paddingHorizontal: 12,
-              }}
-            >
-              {itemBefore.item.destinationWarehouseSub?.name} -{' '}
-              {itemBefore.item.destinationBin?.name} -{' '}
-              {itemBefore.item.quantity} {itemBefore.item.uom} - Week-
-              {itemBefore.item.week_number}
-            </Text>
+           <Text
+                      style={{
+                        textAlign: 'center',
+                        fontSize: 16,
+                        color: '#333',
+                        fontWeight: '700',
+                        marginTop: 4,
+                        backgroundColor: '#FFF5E6',
+                        borderRadius: 8,
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                      }}
+                    >
+                      
+                      {itemBefore?.item.quantity} {itemBefore?.item.uom} - Week {' '} 
+                      {itemBefore?.item.week_number}
+                    </Text>
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        fontSize: 14,
+                        color: '#333',
+                        fontWeight: '700',
+                        marginTop: 4,
+                        backgroundColor: '#FFF5E6',
+                        borderRadius: 8,
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                      }}
+                    >
+                     From {itemBefore?.item.sourceWarehouseSub?.name} Bin {itemBefore?.item.sourceBin?.name} to {itemBefore?.item.destinationWarehouseSub?.name} -{' '}
+                      {itemBefore?.item.destinationBin?.name}
+                      
+                    </Text>
           </View>
 
           {/* 📌 LIST ACTIVITY */}
@@ -145,12 +173,24 @@ export default function PickingActivity() {
               Belum ada Activity, silahkan lakukan Activity Picking
             </Text>
           ) : (
-
             pickingList.map((activity: any, index: number) => (
               <View
                 key={activity?.id || `${activity.week_number}-${index}`}
                 style={styles.activityCard}
               >
+                {/* 🔹 Title Section */}
+                <Text style={{
+                  fontSize: 18,
+                  backgroundColor: '#FFF5E6',
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 8,
+                  fontWeight: '800',
+                  marginBottom: 12,
+                  color: '#333',
+                }}>
+                  Picking - {index + 1}
+                </Text>
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Quantity Picked</Text>
                   <Text
@@ -178,25 +218,59 @@ export default function PickingActivity() {
                   <Text style={styles.rowValue}>{activity.user_name}</Text>
                 </View>
 
-                <View style={styles.statusBox}>
-                  <Text style={styles.statusText}>{activity.status}</Text>
+                <View style={styles.row}>
+                  <Text style={styles.rowLabel}>Status</Text>
+                  <Text style={[styles.rowValue, { color: 'green' }]}>{activity.status}</Text>
                 </View>
+
+
+                {activity.status === "INSPECTION_APPROVED" || activity.status === "PENDING" ? null : (
+                  <TouchableOpacity
+                    style={{
+                      marginTop: 10,
+                      backgroundColor: '#1F5BF2',
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                    }}
+                    onPress={() => navigation.navigate("PickingDetailActivity", {
+                      mode: "edit",
+                      activity: activity,   // kirim data item yang mau diedit
+                      itemBefore: itemBefore.item // kirim itemBefore (kalau masih dipakai)
+                    })}
+                  >
+                    <Text style={{ color: "white", textAlign: "center", fontWeight: "700" }}>
+                      Edit
+                    </Text>
+
+                  </TouchableOpacity>
+                )}
               </View>
+
             ))
           )}
         </View>
+        {/* 🔥 Hitung total quantity picked */}
+        {(() => {
+          const totalPicked = pickingList?.reduce(
+            (sum: number, item: any) => sum + item.quantity_picked,
+            0
+          );
 
-        <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
-          <Text style={styles.addButtonText}>+ Add Activity</Text>
-        </TouchableOpacity>
+          return totalPicked >= itemBefore.item.quantity ? null : (
+            <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
+              <Text style={styles.addButtonText}>+ Add Activity</Text>
+            </TouchableOpacity>
+          );
+        })()}
+
       </ScrollView>
 
       {/* Floating Action Button */}
-        {pickingList && pickingList.length === 0 ? (null) : (
-      <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
-        <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
-      </TouchableOpacity>
-        )}
+      {pickingList && pickingList.length === 0 ? (null) : (
+        <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
+          <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

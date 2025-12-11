@@ -22,8 +22,9 @@ import ScannerService from '../../../../service/palletServices';
 import OutboundService from '../../../../service/outboundService';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore';
 import { useDialogStore } from '../../../../store/useGlobalDialog';
+import { userId } from '../../../../dummy/inboundData';
 
-export default function PickingDetailActivity() {
+export default function InspectionUpdateActivity() {
   const navigation = useNavigation();
   const route = useRoute();
   const params = (route.params || {}) as any;
@@ -43,7 +44,7 @@ export default function PickingDetailActivity() {
       itemBeforeParam = { item: {} };
     }
   }
-  const itemBefore = itemBeforeParam as any; // use itemBefore.item below
+  const itemBefore = itemBeforeParam as any;
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -95,33 +96,40 @@ export default function PickingDetailActivity() {
     },
   });
 
-  const fetchAssign = async () => {
-    // guard: require memo_id
-    const memoId = itemBefore?.item?.memo_id;
-    if (!memoId) return;
+  const handleApproveAction = async (type: "APPROVE" | "FINAL") => {
+    if (!activity) return;
 
-    try {
-      showLoadingDialog('Loading List Picking SKU');
-      const response = await OutboundService.getAssignPickingUser(memoId);
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        const latest = response.data.reduce((prev: any, curr: any) =>
-          new Date(curr.createdAt) > new Date(prev.createdAt) ? curr : prev
-        );
-        setAssignPicking(latest);
-      }
-    } catch (error) {
-      // don't hide here (finally will hide)
-      showDialog('error', 'Error while Fetching Data Picking!');
-    } finally {
-      hideLoadingDialog();
-    }
+    const nextStatus =
+      type === "APPROVE" ? "INSPECTION" : "INSPECTION_APPROVED";
+
+    Alert.alert(
+      "Confirm Approve",
+      "Apakah Anda yakin ingin meng-approve item ini?",
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Approve",
+          onPress: async () => {
+            try {
+              showLoadingDialog("Approving...");
+              const payload = {
+                status: nextStatus,
+                inspection_by: userId,
+                ids: [activity.id],
+              };
+              await OutboundService.updateStatusPickingBulk(payload);
+              hideLoadingDialog();
+              showDialog("success", "Berhasil Update Status!");
+              navigation.goBack();
+            } catch (error) {
+              hideLoadingDialog();
+              showDialog("error", "Gagal Update Status!");
+            }
+          },
+        },
+      ]
+    );
   };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchAssign();
-    }, [itemBefore?.item?.memo_id])
-  );
 
   // when qty or foundItem changes, recalc switch qty if isSwitching and mode add
   useEffect(() => {
@@ -358,43 +366,9 @@ export default function PickingDetailActivity() {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {mode === 'edit'
-              ? itemBefore?.item?.description
-              : itemBefore?.item?.item?.description ||
-          itemBefore?.item?.description ||
-          'Picking Activity'}
+            {mode === 'edit' ? itemBefore?.item?.description : itemBefore?.item?.item?.description || itemBefore?.item?.description || 'Picking Activity'}
           </Text>
-          <TouchableOpacity
-            onPress={async () => {
-              Alert.alert(
-          'Delete Activity',
-          'Are you sure you want to delete this picking activity?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Delete',
-              style: 'destructive',
-              onPress: async () => {
-                try {
-            showLoadingDialog('Deleting...');
-            console.log('Deleting activity with id:', activity);
-            // await OutboundService.deleteTranscationScan(activity?.id);
-            showDialog('success', 'Berhasil menghapus activity picking');
-            navigation.goBack();
-                } catch (err) {
-            showDialog('error', 'Gagal menghapus activity picking');
-                } finally {
-            hideLoadingDialog();
-                }
-              },
-            },
-          ]
-              );
-            }}
-            disabled={mode !== 'edit'}
-          >
-            <Ionicons name="times" size={20} color={"red"} style={{ marginLeft: 12 }} />
-          </TouchableOpacity>
+          {/* <Ionicons name="times" size={20} color={"red"} style={{ marginLeft: 12 }} /> */}
         </View>
 
         {/* SUGGESTED DESTINATION */}
@@ -422,9 +396,9 @@ export default function PickingDetailActivity() {
               paddingHorizontal: 12,
             }}
           >
-            
-            {itemBefore?.quantity} {itemBefore?.uom} - Week-
-            {itemBefore?.week_number}
+
+            {itemBefore?.quantity_plan} {itemBefore?.uom} - Week-
+            {itemBefore?.transcation_pickig.week_number}
           </Text>
           <Text
             style={{
@@ -439,9 +413,25 @@ export default function PickingDetailActivity() {
               paddingHorizontal: 12,
             }}
           >
-           From {itemBefore?.sourceWarehouseSub?.name} Bin {itemBefore?.sourceBin?.name} to {itemBefore?.destinationWarehouseSub?.name} -{' '}
-            {itemBefore?.destinationBin?.name}
-            
+            From {itemBefore?.transcation_pickig.sourceWarehouseSub?.name} Bin {itemBefore?.transcation_pickig.sourceBin?.name} to {itemBefore?.transcation_pickig.destinationWarehouseSub?.name} -{' '}
+            {itemBefore?.transcation_pickig.destinationBin?.name}
+
+          </Text>
+          <Text
+            style={{
+              textAlign: 'center',
+              fontSize: 12,
+              color: '#333',
+              fontWeight: '700',
+              marginTop: 4,
+              backgroundColor: '#FFF5E6',
+              borderRadius: 8,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+            }}
+          >
+            {`Activity Status: ${activity.status}`}
+
           </Text>
         </View>
 
@@ -465,7 +455,6 @@ export default function PickingDetailActivity() {
           <TextInput
             placeholder="Pallet Sumber"
             value={palletSumber}
-            editable={mode !== 'edit'}
             onChangeText={(v) => {
               setPalletSumber(v);
               setFoundItem(null);
@@ -475,18 +464,18 @@ export default function PickingDetailActivity() {
           />
 
           {/* Scan Button (hidden in edit mode) */}
-          {mode !== 'edit' && (
-            <TouchableOpacity
-              style={styles.scanBtn}
-              onPress={() => openScanner('sumber')}
-            >
-              <Ionicons
-                name="barcode"
-                size={22}
-                color={Colors.secondaryColor}
-              />
-            </TouchableOpacity>
-          )}
+
+          <TouchableOpacity
+            style={styles.scanBtn}
+            onPress={() => openScanner('sumber')}
+          >
+            <Ionicons
+              name="barcode"
+              size={22}
+              color={Colors.secondaryColor}
+            />
+          </TouchableOpacity>
+
 
           {/* CHECK Button SUMBER*/}
           {doneSumber ? (
@@ -520,7 +509,6 @@ export default function PickingDetailActivity() {
           <TextInput
             placeholder="Pallet Picking"
             value={palletPicking}
-            editable={mode !== 'edit'}
             onChangeText={(v) => {
               setPalletPicking(v);
               setPickingPallet(null);
@@ -528,18 +516,18 @@ export default function PickingDetailActivity() {
             }}
             style={[styles.input, { flex: 1, marginVertical: 0 }]}
           />
-          {mode !== 'edit' && (
-            <TouchableOpacity
-              style={styles.scanBtn}
-              onPress={() => openScanner('picking')}
-            >
-              <Ionicons
-                name="barcode"
-                size={22}
-                color={Colors.secondaryColor}
-              />
-            </TouchableOpacity>
-          )}
+
+          <TouchableOpacity
+            style={styles.scanBtn}
+            onPress={() => openScanner('picking')}
+          >
+            <Ionicons
+              name="barcode"
+              size={22}
+              color={Colors.secondaryColor}
+            />
+          </TouchableOpacity>
+
           {/* CHECK Button */}
           {donePicking ? (
             <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
@@ -637,7 +625,7 @@ export default function PickingDetailActivity() {
               <TouchableOpacity
                 style={styles.scanBtn}
                 onPress={() => openScanner('switching')}
-                disabled={mode === 'edit'}
+
               >
                 <Ionicons
                   name="barcode"
@@ -689,6 +677,30 @@ export default function PickingDetailActivity() {
           </View>
         )}
       </View>
+
+      {/* APPROVE BUTTONS */}
+
+      <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+        
+          <TouchableOpacity
+            style={[styles.approveButton, { flex: 1 , backgroundColor:  activity.status !== "INSPECTION" ? "green" : "#ccc" }]}
+            // disabled={ activity.status !== "INSPECTION"}
+            onPress={() => handleApproveAction("APPROVE")}
+          >
+            <Text style={styles.approveText}>Approve</Text>
+          </TouchableOpacity>
+        
+
+        <TouchableOpacity
+          style={[styles.approveButton, { flex: 1, backgroundColor:  activity.status !== "INSPECTION_APPROVED" || activity.status === "PENDING" ? "#f57f1e" : "#ccc"  }]}
+          // disabled={ activity.status !== "INSPECTION_APPROVED" || activity.status === "PENDING"}
+          onPress={() => handleApproveAction("FINAL")}
+        >
+          <Text style={styles.approveText}>Final</Text>
+        </TouchableOpacity>
+
+      </View>
+
 
       {/* SUBMIT */}
       <TouchableOpacity
@@ -827,5 +839,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
+  },
+  approveButton: {
+    marginTop: 10,
+    backgroundColor: 'green',
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  approveText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '700',
   },
 });

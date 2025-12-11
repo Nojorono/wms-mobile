@@ -17,6 +17,7 @@ import Colors from "../../../../constants/Colors";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from "react-native-vision-camera";
+import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 
 type NavigationProp = StackNavigationProp<
     ForkliftGateParamList,
@@ -26,9 +27,12 @@ type NavigationProp = StackNavigationProp<
 export const ForkliftGateDetail = () => {
     const route = useRoute();
     const { item } = route.params as any;
+    console.log("ITEM DETAIL:", item);
 
     const navigation = useNavigation<NavigationProp>();
     const [dataOutbound, setDataOutbound] = useState<any>(null);
+
+    const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
     // === MODAL STATE ===
     const [modalVisible, setModalVisible] = useState(false);
@@ -108,13 +112,19 @@ export const ForkliftGateDetail = () => {
             pallet_id: selectedTask.transactionScanPicking[0].pallet_use_id, // sesuaikan jika berbeda
             status: "ASSIGNED",
         };
+        try {
+            showLoadingDialog('Memproses data...');
+            await OutboundService.postForkliftScanGate(item.id, payload);
+            showDialog('success', 'Pallet dan Gate berhasil di-assign.');
+            setModalVisible(false);
+            navigation.goBack();
+        } catch (error) {
+            showDialog('error', 'Gagal meng-assign Pallet dan Gate.');
+        } finally {
+            hideLoadingDialog();
+        }
 
-        console.log("PAYLOAD:", payload);
 
-        // contoh hit API
-        // await OutboundService.assignGatePallet(payload)
-
-        setModalVisible(false);
     };
 
     return (
@@ -137,6 +147,19 @@ export const ForkliftGateDetail = () => {
                                 const palletCodes = scans.map(
                                     (scan: any) => scan?.palletUse.pallet_code
                                 );
+
+                                // Ambil pallet tujuan tanpa pakai [0]
+                                const assignedPallet = item?.assigned_gate_pallets?.find(
+                                    (p: any) => p.status === "ASSIGNED"
+                                );
+
+                                const palletTujuan = assignedPallet?.pallet?.pallet_code;
+
+                                // Cek match dengan palletCodes
+                                const isMatch =
+                                    Array.isArray(palletCodes) &&
+                                    palletTujuan &&
+                                    palletCodes.includes(palletTujuan);
 
                                 return (
                                     <View key={task.id} style={styles.taskBox}>
@@ -172,12 +195,17 @@ export const ForkliftGateDetail = () => {
                                             </Text>
                                         ) : (
                                             <View>
-                                                <Text style={styles.palletLabel}>
-                                                    Pallet hasil scan:
-                                                </Text>
-                                                <Text style={styles.palletItem}>
-                                                    {palletCodes.join(", ")}
-                                                </Text>
+                                                <Text style={styles.palletLabel}>Pallet hasil scan:</Text>
+
+                                                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                                    <Text style={styles.palletItem}>
+                                                        {palletCodes.join(", ")}
+                                                    </Text>
+
+                                                    {isMatch && (
+                                                       <Ionicons name="check-circle" size={16} color="green" style={{ marginLeft: 8 }} />
+                                                    )}
+                                                </View>
                                             </View>
                                         )}
                                     </View>

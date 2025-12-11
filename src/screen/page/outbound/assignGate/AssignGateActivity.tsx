@@ -17,6 +17,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { AssignGateParamList } from "../../../navigation/outbound/AssignGateNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
+import Ionicons from "react-native-vector-icons/FontAwesome5";
 
 interface AssignForm {
   name: string;
@@ -52,6 +53,22 @@ export default function AssignGateActivity() {
     contact: "",
     deviceId: "",
   });
+
+  const handleDeleteUser = async (gateId: string, assignedUserId: string) => {
+    try {
+      showLoadingDialog("Removing user...");
+      await OutboundService.deleteAssignedGateUser(
+        gateId,
+        assignedUserId
+      );
+      showDialog("success", "User removed from assigned gate.");
+      navigation.goBack();
+    } catch (error) {
+      showDialog("error", "Failed to remove user from assigned gate.");
+    } finally {
+      hideLoadingDialog();
+    }
+  }
 
   const handleSubmit = async () => {
   try {
@@ -336,6 +353,14 @@ export default function AssignGateActivity() {
             }}
           >
             <Text style={styles.editText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => {
+              handleDeleteUser(assignedGate.id, u.id)
+            }}
+          >
+            <Ionicons name="trash" size={16} color="red" />
           </TouchableOpacity>
         </View>
       </View>

@@ -54,21 +54,28 @@ export default function AssignGateVehicle() {
     });
 
     async function fetchData() {
-        const response = await OutboundService.getOutboundDetailById(params.item.id);
-        const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
-        setDataAssigned(assignedGate.data)
+        try {
+            showLoadingDialog("Loading...");
+            const response = await OutboundService.getOutboundDetailById(params.item.id);
+            const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
+            setDataAssigned(assignedGate.data);
 
-        const newData = {
+            const newData = {
             expedition: response?.data?.expedition ?? "",
             license_plate: response?.data?.license_plate ?? "",
             driver_name: response?.data?.driver_name ?? "",
             driver_phone: response?.data?.driver_phone ?? "",
-        };
+            };
 
-        setData(newData);
+            setData(newData);
 
-        // Reset form biar input terisi otomatis
-        reset(newData);
+            // Reset form biar input terisi otomatis
+            reset(newData);
+        } catch (error) {
+            showDialog("error", "Gagal mengambil data kendaraan dan assigned gate.");
+        } finally {
+            hideLoadingDialog();
+        }
     }
 
     useFocusEffect(
@@ -180,77 +187,78 @@ export default function AssignGateVehicle() {
 
                     <Text style={styles.header}>List Assign Gate</Text>
 
-                    {/* Assigned Gate Compact */}
-                    {dataAssigned.map((ag: any, index: number) => {
-                        // --- Ambil user terbaru (createdAt terbesar) ---
-                        const sortedUsers = [...(ag.assigned_gate_users ?? [])].sort(
-                            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                        );
-                        const latestUser = sortedUsers[0];
-
-                        // --- Tampilkan semua pallet code ---
-                        const pallets = (ag.assigned_gate_pallets ?? []).map(
-                            (p: any) => p?.pallet?.pallet_code
-                        );
-
-                        const handleDelete = () => {
-                            confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
-                                try {
-                                    showLoadingDialog("Deleting...");
-                                    const res = await OutboundService.deleteAssignedGate(ag.id);
-                                    showDialog("success", "Assigned gate deleted!");
-                                    fetchData();
-                                } catch (err) {
-                                    showDialog("error", "Failed to delete assigned gate.");
-                                } finally {
-                                    hideLoadingDialog();
-                                }
-                            }, false
+                    {dataAssigned && dataAssigned.length > 0 ? (
+                        dataAssigned.map((ag: any, index: number) => {
+                            const sortedUsers = [...(ag.assigned_gate_users ?? [])].sort(
+                                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                             );
-                        };
+                            const latestUser = sortedUsers[0];
 
-                        const handleEdit = () => {
-                            navigation.navigate('AssignGateActivity', {
-                                item: params.item,
-                                mode: "edit",
-                                assignedGate: ag,   // kirim data lengkap
-                            });
-                        };
+                            const pallets = (ag.assigned_gate_pallets ?? []).map(
+                                (p: any) => p?.pallet?.pallet_code
+                            );
 
-                        return (
-                            <View key={ag.id} style={styles.compactCard}>
-                                <Text style={styles.indexNumber}>{index + 1}</Text>
+                            const handleDelete = () => {
+                                confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
+                                    try {
+                                        showLoadingDialog("Deleting...");
+                                        const res = await OutboundService.deleteAssignedGate(ag.id);
+                                        showDialog("success", "Assigned gate deleted!");
+                                        fetchData();
+                                    } catch (err) {
+                                        showDialog("error", "Failed to delete assigned gate.");
+                                    } finally {
+                                        hideLoadingDialog();
+                                    }
+                                }, false
+                                );
+                            };
 
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.compactText}>
-                                        <Text style={styles.bold}>Gate:</Text> {ag.gate.code ?? "-"}
-                                    </Text>
+                            const handleEdit = () => {
+                                navigation.navigate('AssignGateActivity', {
+                                    item: params.item,
+                                    mode: "edit",
+                                    assignedGate: ag,   // kirim data lengkap
+                                });
+                            };
 
-                                    <Text style={styles.compactText}>
-                                        <Text style={styles.bold}>User:</Text> {latestUser?.user_name ?? "-"}
-                                    </Text>
+                            return (
+                                <View key={ag.id} style={styles.compactCard}>
+                                    <Text style={styles.indexNumber}>{index + 1}</Text>
 
-                                    <Text style={styles.compactText}>
-                                        <Text style={styles.bold}>Device :</Text>{" "}
-                                        {/* {pallets.length > 0 ? pallets.join(", ") : "-"} */}
-                                        {latestUser?.user.username ?? "-"}
-                                    </Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.compactText}>
+                                            <Text style={styles.bold}>Gate:</Text> {ag.gate.code ?? "-"}
+                                        </Text>
+
+                                        <Text style={styles.compactText}>
+                                            <Text style={styles.bold}>User:</Text> {latestUser?.user_name ?? "-"}
+                                        </Text>
+
+                                        <Text style={styles.compactText}>
+                                            <Text style={styles.bold}>Device :</Text>{" "}
+                                            {/* {pallets.length > 0 ? pallets.join(", ") : "-"} */}
+                                            {latestUser?.user.username ?? "-"}
+                                        </Text>
+                                    </View>
+
+                                    
+                                    <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+                                        <Icon name="edit" size={16} color="#007AFF" />
+                                    </TouchableOpacity>
+
+                                   
+                                    <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
+                                        <Icon name="trash" size={16} color="red" />
+                                    </TouchableOpacity>
                                 </View>
+                            );
+                        })
+                    ) : (
+                        <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign gate</Text>
+                    )}
 
-                                {/* BUTTON EDIT */}
-                                <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
-                                    <Icon name="edit" size={16} color="#007AFF" />
-                                </TouchableOpacity>
-
-                                {/* BUTTON DELETE */}
-                                <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
-                                    <Icon name="trash" size={16} color="red" />
-                                </TouchableOpacity>
-                            </View>
-                        );
-                    })}
-
-                    {dataAssigned.length < 1 && (
+                   {dataAssigned.length < 1 && (
                         <TouchableOpacity
                             style={styles.assignButton}
                             onPress={() => navigation.navigate('AssignGateActivity', { item: params.item })}

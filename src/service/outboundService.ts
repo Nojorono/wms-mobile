@@ -179,7 +179,7 @@ class OutboundService {
 
   static async updateAssignedGateUser(assignedGateId: string, assignedUserId: string): Promise<any> {
     try {
-      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`); 
+      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`);
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -188,7 +188,7 @@ class OutboundService {
 
   static async deleteAssignedGateUser(assignedGateId: string, assignedUserId: string): Promise<any> {
     try {
-      const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`);  
+      const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`);
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -201,13 +201,32 @@ class OutboundService {
       return response.data;
     } catch (error: any) {
       throw error.response;
-    } 
+    }
   }
 
   //forklift scan
   static async postForkliftScanGate(assignedGateId: string, payload: any): Promise<any> {
     try {
       const response = await axiosInstance.post(`/assigned-gate/${assignedGateId}/pallets`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateStatusForkliftGateDone(assignedGateId: string, statusPayload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/status`, { status: statusPayload });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  //kalo udah kelar semuanya nanti klik ini wh staffnya
+  static async updateStatusPickingWhStaff(transactionPickingId: string, statusPicking: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/transaction-scan-picking/${transactionPickingId}`, { status: statusPicking });
       return response.data;
     } catch (error: any) {
       throw error.response;

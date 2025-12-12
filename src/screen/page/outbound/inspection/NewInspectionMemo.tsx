@@ -157,8 +157,52 @@ function NewInspectionMemo() {
           )
         }
       >
-        <Text style={stylesLocal.fabText}>Approve Task</Text>
-      </TouchableOpacity>
+        <Text style={stylesLocal.fabText}>Approved Task</Text>
+        </TouchableOpacity>
+      {
+        // Tampilkan tombol hanya jika ada item yang memenuhi syarat
+        memoList.some((m: any) =>
+          m.items.some(
+            (item: any) =>
+              item.picked_quantity !== 0 && item.picked_quantity <= item.quantity_plan
+          )
+        ) && (
+          <>
+            {/* Floating Button */}
+            <TouchableOpacity
+              style={stylesLocal.fabApproved}
+              onPress={() =>
+                Alert.alert(
+                  "Approve All",
+                  "Are you sure you want to approve all tasks?",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "OK",
+                      onPress: async () => {
+                        try {
+                          memoList.forEach((memoGroup: any, memoIdx: number) => {
+                            memoGroup.items.forEach(async (item: any, itemIdx: number) => {
+                              const res = await OutboundService.updateStatusWhenCompleteInspection(item.transcation_pickig?.id, "COMPLETED");
+                            });
+                          });
+                          
+                          showDialog("success", "All tasks approved successfully!");
+                          navigation.goBack();
+                        } catch (error) {
+                          showDialog("error", "Failed to approve tasks!");
+                        }
+                      },
+                    },
+                  ]
+                )
+              }
+            >
+              <Text style={stylesLocal.fabText}>Completed Task</Text>
+            </TouchableOpacity>
+          </>
+        )
+      }
     </View>
   );
 }
@@ -181,5 +225,17 @@ const stylesLocal = StyleSheet.create({
   fabText: {
     color: "white",
     fontWeight: "700",
+  },
+  fabApproved: {
+    position: "absolute",
+    bottom: 30,
+    right: 30,
+    backgroundColor: "#1f46f2ff",
+    width: 140,
+    height: 50,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
   },
 });

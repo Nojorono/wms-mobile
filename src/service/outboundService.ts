@@ -89,7 +89,7 @@ class OutboundService {
 
   static async cancelMemo(memoId: string): Promise<any> {
     try {
-      const response = await axiosInstance.patch(`/transaction-picking/memo/${memoId}/detach`);
+      const response = await axiosInstance.patch(`/outbound-memo/${memoId}/cancelled`);
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -114,9 +114,9 @@ class OutboundService {
     }
   }
   //for assign gate
-  static async getOutboundDetailById(outboundDoId: string): Promise<any> {
+  static async getOutboundDetailById(outboundDoId: string, payload?:any): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/outbound-do/${outboundDoId}`);
+      const response = await axiosInstance.get(`/outbound-do/${outboundDoId}`, { params: payload });
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -177,9 +177,9 @@ class OutboundService {
     }
   }
 
-  static async updateAssignedGateUser(assignedGateId: string, assignedUserId: string): Promise<any> {
+  static async updateAssignedGateUser(assignedGateId: string, assignedUserId: string, payload: any): Promise<any> {
     try {
-      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`);
+      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`, payload);
       return response.data;
     } catch (error: any) {
       throw error.response;

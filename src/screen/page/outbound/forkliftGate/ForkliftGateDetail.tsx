@@ -73,10 +73,13 @@ export const ForkliftGateDetail = () => {
         },
     });
 
+
     // === FETCH DETAIL ===
     const fetchOutboundDetail = async () => {
         const res = await OutboundService.getOutboundDetailById(
-            item.outbound_do_id
+            item.outbound_do_id,
+            { transaction_picking_status: "PENDING" }
+ 
         );
         setDataOutbound(res.data);
     };

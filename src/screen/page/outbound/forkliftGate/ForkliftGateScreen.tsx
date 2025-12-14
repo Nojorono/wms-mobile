@@ -34,6 +34,7 @@ type GateTask = {
     id: string | number;
     gate: { name: string };
     gate_id?: string;
+    status: string;
     outbound_do: OutboundDO;
     assigned_gate_pallets?: Pallet[];
     // add other GateTask properties if needed
@@ -56,7 +57,9 @@ function ForkliftGateScreen() {
 
     const fetchData = async () => {
         try {
+            console.log("Fetching gate tasks for user:", userId);
             const res = await OutboundService.getAssignedGateByUserId(userId);
+            console.log("data:", res.data);
             setData(res.data);
             console.log("Fetched gate tasks:", res.data);
         } catch (err) {
@@ -101,7 +104,24 @@ function ForkliftGateScreen() {
                     <View key={item.id} style={styles.card}>
                         {/* GATE TUJUAN */}
                         <View style={[styles.gateBanner, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
-                            <Text style={styles.gateTitle}>Gate: {gateName}</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                <Text style={styles.gateTitle}>{gateName} </Text>
+                                <Text
+                                    style={{
+                                        color: "#FFF",
+                                        fontWeight: "600",
+                                        backgroundColor: item.status === "PENDING" ? "#ff9c07ff" : item.status === "DONE" ? "#4CAF50" : "#888",
+                                        borderRadius: 6,
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 4,
+                                        overflow: "hidden",
+                                        fontSize: 13,
+                                        marginLeft: 8,
+                                    }}
+                                >
+                                    {item.status}
+                                </Text>
+                            </View>
                             <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
                                 <Ionicons name="chevron-right" size={24} color="#FFF" />
                             </TouchableOpacity>

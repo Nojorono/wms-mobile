@@ -43,8 +43,9 @@ function NewInspectionMemo() {
       setRefreshing(true);
       showLoadingDialog("Loading...");
 
-      const data = { limit: 100 };
+      const data = { limit: 100, transaction_picking_status: "PENDING" };
       const response = await OutboundService.getOutboundDoList(data);
+      console.log("Inspection DO Response:", response);
 
       const list = response?.data || [];
       const matched = list.find((i: any) => i.id === itemBefore.item.id);
@@ -82,6 +83,7 @@ function NewInspectionMemo() {
           items: mergedItems,
         };
       });
+      console.log("Processed Memos:", processed);
       setMemoList(processed);
     } catch (e) {
       showDialog("error", "Error while fetching data!");
@@ -164,7 +166,7 @@ function NewInspectionMemo() {
         memoList.some((m: any) =>
           m.items.some(
             (item: any) =>
-              item.picked_quantity !== 0 && item.picked_quantity <= item.quantity_plan
+              item.picked_quantity !== 0 && item.picked_quantity === item.quantity_plan
           )
         ) && (
           <>

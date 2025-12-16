@@ -129,8 +129,8 @@ useFocusEffect(
             
                   key={i}
                   title={ item.outbound_memo_number}
-                  subTitle={ item.destination}
-                  origin={item.type}
+                  subTitle={ item.type}
+                  origin={item.destination}
                   status={item.delivery_date}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('PickingSku', { item })}

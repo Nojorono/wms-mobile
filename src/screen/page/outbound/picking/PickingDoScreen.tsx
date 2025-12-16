@@ -22,12 +22,20 @@ import { outboundData } from '../../../../dummy/outboundData.js';
 import OutboundService from '../../../../service/outboundService.ts';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
-
+const FILTER_OPTIONS = [
+  'PENDING',
+  'IN_PROGRESS',
+  'APPROVED',
+];
 function PickingDoScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [PickingList, setPickingList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string | null>();
+
+  const availableFilters = useMemo(() => {
+    return FILTER_OPTIONS;
+  }, []);
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -51,11 +59,11 @@ function PickingDoScreen() {
     }
   };
 
-useFocusEffect(
-  useCallback(() => {
-    fetchPicking();
-  }, [selectedFilter])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPicking();
+    }, [selectedFilter])
+  );
 
   // filter & search data
   const filteredList = useMemo(() => {
@@ -107,6 +115,36 @@ useFocusEffect(
             />
           </View>
 
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 10 }}
+          >
+            {availableFilters.map((filter) => (
+              <TouchableOpacity
+                key={filter}
+                style={[
+                  localStyles.filterButton,
+                  selectedFilter === filter && { backgroundColor: Colors.primeColor },
+                ]}
+                onPress={() => {
+                  const newFilter = selectedFilter === filter ? null : filter;
+                  setSelectedFilter(newFilter);
+                }}
+              >
+                <Text
+                  style={[
+                    localStyles.filterText,
+                    selectedFilter === filter && { color: "#fff" },
+                  ]}
+                >
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+
           {/* 📦 List Card */}
           {filteredList.length === 0 ? (
             <View style={{ alignItems: 'center', marginTop: 40 }}>
@@ -123,19 +161,19 @@ useFocusEffect(
                 statusColor = '#696969';
               }
 
-                // Ambil 8 karakter terakhir dari Picking_number
-                const pickingNumberLast8 = item.id?.slice(-15) || '';
-                return (
+              // Ambil 8 karakter terakhir dari Picking_number
+              const pickingNumberLast8 = item.id?.slice(-15) || '';
+              return (
                 <OutboundCard
                   key={item.id}
                   title={`${item.outbound_do_number}`}
-                  subTitle={ item.outbound_type}
-                  origin={  item.origin}
+                  subTitle={item.outbound_type}
+                  // origin={item.origin}
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('PickingMemo', { item })}
                 />
-                );
+              );
             })
           )}
         </View>

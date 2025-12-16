@@ -141,7 +141,6 @@ export const ForkliftGateDetail = () => {
         if (!canSubmit) return;
 
         const payload = {
-            id: item.id,
             pallet_id: selectedTask.transactionScanPicking.find(
                 (i: any) => i.palletUse?.pallet_code === targetPallet
             )?.palletUse?.id,

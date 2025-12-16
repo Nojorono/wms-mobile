@@ -194,9 +194,41 @@ export default function PickingDetailActivity() {
         return;
       }
       // find matching item_id
-      const found = res.data.find((item: any) => item.item_id === itemBefore.item_id);
+      // Gabungkan pengecekan item_id, uom, dan week_number
+      const found = res.data.find(
+        (item: any) =>
+          item.item_id === itemBefore.item_id &&
+          item.uom === itemBefore.uom &&
+          item.week_number === itemBefore.week_number
+      );
       if (!found) {
-        Alert.alert('Pallet tidak memiliki item yang akan dipicking');
+        // Cek apakah item_id ada, jika tidak, error item tidak ditemukan
+        const hasItemId = res.data.some((item: any) => item.item_id === itemBefore.item_id);
+        if (!hasItemId) {
+          Alert.alert('Pallet tidak memiliki item yang akan dipicking');
+        } else {
+          // Jika item_id ada, tapi uom/week_number tidak cocok
+          const firstMatch = res.data.find((item: any) => item.item_id === itemBefore.item_id);
+          // Tambahkan pengecekan warehouse_bin_name juga
+          if (
+        firstMatch?.warehouse_bin_name !== itemBefore?.sourceBin?.name
+          ) {
+        Alert.alert(
+          `Invalid, pallet berada di ${firstMatch?.warehouse_bin_name}, seharusnya di ${itemBefore?.sourceBin?.name}`
+        );
+          } else {
+        Alert.alert(
+          `Invalid, pallet memiliki Uom ${firstMatch?.uom} dan week ${firstMatch?.week_number}`
+        );
+          }
+        }
+        return;
+      }
+      // Jika found, tetap cek bin-nya
+      if (found.warehouse_bin_name !== itemBefore?.sourceBin?.name) {
+        Alert.alert(
+          `Invalid, pallet berada di ${found.warehouse_bin_name}, seharusnya di ${itemBefore?.sourceBin?.name}`
+        );
         return;
       }
       setFoundItem(found);
@@ -219,6 +251,16 @@ export default function PickingDetailActivity() {
         Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
       }
+      const found = res.data.find(
+        (item: any) =>
+          item.uom === itemBefore.uom 
+      );
+      if (!found) {
+        Alert.alert(
+          `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom}`
+        );
+        return;
+      }
       setPickingPallet(res.data[0]);
       setDonePicking(true);
       Alert.alert('Pallet valid', `Week: ${res.data[0].week_number} | Uom: ${res.data[0].uom}`);
@@ -236,6 +278,16 @@ export default function PickingDetailActivity() {
       const res = await ScannerService.getPalletByCode(switchPallet);
       if (!res.success) {
         Alert.alert('Pallet tidak ditemukan atau tidak valid');
+        return;
+      }
+       const found = res.data.find(
+        (item: any) =>
+          item.uom === itemBefore.uom && item.week_number === itemBefore.week_number
+      );
+      if (!found) {
+        Alert.alert(
+          `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom} dan week ${res.data[0].week_number}`
+        );
         return;
       }
       setSwitchInfo(res.data[0]);
@@ -299,6 +351,7 @@ export default function PickingDetailActivity() {
       payload.quantity_switch = Number(switchQty);
     }
 
+    console.log('Submitting payload:', payload);
     try {
       showLoadingDialog(mode === 'edit' ? 'Updating Activity' : 'Submitting Activity');
 
@@ -364,7 +417,7 @@ export default function PickingDetailActivity() {
           itemBefore?.item?.description ||
           'Picking Activity'}
           </Text>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={async () => {
               Alert.alert(
           'Delete Activity',
@@ -394,7 +447,7 @@ export default function PickingDetailActivity() {
             disabled={mode !== 'edit'}
           >
             <Ionicons name="times" size={20} color={"red"} style={{ marginLeft: 12 }} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* SUGGESTED DESTINATION */}
@@ -449,7 +502,7 @@ export default function PickingDetailActivity() {
         {foundItem && (
           <View style={{ marginBottom: 4 }}>
             <Text style={{ color: '#888', fontSize: 14 }}>
-              {foundItem.item_name} | Qty: {foundItem.current_quantity} {foundItem.uom} | Week: {foundItem.week_number}
+              {foundItem.item_name} | Qty: {foundItem.current_quantity} {foundItem.uom} | Week: {foundItem.week_number} | Bin: {foundItem.warehouse_bin_name}
             </Text>
           </View>
         )}
@@ -565,7 +618,17 @@ export default function PickingDetailActivity() {
           <TextInput
             placeholder="Qty Picking"
             value={qtyPicking}
-            onChangeText={onChangeQtyPicking}
+            onChangeText={(v) => {
+              const qty = Number(v);
+              if (
+          itemBefore?.quantity != null &&
+          qty > Number(itemBefore.quantity)
+              ) {
+          Alert.alert('Qty picking tidak boleh lebih besar dari qty permintaan');
+          return;
+              }
+              onChangeQtyPicking(v);
+            }}
             keyboardType="numeric"
             style={[styles.input, { flex: 1, marginVertical: 0 }]}
           />

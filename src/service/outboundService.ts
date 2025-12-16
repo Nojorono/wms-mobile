@@ -12,9 +12,9 @@ class OutboundService {
     }
   }
 
-  static async getSkuByMemoId(memoId: string): Promise<any> {
+  static async getSkuByMemoId(memoId: string,statusInput:string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/transaction-picking/memo/${memoId}`);
+      const response = await axiosInstance.get(`/transaction-picking/memo/${memoId}`, { params: { status: statusInput } });
       return response.data;
     } catch (error: any) {
       throw error.response;

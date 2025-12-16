@@ -22,12 +22,22 @@ import { InspectionParamList } from '../../../navigation/outbound/InspectionNavi
 import OutboundService from '../../../../service/outboundService.ts';
 
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
+const FILTER_OPTIONS = [
+  'PENDING',
+  'APPROVED',
+  'IN_PROGRESS',
+  'READY_INTEGRATION',
+];
 
 function InspectionDoScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [InspectionList, setInspectionList] = useState<any[]>([]);
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string | null>();
+
+  const availableFilters = useMemo(() => {
+    return FILTER_OPTIONS;
+  }, []);
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -39,8 +49,8 @@ function InspectionDoScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List Inspection Planning');
-      const data:any= {
-        limit:100,
+      const data: any = {
+        limit: 100,
         // status:"PENDING"
       }
       const response = await OutboundService.getOutboundDoList(data);
@@ -54,12 +64,11 @@ function InspectionDoScreen() {
     }
   };
 
-useFocusEffect(
-  useCallback(() => {
-    fetchInspection();
-  }, [selectedFilter])
-);
-
+  useFocusEffect(
+    useCallback(() => {
+      fetchInspection();
+    }, [selectedFilter])
+  );
   // filter & search data
   const filteredList = useMemo(() => {
     return InspectionList.filter((item) => {
@@ -110,6 +119,36 @@ useFocusEffect(
             />
           </View>
 
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 10 }}
+          >
+            {availableFilters.map((filter) => (
+              <TouchableOpacity
+                key={filter}
+                style={[
+                  localStyles.filterButton,
+                  selectedFilter === filter && { backgroundColor: Colors.primeColor },
+                ]}
+                onPress={() => {
+                  const newFilter = selectedFilter === filter ? null : filter;
+                  setSelectedFilter(newFilter);
+                }}
+              >
+                <Text
+                  style={[
+                    localStyles.filterText,
+                    selectedFilter === filter && { color: "#fff" },
+                  ]}
+                >
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+
           {/* 📦 List Card */}
           {filteredList.length === 0 ? (
             <View style={{ alignItems: 'center', marginTop: 40 }}>
@@ -122,7 +161,7 @@ useFocusEffect(
                 statusColor = '#228B22';
               } else if (item.status === 'PENDING') {
                 statusColor = '#FFB347';
-              }  else if (item.status === 'IN_PROGRESS') {
+              } else if (item.status === 'IN_PROGRESS') {
                 statusColor = '#477bffff';
               } else {
                 statusColor = '#696969';

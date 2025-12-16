@@ -7,6 +7,7 @@ import PickingDetailScreen from '../../page/outbound/picking/PikingMemoScreen.ts
 import PickingActivity from '../../page/outbound/picking/PickingActivity.tsx';
 import PickingDetailActivity from '../../page/outbound/picking/PickingDetailActivity.tsx';
 import PickingSkuScreen from '../../page/outbound/picking/PickingSkuScreen.tsx';
+import PickingSkuByPallet from '../../page/outbound/picking/PickingSkuByPallet.tsx';
 
 
 
@@ -14,6 +15,7 @@ export type PickingParamList = {
   PickingDoMain: undefined;
   PickingMemo: { item: any };
   PickingSku: { item: any };
+  PickingSkuByPallet: { itemBefore: any };
   PickingActivity: { item: any };
   PickingDetailActivity: {
     mode: "add" | "edit";
@@ -57,6 +59,20 @@ const PickingStackNavigator = () => (
     <PickingStack.Screen
       name="PickingSku"
       component={PickingSkuScreen}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor, // Full header background
+          elevation: 0, // Remove shadow on Android
+          shadowOpacity: 0, // Remove shadow on iOS
+          borderBottomWidth: 0, // Remove any border
+        },
+      }}
+    />
+        <PickingStack.Screen
+      name="PickingSkuByPallet"
+      component={PickingSkuByPallet}
       options={{
         headerShown: true,
         headerTintColor: '#fff',

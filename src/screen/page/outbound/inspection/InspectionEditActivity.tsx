@@ -682,22 +682,40 @@ export default function InspectionUpdateActivity() {
 
       <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
         
-          <TouchableOpacity
-            style={[styles.approveButton, { flex: 1 , backgroundColor:  activity.status !== "INSPECTION" ? "green" : "#ccc" }]}
-            // disabled={ activity.status !== "INSPECTION"}
-            onPress={() => handleApproveAction("APPROVE")}
-          >
-            <Text style={styles.approveText}>Approve</Text>
-          </TouchableOpacity>
-        
+          {activity.status === "PENDING" && (
+            <TouchableOpacity
+              style={[styles.approveButton, { flex: 1, backgroundColor: "green" }]}
+              onPress={() => handleApproveAction("APPROVE")}
+            >
+              <Text style={styles.approveText}>Approve</Text>
+            </TouchableOpacity>
+          )}
 
-        <TouchableOpacity
-          style={[styles.approveButton, { flex: 1, backgroundColor:  activity.status !== "INSPECTION_APPROVED" || activity.status === "PENDING" ? "#f57f1e" : "#ccc"  }]}
-          // disabled={ activity.status !== "INSPECTION_APPROVED" || activity.status === "PENDING"}
-          onPress={() => handleApproveAction("FINAL")}
-        >
-          <Text style={styles.approveText}>Final</Text>
-        </TouchableOpacity>
+          {activity.status === "INSPECTION" && (
+            <TouchableOpacity
+              style={[styles.approveButton, { flex: 1, backgroundColor: "#f57f1e" }]}
+              onPress={() => handleApproveAction("FINAL")}
+            >
+              <Text style={styles.approveText}>Final</Text>
+            </TouchableOpacity>
+          )}
+
+          {activity.status === "INSPECTION_APPROVED" && (
+            <>
+              <TouchableOpacity
+                style={[styles.approveButton, { flex: 1, backgroundColor: "#ccc" }]}
+                disabled
+              >
+                <Text style={styles.approveText}>Approve</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.approveButton, { flex: 1, backgroundColor: "#ccc" }]}
+                disabled
+              >
+                <Text style={styles.approveText}>Final</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
       </View>
 
@@ -706,9 +724,14 @@ export default function InspectionUpdateActivity() {
       <TouchableOpacity
         style={[
           styles.submitButton,
-          { backgroundColor: isSubmitValid ? '#F26E1F' : '#bfbfbf' }
+          {
+        backgroundColor:
+          isSubmitValid && activity.status !== "INSPECTION_APPROVED"
+            ? '#F26E1F'
+            : '#bfbfbf'
+          }
         ]}
-        disabled={!isSubmitValid}
+        disabled={!isSubmitValid || activity.status === "INSPECTION_APPROVED"}
         onPress={handleSubmit}
       >
         <Text style={styles.submitText}>{mode === 'edit' ? 'Update' : 'Submit'}</Text>

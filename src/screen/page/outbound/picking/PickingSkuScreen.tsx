@@ -36,12 +36,16 @@ function PickingSkuScreen() {
     const route = useRoute();
     const itemBefore = route.params as any
 
+    const DetailPallet = () => {
+        navigation.navigate('PickingSkuByPallet', { itemBefore });
+    }
+
     const fetchPicking = async () => {
         try {
             setRefreshing(true);
             showLoadingDialog('Loading List Picking SKU');
-            const response = await OutboundService.getSkuByMemoId(itemBefore.item.id);
-            console.log("Fetched Picking SKU Response:", response);
+            const response = await OutboundService.getSkuByMemoId(itemBefore.item.id,'PENDING');
+            console.log("Fetched Picking SKU Response 222:", response);
             setPickingList(response.data || []);
         } catch (error) {
             hideLoadingDialog();
@@ -61,13 +65,13 @@ function PickingSkuScreen() {
     // filter & search data
     const filteredList = useMemo(() => {
         return PickingList.filter((item) => {
-            const matchSearch =
-                item.item?.sku?.toLowerCase().includes(searchText.toLowerCase()) ||
-                item.item?.description?.toLowerCase().includes(searchText.toLowerCase());
+            // const matchSearch =
+            //     item.item?.sku?.toLowerCase().includes(searchText.toLowerCase()) ||
+            //     item.item?.description?.toLowerCase().includes(searchText.toLowerCase());
 
             const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
-            return matchSearch && matchFilter;
+            return  matchFilter;
         });
     }, [PickingList, searchText, selectedFilter]);
 
@@ -140,6 +144,10 @@ function PickingSkuScreen() {
                     )}
                 </View>
             </ScrollView>
+             {/* Floating Action Button */}
+                    <TouchableOpacity style={localStyles.fab} onPress={DetailPallet}>
+                        <Text style={[localStyles.addButtonText, { color: '#fff' }]}>Detail by Pallet</Text>
+                    </TouchableOpacity>
         </View>
     );
 }
@@ -167,5 +175,25 @@ const localStyles = StyleSheet.create({
     filterText: {
         fontSize: 13,
         color: '#333',
+    }, addButtonText: {
+        textAlign: 'center',
+        fontWeight: '600',
+        color: '#F26E1F',
+    },
+
+    fab: {
+        position: "absolute",
+        bottom: 30,
+        left: 25,
+        backgroundColor: "#F26E1F",
+        width: 100,
+        height: 60,
+        borderRadius: 40,
+        justifyContent: "center",
+        alignItems: "center",
+        elevation: 6,
+        shadowColor: "#000",
+        shadowOpacity: 0.25,
+        shadowOffset: { width: 0, height: 3 },
     },
 });

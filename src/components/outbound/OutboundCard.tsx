@@ -37,9 +37,11 @@ const OutboundCard: React.FC<OutboundCardProps> = ({
       {/* Middle: Icon + Info */}
       <View style={styles.infoRow}>
         <Ionicons name="cube-outline" size={58} color="black" />
-        <View style={{ marginLeft: 8 }}>
+        <View style={{ marginLeft: 8, flex: 1 }}>
           <Text style={styles.plate}>{subTitle}</Text>
-          <Text style={styles.date}>{origin}</Text>
+          <Text style={styles.date} numberOfLines={0} ellipsizeMode="tail">
+        {origin}
+          </Text>
           <Text style={styles.role}>{role}</Text>
         </View>
       </View>
@@ -90,7 +92,7 @@ const styles = StyleSheet.create({
         color: "#000",
     },
     date: {
-        fontSize: 16, // lebih besar
+        fontSize: 13, // lebih besar
         color: "#333",
         marginTop: 2,
     },

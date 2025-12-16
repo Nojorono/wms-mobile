@@ -45,11 +45,11 @@ function NewInspectionMemo() {
 
       const data = { limit: 100, transaction_picking_status: "PENDING" };
       const response = await OutboundService.getOutboundDoList(data);
-      console.log("Inspection DO Response:", response);
 
       const list = response?.data || [];
       const matched = list.find((i: any) => i.id === itemBefore.item.id);
       const memos = matched?.outbound_memos || [];
+      console.log("Fetched Memos:", memos);
       // Proses memo items + picking scan
       const processed = memos.map((memo: any) => {
         const memoItems = memo?.outbound_memo_items || [];
@@ -162,11 +162,11 @@ function NewInspectionMemo() {
         <Text style={stylesLocal.fabText}>Approved Task</Text>
         </TouchableOpacity>
       {
-        // Tampilkan tombol hanya jika ada item yang memenuhi syarat
-        memoList.some((m: any) =>
-          m.items.some(
+        // Tampilkan tombol hanya jika SEMUA item sudah picked sesuai quantity_plan
+        memoList.every((m: any) =>
+          m.items.every(
             (item: any) =>
-              item.picked_quantity !== 0 && item.picked_quantity === item.quantity_plan
+              item.picked_quantity === item.quantity_plan
           )
         ) && (
           <>

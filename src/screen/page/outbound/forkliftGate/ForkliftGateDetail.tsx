@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -10,7 +10,7 @@ import {
     Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ForkliftGateParamList } from "../../../navigation/outbound/ForkliftGateNavigator";
 import OutboundService from "../../../../service/outboundService";
@@ -79,14 +79,17 @@ export const ForkliftGateDetail = () => {
         const res = await OutboundService.getOutboundDetailById(
             item.outbound_do_id,
             { transaction_picking_status: "PENDING" }
- 
+
         );
+        console.log("Fetched Outbound Detail:", res.data);
         setDataOutbound(res.data);
     };
 
-    useEffect(() => {
-        fetchOutboundDetail();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            fetchOutboundDetail();
+        }, [])
+    );
 
     const groupByPallet = (tasks: any[]) => {
         const groups: any = {};
@@ -116,9 +119,9 @@ export const ForkliftGateDetail = () => {
 
 
     // === HANDLE OPEN MODAL ===
-    const openModal = (task: any, palletCodes: string[]) => {
+    const openModal = (task: any, palletCodes: string) => {
         setSelectedTask(task);
-        setTargetPallet(palletCodes.join(", "));
+        setTargetPallet(palletCodes || "");
         setTargetGate(item.gate.code);
 
         setScanPallet("");
@@ -139,9 +142,13 @@ export const ForkliftGateDetail = () => {
 
         const payload = {
             id: item.id,
-            pallet_id: selectedTask.transactionScanPicking[0].pallet_use_id, // sesuaikan jika berbeda
+            pallet_id: selectedTask.transactionScanPicking.find(
+                (i: any) => i.palletUse?.pallet_code === targetPallet
+            )?.palletUse?.id,
             status: "COMPLETED",
         };
+        console.log("Submit Payload:", payload);
+        console.log("Submitting assignment for DO ID:", item.id);
         try {
             showLoadingDialog('Memproses data...');
             await OutboundService.postForkliftScanGate(item.id, payload);
@@ -174,6 +181,11 @@ export const ForkliftGateDetail = () => {
 
                             {(() => {
                                 const palletGroups = groupByPallet(tasks);
+                                const completedPalletCodes = new Set(
+                                    item?.assigned_gate_pallets
+                                        ?.filter((p: any) => p.status === "COMPLETED")
+                                        ?.map((p: any) => p.pallet?.pallet_code)
+                                );
 
                                 return (
                                     <View style={{ marginTop: 6, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 12 }}>
@@ -181,67 +193,75 @@ export const ForkliftGateDetail = () => {
                                             Total Pallet: {Object.keys(palletGroups).length}
                                         </Text>
 
-                                        {Object.keys(palletGroups).map((palletCode) => {
-                                            const itemsInPallet = palletGroups[palletCode];
+                                        {
+                                            Object.keys(palletGroups).map((palletCode) => {
+                                                // const itemsInPallet = palletGroups[palletCode];
+                                                // console.log("Items in Pallet:", item?.assigned_gate_pallets);
 
-                                            const assignedPallet = item?.assigned_gate_pallets?.find(
-                                                (p: any) => p.status === "COMPLETED"
-                                            );
+                                                // const assignedPallet = item?.assigned_gate_pallets?.find(
+                                                //     (p: any) =>
+                                                //         p.status === "COMPLETED" &&
+                                                //         p.pallet?.pallet_code === palletCode
+                                                // );
 
-                                            const palletTujuan = assignedPallet?.pallet?.pallet_code;
-                                            const isMatch = palletTujuan === palletCode;
+                                                // const palletTujuan = assignedPallet?.pallet?.pallet_code;
+                                                // const isMatch = palletTujuan === palletCode;
+                                                const itemsInPallet = palletGroups[palletCode];
+                                                const isMatch = completedPalletCodes.has(palletCode);
 
-                                            return (
-                                                <View key={palletCode} style={styles.taskBox}>
-                                                    <View
-                                                        style={{
-                                                            flexDirection: "row",
-                                                            justifyContent: "space-between",
-                                                            alignItems: "center",
-                                                        }}
-                                                    >
-                                                        <Text style={styles.taskTitle}>
-                                                            • Pallet {palletCode}
-                                                        </Text>
-
-                                                        <TouchableOpacity
-                                                            style={{ padding: 8 }}
-                                                            onPress={() =>
-                                                                openModal(
-                                                                    itemsInPallet[0].task,
-                                                                    [palletCode]
-                                                                )
-                                                            }
+                                                return (
+                                                    <View key={palletCode} style={styles.taskBox}>
+                                                        <View
+                                                            style={{
+                                                                flexDirection: "row",
+                                                                justifyContent: "space-between",
+                                                                alignItems: "center",
+                                                            }}
                                                         >
-                                                            <Icon name="chevron-right" size={18} color="#888" />
-                                                        </TouchableOpacity>
-                                                    </View>
-
-                                                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                                        <Text style={styles.palletItem}>
-                                                            Digunakan oleh {itemsInPallet.length} item
-                                                        </Text>
-
-                                                        {isMatch && (
-                                                            <Ionicons
-                                                                name="check-circle"
-                                                                size={16}
-                                                                color="green"
-                                                                style={{ marginLeft: 8 }}
-                                                            />
-                                                        )}
-                                                    </View>
-
-                                                    <View style={{ marginTop: 6 }}>
-                                                        {itemsInPallet.map((row: any, idx: number) => (
-                                                            <Text key={idx} style={{ color: "#666", marginVertical: 2 }}>
-                                                                - SKU {row.sku} (Task Ke : {idx + 1} )
+                                                            <Text style={styles.taskTitle}>
+                                                                • Pallet {palletCode}
                                                             </Text>
-                                                        ))}
+
+                                                            <TouchableOpacity
+                                                                style={{ padding: 8 }}
+                                                                onPress={() => {
+                                                                        openModal(
+                                                                            itemsInPallet[0].task,
+                                                                            palletCode
+                                                                        )
+                                                                }
+                                                                }
+                                                            >
+                                                                <Icon name="chevron-right" size={18} color="#888" />
+                                                            </TouchableOpacity>
+                                                        </View>
+
+                                                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                                            <Text style={styles.palletItem}>
+                                                                Digunakan oleh {itemsInPallet.length} item
+                                                            </Text>
+
+                                                            {isMatch && (
+                                                                <Ionicons
+                                                                    name="check-circle"
+                                                                    size={16}
+                                                                    color="green"
+                                                                    style={{ marginLeft: 8 }}
+                                                                />
+                                                            )}
+                                                        </View>
+
+                                                        <View style={{ marginTop: 6 }}>
+                                                            {itemsInPallet.map((row: any, idx: number) => (
+                                                                <Text key={idx} style={{ color: "#666", marginVertical: 2 }}>
+                                                                    - SKU {row.sku} (Task Ke : {idx + 1} )
+                                                                </Text>
+                                                            ))}
+                                                        </View>
                                                     </View>
-                                                </View>
-                                            );
-                                        })}
+                                                );
+                                            })
+                                        }
                                     </View>
                                 );
                             })()}
@@ -252,32 +272,34 @@ export const ForkliftGateDetail = () => {
             </ScrollView>
 
             {/* Floating Button */}
-            <TouchableOpacity
-                style={styles.fab}
-                onPress={() =>
-                    Alert.alert(
-                        "Done Confirmation",
-                        "Are you sure all your tasks are done?",
-                        [
-                            { text: "Cancel", style: "cancel" },
-                            {
-                                text: "OK",
-                                onPress: async () => {
-                                    try {
-                                        const res = await OutboundService.updateStatusForkliftGateDone(item.id, "DONE");
-                                        showDialog("success", "All tasks approved successfully!");
-                                        navigation.goBack();
-                                    } catch (error) {
-                                        showDialog("error", "Failed to approve tasks!");
-                                    }
+            {item.status !== "DONE" && (
+                <TouchableOpacity
+                    style={styles.fab}
+                    onPress={() =>
+                        Alert.alert(
+                            "Done Confirmation",
+                            "Are you sure all your tasks are done?",
+                            [
+                                { text: "Cancel", style: "cancel" },
+                                {
+                                    text: "OK",
+                                    onPress: async () => {
+                                        try {
+                                            const res = await OutboundService.updateStatusForkliftGateDone(item.id, "DONE");
+                                            showDialog("success", "All tasks approved successfully!");
+                                            navigation.goBack();
+                                        } catch (error) {
+                                            showDialog("error", "Failed to approve tasks!");
+                                        }
+                                    },
                                 },
-                            },
-                        ]
-                    )
-                }
-            >
-                 <Text style={styles.fabText}>All Done</Text>
-            </TouchableOpacity>
+                            ]
+                        )
+                    }
+                >
+                    <Text style={styles.fabText}>All Done</Text>
+                </TouchableOpacity>
+            )}
 
             {/* ========================================================= */}
             {/* ====================== MODAL POPUP ====================== */}

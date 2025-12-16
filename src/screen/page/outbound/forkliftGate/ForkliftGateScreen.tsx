@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -13,7 +13,7 @@ import { useAuthStore } from "../../../../store/useAuthStore";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ForkliftGateParamList } from "../../../navigation/outbound/ForkliftGateNavigator";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 
 type Pallet = {
     pallet: {
@@ -40,8 +40,8 @@ type GateTask = {
     // add other GateTask properties if needed
 };
 type NavigationProp = StackNavigationProp<
-  ForkliftGateParamList,
-  "ForkliftGateMain"
+    ForkliftGateParamList,
+    "ForkliftGateMain"
 >;
 
 
@@ -52,8 +52,8 @@ function ForkliftGateScreen() {
     const userId = user?.id || "";
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-     const navigation = useNavigation<NavigationProp>();
-    
+    const navigation = useNavigation<NavigationProp>();
+
 
     const fetchData = async () => {
         try {
@@ -75,9 +75,11 @@ function ForkliftGateScreen() {
         fetchData();
     };
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [])
+    );
 
     if (loading) {
         return (
@@ -97,6 +99,7 @@ function ForkliftGateScreen() {
             <Text style={styles.title}>Assigned Gate Tasks</Text>
 
             {data.map((item, index) => {
+                console.log("Rendering item:", item);
                 const pallets = item.assigned_gate_pallets || [];
                 const gateName = item.gate.name || "Unknown Gate";
 

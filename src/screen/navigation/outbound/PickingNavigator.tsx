@@ -8,6 +8,7 @@ import PickingActivity from '../../page/outbound/picking/PickingActivity.tsx';
 import PickingDetailActivity from '../../page/outbound/picking/PickingDetailActivity.tsx';
 import PickingSkuScreen from '../../page/outbound/picking/PickingSkuScreen.tsx';
 import PickingSkuByPallet from '../../page/outbound/picking/PickingSkuByPallet.tsx';
+import PickingSkuTab from '../../page/outbound/picking/PickingSkuTab.tsx';
 
 
 
@@ -15,7 +16,6 @@ export type PickingParamList = {
   PickingDoMain: undefined;
   PickingMemo: { item: any };
   PickingSku: { item: any };
-  PickingSkuByPallet: { itemBefore: any };
   PickingActivity: { item: any };
   PickingDetailActivity: {
     mode: "add" | "edit";
@@ -58,29 +58,15 @@ const PickingStackNavigator = () => (
     />
     <PickingStack.Screen
       name="PickingSku"
-      component={PickingSkuScreen}
+      component={PickingSkuTab}
       options={{
         headerShown: true,
-        headerTintColor: '#fff',
+        headerTintColor: "#fff",
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
-        },
-      }}
-    />
-        <PickingStack.Screen
-      name="PickingSkuByPallet"
-      component={PickingSkuByPallet}
-      options={{
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
         },
       }}
     />

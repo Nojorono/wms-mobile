@@ -27,6 +27,7 @@ function PickingSkuScreen() {
     const [PickingList, setPickingList] = useState<any[]>([]);
     const [searchText, setSearchText] = useState('');
     const [selectedFilter, setSelectedFilter] = useState<string | null>();
+    
 
     const styles = GlobalStyles();
     const { user } = useAuthStore();
@@ -36,16 +37,12 @@ function PickingSkuScreen() {
     const route = useRoute();
     const itemBefore = route.params as any
 
-    const DetailPallet = () => {
-        navigation.navigate('PickingSkuByPallet', { itemBefore });
-    }
-
     const fetchPicking = async () => {
         try {
             setRefreshing(true);
             showLoadingDialog('Loading List Picking SKU');
-            const response = await OutboundService.getSkuByMemoId(itemBefore.item.id,'PENDING');
-            console.log("Fetched Picking SKU Response 222:", response);
+            const response = await OutboundService.getSkuByMemoId(itemBefore.itemBefore.item.id,'PENDING');
+           
             setPickingList(response.data || []);
         } catch (error) {
             hideLoadingDialog();
@@ -144,10 +141,10 @@ function PickingSkuScreen() {
                     )}
                 </View>
             </ScrollView>
-             {/* Floating Action Button */}
+             {/* Floating Action Button
                     <TouchableOpacity style={localStyles.fab} onPress={DetailPallet}>
                         <Text style={[localStyles.addButtonText, { color: '#fff' }]}>Detail by Pallet</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
         </View>
     );
 }

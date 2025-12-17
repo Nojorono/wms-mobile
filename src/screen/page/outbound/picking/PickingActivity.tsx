@@ -32,34 +32,7 @@ export default function PickingActivity() {
     navigation.navigate('PickingDetailActivity', { mode: "add", itemBefore: itemBefore.item });
   };
 
-  const handleSendToWH = async () => {
 
-
-    // Ambil hanya pallet yang status-nya OPEN
-    const createdPallets = pickingList.filter(p => p.status === "OPEN");
-
-    // Kalau tidak ada pallet dengan status OPEN
-    if (createdPallets.length === 0) {
-      showDialog("success", "Semua data sudah dikirim ke WH STAFF!");
-      return;
-    }
-
-    try {
-      showLoadingDialog("Sending to WH Staff...");
-      const payload = {
-        status: "PENDING",
-        inspection_by: userIdNewest,
-        ids: createdPallets.map((item) => item.id),
-      };
-      const res = await OutboundService.updateStatusPickingBulk(payload);
-      hideLoadingDialog();
-      await fetchPicking();
-      showDialog("success", "Berhasil dikirim ke WH Staff!");
-    } catch (error) {
-      hideLoadingDialog();
-      showDialog("error", "Gagal mengirim ke WH Staff!");
-    }
-  };
 
   const fetchPicking = async () => {
     try {
@@ -264,13 +237,6 @@ export default function PickingActivity() {
         })()}
 
       </ScrollView>
-
-      {/* Floating Action Button */}
-      {pickingList && pickingList.length === 0 ? (null) : (
-        <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
-          <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 }

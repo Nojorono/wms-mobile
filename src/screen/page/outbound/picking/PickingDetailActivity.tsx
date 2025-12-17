@@ -44,6 +44,7 @@ export default function PickingDetailActivity() {
     }
   }
   const itemBefore = itemBeforeParam as any; // use itemBefore.item below
+  console.log('itemBefore:', itemBefore,);
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -247,18 +248,36 @@ export default function PickingDetailActivity() {
 
     try {
       const res = await ScannerService.getPalletByCode(palletPicking);
+      console.log("Pallet Picking Response:", res);
+      console.log("Item Before for Picking Check:", itemBefore.memo_id);
       if (!res.success) {
         Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
       }
       const found = res.data.find(
-        (item: any) =>
-          item.uom === itemBefore.uom 
+        (item: any) => {
+          const uomMatch = item.uom === itemBefore.uom;
+          // Only compare memo_id if item.memo_id is not undefined/null/empty string
+          const memoIdPresent = item.memo_id !== undefined && item.memo_id !== null && item.memo_id !== "";
+          const memoIdMatch = memoIdPresent ? item.memo_id === itemBefore.memo_id : true;
+          return uomMatch && memoIdMatch;
+        }
       );
       if (!found) {
-        Alert.alert(
-          `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom}`
+        // Cek jika ada item dengan uom sama tapi memo_id berbeda
+        const hasOtherMemo = res.data.some(
+          (item: any) =>
+        item.uom === itemBefore.uom &&
+        item.memo_id &&
+        item.memo_id !== itemBefore.memo_id
         );
+        if (hasOtherMemo) {
+          Alert.alert('Pallet ini sudah memiliki Memo yang lain');
+        } else {
+          Alert.alert(
+        `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom} `
+          );
+        }
         return;
       }
       setPickingPallet(res.data[0]);

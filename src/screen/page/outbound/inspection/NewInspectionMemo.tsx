@@ -165,7 +165,7 @@ function NewInspectionMemo() {
         memoList.every((m: any) =>
           m.items.every(
             (item: any) =>
-              item.picked_quantity === item.quantity_plan
+              item.scan_detail.every((s: any) => s.status === "INSPECTION_APPROVED")
           )
         ) && (
           <>

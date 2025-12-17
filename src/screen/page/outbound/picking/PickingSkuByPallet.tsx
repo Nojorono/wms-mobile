@@ -217,6 +217,7 @@ const PickingSkuByPallet = () => {
                     item_id: item.item?.id,
                     description: item.item?.description,
                     code: item.item?.sku,
+                    status: scan.status,
                     week: item.week_number,
                     quantity: scan.quantity_picked || 0,
                     uom: scan.uom || item.uom,
@@ -281,26 +282,28 @@ const PickingSkuByPallet = () => {
                                     </Text>
                                 </View>
                             ))}
-                            <View style={{ marginTop: 12 }}>
-                                <Text
-                                    style={{
-                                        backgroundColor: isSubmitting ? "#9CA3AF" : "#16A34A",
-                                        color: "#fff",
-                                        textAlign: "center",
-                                        paddingVertical: 10,
-                                        borderRadius: 8,
-                                        fontWeight: "bold",
-                                        fontSize: 16,
-                                        opacity: isSubmitting ? 0.7 : 1,
-                                    }}
-                                    onPress={() => {
-                                        if (isSubmitting) return; // 🛑 BLOCK DOUBLE CLICK
-                                        handleSendToWH(item);
-                                    }}
-                                >
-                                    {isSubmitting ? "Processing..." : "Send to WH Staff"}
-                                </Text>
-                            </View>
+                          {!item.items.some((itm: any) => itm.status === "PENDING") && (
+                                <View style={{ marginTop: 12 }}>
+                                    <Text
+                                        style={{
+                                            backgroundColor: isSubmitting ? "#9CA3AF" : "#16A34A",
+                                            color: "#fff",
+                                            textAlign: "center",
+                                            paddingVertical: 10,
+                                            borderRadius: 8,
+                                            fontWeight: "bold",
+                                            fontSize: 16,
+                                            opacity: isSubmitting ? 0.7 : 1,
+                                        }}
+                                        onPress={() => {
+                                            if (isSubmitting) return; // 🛑 BLOCK DOUBLE CLICK
+                                            handleSendToWH(item);
+                                        }}
+                                    >
+                                        {isSubmitting ? "Processing..." : "Scan to Preload Line"}
+                                    </Text>
+                                </View>
+                            )}
 
                         </View>
                     );

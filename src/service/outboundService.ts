@@ -12,7 +12,7 @@ class OutboundService {
     }
   }
 
-  static async getSkuByMemoId(memoId: string,statusInput:string): Promise<any> {
+  static async getSkuByMemoId(memoId: string, statusInput: string): Promise<any> {
     try {
       const response = await axiosInstance.get(`/transaction-picking/memo/${memoId}`, { params: { status: statusInput } });
       return response.data;
@@ -114,7 +114,7 @@ class OutboundService {
     }
   }
   //for assign gate
-  static async getOutboundDetailById(outboundDoId: string, payload?:any): Promise<any> {
+  static async getOutboundDetailById(outboundDoId: string, payload?: any): Promise<any> {
     try {
       const response = await axiosInstance.get(`/outbound-do/${outboundDoId}`, { params: payload });
       return response.data;
@@ -198,6 +198,43 @@ class OutboundService {
   static async deleteAssignedGate(assignedGateId: string): Promise<any> {
     try {
       const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+  //HELPER LOADING SERVICES
+
+  static async getAssignedLoadingByDoId(assignedGateId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/assigned-gate/${assignedGateId}/helpers`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async postHelperToAssignedLoading(assignedGateId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/assigned-gate/${assignedGateId}/helpers`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateAssignedLoadingHelper(assignedGateId: string, helperId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/helpers/${helperId}`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async deleteAssignedLoadingHelper(assignedGateId: string, helperId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}/helpers/${helperId}`);  
       return response.data;
     } catch (error: any) {
       throw error.response;

@@ -8,7 +8,7 @@ import {
     ScrollView,
     RefreshControl,
 } from "react-native";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, set } from "react-hook-form";
 import OutboundService from "../../../../service/outboundService";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
@@ -29,6 +29,7 @@ type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>
 export default function AssignGateVehicle() {
     const [data, setData] = useState<Payload | null>(null);
     const [dataAssigned, setDataAssigned] = useState<any>(null);
+    const [dataAssignedLoading, setDataAssignedLoading] = useState<any>(null);
     const [isEdit, setIsEdit] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -58,7 +59,9 @@ export default function AssignGateVehicle() {
             showLoadingDialog("Loading...");
             const response = await OutboundService.getOutboundDetailById(params.item.id);
             const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
+            const assignedLoading = await OutboundService.getAssignedLoadingByDoId(assignedGate.data[0].id);
             setDataAssigned(assignedGate.data);
+            setDataAssignedLoading(assignedLoading.data);
 
             const newData = {
             expedition: response?.data?.expedition ?? "",
@@ -136,7 +139,7 @@ export default function AssignGateVehicle() {
 
     return (
         <ScrollView
-            style={styles.container}
+            style={styles.contentContainer}
             refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
@@ -266,7 +269,84 @@ export default function AssignGateVehicle() {
                             <Text style={styles.assignButtonText}>Assign Gate</Text>
                         </TouchableOpacity>
                     )}
+
+
+                    <Text style={styles.header}>List Assign Loading</Text>
+
+                    {dataAssignedLoading && dataAssignedLoading.length > 0 ? (
+                        dataAssignedLoading.map((ag: any, index: number) => {
+                            console.log("Assigned Gate Loading:", ag);
+
+
+
+                            const handleDeleteHelperLoading = () => {
+                                confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
+                                    try {
+                                        showLoadingDialog("Deleting...");
+                                        const res = await OutboundService.deleteAssignedLoadingHelper(ag.assigned_gate_id, ag.id);
+                                        showDialog("success", "Assigned gate deleted!");
+                                        fetchData();
+                                    } catch (err) {
+                                        showDialog("error", "Failed to delete assigned gate.");
+                                    } finally {
+                                        hideLoadingDialog();
+                                    }
+                                }, false
+                                );
+                            };
+
+                            const handleEdit = () => {
+                                console.log("Navigating to edit assigned loading:", ag);
+                                navigation.navigate('AssignGateLoading', {
+                                    item: params.item,
+                                    mode: "edit",
+                                    assignedGate: ag,   // kirim data lengkap
+                                });
+                            };
+
+                            return (
+                                <View key={ag.id} style={styles.compactCard}>
+                                    <Text style={styles.indexNumber}>{index + 1}</Text>
+
+                                    <View style={{ flex: 1 }}>
+                                
+                                        <Text style={styles.compactText}>
+                                            <Text style={styles.bold}>User:</Text> {ag?.helper_name ?? "-"}
+                                        </Text>
+
+                                        <Text style={styles.compactText}>
+                                            <Text style={styles.bold}>Device :</Text>{" "}
+                                            {ag?.helper_phone ?? "-"}
+                                        </Text>
+                                    </View>
+
+                                    
+                                    <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+                                        <Icon name="edit" size={16} color="#007AFF" />
+                                    </TouchableOpacity>
+
+                                   
+                                    <TouchableOpacity style={styles.actionButton} onPress={handleDeleteHelperLoading}>
+                                        <Icon name="trash" size={16} color="red" />
+                                    </TouchableOpacity>
+                                </View>
+                            );
+                        })
+                    ) : (
+                        <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign helper untuk loading</Text>
+                    )}
+
+                   {/* {dataAssigned.length < 0 && ( */}
+                        <TouchableOpacity
+                            style={styles.assignButton}
+                            onPress={() => navigation.navigate('AssignGateLoading', { item: dataAssigned[0] })}
+                        >
+                            <Text style={styles.assignButtonText}>Assign Loading</Text>
+                        </TouchableOpacity>
+                    {/* )} */}
                 </>
+
+                
             )}
         </ScrollView>
     );
@@ -389,7 +469,12 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         marginRight: 6,
         color: "#000",
-    },
+    },contentContainer: {
+  padding: 18,
+  paddingBottom: 40, // 🔴 INI PENTING supaya button tidak kepotong
+  backgroundColor: "#F8F9FA",
+  flexGrow: 1,       // 🔴 WAJIB untuk scroll penuh
+},
 
 
 });

@@ -224,10 +224,10 @@ export const ForkliftGateDetail = () => {
                                                             <TouchableOpacity
                                                                 style={{ padding: 8 }}
                                                                 onPress={() => {
-                                                                        openModal(
-                                                                            itemsInPallet[0].task,
-                                                                            palletCode
-                                                                        )
+                                                                    openModal(
+                                                                        itemsInPallet[0].task,
+                                                                        palletCode
+                                                                    )
                                                                 }
                                                                 }
                                                             >
@@ -271,7 +271,7 @@ export const ForkliftGateDetail = () => {
             </ScrollView>
 
             {/* Floating Button */}
-            {item.status !== "DONE" && (
+            {/* {item.status !== "DONE" && (
                 <TouchableOpacity
                     style={styles.fab}
                     onPress={() =>
@@ -298,7 +298,7 @@ export const ForkliftGateDetail = () => {
                 >
                     <Text style={styles.fabText}>All Done</Text>
                 </TouchableOpacity>
-            )}
+            )} */}
 
             {/* ========================================================= */}
             {/* ====================== MODAL POPUP ====================== */}

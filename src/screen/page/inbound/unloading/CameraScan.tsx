@@ -229,7 +229,7 @@ const CameraScreen = () => {
         showDialog("error", "Pallet not found or invalid!");
         return;
       }
-      if (palletData?.items.length !== 0) {
+      if (palletData?.items.length > 0) {
         if (palletData?.items[0]?.item_id !== item.id) {
           showDialog("error", "Pallet tidak sesuai dengan item inbound!");
           return;

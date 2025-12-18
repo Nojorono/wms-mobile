@@ -5,17 +5,23 @@ import React from 'react';
 import AssignGateDoScreen from '../../page/outbound/assignGate/AssignGateDo.tsx';
 import AssignGateActivity from '../../page/outbound/assignGate/AssignGateActivity.tsx';
 import AssignGateVehicle from '../../page/outbound/assignGate/AssignGateVehicle.tsx';
+import AssignGateLoading from '../../page/outbound/assignGate/AssignGateLoading.tsx';
 
 
 
 export type AssignGateParamList = {
   AssignGateMain: undefined;
-   AssignGateActivity: {
+  AssignGateActivity: {
     item: any;
     mode?: "add" | "edit";
     assignedGate?: any;
   };
-  AssignGateVehicle: {item:any};
+  AssignGateLoading: {
+    item: any;
+    mode?: "add" | "edit";
+    assignedGate?: any;
+  };
+  AssignGateVehicle: { item: any };
 }
 const AssignGateStack = createStackNavigator<AssignGateParamList>();
 
@@ -70,9 +76,20 @@ const AssignGateStackNavigator = () => (
         },
       }}
     />
+    <AssignGateStack.Screen
+      name="AssignGateLoading"
+      component={AssignGateLoading}
+      options={{
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
 
 
-    
+
   </AssignGateStack.Navigator>
 );
 

@@ -132,7 +132,8 @@ function ForkliftGateScreen() {
                         </View>
 
                         {/* PALLET HIGHLIGHT */}
-                        <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
+                        <Text style={styles.palletHeader}>{item.outbound_do.outbound_do_number}</Text>
+                        {/* <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
 
                         <View style={styles.palletWrapper}>
                             {pallets.length === 0 && (
@@ -144,7 +145,7 @@ function ForkliftGateScreen() {
                                     <Text style={styles.palletText}>{pallet?.pallet?.pallet_code}</Text>
                                 </View>
                             ))}
-                        </View>
+                        </View> */}
                     </View>
                 );
             })}

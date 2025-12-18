@@ -59,15 +59,18 @@ export default function AssignGateVehicle() {
             showLoadingDialog("Loading...");
             const response = await OutboundService.getOutboundDetailById(params.item.id);
             const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
-            const assignedLoading = await OutboundService.getAssignedLoadingByDoId(assignedGate.data[0].id);
+            if (assignedGate.data.length > 0) {
+                const assignedLoading = await OutboundService.getAssignedLoadingByDoId(assignedGate.data[0].id);
+                setDataAssignedLoading(assignedLoading.data);
+            }
             setDataAssigned(assignedGate.data);
-            setDataAssignedLoading(assignedLoading.data);
+
 
             const newData = {
-            expedition: response?.data?.expedition ?? "",
-            license_plate: response?.data?.license_plate ?? "",
-            driver_name: response?.data?.driver_name ?? "",
-            driver_phone: response?.data?.driver_phone ?? "",
+                expedition: response?.data?.expedition ?? "",
+                license_plate: response?.data?.license_plate ?? "",
+                driver_name: response?.data?.driver_name ?? "",
+                driver_phone: response?.data?.driver_phone ?? "",
             };
 
             setData(newData);
@@ -245,12 +248,12 @@ export default function AssignGateVehicle() {
                                         </Text>
                                     </View>
 
-                                    
+
                                     <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
                                         <Icon name="edit" size={16} color="#007AFF" />
                                     </TouchableOpacity>
 
-                                   
+
                                     <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
                                         <Icon name="trash" size={16} color="red" />
                                     </TouchableOpacity>
@@ -261,7 +264,7 @@ export default function AssignGateVehicle() {
                         <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign gate</Text>
                     )}
 
-                   {dataAssigned.length < 1 && (
+                    {dataAssigned.length < 1 && (
                         <TouchableOpacity
                             style={styles.assignButton}
                             onPress={() => navigation.navigate('AssignGateActivity', { item: params.item })}
@@ -271,7 +274,7 @@ export default function AssignGateVehicle() {
                     )}
 
 
-                    <Text style={styles.header}>List Assign Loading</Text>
+                    <Text style={styles.header}>List Assign Helper Loading</Text>
 
                     {dataAssignedLoading && dataAssignedLoading.length > 0 ? (
                         dataAssignedLoading.map((ag: any, index: number) => {
@@ -309,7 +312,7 @@ export default function AssignGateVehicle() {
                                     <Text style={styles.indexNumber}>{index + 1}</Text>
 
                                     <View style={{ flex: 1 }}>
-                                
+
                                         <Text style={styles.compactText}>
                                             <Text style={styles.bold}>User:</Text> {ag?.helper_name ?? "-"}
                                         </Text>
@@ -320,12 +323,12 @@ export default function AssignGateVehicle() {
                                         </Text>
                                     </View>
 
-                                    
+
                                     <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
                                         <Icon name="edit" size={16} color="#007AFF" />
                                     </TouchableOpacity>
 
-                                   
+
                                     <TouchableOpacity style={styles.actionButton} onPress={handleDeleteHelperLoading}>
                                         <Icon name="trash" size={16} color="red" />
                                     </TouchableOpacity>
@@ -336,17 +339,17 @@ export default function AssignGateVehicle() {
                         <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign helper untuk loading</Text>
                     )}
 
-                   {/* {dataAssigned.length < 0 && ( */}
-                        <TouchableOpacity
-                            style={styles.assignButton}
-                            onPress={() => navigation.navigate('AssignGateLoading', { item: dataAssigned[0] })}
-                        >
-                            <Text style={styles.assignButtonText}>Assign Loading</Text>
-                        </TouchableOpacity>
+                    {/* {dataAssigned.length < 0 && ( */}
+                    <TouchableOpacity
+                        style={styles.assignButton}
+                        onPress={() => navigation.navigate('AssignGateLoading', { item: dataAssigned[0] })}
+                    >
+                        <Text style={styles.assignButtonText}>Assign Helper Loading</Text>
+                    </TouchableOpacity>
                     {/* )} */}
                 </>
 
-                
+
             )}
         </ScrollView>
     );
@@ -469,12 +472,12 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         marginRight: 6,
         color: "#000",
-    },contentContainer: {
-  padding: 18,
-  paddingBottom: 40, // 🔴 INI PENTING supaya button tidak kepotong
-  backgroundColor: "#F8F9FA",
-  flexGrow: 1,       // 🔴 WAJIB untuk scroll penuh
-},
+    }, contentContainer: {
+        padding: 18,
+        paddingBottom: 40, // 🔴 INI PENTING supaya button tidak kepotong
+        backgroundColor: "#F8F9FA",
+        flexGrow: 1,       // 🔴 WAJIB untuk scroll penuh
+    },
 
 
 });

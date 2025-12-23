@@ -37,6 +37,8 @@ function NewInspectionMemo() {
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((s) => s.showDialog);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   const fetchInspection = async () => {
     try {
@@ -98,6 +100,29 @@ function NewInspectionMemo() {
     }, [])
   );
 
+  const filteredMemoList = useMemo(() => {
+    if (!searchKeyword) return memoList;
+
+    const keyword = searchKeyword.toUpperCase();
+
+    return memoList
+      .map((group: any) => {
+        const filteredItems = group.items.filter(
+          (i: any) => i.item?.sku?.toUpperCase() === keyword
+        );
+
+        if (filteredItems.length === 0) return null;
+
+        return {
+          ...group,
+          items: filteredItems,
+        };
+      })
+      .filter(Boolean);
+  }, [memoList, searchKeyword]);
+
+
+
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
       <ScrollView
@@ -114,9 +139,25 @@ function NewInspectionMemo() {
           <View style={[styles.activitiesHeader, { borderBottomWidth: 2, borderBottomColor: "#ccc" }]}>
             <Text style={styles.activitiesHeaderText}>List Inspection Memo</Text>
           </View>
+          <View style={{ flexDirection: "row", marginVertical: 12, gap: 8 }}>
+            <TextInput
+              style={[stylesLocal.searchInput, { flex: 1 }]}
+              placeholder="Input Memo (ex: CLM16)"
+              value={searchInput}
+              onChangeText={setSearchInput}
+              placeholderTextColor="#888"
+            />
+
+            <TouchableOpacity
+              style={stylesLocal.goButton}
+              onPress={() => setSearchKeyword(searchInput.trim())}
+            >
+              <Text style={stylesLocal.goButtonText}>GO</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* LIST MEMO */}
-          {memoList.length === 0 ? (
+          {/* {memoList.length === 0 ? (
             <Text style={{ textAlign: "center", marginTop: 30, color: "#777" }}>
               No memo found.
             </Text>
@@ -129,7 +170,15 @@ function NewInspectionMemo() {
                 onRefresh={fetchInspection}
               />
             ))
-          )}
+          )} */}
+          {filteredMemoList.map((m: any, index: number) => (
+            <MemoGroupCard
+              key={`${m.memo.outbound_memo_number}-${index}`}
+              memo={m.memo}
+              items={m.items}
+              onRefresh={fetchInspection}
+            />
+          ))}
         </View>
       </ScrollView>
 
@@ -159,7 +208,7 @@ function NewInspectionMemo() {
         }
       >
         <Text style={stylesLocal.fabText}>Approved Task</Text>
-        </TouchableOpacity>
+      </TouchableOpacity>
       {
         // Tampilkan tombol hanya jika SEMUA item sudah picked sesuai quantity_plan
         memoList.every((m: any) =>
@@ -187,7 +236,7 @@ function NewInspectionMemo() {
                               const res = await OutboundService.updateStatusWhenCompleteInspection(item.transcation_pickig?.id, "COMPLETED");
                             });
                           });
-                          
+
                           showDialog("success", "All tasks approved successfully!");
                           navigation.goBack();
                         } catch (error) {
@@ -239,4 +288,24 @@ const stylesLocal = StyleSheet.create({
     alignItems: "center",
     elevation: 4,
   },
+  searchInput: {
+    backgroundColor: "#f2f2f2",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: "#333",
+  },
+  goButton: {
+    backgroundColor: Colors.primeColor,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  goButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+
 });

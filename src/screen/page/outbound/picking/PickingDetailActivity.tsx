@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
-  Alert,
 } from 'react-native';
 
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
@@ -31,6 +30,7 @@ export default function PickingDetailActivity() {
   // normalize params so we always have itemBefore.item like original code expects
   const mode: 'add' | 'edit' = (params.mode as any) || 'add';
   const activity = params.activity;
+  console.log('Picked activity:', activity);
   // support several shapes: { item } (from screen-add), or { itemBefore } (original)
   let itemBeforeParam = params.itemBefore;
   if (!itemBeforeParam) {
@@ -181,14 +181,14 @@ export default function PickingDetailActivity() {
 
   const handleCheckPalletSumber = async () => {
     if (!palletSumber.trim()) {
-      Alert.alert('Masukkan pallet sumber terlebih dahulu');
+      showDialog('error','Masukkan pallet sumber terlebih dahulu');
       return;
     }
 
     try {
       const res = await ScannerService.getPalletByCode(palletSumber);
       if (!res.success) {
-        Alert.alert('Pallet tidak ditemukan atau tidak valid');
+        showDialog('error','Pallet tidak ditemukan atau tidak valid');
         return;
       }
       // find matching item_id
@@ -203,7 +203,7 @@ export default function PickingDetailActivity() {
         // Cek apakah item_id ada, jika tidak, error item tidak ditemukan
         const hasItemId = res.data.some((item: any) => item.item_id === itemBefore.item_id);
         if (!hasItemId) {
-          Alert.alert('Pallet tidak memiliki item yang akan dipicking');
+          showDialog('error','Pallet tidak memiliki item yang akan dipicking');
         } else {
           // Jika item_id ada, tapi uom/week_number tidak cocok
           const firstMatch = res.data.find((item: any) => item.item_id === itemBefore.item_id);
@@ -211,12 +211,10 @@ export default function PickingDetailActivity() {
           if (
         firstMatch?.warehouse_bin_name !== itemBefore?.sourceBin?.name
           ) {
-        Alert.alert(
-          `Invalid, pallet berada di ${firstMatch?.warehouse_bin_name}, seharusnya di ${itemBefore?.sourceBin?.name}`
+       showDialog('error',`Invalid, pallet berada di ${firstMatch?.warehouse_bin_name}, seharusnya di ${itemBefore?.sourceBin?.name}`
         );
           } else {
-        Alert.alert(
-          `Invalid, pallet memiliki Uom ${firstMatch?.uom} dan week ${firstMatch?.week_number}`
+        showDialog('error',`Invalid, pallet memiliki Uom ${firstMatch?.uom} dan week ${firstMatch?.week_number}`
         );
           }
         }
@@ -224,29 +222,28 @@ export default function PickingDetailActivity() {
       }
       // Jika found, tetap cek bin-nya
       if (found.warehouse_bin_name !== itemBefore?.sourceBin?.name) {
-        Alert.alert(
-          `Invalid, pallet berada di ${found.warehouse_bin_name}, seharusnya di ${itemBefore?.sourceBin?.name}`
+        showDialog('error',`Invalid, pallet berada di ${found.warehouse_bin_name}, seharusnya di ${itemBefore?.sourceBin?.name}`
         );
         return;
       }
       setFoundItem(found);
       setDoneSumber(true);
-      Alert.alert('Pallet valid', `${found.item_name}\nQty ${found.current_quantity} ${found.uom}`);
+      showDialog('success',`Pallet valid ${found.item_name}\nQty ${found.current_quantity} ${found.uom}`);
     } catch (err) {
-      Alert.alert('Gagal memeriksa pallet');
+      showDialog('error','Gagal memeriksa pallet');
     }
   };
 
   const handleCheckPalletPicking = async () => {
     if (!palletPicking.trim()) {
-      Alert.alert('Masukkan pallet picking terlebih dahulu');
+      showDialog('error','Masukkan pallet picking terlebih dahulu');
       return;
     }
 
     try {
       const res = await ScannerService.getPalletByCode(palletPicking);
       if (!res.success) {
-        Alert.alert('Pallet tidak ditemukan atau tidak valid');
+        showDialog('error','Pallet tidak ditemukan atau tidak valid');
         return;
       }
       const found = res.data.find(
@@ -267,9 +264,9 @@ export default function PickingDetailActivity() {
         item.memo_id !== itemBefore.memo_id
         );
         if (hasOtherMemo) {
-          Alert.alert('Pallet ini sudah memiliki Memo yang lain');
+          showDialog('error','Pallet ini sudah memiliki Memo yang lain');
         } else {
-          Alert.alert(
+          showDialog('error',
         `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom} `
           );
         }
@@ -277,21 +274,21 @@ export default function PickingDetailActivity() {
       }
       setPickingPallet(res.data[0]);
       setDonePicking(true);
-      Alert.alert('Pallet valid', `Week: ${res.data[0].week_number} | Uom: ${res.data[0].uom}`);
+      showDialog('success', `Pallet valid Week: ${res.data[0].week_number} | Uom: ${res.data[0].uom}`);
     } catch (err) {
-      Alert.alert('Gagal memeriksa pallet');
+      showDialog('error','Gagal memeriksa pallet');
     }
   };
 
   const handleCheckPalletSwitching = async () => {
     if (!switchPallet.trim()) {
-      Alert.alert('Masukkan pallet switching terlebih dahulu');
+      showDialog('error','Masukkan pallet switching terlebih dahulu');
       return;
     }
     try {
       const res = await ScannerService.getPalletByCode(switchPallet);
       if (!res.success) {
-        Alert.alert('Pallet tidak ditemukan atau tidak valid');
+        showDialog('error','Pallet tidak ditemukan atau tidak valid');
         return;
       }
        const found = res.data.find(
@@ -299,16 +296,14 @@ export default function PickingDetailActivity() {
           item.uom === itemBefore.uom && item.week_number === itemBefore.week_number
       );
       if (!found) {
-        Alert.alert(
-          `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom} dan week ${res.data[0].week_number}`
-        );
+        showDialog('error', `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom} dan week ${res.data[0].week_number}`);
         return;
       }
       setSwitchInfo(res.data[0]);
       setDoneSwitch(true);
-      Alert.alert('Pallet valid', `${res.data[0].item_name}\nQty ${res.data[0].current_quantity} ${res.data[0].uom}`);
+      showDialog('success', `Pallet valid ${res.data[0].item_name}\nQty ${res.data[0].current_quantity} ${res.data[0].uom}`);
     } catch (err) {
-      Alert.alert('Gagal memeriksa pallet');
+      showDialog('error','Gagal memeriksa pallet');
     }
   };
 
@@ -332,11 +327,11 @@ export default function PickingDetailActivity() {
   const handleSubmit = async () => {
     // basic guard
     if (!foundItem) {
-      Alert.alert('Pallet sumber belum dicek!');
+      showDialog('error','Pallet sumber belum dicek!');
       return;
     }
     if (!pickingPallet) {
-      Alert.alert('Pallet picking belum dicek!');
+      showDialog('error','Pallet picking belum dicek!');
       return;
     }
 
@@ -392,7 +387,7 @@ export default function PickingDetailActivity() {
     const qty = Number(v);
     // limit: not exceed requested quantity (itemBefore.item.quantity)
     if (itemBefore?.item?.quantity != null && qty > Number(itemBefore.item.quantity)) {
-      Alert.alert('Qty picking tidak boleh lebih besar dari qty permintaan');
+      showDialog('error','Qty picking tidak boleh lebih besar dari qty permintaan');
       return;
     }
     setQtyPicking(v);
@@ -430,37 +425,6 @@ export default function PickingDetailActivity() {
           itemBefore?.item?.description ||
           'Picking Activity'}
           </Text>
-          {/* <TouchableOpacity
-            onPress={async () => {
-              Alert.alert(
-          'Delete Activity',
-          'Are you sure you want to delete this picking activity?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Delete',
-              style: 'destructive',
-              onPress: async () => {
-                try {
-            showLoadingDialog('Deleting...');
-            console.log('Deleting activity with id:', activity);
-            // await OutboundService.deleteTranscationScan(activity?.id);
-            showDialog('success', 'Berhasil menghapus activity picking');
-            navigation.goBack();
-                } catch (err) {
-            showDialog('error', 'Gagal menghapus activity picking');
-                } finally {
-            hideLoadingDialog();
-                }
-              },
-            },
-          ]
-              );
-            }}
-            disabled={mode !== 'edit'}
-          >
-            <Ionicons name="times" size={20} color={"red"} style={{ marginLeft: 12 }} />
-          </TouchableOpacity> */}
         </View>
 
         {/* SUGGESTED DESTINATION */}
@@ -632,14 +596,31 @@ export default function PickingDetailActivity() {
             placeholder="Qty Picking"
             value={qtyPicking}
             onChangeText={(v) => {
-              const qty = Number(v);
-              if (
-          itemBefore?.quantity != null &&
-          qty > Number(itemBefore.quantity)
-              ) {
-          Alert.alert('Qty picking tidak boleh lebih besar dari qty permintaan');
-          return;
-              }
+                const qty = Number(v);
+                // Cek jika qty melebihi permintaan
+                if (
+                itemBefore?.quantity != null &&
+                qty > Number(itemBefore.quantity)
+                ) {
+                showDialog('error','Qty picking tidak boleh lebih besar dari qty permintaan');
+                return;
+                }
+                // Cek jika qty + total picked sebelumnya melebihi permintaan
+                const activities = Array.isArray(activity) ? activity : [];
+                const totalPicked = activities.reduce(
+                (sum: number, act: any) =>
+                  typeof act?.quantity_picked === 'number'
+                  ? sum + act.quantity_picked
+                  : sum,
+                0
+                );
+                if (
+                itemBefore?.quantity != null &&
+                qty + totalPicked > Number(itemBefore.quantity)
+                ) {
+                 showDialog('error',`Qty picking total (${qty + totalPicked}) tidak boleh lebih besar dari qty permintaan (${itemBefore.quantity})`);
+                return;
+                }
               onChangeQtyPicking(v);
             }}
             keyboardType="numeric"

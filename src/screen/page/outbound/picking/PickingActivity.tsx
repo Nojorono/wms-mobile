@@ -31,7 +31,7 @@ export default function PickingActivity() {
   const [userIdNewest, setUserIdNewest] = useState('');
 
   const handleAddActivity = () => {
-    navigation.navigate('PickingDetailActivity', { mode: "add", itemBefore: itemBefore.item });
+    navigation.navigate('PickingDetailActivity', { mode: "add", itemBefore: itemBefore.item, activity: pickingList  });
   };
 
 

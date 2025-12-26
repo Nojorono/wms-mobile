@@ -78,7 +78,7 @@ function PickingSkuScreen() {
             <ScrollView
                 contentContainerStyle={styles.menuContainer}
                 stickyHeaderIndices={[2]}
-                style={styles.scrollViewContent}
+                style={[styles.scrollViewContent, { borderTopLeftRadius: 0, borderTopRightRadius: 0 }]}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -87,7 +87,7 @@ function PickingSkuScreen() {
                     />
                 }
             >
-                <View style={styles.menuCard}>
+                <View style={[styles.menuCard, ]}>
                     <View
                         style={[
                             styles.activitiesHeader,

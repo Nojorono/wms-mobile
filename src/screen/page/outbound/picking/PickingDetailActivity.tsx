@@ -44,11 +44,8 @@ export default function PickingDetailActivity() {
     }
   }
   const itemBefore = itemBeforeParam as any; // use itemBefore.item below
-  console.log('itemBefore:', itemBefore,);
-
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
-
   const [palletSumber, setPalletSumber] = useState('');
   const [palletPicking, setPalletPicking] = useState('');
   const [qtyPicking, setQtyPicking] = useState('');
@@ -248,8 +245,6 @@ export default function PickingDetailActivity() {
 
     try {
       const res = await ScannerService.getPalletByCode(palletPicking);
-      console.log("Pallet Picking Response:", res);
-      console.log("Item Before for Picking Check:", itemBefore.memo_id);
       if (!res.success) {
         Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
@@ -370,7 +365,6 @@ export default function PickingDetailActivity() {
       payload.quantity_switch = Number(switchQty);
     }
 
-    console.log('Submitting payload:', payload);
     try {
       showLoadingDialog(mode === 'edit' ? 'Updating Activity' : 'Submitting Activity');
 

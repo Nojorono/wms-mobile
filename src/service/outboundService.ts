@@ -87,6 +87,15 @@ class OutboundService {
     }
   }
 
+  static async deteleTransactionPickingById(transactionPickingId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete(`/transaction-scan-picking/${transactionPickingId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   static async cancelMemo(memoId: string): Promise<any> {
     try {
       const response = await axiosInstance.patch(`/outbound-memo/${memoId}/cancelled`);

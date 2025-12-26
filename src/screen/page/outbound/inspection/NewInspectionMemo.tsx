@@ -142,7 +142,7 @@ function NewInspectionMemo() {
           <View style={{ flexDirection: "row", marginVertical: 12, gap: 8 }}>
             <TextInput
               style={[stylesLocal.searchInput, { flex: 1 }]}
-              placeholder="Input Memo (ex: CLM16)"
+              placeholder="Input SKU (ex: CLM16)"
               value={searchInput}
               onChangeText={setSearchInput}
               placeholderTextColor="#888"
@@ -152,7 +152,7 @@ function NewInspectionMemo() {
               style={stylesLocal.goButton}
               onPress={() => setSearchKeyword(searchInput.trim())}
             >
-              <Text style={stylesLocal.goButtonText}>GO</Text>
+              <Text style={stylesLocal.goButtonText}>Go</Text>
             </TouchableOpacity>
           </View>
 

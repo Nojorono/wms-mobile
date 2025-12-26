@@ -23,6 +23,7 @@ interface Payload {
     license_plate: string;
     driver_name: string;
     driver_phone: string;
+    container_number?: string;
 }
 type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>;
 
@@ -51,6 +52,7 @@ export default function AssignGateVehicle() {
             license_plate: "",
             driver_name: "",
             driver_phone: "",
+            container_number: "",
         }
     });
 
@@ -71,6 +73,7 @@ export default function AssignGateVehicle() {
                 license_plate: response?.data?.license_plate ?? "",
                 driver_name: response?.data?.driver_name ?? "",
                 driver_phone: response?.data?.driver_phone ?? "",
+                container_number: "C099372", // Dummy data
             };
 
             setData(newData);
@@ -102,9 +105,11 @@ export default function AssignGateVehicle() {
     };
 
     const onSubmit = async (values: Payload) => {
+        // Remove container_number from payload before sending
+        const { container_number, ...payload } = values;
         try {
             showLoadingDialog("Updating vehicle information...");
-            const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, values);
+            const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, payload);
             showDialog("success", "Vehicle information updated successfully!");
             await fetchData();
             setIsEdit(false);
@@ -155,6 +160,7 @@ export default function AssignGateVehicle() {
                     {renderInput("License Plate", "license_plate", "Contoh: B1234ABC")}
                     {renderInput("Driver Name", "driver_name", "Contoh: John Doe")}
                     {renderInput("Driver Phone", "driver_phone", "Contoh: 081234567890")}
+                    {renderInput("Container Number", "container_number", "Contoh: C099372")}
 
                     <TouchableOpacity
                         style={styles.saveButton}
@@ -179,6 +185,9 @@ export default function AssignGateVehicle() {
 
                         <Text style={styles.itemTitle}>Driver Phone</Text>
                         <Text style={styles.itemValue}>{data.driver_phone}</Text>
+
+                        <Text style={styles.itemTitle}>Container Number</Text>
+                        <Text style={styles.itemValue}>{data.container_number} (This is Dummy)</Text>
 
                         <TouchableOpacity
                             style={styles.editButton}
@@ -278,10 +287,6 @@ export default function AssignGateVehicle() {
 
                     {dataAssignedLoading && dataAssignedLoading.length > 0 ? (
                         dataAssignedLoading.map((ag: any, index: number) => {
-                            console.log("Assigned Gate Loading:", ag);
-
-
-
                             const handleDeleteHelperLoading = () => {
                                 confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
                                     try {
@@ -299,7 +304,6 @@ export default function AssignGateVehicle() {
                             };
 
                             const handleEdit = () => {
-                                console.log("Navigating to edit assigned loading:", ag);
                                 navigation.navigate('AssignGateLoading', {
                                     item: params.item,
                                     mode: "edit",

@@ -18,7 +18,6 @@ import { useDialogStore } from "../../store/useGlobalDialog";
 
 const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRefresh: () => void }) => {
   const [expanded, setExpanded] = useState(false);
-  console.log("Rendering MemoGroupCard for memo:", memo)
   // const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
   const handleLepasMemo = () => {

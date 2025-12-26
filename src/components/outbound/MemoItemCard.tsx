@@ -196,6 +196,7 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                     <View style={{ marginBottom: 10 }}>
                         <Text style={{ fontWeight: "700", marginBottom: 6 }}>Detail Scan</Text>
                         {item.scan_detail.map((detail: any, idx: number) => {
+                            console.log("Rendering detail:", detail);
                             const isStatusOpen = detail?.status?.toUpperCase() === "OPEN";
                             return (
                                 <View key={detail.id ?? idx} style={{ marginBottom: 12, paddingBottom: 8, borderBottomWidth: 1, borderColor: "#eee" }}>
@@ -227,6 +228,12 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                                             {detail.pallet_use_id
                                                 ? `${detail.palletUse.pallet_code}`
                                                 : "-"}
+                                        </Text>
+                                    </View>
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <Text style={{ fontWeight: "600" }}>Quantity Picked</Text>
+                                        <Text>
+                                            {detail.quantity_picked ?? "-"}
                                         </Text>
                                     </View>
                                     {/* Tombol buka modal edit */}

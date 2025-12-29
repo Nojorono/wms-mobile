@@ -23,7 +23,7 @@ interface Payload {
     license_plate: string;
     driver_name: string;
     driver_phone: string;
-    container_number?: string;
+    seal_number?: string;
 }
 type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>;
 
@@ -52,7 +52,7 @@ export default function AssignGateVehicle() {
             license_plate: "",
             driver_name: "",
             driver_phone: "",
-            container_number: "",
+            seal_number: "",
         }
     });
 
@@ -73,7 +73,7 @@ export default function AssignGateVehicle() {
                 license_plate: response?.data?.license_plate ?? "",
                 driver_name: response?.data?.driver_name ?? "",
                 driver_phone: response?.data?.driver_phone ?? "",
-                container_number: "C099372", // Dummy data
+                seal_number: "C099372", // Dummy data
             };
 
             setData(newData);
@@ -105,8 +105,8 @@ export default function AssignGateVehicle() {
     };
 
     const onSubmit = async (values: Payload) => {
-        // Remove container_number from payload before sending
-        const { container_number, ...payload } = values;
+        // Remove seal_number from payload before sending
+        const { seal_number, ...payload } = values;
         try {
             showLoadingDialog("Updating vehicle information...");
             const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, payload);
@@ -147,7 +147,7 @@ export default function AssignGateVehicle() {
 
     return (
         <ScrollView
-            style={styles.contentContainer}
+            style={styles.contentseal}
             refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
@@ -160,7 +160,7 @@ export default function AssignGateVehicle() {
                     {renderInput("License Plate", "license_plate", "Contoh: B1234ABC")}
                     {renderInput("Driver Name", "driver_name", "Contoh: John Doe")}
                     {renderInput("Driver Phone", "driver_phone", "Contoh: 081234567890")}
-                    {renderInput("Container Number", "container_number", "Contoh: C099372")}
+                    {renderInput("seal Number", "seal_number", "Contoh: C099372")}
 
                     <TouchableOpacity
                         style={styles.saveButton}
@@ -186,8 +186,8 @@ export default function AssignGateVehicle() {
                         <Text style={styles.itemTitle}>Driver Phone</Text>
                         <Text style={styles.itemValue}>{data.driver_phone}</Text>
 
-                        <Text style={styles.itemTitle}>Container Number</Text>
-                        <Text style={styles.itemValue}>{data.container_number} (This is Dummy)</Text>
+                        <Text style={styles.itemTitle}>seal Number</Text>
+                        <Text style={styles.itemValue}>{data.seal_number} (This is Dummy)</Text>
 
                         <TouchableOpacity
                             style={styles.editButton}
@@ -360,7 +360,7 @@ export default function AssignGateVehicle() {
 }
 
 const styles = StyleSheet.create({
-    container: {
+    seal: {
         flex: 1,
         padding: 18,
         backgroundColor: "#F8F9FA",
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         marginRight: 6,
         color: "#000",
-    }, contentContainer: {
+    }, contentseal: {
         padding: 18,
         paddingBottom: 40, // 🔴 INI PENTING supaya button tidak kepotong
         backgroundColor: "#F8F9FA",

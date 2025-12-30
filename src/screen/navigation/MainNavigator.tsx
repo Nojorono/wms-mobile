@@ -7,6 +7,7 @@ import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import InboundStackNavigator from './inbound/InboundNavigator.tsx';
 import OutboundNavigator from './outbound/OutboundNavigator.tsx';
 import ScannerStackNavigator from './scanner/ScannerNavigator.tsx';
+import MovementStackNavigator from './movement/MovementNavigator.tsx';
 
 // Define the param list for MainTab
 export type MainTabParamList = {
@@ -14,6 +15,7 @@ export type MainTabParamList = {
   Inbound: NavigatorScreenParams<HomeStackParamList>;
   Outbond: NavigatorScreenParams<HomeStackParamList>;
   Scanner: NavigatorScreenParams<HomeStackParamList>;
+  Movement: NavigatorScreenParams<HomeStackParamList>;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -25,6 +27,8 @@ type IconNames =
   | 'inventory'
   | 'user'
   | 'cog'
+  | 'box'
+  | 'kaaba'
   | 'qrcode'
   | 'arrow-up'
   | 'arrow-down'
@@ -60,6 +64,7 @@ const MainNavigator = () => (
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Inbound') iconName = 'arrow-down';
           else if (route.name === 'Outbond') iconName = 'arrow-up';
+          else if (route.name === 'Movement') iconName = 'kaaba';
           else if (route.name === 'Scanner') iconName = 'qrcode';
 
           return <Ionicons name={iconName} size={22} color={color} />;
@@ -89,7 +94,9 @@ const MainNavigator = () => (
       }}
     />
  <Tab.Screen name="Home" component={HomeStackNavigator} />
+ <Tab.Screen name="Movement" component={MovementStackNavigator} />
  <Tab.Screen name="Scanner" component={ScannerStackNavigator} />
+ 
     <Tab.Screen
       name="Outbond"
       component={OutboundNavigator}

@@ -81,6 +81,20 @@ function HomeScreen() {
               <Text style={stylez.titlex}>Outbound</Text>
             </TouchableOpacity>
 
+
+          </View>
+          <View style={stylez.rowWithMargin}>
+            <TouchableOpacity
+              style={[stylez.cardx, stylez.flexOne, stylez.marginRight8]}
+              onPress={() => {
+                // TODO: handle inbound card press
+                navigation.navigate('Movement', { screen: 'movementIndex' });
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="box" size={32} color={Colors.primeColor} />
+              <Text style={stylez.titlex}>Movement</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

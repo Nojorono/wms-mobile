@@ -13,6 +13,7 @@ export type HomeStackParamList = {
     inboundIndex: undefined;
     outBoundIndex: undefined;
     scannerIndex: undefined;
+    movementIndex: undefined;
 };
 
 

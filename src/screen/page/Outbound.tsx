@@ -59,19 +59,19 @@ function OutboundIndex() {
             {roleName === ROLES.DRIVER_FORKLIFT && (
               <MenuCard
                 title={"Line to Gate"}
-              onPress={() => navigation.navigate("OutboundForkliftGate")}
+                onPress={() => navigation.navigate("OutboundForkliftGate")}
               />
             )}
 
-           {roleName === ROLES.WH_STAFF && (
+            {roleName === ROLES.WH_STAFF && (
               <>
                 <MenuCard
                   title={"Inspection"}
-                onPress={() => navigation.navigate("OutboundInspection")}
+                  onPress={() => navigation.navigate("OutboundInspection")}
                 />
                 <MenuCard
                   title={"Assign Gate"}
-                onPress={() => navigation.navigate("OutboundAssignGate")}
+                  onPress={() => navigation.navigate("OutboundAssignGate")}
                 />
                 {/* <MenuCard
                   title={"Update Inventory"}
@@ -84,7 +84,7 @@ function OutboundIndex() {
               <>
                 <MenuCard
                   title={"PICKING"}
-                onPress={() => navigation.navigate("OutboundPicking")}
+                  onPress={() => navigation.navigate("OutboundPicking")}
                 />
                 {/* <MenuCard
                   title={"LOADING"}
@@ -95,7 +95,7 @@ function OutboundIndex() {
             )}
 
             {/* 🔸 Optional: fallback jika role tidak dikenali */}
-             {!Object.values(ROLES).includes(roleName as typeof ROLES[keyof typeof ROLES]) && (
+            {!Object.values(ROLES).includes(roleName as typeof ROLES[keyof typeof ROLES]) && (
               <Text style={{
                 textAlign: "center",
                 color: "#999",

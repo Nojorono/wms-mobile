@@ -7,6 +7,7 @@ import PickingNavigator from './PickingNavigator.tsx';
 import InspectionNavigator from './InspectionNavigator.tsx';
 import AssignGateNavigator from './AssignGateNavigator.tsx';
 import ForkliftGateNavigator from './ForkliftGateNavigator.tsx';
+import ApprovalGateScreen from '../../page/outbound/approvalGate/ApprovalGateActivity.tsx';
 
 
 
@@ -19,6 +20,7 @@ export type OutboundParamList = {
   //WH STAFF
   OutboundInspection: undefined;
   OutboundAssignGate: undefined;
+  OutboundGateApproval: undefined;
   //Driver Forklift
   OutboundForkliftGate: undefined;
 };
@@ -90,6 +92,17 @@ const OutboundStackNavigator = () => (
        <OutboundStack.Screen
       name="OutboundForkliftGate"
       component={ForkliftGateNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <OutboundStack.Screen
+      name="OutboundGateApproval"
+      component={ApprovalGateScreen}
       options={{
         headerShown: false,
         headerTintColor: '#fff',

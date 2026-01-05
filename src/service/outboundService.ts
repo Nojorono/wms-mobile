@@ -269,6 +269,15 @@ class OutboundService {
     }
   }
 
+  static async getAssignedGateByStatus(payload?: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/assigned-gate`, { params: { status: "PENDING" } }); 
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   //kalo udah kelar semuanya nanti klik ini wh staffnya
   static async updateStatusPickingWhStaff(transactionPickingId: string, statusPicking: any): Promise<any> {
     try {

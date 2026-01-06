@@ -45,6 +45,7 @@ export default function InspectionUpdateActivity() {
     }
   }
   const itemBefore = itemBeforeParam as any;
+  console.log('InspectionEditActivity itemBefore:', itemBefore);
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -398,7 +399,7 @@ export default function InspectionUpdateActivity() {
           >
 
             {itemBefore?.quantity_plan} {itemBefore?.uom} - Week-
-            {itemBefore?.transcation_pickig.week_number}
+            {itemBefore?.transaction_picking.week_number}
           </Text>
           <Text
             style={{
@@ -413,8 +414,8 @@ export default function InspectionUpdateActivity() {
               paddingHorizontal: 12,
             }}
           >
-            From {itemBefore?.transcation_pickig.sourceWarehouseSub?.name} Bin {itemBefore?.transcation_pickig.sourceBin?.name} to {itemBefore?.transcation_pickig.destinationWarehouseSub?.name} -{' '}
-            {itemBefore?.transcation_pickig.destinationBin?.name}
+            From {itemBefore?.transaction_picking.sourceWarehouseSub?.name} Bin {itemBefore?.transaction_picking.sourceBin?.name} to {itemBefore?.transaction_picking.destinationWarehouseSub?.name} -{' '}
+            {itemBefore?.transaction_picking.destinationBin?.name}
 
           </Text>
           <Text

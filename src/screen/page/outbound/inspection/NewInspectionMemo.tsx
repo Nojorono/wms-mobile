@@ -51,40 +51,57 @@ function NewInspectionMemo() {
       const list = response?.data || [];
       const matched = list.find((i: any) => i.id === itemBefore.item.id);
       const memos = matched?.outbound_memos || [];
+      console.log("Fetched Memos:", memos);
       // Proses memo items + picking scan
-      const processed = memos.map((memo: any) => {
-        const memoItems = memo?.outbound_memo_items || [];
-        const pickings = memo?.transaction_pickings || [];
+     const processed = memos.map((memo: any) => {
+  const memoItems = memo?.outbound_memo_items || [];
+  const pickings = memo?.transaction_pickings || [];
 
-        const mergedItems = memoItems.map((itm: any) => {
-          // cari picking untuk item ini
-          const picking = pickings.find((p: any) => p.item_id === itm.item_id);
+  const mergedItems = pickings.map((picking: any) => {
+    // ✅ match item_id + uom
+    const memoItem = memoItems.find(
+      (itm: any) =>
+        itm.item_id === picking.item_id &&
+        itm.uom === picking.uom
+    );
 
-          // ambil scan array
-          const scans = picking?.transactionScanPicking || [];
-          const transcation = picking
+    const scans = picking.transactionScanPicking || [];
 
-          // total qty dari semua scan
-          const totalQtyPicked = scans.reduce(
-            (sum: number, s: any) => sum + (s.quantity_picked || 0),
-            0
-          );
+    const totalQtyPicked = scans.reduce(
+      (sum: number, s: any) => sum + (s.quantity_picked || 0),
+      0
+    );
 
-          return {
-            ...itm,
-            is_scanned: scans.length > 0,
-            picked_quantity: totalQtyPicked,
-            transcation_pickig: transcation,
-            scan_detail: scans, // simpan semua scan
-          };
-        });
+    return {
+      // identity
+      picking_id: picking.id,
+      item_id: picking.item_id,
 
-        return {
-          memo,
-          items: mergedItems,
-        };
-      });
-      console.log("Processed Memos:", processed);
+      // item info
+      item: picking.item || memoItem?.item,
+
+      // ✅ aligned plan
+      quantity_plan: memoItem?.quantity_plan ?? 0,
+      uom: picking.uom,
+
+      // scan
+      is_scanned: scans.length > 0,
+      picked_quantity: totalQtyPicked,
+      scan_detail: scans,
+
+      // raw objects (optional)
+      transaction_picking: picking,
+      outbound_memo_item: memoItem,
+    };
+  });
+
+  return {
+    memo,
+    items: mergedItems,
+  };
+});
+
+
       setMemoList(processed);
     } catch (e) {
       showDialog("error", "Error while fetching data!");

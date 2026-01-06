@@ -1,5 +1,5 @@
 // GateLoadingScreen.js
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -30,45 +30,66 @@ type ApprovalGateItem = {
 };
 
 const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
-    // If data is not array, fallback to empty array
-    const arr = Array.isArray(dataArr) ? dataArr : [];
-    return arr.map((data) => ({
-        gate: data.gate?.name ?? "-",
-        doNumber: data.outbound_do?.outbound_do_number ?? "-",
-        memos: (data.outbound_do?.outbound_memos ?? []).map((memo: any) => {
-            const palletMap: Record<string, Sku[]> = {};
+  const arr = Array.isArray(dataArr) ? dataArr : [];
 
-            (memo.transaction_pickings ?? []).forEach((tp: any) => {
-                (tp.transactionScanPicking ?? []).forEach((scan: any) => {
-                    const palletCode = scan.palletUse?.pallet_code ?? "UNKNOWN";
+  return arr.map((gateItem) => {
+    const loads = gateItem.assigned_gate_loads ?? [];
+    const outboundMemos = gateItem.outbound_do?.outbound_memos ?? [];
 
-                    if (!palletMap[palletCode]) {
-                        palletMap[palletCode] = [];
-                    }
+    // lookup memoId -> memo info
+    const memoInfoMap: Record<string, any> = {};
+    outboundMemos.forEach((m: any) => {
+      memoInfoMap[m.id] = {
+        memoNo: m.outbound_memo_number,
+        route: `${m.origin} → ${m.destination}`,
+      };
+    });
 
-                    palletMap[palletCode].push({
-                        sku: scan.item?.sku ?? "-",
-                        uom: scan.uom,
-                        week: scan.week_number,
-                        qtyPicking: tp.quantity,
-                        qtyLoad: scan.quantity_picked,
-                    });
-                });
-            });
+    // group load -> memo -> pallet
+    const memoMap: Record<string, any> = {};
 
-            return {
-                memoNo: memo.outbound_memo_number,
-                route: `${memo.origin} → ${memo.destination}`,
-                pallets: Object.entries(palletMap).map(
-                    ([palletCode, skus]) => ({
-                        palletCode,
-                        skus,
-                    })
-                ),
-            };
-        }),
-    }));
+    loads.forEach((load: any) => {
+      const memoId = load.outbound_memo_id ?? "UNKNOWN_MEMO";
+      const palletCode = load.pallet?.pallet_code ?? "UNKNOWN_PALLET";
+
+      if (!memoMap[memoId]) {
+        memoMap[memoId] = {
+          memoNo: memoInfoMap[memoId]?.memoNo ?? "-",
+          route: memoInfoMap[memoId]?.route ?? "-",
+          pallets: {},
+        };
+      }
+
+      if (!memoMap[memoId].pallets[palletCode]) {
+        memoMap[memoId].pallets[palletCode] = [];
+      }
+
+      memoMap[memoId].pallets[palletCode].push({
+        sku: load.item?.sku ?? "-",
+        uom: load.uom,
+        week: load.pallet?.currentWeekNumber,
+        qtyPicking: load.quantity_picked,
+        qtyLoad: load.quantity_loaded,
+      });
+    });
+
+    return {
+      gate: gateItem.gate?.name ?? "-",
+      doNumber: gateItem.outbound_do?.outbound_do_number ?? "-",
+      memos: Object.values(memoMap).map((memo: any) => ({
+        memoNo: memo.memoNo,
+        route: memo.route,
+        pallets: Object.entries(memo.pallets).map(
+          ([palletCode, skus]) => ({
+            palletCode,
+            skus: skus as Sku[],
+          })
+        ),
+      })),
+    };
+  });
 };
+
 
 
 
@@ -92,24 +113,17 @@ const SkuCard = ({ item }: { item: Sku }) => {
 
     return (
         <View style={[styles.skuCard, { borderColor: status.color }]}>
-            <Text style={styles.sku}>{item.sku}</Text>
-            <Text style={styles.subValue}>
-                UOM {item.uom} · Week {item.week}
-            </Text>
-
-            <View style={styles.qtyRow}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View>
-                    <Text style={styles.qtyLabel}>Qty Picking</Text>
-                    <Text style={styles.qty}>{item.qtyPicking}</Text>
+                    <Text style={styles.sku}>{item.sku}</Text>
+                    <Text style={styles.subValue}>
+                        UOM {item.uom} · Week {item.week}
+                    </Text>
                 </View>
-                <View>
-                    <Text style={styles.qtyLabel}>Final Qty Load</Text>
-                    <Text style={styles.qty}>{item.qtyLoad}</Text>
+                <View style={{ alignItems: "flex-end" }}>
+                    <Text style={styles.qtyLabel}>Picking / Load</Text>
+                    <Text style={styles.qty}>{item.qtyPicking} / {item.qtyLoad}</Text>
                 </View>
-            </View>
-
-            <View style={[styles.status, { backgroundColor: status.color }]}>
-                <Text style={styles.statusText}>{status.label}</Text>
             </View>
         </View>
     );
@@ -123,64 +137,131 @@ export default function ApprovalGateScreen() {
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
     const showDialog = useDialogStore((state) => state.showDialog);
     const [approvalGate, setApprovalGate] = useState<ApprovalGateItem[]>([]);
-    const [refreshing, setRefreshing] = useState(false);
+    const listRef = useRef<FlatList>(null);
+    const [refreshing, setRefreshing] = useState<boolean>(false);
     const [collapsedDO, setCollapsedDO] = useState<Record<string, boolean>>({});
 
-const toggleDO = (doNumber: string) => {
-  setCollapsedDO((prev) => ({
-    ...prev,
-    [doNumber]: !prev[doNumber],
-  }));
-};;
+    const toggleDO = (doNumber: string) => {
+        setCollapsedDO((prev) => ({
+            ...prev,
+            [doNumber]: !prev[doNumber],
+        }));
+    };;
 
-const getDOStatus = (memos: ApprovalGateMemo[]) => {
-  let totalPicking = 0;
-  let totalLoad = 0;
+    const getDOStatus = (memos: ApprovalGateMemo[]) => {
+        let totalPicking = 0;
+        let totalLoad = 0;
 
-  memos.forEach((memo) => {
-    memo.pallets.forEach((pallet) => {
-      pallet.skus.forEach((sku) => {
-        totalPicking += sku.qtyPicking;
-        totalLoad += sku.qtyLoad;
-      });
-    });
-  });
+        memos.forEach((memo) => {
+            memo.pallets.forEach((pallet) => {
+                pallet.skus.forEach((sku) => {
+                    totalPicking += sku.qtyPicking;
+                    totalLoad += sku.qtyLoad;
+                });
+            });
+        });
 
-  if (totalLoad === 0)
-    return { label: "NOT LOADED", color: "#9CA3AF" };
+        if (totalLoad === 0)
+            return { label: "NOT LOADED", color: "#9CA3AF" };
 
-  if (totalLoad < totalPicking)
-    return { label: "PARTIAL", color: "#F59E0B" };
+        if (totalLoad < totalPicking)
+            return { label: "PARTIAL", color: "#F59E0B" };
 
-  if (totalLoad === totalPicking)
-    return { label: "COMPLETE", color: "#16A34A" };
+        if (totalLoad === totalPicking)
+            return { label: "COMPLETE", color: "#16A34A" };
 
-  return { label: "OVER LOAD", color: "#DC2626" };
+        return { label: "OVER LOAD", color: "#DC2626" };
+    };
+
+
+
+const fetchGate = async () => {
+    try {
+        setRefreshing(true);
+        showLoadingDialog("Loading List Approval Gate");
+
+        const response =
+            await OutboundService.getAssignedGateByStatus("DONE");
+
+        const data = response.data;
+        if (!data) return;
+
+        const mapped = mapApprovalGateToUI(data);
+        setApprovalGate(mapped);
+
+        // 👇 scroll ke atas setelah data refresh
+        requestAnimationFrame(() => {
+            listRef.current?.scrollToOffset({
+                offset: 0,
+                animated: true,
+            });
+        });
+    } catch (error) {
+        showDialog("error", "Error while Fetching Data Approval Gate!");
+    } finally {
+        hideLoadingDialog();
+        setRefreshing(false);
+    }
 };
 
 
 
-    const fetchGate = async () => {
-        try {
-            setRefreshing(true);
-            showLoadingDialog("Loading List Approval Gate");
+    const GateItem = ({
+        gateItem,
+        collapsedDO,
+        toggleDO,
+        getDOStatus,
+    }: any) => {
+        const { gate, doNumber, memos = [] } = gateItem;
+        const collapsed = collapsedDO[doNumber];
+        const status = getDOStatus(memos);
 
-            const response =
-                await OutboundService.getAssignedGateByStatus("PENDING");
+        return (
+            <View>
+                {/* DO HEADER */}
+                <View style={styles.doHeader} onTouchEnd={() => toggleDO(doNumber)}>
+                    <View>
+                        <Text style={styles.label}>GATE LOADING</Text>
+                        <Text style={styles.value}>{gate}</Text>
+                        <Text style={styles.do}>{doNumber}</Text>
+                    </View>
 
-            const data = response.data;
-            if (!data) return;
+                    <View style={[styles.doStatus, { backgroundColor: status.color }]}>
+                        <Text style={styles.doStatusText}>{status.label}</Text>
+                    </View>
+                </View>
 
-            const mapped = mapApprovalGateToUI(data);
-            console.log("Mapped Approval Gate Data:", mapped);
-            setApprovalGate(mapped);
-        } catch (error) {
-            showDialog("error", "Error while Fetching Data Approval Gate!");
-        } finally {
-            hideLoadingDialog();
-            setRefreshing(false);
-        }
+                {!collapsed &&
+                    memos.map((memo: any) => (
+                        <View key={memo.memoNo}>
+                            <View style={styles.card}>
+                                <Text style={styles.value}>{memo.memoNo}</Text>
+                                <Text style={styles.subValue}>{memo.route}</Text>
+                            </View>
+
+                            {memo.pallets.map((pallet: any) => (
+                                <View key={pallet.palletCode} style={styles.pallet}>
+                                    <Text style={styles.palletTitle}>
+                                        PALLET {pallet.palletCode}
+                                    </Text>
+
+                                    {/* 👇 FlatList TANPA scroll */}
+                                    <FlatList
+                                        data={pallet.skus}
+                                        numColumns={1}
+                                        keyExtractor={(item, idx) =>
+                                            `${pallet.palletCode}-${item.sku}-${idx}`
+                                        }
+                                        renderItem={({ item }) => <SkuCard item={item} />}
+                                    />
+                                </View>
+                            ))}
+                        </View>
+                    ))}
+            </View>
+        );
     };
+
 
 
 
@@ -200,70 +281,22 @@ const getDOStatus = (memos: ApprovalGateMemo[]) => {
 
 
     return (
-        <ScrollView style={styles.container}>
-            {approvalGate.map((gateItem: ApprovalGateItem, index: number) => {
-  const { gate, doNumber, memos = [] } = gateItem;
-  const collapsed = collapsedDO[doNumber];
-  const status = getDOStatus(memos);
-
-  return (
-    <View key={index}>
-      {/* DO HEADER (COLLAPSIBLE) */}
-      <View
-        style={styles.doHeader}
-        onTouchEnd={() => toggleDO(doNumber)}
-      >
-        <View>
-          <Text style={styles.label}>GATE LOADING</Text>
-          <Text style={styles.value}>{gate}</Text>
-          <Text style={styles.do}>{doNumber}</Text>
-        </View>
-
-        <View
-          style={[
-            styles.doStatus,
-            { backgroundColor: status.color },
-          ]}
-        >
-          <Text style={styles.doStatusText}>{status.label}</Text>
-        </View>
-      </View>
-
-      {/* COLLAPSED CONTENT */}
-      {!collapsed &&
-        memos.map((memo) => (
-          <View key={memo.memoNo}>
-            {/* Memo */}
-            <View style={styles.card}>
-              <Text style={styles.label}>MEMO NO</Text>
-              <Text style={styles.value}>{memo.memoNo}</Text>
-              <Text style={styles.subValue}>{memo.route}</Text>
-            </View>
-
-            {/* Pallet */}
-            {memo.pallets.map((pallet) => (
-              <View key={pallet.palletCode} style={styles.pallet}>
-                <Text style={styles.palletTitle}>
-                  PALLET {pallet.palletCode}
-                </Text>
-
-                <FlatList
-                  data={pallet.skus}
-                  numColumns={2}
-                  keyExtractor={(item, idx) =>
-                    `${pallet.palletCode}-${item.sku}-${idx}`
-                  }
-                  renderItem={({ item }) => <SkuCard item={item} />}
-                />
-              </View>
-            ))}
-          </View>
-        ))}
-    </View>
-  );
-})}
-
-        </ScrollView>
+       <FlatList
+    ref={listRef}
+    data={approvalGate}
+    keyExtractor={(item) => item.doNumber}
+    contentContainerStyle={styles.container}
+    refreshing={refreshing}
+    onRefresh={fetchGate}
+    renderItem={({ item }) => (
+        <GateItem
+            gateItem={item}
+            collapsedDO={collapsedDO}
+            toggleDO={toggleDO}
+            getDOStatus={getDOStatus}
+        />
+    )}
+/>
     );
 
 
@@ -277,7 +310,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     container: {
-        flex: 1,
+        flexGrow: 1,
         backgroundColor: "#F6F8FA",
         padding: 12,
     },
@@ -415,27 +448,27 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: "700",
     },
-doHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  backgroundColor: "#FFF",
-  padding: 12,
-  borderRadius: 10,
-  marginBottom: 12,
-},
+    doHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#FFF",
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 12,
+    },
 
-doStatus: {
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 14,
-},
+    doStatus: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 14,
+    },
 
-doStatusText: {
-  color: "#FFF",
-  fontSize: 12,
-  fontWeight: "800",
-},
+    doStatusText: {
+        color: "#FFF",
+        fontSize: 12,
+        fontWeight: "800",
+    },
 
 });
 

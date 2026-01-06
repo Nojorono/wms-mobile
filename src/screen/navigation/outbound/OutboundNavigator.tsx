@@ -104,10 +104,13 @@ const OutboundStackNavigator = () => (
       name="OutboundGateApproval"
       component={ApprovalGateScreen}
       options={{
-        headerShown: false,
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor,
+          backgroundColor: Colors.secondaryColor, // Full header background
+          elevation: 0, // Remove shadow on Android
+          shadowOpacity: 0, // Remove shadow on iOS
+          borderBottomWidth: 0, // Remove any border
         },
       }}
     />

@@ -242,6 +242,7 @@ export default function PickingDetailActivity() {
 
     try {
       const res = await ScannerService.getPalletByCode(palletPicking);
+      console.log('Pallet picking check response:', res);
       if (!res.success) {
         showDialog('error','Pallet tidak ditemukan atau tidak valid');
         return;
@@ -375,9 +376,8 @@ export default function PickingDetailActivity() {
       }
 
       navigation.goBack();
-    } catch (err) {
-      console.error(err);
-      showDialog('error', mode === 'edit' ? 'Gagal update activity' : 'Gagal submit picking');
+    } catch (err:any) {
+      showDialog('error', mode === 'edit' ? `Gagal update activity, ${err.data.message}` : `Gagal submit picking, ${err.data.message}`);
     } finally {
       hideLoadingDialog();
     }

@@ -2,12 +2,12 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../store/useAuthStore.ts';
+import { API_URL } from '@env';
 
 const axiosInstance = axios.create({
     // baseURL: BASE_URL,
-    // baseURL: "https://api.koneksi.co.id/api/v1",
-    baseURL: "http://10.0.29.47:9005/",
-    timeout: 10000,
+    baseURL: API_URL,
+    timeout:10000,
 });
 
 

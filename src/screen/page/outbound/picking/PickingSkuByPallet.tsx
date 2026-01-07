@@ -64,9 +64,8 @@ const PickingSkuByPallet = () => {
                 inspection_by: userName,
                 ids: currentPallet.ids, // ✅ sesuai card yang dipilih
             };
-            console.log("Send to WH Payload:", payload);
+            
             const res = await OutboundService.updateStatusPickingBulk(payload);
-            console.log("Send to WH Response:", res.data);
 
             hideLoadingDialog();
             await fetchPicking();
@@ -130,7 +129,6 @@ const PickingSkuByPallet = () => {
             setRefreshing(true);
             showLoadingDialog('Loading List Picking SKU');
             const response = await OutboundService.getSkuByMemoId(itemBefore.itemBefore.item.id, 'PENDING');
-            console.log("Picking SKU Response:", response.data);
             setPickingList(response.data || []);
         } catch (error) {
             hideLoadingDialog();
@@ -226,7 +224,6 @@ const PickingSkuByPallet = () => {
         });
 
         const result = Object.values(palletMap);
-        console.log("Transformed Pallet Data:", result);
         return result;
     };
 

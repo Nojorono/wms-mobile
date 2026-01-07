@@ -81,7 +81,6 @@ export const ForkliftGateDetail = () => {
             { transaction_picking_status: "PENDING" }
 
         );
-        console.log("Fetched Outbound Detail:", res.data);
         setDataOutbound(res.data);
     };
 
@@ -146,8 +145,6 @@ export const ForkliftGateDetail = () => {
             )?.palletUse?.id,
             status: "COMPLETED",
         };
-        console.log("Submit Payload:", payload);
-        console.log("Submitting assignment for DO ID:", item.id);
         try {
             showLoadingDialog('Memproses data...');
             await OutboundService.postForkliftScanGate(item.id, payload);

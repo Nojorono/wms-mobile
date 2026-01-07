@@ -14,6 +14,7 @@ import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ForkliftGateParamList } from "../../../navigation/outbound/ForkliftGateNavigator";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useDialogStore } from "../../../../store/useGlobalDialog";
 
 type Pallet = {
     pallet: {
@@ -53,17 +54,15 @@ function ForkliftGateScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const navigation = useNavigation<NavigationProp>();
+    const showDialog = useDialogStore((state) => state.showDialog);
 
 
     const fetchData = async () => {
         try {
-            console.log("Fetching gate tasks for user:", userId);
             const res = await OutboundService.getAssignedGateByUserId(userId);
-            console.log("data:", res.data);
             setData(res.data);
-            console.log("Fetched gate tasks:", res.data);
-        } catch (err) {
-            console.log("Fetch error:", err);
+        } catch (err:any) {
+            showDialog('error', `Fetch error: ${err.data.message || ''}.`);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -99,7 +98,6 @@ function ForkliftGateScreen() {
             <Text style={styles.title}>Assigned Gate Tasks</Text>
 
             {data.map((item, index) => {
-                console.log("Rendering item:", item);
                 const pallets = item.assigned_gate_pallets || [];
                 const gateName = item.gate.name || "Unknown Gate";
 

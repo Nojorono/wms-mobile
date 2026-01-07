@@ -13,6 +13,7 @@ import { useLoadingDialogStore } from "../../../../../store/useLoadingStore";
 import InboundServices from "../../../../../service/inboundServices";
 import UserServices from "../../../../../service/userServices";
 import { ROLES } from "../../../../../constants/Roles";
+import { useDialogStore } from "../../../../../store/useGlobalDialog";
 
 type HelperModalProps = {
   visible: boolean;
@@ -41,6 +42,7 @@ export default function HelperModal({
 
   const [userList, setUserList] = useState<any[]>([]);
   const [userManageList, setUserManageList] = useState<any[]>([]);
+  const showDialog = useDialogStore((state) => state.showDialog);
 
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -80,8 +82,8 @@ export default function HelperModal({
       );
 
       setUserList(filteredUsers);
-    } catch (error) {
-      console.log("Error:", error);
+    } catch (error:any) {
+      showDialog('error', `Error submitting adjustment: ${error.data.message || ''}.`);
     } finally {
       hideLoadingDialog();
     }
@@ -159,8 +161,8 @@ export default function HelperModal({
       } else {
         await InboundServices.postHelper(payload);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error:any) {
+      showDialog('error', `Error: ${error.data.message || ''}.`);
     } finally {
       hideLoadingDialog();
       onClose();

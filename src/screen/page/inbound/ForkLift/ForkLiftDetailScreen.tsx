@@ -25,7 +25,7 @@ const ForkLiftDetailScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const staging = item.inventoryTracking.warehouseSub;
   const destination = item.destinationBin;
-  console.log("s", destination)
+
 
   return (
     <View style={styles.container}>

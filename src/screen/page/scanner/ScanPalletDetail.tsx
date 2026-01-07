@@ -16,6 +16,7 @@ import ScannerService from "../../../service/palletServices";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ScannerParamList } from "../../navigation/scanner/ScannerNavigator";
+import { useDialogStore } from "../../../store/useGlobalDialog";
 
 type NavigationProp = StackNavigationProp<ScannerParamList, 'ScannerMain'>;
 
@@ -24,7 +25,7 @@ export default function EditItemForm({ route }: any) {
     const { user } = useAuthStore();
     const userId = user?.id || "";
     const navigation = useNavigation<NavigationProp>();
-
+    const showDialog = useDialogStore((state) => state.showDialog);
     const [isMovePallet, setIsMovePallet] = useState(false);
     const [loadingCheck, setLoadingCheck] = useState(false);
     const [palletInfo, setPalletInfo] = useState<any>(null);
@@ -60,8 +61,8 @@ export default function EditItemForm({ route }: any) {
             );
 
             setPalletInfo(response);
-        } catch (error) {
-            console.log("Check pallet error:", error);
+        } catch (error: any) {
+            showDialog('error', `Error submitting adjustment: ${error.data.message || ''}.`);
         } finally {
             setLoadingCheck(false);
         }
@@ -86,8 +87,8 @@ export default function EditItemForm({ route }: any) {
                 // Kembali ke halaman sebelumnya jika sukses
                 navigation.goBack();
             }
-        } catch (error) {
-            console.log("Error submitting adjustment:", error);
+        } catch (error: any) {
+            showDialog('error', `Error submitting adjustment: ${error.data.message || ''}.`);
         }
     };
 

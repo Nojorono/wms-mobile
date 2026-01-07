@@ -107,7 +107,6 @@ const CameraScreen = () => {
 
       if (val && !isProcessing) {
         setIsProcessing(true);
-        console.log("Scanned Value:", val);
         setManualInput(val);
         handleAddPallet(val);
 
@@ -223,7 +222,6 @@ const CameraScreen = () => {
       // 🆕 Jika belum ada di existing, fetch dari API seperti biasa
       const res = await InboundServices.getPalletInfo(value);
       const palletData = res?.data;
-      console.log("Pallet Info Response:", palletData);
 
       if (!palletData) {
         showDialog("error", "Pallet not found or invalid!");
@@ -328,7 +326,6 @@ const CameraScreen = () => {
       m_warehouse_sub_id: scan.staging_area_id || "",
     };
 
-    console.log("Data to submit/edit:", data);
 
     // ✅ Validasi sebelum kirim
     const requiredFields = [

@@ -45,7 +45,6 @@ export default function InspectionUpdateActivity() {
     }
   }
   const itemBefore = itemBeforeParam as any;
-  console.log('InspectionEditActivity itemBefore:', itemBefore);
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);

@@ -53,7 +53,6 @@ export default function AssignGateLoading() {
     const handleSubmit = async () => {
         try {
             showLoadingDialog("Processing...");
-            console.log("Form Data Submitted:", params.item);
 
             if (!isEdit) {
                 // CREATE MODE
@@ -63,7 +62,6 @@ export default function AssignGateLoading() {
                     helper_phone: formData.contact,
                 };
                 const res = await OutboundService.postHelperToAssignedLoading(params.item.id, payload);
-                console.log("Response:", res);
                 showDialog("success", "Gate assignment saved.");
                 navigation.goBack();
                 return;
@@ -96,9 +94,8 @@ export default function AssignGateLoading() {
             }
 
             navigation.goBack();
-        } catch (err) {
-            console.log(err);
-            showDialog("error", "Failed processing request.");
+        } catch (err:any) {
+            showDialog("error", `Failed processing request. ${err.data?.message || ''}`);
         } finally {
             hideLoadingDialog();
         }
@@ -121,7 +118,7 @@ export default function AssignGateLoading() {
 
             setUserList(filteredUsers);
         } catch (error) {
-            console.log("Error:", error);
+            showDialog("error", "Error while fetching data!");
         } finally {
             hideLoadingDialog();
         }

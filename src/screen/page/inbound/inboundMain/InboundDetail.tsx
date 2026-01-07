@@ -242,7 +242,6 @@ export default function InboundDetail() {
             setStatus(response.data.status); // Update status dari response
             const inbound_dos = response.data.inbound_dos;
             setMergedData(mergeInboundDos(inbound_dos));
-            console.log('Fetched inbound data:', response.data);
             setPhotos({
                 segel: response.data.photo_seal
                     ? {

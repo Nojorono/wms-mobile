@@ -54,7 +54,7 @@ export default function ForkLiftScreen() {
       const response = await InboundServices.getForkLiftList(
         user?.id || ''
       );
-      console.log('ForkLift List Response:', response);
+    
       setForkLiftList(response?.data || []);
     } catch (error) {
       showDialog('error', 'Error while fetching ForkLift data!');

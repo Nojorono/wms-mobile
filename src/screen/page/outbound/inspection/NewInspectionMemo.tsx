@@ -51,7 +51,7 @@ function NewInspectionMemo() {
       const list = response?.data || [];
       const matched = list.find((i: any) => i.id === itemBefore.item.id);
       const memos = matched?.outbound_memos || [];
-      console.log("Fetched Memos:", memos);
+    
       // Proses memo items + picking scan
      const processed = memos.map((memo: any) => {
   const memoItems = memo?.outbound_memo_items || [];

@@ -126,7 +126,6 @@ export default function AssignGateActivity() {
 
     navigation.goBack();
   } catch (err) {
-    console.log(err);
     showDialog("error", "Failed processing request.");
   } finally {
     hideLoadingDialog();
@@ -149,8 +148,8 @@ export default function AssignGateActivity() {
       );
 
       setUserList(filteredUsers);
-    } catch (error) {
-      console.log("Error:", error);
+    } catch (error:any) {
+      showDialog('error', `Error : ${error.data.message || ''}.`);
     } finally {
       hideLoadingDialog();
     }

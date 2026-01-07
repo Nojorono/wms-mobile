@@ -30,7 +30,6 @@ export default function PickingDetailActivity() {
   // normalize params so we always have itemBefore.item like original code expects
   const mode: 'add' | 'edit' = (params.mode as any) || 'add';
   const activity = params.activity;
-  console.log('Picked activity:', activity);
   // support several shapes: { item } (from screen-add), or { itemBefore } (original)
   let itemBeforeParam = params.itemBefore;
   if (!itemBeforeParam) {
@@ -242,7 +241,6 @@ export default function PickingDetailActivity() {
 
     try {
       const res = await ScannerService.getPalletByCode(palletPicking);
-      console.log('Pallet picking check response:', res);
       if (!res.success) {
         showDialog('error','Pallet tidak ditemukan atau tidak valid');
         return;

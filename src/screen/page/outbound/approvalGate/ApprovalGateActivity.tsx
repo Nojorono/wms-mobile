@@ -6,11 +6,13 @@ import {
     ScrollView,
     StyleSheet,
     FlatList,
+    TouchableOpacity,
 } from "react-native";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { useFocusEffect } from "@react-navigation/native";
 import OutboundService from "../../../../service/outboundService";
+import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 
 type ApprovalGateMemoPallet = {
     palletCode: string;
@@ -30,65 +32,67 @@ type ApprovalGateItem = {
 };
 
 const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
-  const arr = Array.isArray(dataArr) ? dataArr : [];
+    const arr = Array.isArray(dataArr) ? dataArr : [];
 
-  return arr.map((gateItem) => {
-    const loads = gateItem.assigned_gate_loads ?? [];
-    const outboundMemos = gateItem.outbound_do?.outbound_memos ?? [];
+    return arr.map((gateItem) => {
+        const loads = gateItem.assigned_gate_loads ?? [];
+        const outboundMemos = gateItem.outbound_do?.outbound_memos ?? [];
 
-    // lookup memoId -> memo info
-    const memoInfoMap: Record<string, any> = {};
-    outboundMemos.forEach((m: any) => {
-      memoInfoMap[m.id] = {
-        memoNo: m.outbound_memo_number,
-        route: `${m.origin} → ${m.destination}`,
-      };
-    });
+        // lookup memoId -> memo info
+        const memoInfoMap: Record<string, any> = {};
+        outboundMemos.forEach((m: any) => {
+            memoInfoMap[m.id] = {
+                memoNo: m.outbound_memo_number,
+                route: `${m.origin} → ${m.destination}`,
+            };
+        });
 
-    // group load -> memo -> pallet
-    const memoMap: Record<string, any> = {};
+        // group load -> memo -> pallet
+        const memoMap: Record<string, any> = {};
 
-    loads.forEach((load: any) => {
-      const memoId = load.outbound_memo_id ?? "UNKNOWN_MEMO";
-      const palletCode = load.pallet?.pallet_code ?? "UNKNOWN_PALLET";
+        loads.forEach((load: any) => {
+            const memoId = load.outbound_memo_id ?? "UNKNOWN_MEMO";
+            const palletCode = load.pallet?.pallet_code ?? "UNKNOWN_PALLET";
 
-      if (!memoMap[memoId]) {
-        memoMap[memoId] = {
-          memoNo: memoInfoMap[memoId]?.memoNo ?? "-",
-          route: memoInfoMap[memoId]?.route ?? "-",
-          pallets: {},
+            if (!memoMap[memoId]) {
+                memoMap[memoId] = {
+                    memoNo: memoInfoMap[memoId]?.memoNo ?? "-",
+                    route: memoInfoMap[memoId]?.route ?? "-",
+                    pallets: {},
+                };
+            }
+
+            if (!memoMap[memoId].pallets[palletCode]) {
+                memoMap[memoId].pallets[palletCode] = [];
+            }
+
+            memoMap[memoId].pallets[palletCode].push({
+                sku: load.item?.sku ?? "-",
+                uom: load.uom,
+                week: load.pallet?.currentWeekNumber,
+                qtyPicking: load.quantity_picked,
+                qtyLoad: load.quantity_loaded,
+            });
+        });
+
+        return {
+            id: gateItem.id, // ✅ INI YANG KAMU MAU
+            gate: gateItem.gate?.name ?? "-",
+            doNumber: gateItem.outbound_do?.outbound_do_number ?? "-",
+            memos: Object.values(memoMap).map((memo: any) => ({
+                memoNo: memo.memoNo,
+                route: memo.route,
+                pallets: Object.entries(memo.pallets).map(
+                    ([palletCode, skus]) => ({
+                        palletCode,
+                        skus: skus as Sku[],
+                    })
+                ),
+            })),
         };
-      }
-
-      if (!memoMap[memoId].pallets[palletCode]) {
-        memoMap[memoId].pallets[palletCode] = [];
-      }
-
-      memoMap[memoId].pallets[palletCode].push({
-        sku: load.item?.sku ?? "-",
-        uom: load.uom,
-        week: load.pallet?.currentWeekNumber,
-        qtyPicking: load.quantity_picked,
-        qtyLoad: load.quantity_loaded,
-      });
     });
-
-    return {
-      gate: gateItem.gate?.name ?? "-",
-      doNumber: gateItem.outbound_do?.outbound_do_number ?? "-",
-      memos: Object.values(memoMap).map((memo: any) => ({
-        memoNo: memo.memoNo,
-        route: memo.route,
-        pallets: Object.entries(memo.pallets).map(
-          ([palletCode, skus]) => ({
-            palletCode,
-            skus: skus as Sku[],
-          })
-        ),
-      })),
-    };
-  });
 };
+
 
 
 
@@ -140,6 +144,8 @@ export default function ApprovalGateScreen() {
     const listRef = useRef<FlatList>(null);
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [collapsedDO, setCollapsedDO] = useState<Record<string, boolean>>({});
+    
+        const confirm = useConfirmationStore();
 
     const toggleDO = (doNumber: string) => {
         setCollapsedDO((prev) => ({
@@ -175,34 +181,35 @@ export default function ApprovalGateScreen() {
 
 
 
-const fetchGate = async () => {
-    try {
-        setRefreshing(true);
-        showLoadingDialog("Loading List Approval Gate");
+    const fetchGate = async () => {
+        try {
+            setRefreshing(true);
+            showLoadingDialog("Loading List Approval Gate");
 
-        const response =
-            await OutboundService.getAssignedGateByStatus("DONE");
+            const response =
+                await OutboundService.getAssignedGateByStatus("DONE");
 
-        const data = response.data;
-        if (!data) return;
+            const data = response.data;
+            if (!data) return;
 
-        const mapped = mapApprovalGateToUI(data);
-        setApprovalGate(mapped);
+            const mapped = mapApprovalGateToUI(data);
+            console.log("Mapped Approval Gate Data:", mapped);
+            setApprovalGate(mapped);
 
-        // 👇 scroll ke atas setelah data refresh
-        requestAnimationFrame(() => {
-            listRef.current?.scrollToOffset({
-                offset: 0,
-                animated: true,
+            // 👇 scroll ke atas setelah data refresh
+            requestAnimationFrame(() => {
+                listRef.current?.scrollToOffset({
+                    offset: 0,
+                    animated: true,
+                });
             });
-        });
-    } catch (error) {
-        showDialog("error", "Error while Fetching Data Approval Gate!");
-    } finally {
-        hideLoadingDialog();
-        setRefreshing(false);
-    }
-};
+        } catch (error) {
+            showDialog("error", "Error while Fetching Data Approval Gate!");
+        } finally {
+            hideLoadingDialog();
+            setRefreshing(false);
+        }
+    };
 
 
 
@@ -219,16 +226,43 @@ const fetchGate = async () => {
         return (
             <View>
                 {/* DO HEADER */}
-                <View style={styles.doHeader} onTouchEnd={() => toggleDO(doNumber)}>
-                    <View>
+                <View style={styles.doHeader}>
+                    {/* AREA KIRI → TOGGLE */}
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => toggleDO(doNumber)}
+                        style={{ flex: 1 }}
+                    >
                         <Text style={styles.label}>GATE LOADING</Text>
                         <Text style={styles.value}>{gate}</Text>
                         <Text style={styles.do}>{doNumber}</Text>
-                    </View>
+                    </TouchableOpacity>
 
-                    <View style={[styles.doStatus, { backgroundColor: status.color }]}>
-                        <Text style={styles.doStatusText}>{status.label}</Text>
-                    </View>
+                    {/* AREA KANAN → APPROVE */}
+                    <TouchableOpacity
+                        style={[styles.doStatus, { backgroundColor: "#ff9100ff" }]}
+                        onPress={async () => {
+                            console.log("Approve clicked:", gateItem.id);
+                            confirm.show(
+                                "accept",
+                                "Apakah kamu yakin ingin approve gate ini?",
+                                async () => {
+                                    try {
+                                        showLoadingDialog("Approving Gate...");
+                                        await OutboundService.updateStatusForkliftGateDone(gateItem.id, "APPROVED");
+                                        showDialog("success", "Gate approved successfully!");
+                                        await fetchGate();
+                                    } catch (error) {
+                                        showDialog("error", "Failed to approve gate!");
+                                    } finally {
+                                        hideLoadingDialog();
+                                    }
+                                }
+                            );
+                        }}
+                    >
+                        <Text style={styles.doStatusText}>APPROVED</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {!collapsed &&
@@ -274,29 +308,29 @@ const fetchGate = async () => {
     if (!approvalGate.length) {
         return (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                <Text>Loading...</Text>
+                <Text>No data</Text>
             </View>
         );
     }
 
 
     return (
-       <FlatList
-    ref={listRef}
-    data={approvalGate}
-    keyExtractor={(item) => item.doNumber}
-    contentContainerStyle={styles.container}
-    refreshing={refreshing}
-    onRefresh={fetchGate}
-    renderItem={({ item }) => (
-        <GateItem
-            gateItem={item}
-            collapsedDO={collapsedDO}
-            toggleDO={toggleDO}
-            getDOStatus={getDOStatus}
+        <FlatList
+            ref={listRef}
+            data={approvalGate}
+            keyExtractor={(item) => item.doNumber}
+            contentContainerStyle={styles.container}
+            refreshing={refreshing}
+            onRefresh={fetchGate}
+            renderItem={({ item }) => (
+                <GateItem
+                    gateItem={item}
+                    collapsedDO={collapsedDO}
+                    toggleDO={toggleDO}
+                    getDOStatus={getDOStatus}
+                />
+            )}
         />
-    )}
-/>
     );
 
 

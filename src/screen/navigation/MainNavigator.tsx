@@ -64,7 +64,7 @@ const MainNavigator = () => (
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Inbound') iconName = 'arrow-down';
           else if (route.name === 'Outbond') iconName = 'arrow-up';
-          else if (route.name === 'Movement') iconName = 'kaaba';
+          else if (route.name === 'Movement') iconName = 'box';
           else if (route.name === 'Scanner') iconName = 'qrcode';
 
           return <Ionicons name={iconName} size={22} color={color} />;

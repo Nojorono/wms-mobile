@@ -125,8 +125,8 @@ const SkuCard = ({ item }: { item: Sku }) => {
                     </Text>
                 </View>
                 <View style={{ alignItems: "flex-end" }}>
-                    <Text style={styles.qtyLabel}>Picking / Load</Text>
-                    <Text style={styles.qty}>{item.qtyPicking} / {item.qtyLoad}</Text>
+                    <Text style={styles.qtyLabel}>Loading / Picking</Text>
+                    <Text style={styles.qty}>{item.qtyLoad} / {item.qtyPicking}</Text>
                 </View>
             </View>
         </View>
@@ -249,7 +249,7 @@ export default function ApprovalGateScreen() {
                                 async () => {
                                     try {
                                         showLoadingDialog("Approving Gate...");
-                                        await OutboundService.updateStatusForkliftGateDone(gateItem.id, "APPROVED");
+                                        await OutboundService.updateAssignedGateApprove(gateItem.id);
                                         showDialog("success", "Gate approved successfully!");
                                         await fetchGate();
                                     } catch (error) {

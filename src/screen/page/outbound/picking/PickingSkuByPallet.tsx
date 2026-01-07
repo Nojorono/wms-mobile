@@ -272,7 +272,7 @@ const PickingSkuByPallet = () => {
                                         {itm.code}
                                     </Text>
                                     <Text style={styles.itemName}>
-                                        {itm.week}
+                                        W-{itm.week} 
                                     </Text>
                                     <Text style={styles.qtyText}>
                                         {itm.quantity} {itm.uom}

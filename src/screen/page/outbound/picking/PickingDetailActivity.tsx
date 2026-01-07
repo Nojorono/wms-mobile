@@ -273,7 +273,14 @@ export default function PickingDetailActivity() {
       }
       setPickingPallet(res.data[0]);
       setDonePicking(true);
-      showDialog('success', `Pallet valid Week: ${res.data[0].week_number} | Uom: ${res.data[0].uom}`);
+      showDialog(
+        'success',
+        `Pallet valid ${
+          res.data[0].week_number 
+        ? `week ${res.data[0].week_number}`
+        : ''
+        } | Uom: ${res.data && res.data.length > 0 ? res.data[0].uom ?? '' : ''}`
+      );
     } catch (err) {
       showDialog('error','Gagal memeriksa pallet');
     }

@@ -278,6 +278,15 @@ class OutboundService {
     }
   }
 
+  static async updateAssignedGateApprove(assignedGateId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/assigned-gate/${assignedGateId}/approve`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   //kalo udah kelar semuanya nanti klik ini wh staffnya
   static async updateStatusPickingWhStaff(transactionPickingId: string, statusPicking: any): Promise<any> {
     try {

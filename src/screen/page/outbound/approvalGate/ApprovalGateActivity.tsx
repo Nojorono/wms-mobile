@@ -239,30 +239,7 @@ export default function ApprovalGateScreen() {
                     </TouchableOpacity>
 
                     {/* AREA KANAN → APPROVE */}
-                    <TouchableOpacity
-                        style={[styles.doStatus, { backgroundColor: "#ff9100ff" }]}
-                        onPress={async () => {
-                            console.log("Approve clicked:", gateItem.id);
-                            confirm.show(
-                                "accept",
-                                "Apakah kamu yakin ingin approve gate ini?",
-                                async () => {
-                                    try {
-                                        showLoadingDialog("Approving Gate...");
-                                        await OutboundService.updateAssignedGateApprove(gateItem.id);
-                                        showDialog("success", "Gate approved successfully!");
-                                        await fetchGate();
-                                    } catch (error) {
-                                        showDialog("error", "Failed to approve gate!");
-                                    } finally {
-                                        hideLoadingDialog();
-                                    }
-                                }
-                            );
-                        }}
-                    >
-                        <Text style={styles.doStatusText}>APPROVED</Text>
-                    </TouchableOpacity>
+                
                 </View>
 
                 {!collapsed &&
@@ -323,12 +300,57 @@ export default function ApprovalGateScreen() {
             refreshing={refreshing}
             onRefresh={fetchGate}
             renderItem={({ item }) => (
-                <GateItem
-                    gateItem={item}
-                    collapsedDO={collapsedDO}
-                    toggleDO={toggleDO}
-                    getDOStatus={getDOStatus}
-                />
+                <View>
+                    <GateItem
+                        gateItem={item}
+                        collapsedDO={collapsedDO}
+                        toggleDO={toggleDO}
+                        getDOStatus={getDOStatus}
+                    />
+                    {!collapsedDO[item.doNumber] && (
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: "#2563EB",
+                                borderRadius: 8,
+                                paddingVertical: 10,
+                                alignItems: "center",
+                                marginTop: -10,
+                                marginBottom: 32,
+                                shadowColor: "#000",
+                                shadowOpacity: 0.08,
+                                shadowRadius: 4,
+                            }}
+                            onPress={async () => {
+                                console.log("Approve clicked:", item.id);
+                                confirm.show(
+                                    "accept",
+                                    "Apakah kamu yakin ingin approve gate ini?",
+                                    async () => {
+                                        try {
+                                            showLoadingDialog("Approving Gate...");
+                                            await OutboundService.updateAssignedGateApprove(item.id);
+                                            showDialog("success", "Gate approved successfully!");
+                                            await fetchGate();
+                                        } catch (error) {
+                                            showDialog("error", "Failed to approve gate!");
+                                        } finally {
+                                            hideLoadingDialog();
+                                        }
+                                    }
+                                );
+                            }}
+                        >
+                            <Text style={{
+                                color: "#FFF",
+                                fontWeight: "700",
+                                fontSize: 16,
+                                letterSpacing: 0.5,
+                            }}>
+                                APPROVE GATE
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             )}
         />
     );

@@ -41,22 +41,6 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
     const userId = user?.id || "";
     const [quantitySwitch, setQuantitySwitch] = useState("");
 
-
-    // Gabungkan data detail ke satu state (selectedItem) agar lebih mudah dikelola
-    const openDetailModal = (detail: any) => {
-        setSelectedItem(detail);
-        setWeekNumber(String(detail?.week_number ?? ""));
-        setQuantityPicked(String(detail?.quantity_picked ?? ""));
-        setQuantitySwitch(String(item.quantity_switch || ""));
-        setIsEditing(false);
-        setModalVisible(true);
-    };
-
-    const onChangeWeek = (text: string) => {
-        setWeekNumber(text);
-        if (!isEditing) setIsEditing(true);
-    };
-
     const handleSubmitEdit = async () => {
         if (!selectedItem) return;
 
@@ -82,9 +66,6 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                 uom: selectedItem?.uom,
                 week_number: Number(weekNumber),
                 status: selectedItem?.status,
-                // inspection_by: user?.name,
-                // user_id: user?.id,
-                // user_name: user?.name,
             };
 
             await OutboundService.updateTransactionPickingDetail(selectedItem.id, payload);
@@ -144,8 +125,10 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
     // Indicator warna
     let statusColor = "#FF3B30";
 
+    if (item.scan_detail?.status?.toUpperCase() === "INSPECTION") statusColor = "#2196F3";
+    if (item.scan_detail?.status?.toUpperCase() === "INSPECTION_APPROVED") statusColor = "#4CAF50";
     if (item.is_scanned) statusColor = "#4CAF50";
-    if (item.picked_quantity > 0 && item.picked_quantity < item.quantity_plan) statusColor = "#2196F3";
+    // if (item.picked_quantity > 0 && item.picked_quantity < item.quantity_plan) statusColor = "#2196F3";
 
     // force red if status open
     if (isStatusOpen) statusColor = "#FF3B30";

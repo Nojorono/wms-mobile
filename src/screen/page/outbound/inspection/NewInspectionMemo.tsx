@@ -21,6 +21,7 @@ import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import { InspectionParamList } from '../../../navigation/outbound/InspectionNavigator.tsx';
 import OutboundService from '../../../../service/outboundService.ts';
 import MemoGroupCard from '../../../../components/outbound/MemoGroupCard.tsx';
+import { Picker } from '@react-native-picker/picker';
 
 type NavigationProp = StackNavigationProp<
   InspectionParamList,
@@ -37,8 +38,10 @@ function NewInspectionMemo() {
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((s) => s.showDialog);
-  const [searchInput, setSearchInput] = useState("");
+
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [selectedSku, setSelectedSku] = useState<string | null>(null);
+
 
   const fetchInspection = async () => {
     try {
@@ -51,55 +54,56 @@ function NewInspectionMemo() {
       const list = response?.data || [];
       const matched = list.find((i: any) => i.id === itemBefore.item.id);
       const memos = matched?.outbound_memos || [];
-    
+
       // Proses memo items + picking scan
-     const processed = memos.map((memo: any) => {
-  const memoItems = memo?.outbound_memo_items || [];
-  const pickings = memo?.transaction_pickings || [];
+      const processed = memos.map((memo: any) => {
+        const memoItems = memo?.outbound_memo_items || [];
+        const pickings = memo?.transaction_pickings || [];
 
-  const mergedItems = pickings.map((picking: any) => {
-    // ✅ match item_id + uom
-    const memoItem = memoItems.find(
-      (itm: any) =>
-        itm.item_id === picking.item_id &&
-        itm.uom === picking.uom
-    );
+        const mergedItems = pickings.map((picking: any) => {
+          // ✅ match item_id + uom
+          const memoItem = memoItems.find(
+            (itm: any) =>
+              itm.item_id === picking.item_id &&
+              itm.uom === picking.uom
+          );
 
-    const scans = picking.transactionScanPicking || [];
+          const scans = picking.transactionScanPicking || [];
 
-    const totalQtyPicked = scans.reduce(
-      (sum: number, s: any) => sum + (s.quantity_picked || 0),
-      0
-    );
+          const totalQtyPicked = scans.reduce(
+            (sum: number, s: any) => sum + (s.quantity_picked || 0),
+            0
+          );
 
-    return {
-      // identity
-      picking_id: picking.id,
-      item_id: picking.item_id,
+          return {
+            // identity
+            picking_id: picking.id,
+            item_id: picking.item_id,
 
-      // item info
-      item: picking.item || memoItem?.item,
+            // item info
+            item: picking.item || memoItem?.item,
 
-      // ✅ aligned plan
-      quantity_plan: memoItem?.quantity_plan ?? 0,
-      uom: picking.uom,
+            // ✅ aligned plan
+            quantity_plan: memoItem?.quantity_plan ?? 0,
+            uom: picking.uom,
 
-      // scan
-      is_scanned: scans.length > 0,
-      picked_quantity: totalQtyPicked,
-      scan_detail: scans,
+            // scan
+            is_scanned: scans.length > 0,
+            picked_quantity: totalQtyPicked,
+            scan_detail: scans,
 
-      // raw objects (optional)
-      transaction_picking: picking,
-      outbound_memo_item: memoItem,
-    };
-  });
+            // raw objects (optional)
+            transaction_picking: picking,
+            outbound_memo_item: memoItem,
+          };
+        });
 
-  return {
-    memo,
-    items: mergedItems,
-  };
-});
+        return {
+          memo,
+          items: mergedItems,
+        };
+      });
+      console.log("Processed Memo List: ", processed);
 
 
       setMemoList(processed);
@@ -138,6 +142,20 @@ function NewInspectionMemo() {
       .filter(Boolean);
   }, [memoList, searchKeyword]);
 
+  const skuOptions = useMemo(() => {
+    const set = new Set<string>();
+
+    memoList.forEach((group: any) => {
+      group.items.forEach((i: any) => {
+        if (i.item?.sku) {
+          set.add(i.item.sku);
+        }
+      });
+    });
+
+    return Array.from(set);
+  }, [memoList]);
+
 
 
   return (
@@ -156,30 +174,30 @@ function NewInspectionMemo() {
           <View style={[styles.activitiesHeader, { borderBottomWidth: 2, borderBottomColor: "#ccc" }]}>
             <Text style={styles.activitiesHeaderText}>List Inspection Memo</Text>
           </View>
-          <View style={{ flexDirection: "row", marginVertical: 12, gap: 8 }}>
-            <TextInput
-              style={[stylesLocal.searchInput, { flex: 1 }]}
-              placeholder="Input SKU (ex: CLM16)"
-              value={searchInput}
-              onChangeText={setSearchInput}
-              placeholderTextColor="#888"
-            />
-
-            <TouchableOpacity
-              style={stylesLocal.goButton}
-              onPress={() => setSearchKeyword(searchInput.trim())}
-            >
-              <Text style={stylesLocal.goButtonText}>Go</Text>
-            </TouchableOpacity>
+          <View style={{ marginVertical: 12 }}>
+            <View style={stylesLocal.pickerWrapper}>
+              <Picker
+                selectedValue={selectedSku}
+                onValueChange={(value) => {
+                  setSelectedSku(value);
+                  setSearchKeyword(value ?? "");
+                }}
+              >
+                <Picker.Item label="-- Select SKU --" value={null} />
+                {skuOptions.map((sku) => (
+                  <Picker.Item key={sku} label={sku} value={sku} />
+                ))}
+              </Picker>
+            </View>
           </View>
 
           {/* LIST MEMO */}
-          {/* {memoList.length === 0 ? (
+          {filteredMemoList.length === 0 ? (
             <Text style={{ textAlign: "center", marginTop: 30, color: "#777" }}>
               No memo found.
             </Text>
           ) : (
-            memoList.map((m: any, index: number) => (
+            filteredMemoList.map((m: any, index: number) => (
               <MemoGroupCard
                 key={`${m.memo.outbound_memo_number}-${index}`}
                 memo={m.memo}
@@ -187,50 +205,53 @@ function NewInspectionMemo() {
                 onRefresh={fetchInspection}
               />
             ))
-          )} */}
-          {filteredMemoList.map((m: any, index: number) => (
-            <MemoGroupCard
-              key={`${m.memo.outbound_memo_number}-${index}`}
-              memo={m.memo}
-              items={m.items}
-              onRefresh={fetchInspection}
-            />
-          ))}
+          )}
         </View>
       </ScrollView>
 
       {/* Floating Button */}
-      <TouchableOpacity
-        style={stylesLocal.fab}
-        onPress={() =>
-          Alert.alert(
-            "Approve All",
-            "Are you sure you want to approve all tasks?",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "OK",
-                onPress: async () => {
-                  try {
-                    const res = await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "IN_PROGRESS");
-                    showDialog("success", "All tasks approved successfully!");
-                    navigation.goBack();
-                  } catch (error) {
-                    showDialog("error", "Failed to approve tasks!");
-                  }
-                },
-              },
-            ]
+      {memoList.length > 0 &&
+        memoList.some((m: any) =>
+          m.items.some((item: any) =>
+            item.scan_detail.some(
+              (s: any) =>
+                s.status === "INSPECTION" || s.status === "INSPECTION_APPROVED"
+            )
           )
-        }
-      >
-        <Text style={stylesLocal.fabText}>Approved Task</Text>
-      </TouchableOpacity>
-      {
-        // Tampilkan tombol hanya jika SEMUA item sudah picked sesuai quantity_plan
+        ) && (
+          <TouchableOpacity
+            style={stylesLocal.fab}
+            onPress={() =>
+              Alert.alert(
+                "Approve All",
+                "Are you sure you want to approve all tasks?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "OK",
+                    onPress: async () => {
+                      try {
+                        await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "IN_PROGRESS");
+                        showDialog("success", "All tasks approved successfully!");
+                        navigation.goBack();
+                      } catch (error) {
+                        showDialog("error", "Failed to approve tasks!");
+                      }
+                    },
+                  },
+                ]
+              )
+            }
+          >
+            <Text style={stylesLocal.fabText}>Approved Task</Text>
+          </TouchableOpacity>
+        )
+      }
+      {memoList.length > 0 &&
         memoList.every((m: any) =>
           m.items.every(
             (item: any) =>
+              item.scan_detail.length > 0 &&
               item.scan_detail.every((s: any) => s.status === "INSPECTION_APPROVED")
           )
         ) && (
@@ -248,12 +269,11 @@ function NewInspectionMemo() {
                       text: "OK",
                       onPress: async () => {
                         try {
-                          memoList.forEach((memoGroup: any, memoIdx: number) => {
-                            memoGroup.items.forEach(async (item: any, itemIdx: number) => {
-                              const res = await OutboundService.updateStatusWhenCompleteInspection(item.transcation_pickig?.id, "COMPLETED");
-                            });
-                          });
-
+                          for (const memoGroup of memoList) {
+                            for (const item of memoGroup.items) {
+                              await OutboundService.updateStatusWhenCompleteInspection(item.transaction_picking?.id, "COMPLETED");
+                            }
+                          }
                           showDialog("success", "All tasks approved successfully!");
                           navigation.goBack();
                         } catch (error) {
@@ -305,6 +325,11 @@ const stylesLocal = StyleSheet.create({
     alignItems: "center",
     elevation: 4,
   },
+  pickerWrapper: {
+  backgroundColor: "#f2f2f2",
+  borderRadius: 10,
+  overflow: "hidden",
+},
   searchInput: {
     backgroundColor: "#f2f2f2",
     borderRadius: 10,

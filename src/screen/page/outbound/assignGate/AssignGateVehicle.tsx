@@ -285,73 +285,73 @@ export default function AssignGateVehicle() {
                     )}
 
 
-                    <Text style={styles.header}>List Assign Helper Loading</Text>
+                    {dataAssigned && dataAssigned.length > 0 && (
+                        <>
+                            <Text style={styles.header}>List Assign Helper Loading</Text>
 
-                    {dataAssignedLoading && dataAssignedLoading.length > 0 ? (
-                        dataAssignedLoading.map((ag: any, index: number) => {
-                            const handleDeleteHelperLoading = () => {
-                                confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
-                                    try {
-                                        showLoadingDialog("Deleting...");
-                                        const res = await OutboundService.deleteAssignedLoadingHelper(ag.assigned_gate_id, ag.id);
-                                        showDialog("success", "Assigned gate deleted!");
-                                        fetchData();
-                                    } catch (err) {
-                                        showDialog("error", "Failed to delete assigned gate.");
-                                    } finally {
-                                        hideLoadingDialog();
-                                    }
-                                }, false
-                                );
-                            };
+                            {dataAssignedLoading && dataAssignedLoading.length > 0 ? (
+                                dataAssignedLoading.map((ag: any, index: number) => {
+                                    const handleDeleteHelperLoading = () => {
+                                        confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
+                                            try {
+                                                showLoadingDialog("Deleting...");
+                                                await OutboundService.deleteAssignedLoadingHelper(ag.assigned_gate_id, ag.id);
+                                                showDialog("success", "Assigned gate deleted!");
+                                                fetchData();
+                                            } catch (err) {
+                                                showDialog("error", "Failed to delete assigned gate.");
+                                            } finally {
+                                                hideLoadingDialog();
+                                            }
+                                        }, false
+                                        );
+                                    };
 
-                            const handleEdit = () => {
-                                navigation.navigate('AssignGateLoading', {
-                                    item: params.item,
-                                    mode: "edit",
-                                    assignedGate: ag,   // kirim data lengkap
-                                });
-                            };
+                                    const handleEdit = () => {
+                                        navigation.navigate('AssignGateLoading', {
+                                            item: params.item,
+                                            mode: "edit",
+                                            assignedGate: ag,   // kirim data lengkap
+                                        });
+                                    };
 
-                            return (
-                                <View key={ag.id} style={styles.compactCard}>
-                                    <Text style={styles.indexNumber}>{index + 1}</Text>
+                                    return (
+                                        <View key={ag.id} style={styles.compactCard}>
+                                            <Text style={styles.indexNumber}>{index + 1}</Text>
 
-                                    <View style={{ flex: 1 }}>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.compactText}>
+                                                    <Text style={styles.bold}>User:</Text> {ag?.helper_name ?? "-"}
+                                                </Text>
 
-                                        <Text style={styles.compactText}>
-                                            <Text style={styles.bold}>User:</Text> {ag?.helper_name ?? "-"}
-                                        </Text>
+                                                <Text style={styles.compactText}>
+                                                    <Text style={styles.bold}>Device :</Text>{" "}
+                                                    {ag?.helper_phone ?? "-"}
+                                                </Text>
+                                            </View>
 
-                                        <Text style={styles.compactText}>
-                                            <Text style={styles.bold}>Device :</Text>{" "}
-                                            {ag?.helper_phone ?? "-"}
-                                        </Text>
-                                    </View>
+                                            <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+                                                <Icon name="edit" size={16} color="#007AFF" />
+                                            </TouchableOpacity>
 
+                                            <TouchableOpacity style={styles.actionButton} onPress={handleDeleteHelperLoading}>
+                                                <Icon name="trash" size={16} color="red" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    );
+                                })
+                            ) : (
+                                <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign helper untuk loading</Text>
+                            )}
 
-                                    <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
-                                        <Icon name="edit" size={16} color="#007AFF" />
-                                    </TouchableOpacity>
-
-
-                                    <TouchableOpacity style={styles.actionButton} onPress={handleDeleteHelperLoading}>
-                                        <Icon name="trash" size={16} color="red" />
-                                    </TouchableOpacity>
-                                </View>
-                            );
-                        })
-                    ) : (
-                        <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign helper untuk loading</Text>
+                            <TouchableOpacity
+                                style={styles.assignButton}
+                                onPress={() => navigation.navigate('AssignGateLoading', { item: dataAssigned[0] })}
+                            >
+                                <Text style={styles.assignButtonText}>Assign Helper Loading</Text>
+                            </TouchableOpacity>
+                        </>
                     )}
-
-                    {/* {dataAssigned.length < 0 && ( */}
-                    <TouchableOpacity
-                        style={styles.assignButton}
-                        onPress={() => navigation.navigate('AssignGateLoading', { item: dataAssigned[0] })}
-                    >
-                        <Text style={styles.assignButtonText}>Assign Helper Loading</Text>
-                    </TouchableOpacity>
                     {/* )} */}
                 </>
 

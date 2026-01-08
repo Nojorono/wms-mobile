@@ -176,45 +176,12 @@ export default function AssignGateLoading() {
         setShowUserDropdown(false);
     };
 
-    const handlePickerGateChange = (selectedId: string) => {
-        setFormData((prev) => ({ ...prev, gateId: selectedId }));
-
-        if (!selectedId) return;
-
-        const foundInUserList = userList.find((u) => u.id === selectedId);
-        const foundInManage = userManageList.find((u) => u.id === selectedId);
-        const found = foundInUserList || foundInManage;
-
-        if (found) {
-            setFormData((prev) => ({
-                ...prev,
-                name: found.name || prev.name,
-                contact: found.phone || prev.contact,
-            }));
-        }
-    };
 
 
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Assign Helper to Gate</Text>
-
-            <Text style={styles.label}>Select Gate</Text>
-            <Picker
-                selectedValue={formData.gateId}
-                onValueChange={(itemValue) => handlePickerGateChange(String(itemValue))}
-                style={styles.picker}
-            >
-                <Picker.Item label="Select Gate" value="" />
-                {gateList.map((gate) => (
-                    <Picker.Item
-                        key={gate.id}
-                        label={gate.name || " -"}
-                        value={gate.id}
-                    />
-                ))}
-            </Picker>
 
             <Text style={styles.label}>User</Text>
 

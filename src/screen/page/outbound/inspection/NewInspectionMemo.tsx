@@ -271,7 +271,9 @@ function NewInspectionMemo() {
                         try {
                           for (const memoGroup of memoList) {
                             for (const item of memoGroup.items) {
-                              await OutboundService.updateStatusWhenCompleteInspection(item.transaction_picking?.id, "COMPLETED");
+                              console.log("Item Scan Detail:", item);
+                              console.log("Updating picking id:", item.transaction_picking?.id);
+                              await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "COMPLETED");
                             }
                           }
                           showDialog("success", "All tasks approved successfully!");

@@ -150,7 +150,7 @@ export const ForkliftGateDetail = () => {
             await OutboundService.postForkliftScanGate(item.id, payload);
             showDialog('success', 'Pallet dan Gate berhasil di-assign.');
             setModalVisible(false);
-            navigation.goBack();
+            fetchOutboundDetail
         } catch (error) {
             showDialog('error', 'Gagal meng-assign Pallet dan Gate.');
         } finally {

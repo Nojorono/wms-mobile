@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  KeyboardAvoidingView,
+  ScrollView,
 } from 'react-native';
 
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
@@ -299,19 +301,24 @@ export default function PickingDetailActivity() {
       }
        const found = res.data.find(
         (item: any) =>
-          item.uom === itemBefore.uom && item.week_number === itemBefore.week_number
+          item.uom === itemBefore.uom
       );
       if (!found) {
-        showDialog('error', `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom} dan week ${res.data[0].week_number}`);
+        showDialog('error', `Invalid, ${palletPicking} memiliki Uom ${res.data[0].uom} `);
         return;
       }
       setSwitchInfo(res.data[0]);
       setDoneSwitch(true);
-      showDialog('success', `Pallet valid ${res.data[0].item_name}\nQty ${res.data[0].current_quantity} ${res.data[0].uom}`);
+      if (res.data[0].current_quantity === 0) {
+        showDialog('success', 'Pallet valid');
+      } else {
+        showDialog('success', `Pallet valid ${res.data[0].item_name}\nQty ${res.data[0].current_quantity} ${res.data[0].uom}`);
+      }
     } catch (err) {
       showDialog('error','Gagal memeriksa pallet');
     }
   };
+    const isSamePallet = palletSumber && palletPicking && palletSumber === palletPicking;
 
   // validation adapts for edit: since fields are prefilled, checks still valid
   const isSubmitValid = (() => {
@@ -320,13 +327,27 @@ export default function PickingDetailActivity() {
     const pickingOk = palletPicking && donePicking && pickingPallet;
     const qtyOk = qtyPicking && Number(qtyPicking) > 0;
 
-    // --- JIKA ADA SWITCHING ---
+    // --- JIKA PALLET SAMA ---
+    if (isSamePallet && foundItem) {
+      if (isSwitching) {
+        // Jika switching, validasi switching
+        const switchOk = switchPallet && doneSwitch && switchInfo;
+        const switchQtyOk = switchQty && Number(switchQty) > 0;
+        return sourceOk && pickingOk && qtyOk && switchOk && switchQtyOk;
+      } else {
+        // Jika tidak switching, qty harus sama dengan current_quantity
+        if (Number(qtyPicking) !== Number(foundItem.current_quantity)) {
+          return false;
+        }
+      }
+    }
+
+    // --- JIKA ADA SWITCHING (PALLET TIDAK SAMA) ---
     if (isSwitching) {
       const switchOk = switchPallet && doneSwitch && switchInfo;
       const switchQtyOk = switchQty && Number(switchQty) > 0;
       return sourceOk && pickingOk && qtyOk && switchOk && switchQtyOk;
     }
-
     return sourceOk && pickingOk && qtyOk;
   })();
 
@@ -398,9 +419,19 @@ export default function PickingDetailActivity() {
     setQtyPicking(v);
   };
 
-  const isSamePallet = palletSumber && palletPicking && palletSumber === palletPicking;
+
 
   return (
+     <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={ 'height'}
+    keyboardVerticalOffset={ 0}
+  >
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
     <View style={styles.container}>
       {/* MAIN CARD */}
       <View style={styles.card}>
@@ -763,6 +794,8 @@ export default function PickingDetailActivity() {
       >
         <Text style={styles.submitText}>{mode === 'edit' ? 'Update' : 'Submit'}</Text>
       </TouchableOpacity>
+      </View>
+    </ScrollView>
 
       {/* SCANNER MODAL */}
       {isScannerOpen && device && (
@@ -787,7 +820,8 @@ export default function PickingDetailActivity() {
           </TouchableOpacity>
         </View>
       )}
-    </View>
+    
+    </KeyboardAvoidingView>
   );
 }
 

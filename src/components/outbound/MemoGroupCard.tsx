@@ -20,31 +20,32 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
   const [expanded, setExpanded] = useState(false);
   // const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
-  const handleLepasMemo = () => {
-    try {
-      Alert.alert(
-        'Confirm',
-        'Are you sure you want to release the memo?',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'OK',
-            onPress: async () => {
-              await OutboundService.cancelMemo(memo.id);
-              showDialog('success', 'Memo released successfully!');
-              await onRefresh
-            },
-          },
-        ],
-        { cancelable: false }
-      );
-    } catch (error) {
-      console.error('Error releasing memo:', error);
-    }
-  };
+  // const handleLepasMemo = () => {
+  //   try {
+  //     Alert.alert(
+  //       'Confirm',
+  //       'Are you sure you want to release the memo?',
+  //       [
+  //         {
+  //           text: 'Cancel',
+  //           style: 'cancel',
+  //         },
+  //         {
+  //           text: 'OK',
+  //           onPress: async () => {
+  //            const res = await OutboundService.cancelMemo(memo.id);
+  //            console.log('Release memo response:', res);
+  //             showDialog('success', 'Memo released successfully!');
+  //             await onRefresh
+  //           },
+  //         },
+  //       ],
+  //       { cancelable: false }
+  //     );
+  //   } catch (error) {
+  //     console.error('Error releasing memo:', error);
+  //   }
+  // };
 
   const toggleExpand = () => {
     setExpanded(!expanded);
@@ -89,7 +90,7 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
         </TouchableOpacity>
 
         {/* RIGHT: DELETE BUTTON */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => { handleLepasMemo() }}
           style={{
             paddingHorizontal: 10,
@@ -102,7 +103,7 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
           }}
         >
           <Ionicons name="times" size={14} color="#fff" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* LIST ITEM MEMO */}

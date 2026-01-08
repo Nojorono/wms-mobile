@@ -26,7 +26,7 @@ const FILTER_OPTIONS = [
   'PENDING',
   'APPROVED',
   'IN_PROGRESS',
-  'READY_INTEGRATION',
+  'CANCELLED'
 ];
 
 function InspectionDoScreen() {

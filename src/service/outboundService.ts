@@ -98,7 +98,7 @@ class OutboundService {
 
   static async cancelMemo(memoId: string): Promise<any> {
     try {
-      const response = await axiosInstance.patch(`/outbound-memo/${memoId}/cancelled`);
+      const response = await axiosInstance.post(`/outbound-memo/${memoId}/cancelled`);
       return response.data;
     } catch (error: any) {
       throw error.response;

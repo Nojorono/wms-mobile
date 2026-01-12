@@ -29,7 +29,7 @@ interface MemoItemCardProps {
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
 
 const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
-      const navigation = useNavigation<NavigationProp>();
+    const navigation = useNavigation<NavigationProp>();
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [weekNumber, setWeekNumber] = useState('');
@@ -179,7 +179,7 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                     <View style={{ marginBottom: 10 }}>
                         <Text style={{ fontWeight: "700", marginBottom: 6 }}>Detail Scan</Text>
                         {item.scan_detail.map((detail: any, idx: number) => {
-                           
+
                             const isStatusOpen = detail?.status?.toUpperCase() === "OPEN";
                             return (
                                 <View key={detail.id ?? idx} style={{ marginBottom: 12, paddingBottom: 8, borderBottomWidth: 1, borderColor: "#eee" }}>

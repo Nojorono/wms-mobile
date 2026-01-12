@@ -35,7 +35,7 @@ const DeliveryLetterList: React.FC<DeliveryLetterListProps> = ({
             accessibilityLabel="Detail"
             style={[
               styles.actionButton,
-              {width:120, backgroundColor: Colors.primeColor },
+              { width: 120, backgroundColor: Colors.primeColor },
             ]}
             onPress={() => {
               onClick && onClick();
@@ -49,7 +49,7 @@ const DeliveryLetterList: React.FC<DeliveryLetterListProps> = ({
             accessibilityLabel="Process"
             style={[
               styles.actionButton,
-              { width:120 ,backgroundColor: Colors.secondaryColor },
+              { width: 120, backgroundColor: Colors.secondaryColor },
             ]}
             onPress={() => {
               onProcess && onProcess();

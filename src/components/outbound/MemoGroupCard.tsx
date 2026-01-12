@@ -114,8 +114,8 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
               No memo items.
             </Text>
           ) : (
-            items.map((item: any,index:number) => (
-              <MemoItemCard key={item.item_id+index} item={item} onRefresh={onRefresh} />
+            items.map((item: any, index: number) => (
+              <MemoItemCard key={item.item_id + index} item={item} onRefresh={onRefresh} />
             ))
           )}
         </View>

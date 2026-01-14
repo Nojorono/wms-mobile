@@ -328,10 +328,12 @@ export default function ApprovalGateScreen() {
                                     async () => {
                                         try {
                                             showLoadingDialog("Approving Gate...");
-                                            await OutboundService.updateAssignedGateApprove(item.id);
+                                            const res = await OutboundService.updateAssignedGateApprove(item.id);
+                                            console.log("Approve response:", res);
                                             showDialog("success", "Gate approved successfully!");
                                             await fetchGate();
                                         } catch (error) {
+                                            console.error("Approve error:", error);
                                             showDialog("error", "Failed to approve gate!");
                                         } finally {
                                             hideLoadingDialog();

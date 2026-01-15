@@ -107,7 +107,7 @@ type Sku = {
 };
 const getSkuStatus = (item: Sku) => {
     if (item.qtyLoad === 0) return { label: "NOT LOADED", color: "#9CA3AF" };
-    if (item.qtyLoad < item.qtyPicking) return { label: "PARTIAL", color: "#F59E0B" };
+    if (item.qtyLoad < item.qtyPicking) return { label: "PARTIAL", color: "#DC2626" };
     if (item.qtyLoad === item.qtyPicking) return { label: "COMPLETE", color: "#16A34A" };
     return { label: "OVER LOAD", color: "#DC2626" };
 };

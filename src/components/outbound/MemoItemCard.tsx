@@ -150,12 +150,6 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                     <Text style={{ fontSize: 16, fontWeight: "bold" }}>
                         Item: {item.item.sku}
                     </Text>
-                    <Text style={{ marginTop: 4 }}>
-                        Plan: {item.quantity_plan} {item.uom}
-                    </Text>
-                    <Text>
-                        Picked: {item.picked_quantity} {item.uom}
-                    </Text>
                 </View>
 
                 {/* DOT STATUS */}
@@ -177,34 +171,11 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                     </Text>
                 ) : (
                     <View style={{ marginBottom: 10 }}>
-                        <Text style={{ fontWeight: "700", marginBottom: 6 }}>Detail Scan</Text>
                         {item.scan_detail.map((detail: any, idx: number) => {
 
                             const isStatusOpen = detail?.status?.toUpperCase() === "OPEN";
                             return (
                                 <View key={detail.id ?? idx} style={{ marginBottom: 12, paddingBottom: 8, borderBottomWidth: 1, borderColor: "#eee" }}>
-                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                                        <Text style={{ fontWeight: "600" }}>User</Text>
-                                        <Text>{detail.user_name ?? "-"}</Text>
-                                    </View>
-                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                                        <Text style={{ fontWeight: "600" }}>Status</Text>
-                                        <Text style={{ color: isStatusOpen ? "red" : "black" }}>
-                                            {detail.status ?? "-"}
-                                        </Text>
-                                    </View>
-                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                                        <Text style={{ fontWeight: "600" }}>Week</Text>
-                                        <Text>{detail.week_number ?? "-"}</Text>
-                                    </View>
-                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                                        <Text style={{ fontWeight: "600" }}>Pallet Source</Text>
-                                        <Text>
-                                            {detail.pallet_source_id
-                                                ? `${detail.palletSource.pallet_code}`
-                                                : "-"}
-                                        </Text>
-                                    </View>
                                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                                         <Text style={{ fontWeight: "600" }}>Pallet Use</Text>
                                         <Text>
@@ -213,10 +184,22 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                                                 : "-"}
                                         </Text>
                                     </View>
+                                   
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <Text style={{ fontWeight: "600" }}>Week</Text>
+                                        <Text>{detail.week_number ?? "-"}</Text>
+                                    </View>
+                                    
                                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                                         <Text style={{ fontWeight: "600" }}>Quantity Picked</Text>
                                         <Text>
                                             {detail.quantity_picked ?? "-"}
+                                        </Text>
+                                    </View>
+                                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                                        <Text style={{ fontWeight: "600" }}>Status</Text>
+                                        <Text style={{ color: isStatusOpen ? "red" : "black" }}>
+                                            {detail.status ?? "-"}
                                         </Text>
                                     </View>
                                     {/* Tombol buka modal edit */}

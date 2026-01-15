@@ -11,41 +11,12 @@ import {
 import MemoItemCard from "./MemoItemCard";
 
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
-import OutboundService from "../../service/outboundService";
-import { useLoadingDialogStore } from "../../store/useLoadingStore";
 import { useDialogStore } from "../../store/useGlobalDialog";
 
 
-const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRefresh: () => void }) => {
+const MemoGroupCard = ({memo, items, onRefresh }: { memo: any; items: any; onRefresh: () => void }) => {
   const [expanded, setExpanded] = useState(false);
-  // const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
-  // const handleLepasMemo = () => {
-  //   try {
-  //     Alert.alert(
-  //       'Confirm',
-  //       'Are you sure you want to release the memo?',
-  //       [
-  //         {
-  //           text: 'Cancel',
-  //           style: 'cancel',
-  //         },
-  //         {
-  //           text: 'OK',
-  //           onPress: async () => {
-  //            const res = await OutboundService.cancelMemo(memo.id);
-  //            console.log('Release memo response:', res);
-  //             showDialog('success', 'Memo released successfully!');
-  //             await onRefresh
-  //           },
-  //         },
-  //       ],
-  //       { cancelable: false }
-  //     );
-  //   } catch (error) {
-  //     console.error('Error releasing memo:', error);
-  //   }
-  // };
 
   const toggleExpand = () => {
     setExpanded(!expanded);
@@ -72,38 +43,10 @@ const MemoGroupCard = ({ memo, items, onRefresh }: { memo: any; items: any; onRe
             <Text style={{ fontSize: 16, fontWeight: "bold" }}>
               Memo: {memo.outbound_memo_number}
             </Text>
-
-
             {expanded ? <Ionicons name="angle-up" size={25} color="#F26E1F" /> : <Ionicons name="angle-down" size={25} color="#F26E1F" />}
 
           </View>
-
-          <Text style={{ marginTop: 4, color: "#555" }}>
-            Tipe: {memo.type}
-          </Text>
-          <Text style={{ marginTop: 4, color: "#555" }}>
-            Ship To: {memo.destination}
-          </Text>
-          <Text style={{ marginTop: 4, color: "#555" }}>
-            Address: {memo.ship_to}
-          </Text>
         </TouchableOpacity>
-
-        {/* RIGHT: DELETE BUTTON */}
-        {/* <TouchableOpacity
-          onPress={() => { handleLepasMemo() }}
-          style={{
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 8,
-            backgroundColor: "#FF3B30",
-            alignSelf: "flex-start",
-            height: 32,
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="times" size={14} color="#fff" />
-        </TouchableOpacity> */}
       </View>
 
       {/* LIST ITEM MEMO */}

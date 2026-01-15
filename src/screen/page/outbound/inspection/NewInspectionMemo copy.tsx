@@ -40,7 +40,7 @@ function NewInspectionMemo() {
   const showDialog = useDialogStore((s) => s.showDialog);
 
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedPalletUse, setSelectedPalletUse] = useState<string | null>(null);
+  const [selectedSku, setSelectedSku] = useState<string | null>(null);
 
 
   const fetchInspection = async () => {
@@ -122,14 +122,14 @@ function NewInspectionMemo() {
   );
 
   const filteredMemoList = useMemo(() => {
-    if (!selectedPalletUse) return memoList;
+    if (!searchKeyword) return memoList;
+
+    const keyword = searchKeyword.toUpperCase();
 
     return memoList
       .map((group: any) => {
-        const filteredItems = group.items.filter((item: any) =>
-          item.scan_detail?.some(
-            (scan: any) => scan.palletUse.pallet_code === selectedPalletUse
-          )
+        const filteredItems = group.items.filter(
+          (i: any) => i.item?.sku?.toUpperCase() === keyword
         );
 
         if (filteredItems.length === 0) return null;
@@ -140,24 +140,22 @@ function NewInspectionMemo() {
         };
       })
       .filter(Boolean);
-  }, [memoList, selectedPalletUse]);
+  }, [memoList, searchKeyword]);
 
-  const palletUseOptions = useMemo(() => {
+  const skuOptions = useMemo(() => {
     const set = new Set<string>();
 
     memoList.forEach((group: any) => {
-      group.items.forEach((item: any) => {
-        console.log("Item Scan Detail for Pallet Use:", item);
-        item.scan_detail?.forEach((scan: any) => {
-          if (scan.palletUse) {
-            set.add(scan.palletUse.pallet_code);
-          }
-        });
+      group.items.forEach((i: any) => {
+        if (i.item?.sku) {
+          set.add(i.item.sku);
+        }
       });
     });
 
     return Array.from(set);
   }, [memoList]);
+
 
 
   return (
@@ -178,18 +176,18 @@ function NewInspectionMemo() {
           </View>
           <View style={{ marginVertical: 12 }}>
             <View style={stylesLocal.pickerWrapper}>
-              <View style={stylesLocal.pickerWrapper}>
-                <Picker
-                  selectedValue={selectedPalletUse}
-                  onValueChange={(value) => setSelectedPalletUse(value)}
-                >
-                  <Picker.Item label="-- Select Pallet Use --" value={null} />
-                  {palletUseOptions.map((use) => (
-                    <Picker.Item key={use} label={use} value={use} />
-                  ))}
-                </Picker>
-              </View>
-
+              <Picker
+                selectedValue={selectedSku}
+                onValueChange={(value) => {
+                  setSelectedSku(value);
+                  setSearchKeyword(value ?? "");
+                }}
+              >
+                <Picker.Item label="-- Select SKU --" value={null} />
+                {skuOptions.map((sku) => (
+                  <Picker.Item key={sku} label={sku} value={sku} />
+                ))}
+              </Picker>
             </View>
           </View>
 
@@ -330,10 +328,10 @@ const stylesLocal = StyleSheet.create({
     elevation: 4,
   },
   pickerWrapper: {
-    backgroundColor: "#f2f2f2",
-    borderRadius: 10,
-    overflow: "hidden",
-  },
+  backgroundColor: "#f2f2f2",
+  borderRadius: 10,
+  overflow: "hidden",
+},
   searchInput: {
     backgroundColor: "#f2f2f2",
     borderRadius: 10,

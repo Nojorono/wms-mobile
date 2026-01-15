@@ -106,7 +106,7 @@ function ForkliftGateScreen() {
                         {/* GATE TUJUAN */}
                         <View style={[styles.gateBanner, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
                             <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                <Text style={styles.gateTitle}>{gateName} </Text>
+                                <Text style={styles.gateTitle}>{item.outbound_do.outbound_do_number} </Text>
                                 <Text
                                     style={{
                                         color: "#FFF",
@@ -130,7 +130,7 @@ function ForkliftGateScreen() {
                         </View>
 
                         {/* PALLET HIGHLIGHT */}
-                        <Text style={styles.palletHeader}>{item.outbound_do.outbound_do_number}</Text>
+                        <Text style={styles.palletHeader}>{gateName}</Text>
                         {/* <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
 
                         <View style={styles.palletWrapper}>

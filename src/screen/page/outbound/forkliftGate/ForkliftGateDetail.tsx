@@ -8,6 +8,7 @@ import {
     ScrollView,
     Modal,
     Alert,
+    RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
@@ -19,6 +20,7 @@ import { useDialogStore } from "../../../../store/useGlobalDialog";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from "react-native-vision-camera";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
+import { useAuthStore } from "../../../../store/useAuthStore";
 
 type NavigationProp = StackNavigationProp<
     ForkliftGateParamList,
@@ -28,10 +30,13 @@ type NavigationProp = StackNavigationProp<
 export const ForkliftGateDetail = () => {
     const route = useRoute();
     const { item } = route.params as any;
+    console.log("Route Params:", route.params);
 
     const navigation = useNavigation<NavigationProp>();
     const [dataOutbound, setDataOutbound] = useState<any>(null);
-
+    const [dataItem, setDataItem] = useState<any>(null);
+    const { user } = useAuthStore();
+    const userId = user?.id || "";
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
     // === MODAL STATE ===
@@ -42,6 +47,7 @@ export const ForkliftGateDetail = () => {
     const showDialog = useDialogStore((state) => state.showDialog);
     const [targetGate, setTargetGate] = useState<string>("");
     const [scanGate, setScanGate] = useState<string>("");
+    const [refreshing, setRefreshing] = useState(false);
     // SCANNER STATES
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [scanTarget, setScanTarget] =
@@ -76,6 +82,10 @@ export const ForkliftGateDetail = () => {
 
     // === FETCH DETAIL ===
     const fetchOutboundDetail = async () => {
+        const resItem = await OutboundService.getAssignedGateByUserId(userId);
+        const assignedItem = resItem.data.find((d: any) => d.id === item.id);
+        setDataItem(assignedItem);
+
         const res = await OutboundService.getOutboundDetailById(
             item.outbound_do_id,
             { transaction_picking_status: "PENDING" }
@@ -86,9 +96,21 @@ export const ForkliftGateDetail = () => {
 
     useFocusEffect(
         useCallback(() => {
+
             fetchOutboundDetail();
         }, [])
     );
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            await fetchOutboundDetail();
+        } catch (e) {
+            console.log("Refresh error:", e);
+        } finally {
+            setRefreshing(false);
+        }
+    }, []);
 
     const groupByPallet = (tasks: any[]) => {
         const groups: any = {};
@@ -121,7 +143,7 @@ export const ForkliftGateDetail = () => {
     const openModal = (task: any, palletCodes: string) => {
         setSelectedTask(task);
         setTargetPallet(palletCodes || "");
-        setTargetGate(item.gate.code);
+        setTargetGate(dataItem.gate.code);
 
         setScanPallet("");
         setScanGate("");
@@ -150,7 +172,7 @@ export const ForkliftGateDetail = () => {
             await OutboundService.postForkliftScanGate(item.id, payload);
             showDialog('success', 'Pallet dan Gate berhasil di-assign.');
             setModalVisible(false);
-            fetchOutboundDetail
+            await fetchOutboundDetail();
         } catch (error) {
             showDialog('error', 'Gagal meng-assign Pallet dan Gate.');
         } finally {
@@ -162,7 +184,14 @@ export const ForkliftGateDetail = () => {
 
     return (
         <>
-            <ScrollView style={{ padding: 16 }}>
+            <ScrollView style={{ padding: 16 }} refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    colors={[Colors.secondaryColor]} // Android
+                    tintColor={Colors.secondaryColor} // iOS
+                />
+            }>
                 <Text style={styles.title}>
                     Kamu memiliki {dataOutbound?.outbound_memos.length} memo
                 </Text>
@@ -178,7 +207,7 @@ export const ForkliftGateDetail = () => {
                             {(() => {
                                 const palletGroups = groupByPallet(tasks);
                                 const completedPalletCodes = new Set(
-                                    item?.assigned_gate_pallets
+                                    dataItem?.assigned_gate_pallets
                                         ?.filter((p: any) => p.status === "COMPLETED")
                                         ?.map((p: any) => p.pallet?.pallet_code)
                                 );

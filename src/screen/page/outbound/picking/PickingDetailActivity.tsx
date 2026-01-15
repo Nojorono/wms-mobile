@@ -437,27 +437,27 @@ export default function PickingDetailActivity() {
       <View style={styles.card}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
           <Text
-            style={{
-              fontSize: 22,
-              fontWeight: 'bold',
-              color: 'black',
-              textAlign: 'center',
-              backgroundColor: '#FFF5E6',
-              borderRadius: 8,
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              elevation: 2,
-              shadowColor: '#F26E1F',
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              flex: 1,
-            }}
-            numberOfLines={1}
-            ellipsizeMode="tail"
+        style={{
+          fontSize: 22,
+          fontWeight: 'bold',
+          color: 'black',
+          textAlign: 'center',
+          backgroundColor: '#FFF5E6',
+          borderRadius: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+          elevation: 2,
+          shadowColor: '#F26E1F',
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          flex: 1,
+        }}
+        numberOfLines={1}
+        ellipsizeMode="tail"
           >
-            {mode === 'edit'
-              ? itemBefore?.item?.description
-              : itemBefore?.item?.item?.description ||
+        {mode === 'edit'
+          ? itemBefore?.item?.description
+          : itemBefore?.item?.item?.description ||
           itemBefore?.item?.description ||
           'Picking Activity'}
           </Text>
@@ -466,116 +466,256 @@ export default function PickingDetailActivity() {
         {/* SUGGESTED DESTINATION */}
         <View style={{ alignItems: 'center', marginBottom: 12 }}>
           <Text
-            style={{
-              fontStyle: 'italic',
-              fontSize: 14,
-              color: '#F26E1F',
-              fontWeight: '700',
-            }}
+        style={{
+          fontStyle: 'italic',
+          fontSize: 14,
+          color: '#F26E1F',
+          fontWeight: '700',
+        }}
           >
-            Suggested Destination Location
+        Suggested Destination Location
           </Text>
           <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 16,
-              color: '#333',
-              fontWeight: '700',
-              marginTop: 4,
-              backgroundColor: '#FFF5E6',
-              borderRadius: 8,
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-            }}
+        style={{
+          textAlign: 'center',
+          fontSize: 16,
+          color: '#333',
+          fontWeight: '700',
+          marginTop: 4,
+          backgroundColor: '#FFF5E6',
+          borderRadius: 8,
+          paddingVertical: 6,
+          paddingHorizontal: 12,
+        }}
           >
-            
-            {itemBefore?.quantity} {itemBefore?.uom} - Week-
-            {itemBefore?.week_number}
+        
+        {itemBefore?.quantity} {itemBefore?.uom} - Week-
+        {itemBefore?.week_number}
           </Text>
           <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 12,
-              color: '#333',
-              fontWeight: '700',
-              marginTop: 4,
-              backgroundColor: '#FFF5E6',
-              borderRadius: 8,
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-            }}
+        style={{
+          textAlign: 'center',
+          fontSize: 12,
+          color: '#333',
+          fontWeight: '700',
+          marginTop: 4,
+          backgroundColor: '#FFF5E6',
+          borderRadius: 8,
+          paddingVertical: 6,
+          paddingHorizontal: 12,
+        }}
           >
            From {itemBefore?.sourceWarehouseSub?.name} Bin {itemBefore?.sourceBin?.name} to {itemBefore?.destinationWarehouseSub?.name} -{' '}
-            {itemBefore?.destinationBin?.name}
-            
+        {itemBefore?.destinationBin?.name}
+        
           </Text>
         </View>
 
         {/* FOUND ITEM INFO */}
         {foundItem && (
           <View style={{ marginBottom: 4 }}>
-            <Text style={{ color: '#888', fontSize: 14 }}>
-              {foundItem.item_name} | Qty: {foundItem.current_quantity} {foundItem.uom} | Week: {foundItem.week_number} | Bin: {foundItem.warehouse_bin_name}
-            </Text>
+        <Text style={{ color: '#888', fontSize: 14 }}>
+          {foundItem.item_name} | Qty: {foundItem.current_quantity} {foundItem.uom} | Week: {foundItem.week_number} | Bin: {foundItem.warehouse_bin_name}
+        </Text>
           </View>
         )}
 
         {/* PALLET SUMBER */}
         <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginVertical: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 4,
           }}
         >
-          <TextInput
-            placeholder="Pallet Sumber"
-            value={palletSumber}
-            editable={mode !== 'edit'}
-            onChangeText={(v) => {
-              setPalletSumber(v);
-              setFoundItem(null);
-              setDoneSumber(false);
-            }}
-            style={[styles.input, { flex: 1, marginVertical: 0 }]}
-          />
+          <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>Pallet Sumber</Text>
+        <TextInput
+          placeholder="Pallet Sumber"
+          value={palletSumber}
+          editable={mode !== 'edit'}
+          onChangeText={(v) => {
+            setPalletSumber(v);
+            setFoundItem(null);
+            setDoneSumber(false);
+          }}
+          style={[styles.input, { marginVertical: 0 }]}
+        />
+          </View>
 
           {/* Scan Button (hidden in edit mode) */}
           {mode !== 'edit' && (
-            <TouchableOpacity
-              style={styles.scanBtn}
-              onPress={() => openScanner('sumber')}
-            >
-              <Ionicons
-                name="barcode"
-                size={22}
-                color={Colors.secondaryColor}
-              />
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.scanBtn}
+          onPress={() => openScanner('sumber')}
+        >
+          <Ionicons
+            name="barcode"
+            size={22}
+            color={Colors.secondaryColor}
+          />
+        </TouchableOpacity>
           )}
 
           {/* CHECK Button SUMBER*/}
           {doneSumber ? (
-            <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
-              DONE
-            </Text>
+        <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
+          DONE
+        </Text>
           ) : (
-            <TouchableOpacity
-              onPress={handleCheckPalletSumber}
-              style={{
-                marginLeft: 6,
-                backgroundColor: '#F26E1F',
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                borderRadius: 8,
-              }}
-            >
-              <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
-            </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleCheckPalletSumber}
+          style={{
+            marginLeft: 6,
+            backgroundColor: '#F26E1F',
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
+        </TouchableOpacity>
           )}
         </View>
 
         {/* PALLET PICKING */}
+        <View
+          style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 4,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>Pallet Picking</Text>
+        <TextInput
+          placeholder="Pallet Picking"
+          value={palletPicking}
+          editable={mode !== 'edit'}
+          onChangeText={(v) => {
+            setPalletPicking(v);
+            setPickingPallet(null);
+            setDonePicking(false);
+          }}
+          style={[styles.input, { marginVertical: 0 }]}
+        />
+          </View>
+          {mode !== 'edit' && (
+        <TouchableOpacity
+          style={styles.scanBtn}
+          onPress={() => openScanner('picking')}
+        >
+          <Ionicons
+            name="barcode"
+            size={22}
+            color={Colors.secondaryColor}
+          />
+        </TouchableOpacity>
+          )}
+          {/* CHECK Button */}
+          {donePicking ? (
+        <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
+          DONE
+        </Text>
+          ) : (
+        <TouchableOpacity
+          onPress={handleCheckPalletPicking}
+          style={{
+            marginLeft: 6,
+            backgroundColor: '#1f5bf2ff',
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
+        </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 4 }}>
+          <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>Qty Picking</Text>
+        <TextInput
+          placeholder="Qty Picking"
+          value={qtyPicking}
+          onChangeText={(v) => {
+          const qty = Number(v);
+          // Cek jika qty melebihi permintaan
+          if (
+          itemBefore?.quantity != null &&
+          qty > Number(itemBefore.quantity)
+          ) {
+          showDialog('error','Qty picking tidak boleh lebih besar dari qty permintaan');
+          return;
+          }
+          // Cek jika qty + total picked sebelumnya melebihi permintaan
+          const activities = Array.isArray(activity) ? activity : [];
+          const totalPicked = activities.reduce(
+          (sum: number, act: any) =>
+            typeof act?.quantity_picked === 'number'
+            ? sum + act.quantity_picked
+            : sum,
+          0
+          );
+          if (
+          itemBefore?.quantity != null &&
+          qty + totalPicked > Number(itemBefore.quantity)
+          ) {
+           showDialog('error',`Qty picking total (${qty + totalPicked}) tidak boleh lebih besar dari qty permintaan (${itemBefore.quantity})`);
+          return;
+          }
+            onChangeQtyPicking(v);
+          }}
+          keyboardType="numeric"
+          style={[styles.input, { marginVertical: 0 }]}
+        />
+          </View>
+          <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
+        {itemBefore?.uom}
+          </Text>
+        </View>
+
+        {/* SWITCHING */}
+        {isSamePallet && !isSwitching && (
+          <TouchableOpacity
+        disabled={foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)}
+        style={[
+          styles.cancelButton,
+          {
+            backgroundColor: foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)
+          ? '#ccc'
+          : '#F26E1F'
+          }
+        ]}
+        onPress={() => setIsSwitching(true)}
+          >
+        <Text
+          style={[
+            styles.cancelText,
+            {
+          color: foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)
+            ? '#666'
+            : '#fff'
+            }
+          ]}
+        >
+          Use Pallet Switch
+        </Text>
+          </TouchableOpacity>
+        )}
+
+
+        {isSamePallet && isSwitching && (
+          <View style={styles.switchSection}>
+        <Text style={styles.switchTitle}>Pallet Switching</Text>
+        {/* PALLET SWITCHING */}
+        {switchInfo && (
+          <Text style={{ color: '#888', fontSize: 14, marginVertical: 4 }}>
+            Uom: {switchInfo.uom} | Week:{' '}
+            {switchInfo.week_number}
+          </Text>
+        )}
         <View
           style={{
             flexDirection: 'row',
@@ -583,202 +723,74 @@ export default function PickingDetailActivity() {
             marginVertical: 4,
           }}
         >
-          <TextInput
-            placeholder="Pallet Picking"
-            value={palletPicking}
-            editable={mode !== 'edit'}
-            onChangeText={(v) => {
-              setPalletPicking(v);
-              setPickingPallet(null);
-              setDonePicking(false);
-            }}
-            style={[styles.input, { flex: 1, marginVertical: 0 }]}
-          />
-          {mode !== 'edit' && (
-            <TouchableOpacity
-              style={styles.scanBtn}
-              onPress={() => openScanner('picking')}
-            >
-              <Ionicons
-                name="barcode"
-                size={22}
-                color={Colors.secondaryColor}
-              />
-            </TouchableOpacity>
-          )}
-          {/* CHECK Button */}
-          {donePicking ? (
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>Pallet Switching</Text>
+            <TextInput
+          placeholder="Pallet Switching"
+          value={switchPallet}
+          onChangeText={(v) => {
+            setSwitchPallet(v);
+            setSwitchInfo(null);
+            setDoneSwitch(false);
+          }}
+          style={[styles.input, { marginVertical: 0 }]}
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.scanBtn}
+            onPress={() => openScanner('switching')}
+            disabled={mode === 'edit'}
+          >
+            <Ionicons
+          name="barcode"
+          size={22}
+          color={Colors.secondaryColor}
+            />
+          </TouchableOpacity>
+          {/* CHECK Button SWITCHING*/}
+          {doneSwitch ? (
             <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
-              DONE
+          DONE
             </Text>
           ) : (
             <TouchableOpacity
-              onPress={handleCheckPalletPicking}
-              style={{
-                marginLeft: 6,
-                backgroundColor: '#1f5bf2ff',
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                borderRadius: 8,
-              }}
+          onPress={handleCheckPalletSwitching}
+          style={{
+            marginLeft: 6,
+            backgroundColor: '#1f5bf2ff',
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            borderRadius: 8,
+          }}
             >
-              <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
+          <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
             </TouchableOpacity>
           )}
         </View>
-
         <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 4 }}>
-          <TextInput
-            placeholder="Qty Picking"
-            value={qtyPicking}
-            onChangeText={(v) => {
-                const qty = Number(v);
-                // Cek jika qty melebihi permintaan
-                if (
-                itemBefore?.quantity != null &&
-                qty > Number(itemBefore.quantity)
-                ) {
-                showDialog('error','Qty picking tidak boleh lebih besar dari qty permintaan');
-                return;
-                }
-                // Cek jika qty + total picked sebelumnya melebihi permintaan
-                const activities = Array.isArray(activity) ? activity : [];
-                const totalPicked = activities.reduce(
-                (sum: number, act: any) =>
-                  typeof act?.quantity_picked === 'number'
-                  ? sum + act.quantity_picked
-                  : sum,
-                0
-                );
-                if (
-                itemBefore?.quantity != null &&
-                qty + totalPicked > Number(itemBefore.quantity)
-                ) {
-                 showDialog('error',`Qty picking total (${qty + totalPicked}) tidak boleh lebih besar dari qty permintaan (${itemBefore.quantity})`);
-                return;
-                }
-              onChangeQtyPicking(v);
-            }}
-            keyboardType="numeric"
-            style={[styles.input, { flex: 1, marginVertical: 0 }]}
-          />
-
-          <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
-            {itemBefore?.uom}
-          </Text>
-        </View>
-
-        {/* SWITCHING */}
-        {isSamePallet && !isSwitching && (
-          <TouchableOpacity
-            disabled={foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)}
-            style={[
-              styles.cancelButton,
-              {
-                backgroundColor: foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)
-                  ? '#ccc'
-                  : '#F26E1F'
-              }
-            ]}
-            onPress={() => setIsSwitching(true)}
-          >
-            <Text
-              style={[
-                styles.cancelText,
-                {
-                  color: foundItem && Number(foundItem.current_quantity) === Number(qtyPicking)
-                    ? '#666'
-                    : '#fff'
-                }
-              ]}
-            >
-              Use Pallet Switch
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>Qty Switching</Text>
+            <TextInput
+          placeholder="Qty Switching"
+          value={switchQty}
+          onChangeText={setSwitchQty}
+          keyboardType="numeric"
+          editable={false}
+          style={[styles.input, { marginVertical: 0, backgroundColor: '#eee' }]}
+            />
+          </View>
+          {switchInfo && (
+            <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
+          {switchInfo.uom}
             </Text>
-          </TouchableOpacity>
-        )}
-
-
-        {isSamePallet && isSwitching && (
-          <View style={styles.switchSection}>
-            <Text style={styles.switchTitle}>Pallet Switching</Text>
-            {/* PALLET SWITCHING */}
-            {switchInfo && (
-              <Text style={{ color: '#888', fontSize: 14, marginVertical: 4 }}>
-                Uom: {switchInfo.uom} | Week:{' '}
-                {switchInfo.week_number}
-              </Text>
-            )}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginVertical: 4,
-              }}
-            >
-
-              <TextInput
-                placeholder="Pallet Switching"
-                value={switchPallet}
-                onChangeText={(v) => {
-                  setSwitchPallet(v);
-                  setSwitchInfo(null);
-                  setDoneSwitch(false);
-                }}
-                style={[styles.input, { flex: 1, marginVertical: 0 }]}
-              />
-
-              <TouchableOpacity
-                style={styles.scanBtn}
-                onPress={() => openScanner('switching')}
-                disabled={mode === 'edit'}
-              >
-                <Ionicons
-                  name="barcode"
-                  size={22}
-                  color={Colors.secondaryColor}
-                />
-              </TouchableOpacity>
-              {/* CHECK Button SWITCHING*/}
-              {doneSwitch ? (
-                <Text style={{ color: 'green', fontWeight: '700', marginLeft: 10 }}>
-                  DONE
-                </Text>
-              ) : (
-                <TouchableOpacity
-                  onPress={handleCheckPalletSwitching}
-                  style={{
-                    marginLeft: 6,
-                    backgroundColor: '#1f5bf2ff',
-                    paddingVertical: 10,
-                    paddingHorizontal: 14,
-                    borderRadius: 8,
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontWeight: '700' }}>Check</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 4 }}>
-              <TextInput
-                placeholder="Qty Switching"
-                value={switchQty}
-                onChangeText={setSwitchQty}
-                keyboardType="numeric"
-                editable={false}
-                style={[styles.input, { flex: 1, marginVertical: 0, backgroundColor: '#eee' }]}
-              />
-              {switchInfo && (
-                <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
-                  {switchInfo.uom}
-                </Text>
-              )}
-            </View>
-            <TouchableOpacity
-              style={[styles.cancelButton]}
-              onPress={() => setIsSwitching(false)}
-            >
-              <Text style={styles.cancelText}>Cancel Switching</Text>
-            </TouchableOpacity>
+          )}
+        </View>
+        <TouchableOpacity
+          style={[styles.cancelButton]}
+          onPress={() => setIsSwitching(false)}
+        >
+          <Text style={styles.cancelText}>Cancel Switching</Text>
+        </TouchableOpacity>
           </View>
         )}
       </View>

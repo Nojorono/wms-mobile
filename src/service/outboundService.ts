@@ -161,7 +161,7 @@ class OutboundService {
 
   static async getAssignedGateByUserId(userId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('/assigned-gate', { params: { user_id: userId } });
+      const response = await axiosInstance.get('/assigned-gate', { params: { user_id: userId, status:'PENDING' } });
       return response.data;
     } catch (error: any) {
       throw error.response;

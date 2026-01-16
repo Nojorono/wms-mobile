@@ -27,6 +27,7 @@ function PickingSkuScreen() {
     const [PickingList, setPickingList] = useState<any[]>([]);
     const [searchText, setSearchText] = useState('');
     const [selectedFilter, setSelectedFilter] = useState<string | null>();
+    
 
     const styles = GlobalStyles();
     const { user } = useAuthStore();
@@ -40,7 +41,8 @@ function PickingSkuScreen() {
         try {
             setRefreshing(true);
             showLoadingDialog('Loading List Picking SKU');
-            const response = await OutboundService.getSkuByMemoId(itemBefore.item.id);
+            const response = await OutboundService.getSkuByMemoId(itemBefore.itemBefore.item.id,'PENDING');
+           
             setPickingList(response.data || []);
         } catch (error) {
             hideLoadingDialog();
@@ -60,13 +62,13 @@ function PickingSkuScreen() {
     // filter & search data
     const filteredList = useMemo(() => {
         return PickingList.filter((item) => {
-            const matchSearch =
-                item.item?.sku?.toLowerCase().includes(searchText.toLowerCase()) ||
-                item.item?.description?.toLowerCase().includes(searchText.toLowerCase());
+            // const matchSearch =
+            //     item.item?.sku?.toLowerCase().includes(searchText.toLowerCase()) ||
+            //     item.item?.description?.toLowerCase().includes(searchText.toLowerCase());
 
             const matchFilter = selectedFilter ? item.status === selectedFilter : true;
 
-            return matchSearch && matchFilter;
+            return  matchFilter;
         });
     }, [PickingList, searchText, selectedFilter]);
 
@@ -76,7 +78,7 @@ function PickingSkuScreen() {
             <ScrollView
                 contentContainerStyle={styles.menuContainer}
                 stickyHeaderIndices={[2]}
-                style={styles.scrollViewContent}
+                style={[styles.scrollViewContent, { borderTopLeftRadius: 0, borderTopRightRadius: 0 }]}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -85,7 +87,7 @@ function PickingSkuScreen() {
                     />
                 }
             >
-                <View style={styles.menuCard}>
+                <View style={[styles.menuCard, ]}>
                     <View
                         style={[
                             styles.activitiesHeader,
@@ -139,6 +141,10 @@ function PickingSkuScreen() {
                     )}
                 </View>
             </ScrollView>
+             {/* Floating Action Button
+                    <TouchableOpacity style={localStyles.fab} onPress={DetailPallet}>
+                        <Text style={[localStyles.addButtonText, { color: '#fff' }]}>Detail by Pallet</Text>
+                    </TouchableOpacity> */}
         </View>
     );
 }
@@ -166,5 +172,25 @@ const localStyles = StyleSheet.create({
     filterText: {
         fontSize: 13,
         color: '#333',
+    }, addButtonText: {
+        textAlign: 'center',
+        fontWeight: '600',
+        color: '#F26E1F',
+    },
+
+    fab: {
+        position: "absolute",
+        bottom: 30,
+        left: 25,
+        backgroundColor: "#F26E1F",
+        width: 100,
+        height: 60,
+        borderRadius: 40,
+        justifyContent: "center",
+        alignItems: "center",
+        elevation: 6,
+        shadowColor: "#000",
+        shadowOpacity: 0.25,
+        shadowOffset: { width: 0, height: 3 },
     },
 });

@@ -26,6 +26,7 @@ const ForkLiftDetailScreen = () => {
   const staging = item.inventoryTracking.warehouseSub;
   const destination = item.destinationBin;
 
+
   return (
     <View style={styles.container}>
       {/* Card Section */}

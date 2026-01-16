@@ -12,9 +12,9 @@ class OutboundService {
     }
   }
 
-  static async getSkuByMemoId(memoId: string): Promise<any> {
+  static async getSkuByMemoId(memoId: string, statusInput: string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/transaction-picking/memo/${memoId}`);
+      const response = await axiosInstance.get(`/transaction-picking/memo/${memoId}`, { params: { status: statusInput } });
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -87,9 +87,18 @@ class OutboundService {
     }
   }
 
+  static async deteleTransactionPickingById(transactionPickingId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete(`/transaction-scan-picking/${transactionPickingId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   static async cancelMemo(memoId: string): Promise<any> {
     try {
-      const response = await axiosInstance.patch(`/transaction-picking/memo/${memoId}/detach`);
+      const response = await axiosInstance.post(`/outbound-memo/${memoId}/cancelled`);
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -114,9 +123,9 @@ class OutboundService {
     }
   }
   //for assign gate
-  static async getOutboundDetailById(outboundDoId: string): Promise<any> {
+  static async getOutboundDetailById(outboundDoId: string, payload?: any): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/outbound-do/${outboundDoId}`);
+      const response = await axiosInstance.get(`/outbound-do/${outboundDoId}`, { params: payload });
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -152,7 +161,7 @@ class OutboundService {
 
   static async getAssignedGateByUserId(userId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('/assigned-gate', { params: { user_id: userId } });
+      const response = await axiosInstance.get('/assigned-gate', { params: { user_id: userId, status:'PENDING' } });
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -177,9 +186,9 @@ class OutboundService {
     }
   }
 
-  static async updateAssignedGateUser(assignedGateId: string, assignedUserId: string): Promise<any> {
+  static async updateAssignedGateUser(assignedGateId: string, assignedUserId: string, payload: any): Promise<any> {
     try {
-      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`); 
+      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`, payload);
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -188,7 +197,7 @@ class OutboundService {
 
   static async deleteAssignedGateUser(assignedGateId: string, assignedUserId: string): Promise<any> {
     try {
-      const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`);  
+      const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}/users/${assignedUserId}`);
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -201,13 +210,87 @@ class OutboundService {
       return response.data;
     } catch (error: any) {
       throw error.response;
-    } 
+    }
+  }
+  //HELPER LOADING SERVICES
+
+  static async getAssignedLoadingByDoId(assignedGateId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/assigned-gate/${assignedGateId}/helpers`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async postHelperToAssignedLoading(assignedGateId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/assigned-gate/${assignedGateId}/helpers`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateAssignedLoadingHelper(assignedGateId: string, helperId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/helpers/${helperId}`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async deleteAssignedLoadingHelper(assignedGateId: string, helperId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.delete(`/assigned-gate/${assignedGateId}/helpers/${helperId}`);  
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
   }
 
   //forklift scan
   static async postForkliftScanGate(assignedGateId: string, payload: any): Promise<any> {
     try {
       const response = await axiosInstance.post(`/assigned-gate/${assignedGateId}/pallets`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateStatusForkliftGateDone(assignedGateId: string, statusPayload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/assigned-gate/${assignedGateId}/status`, { status: statusPayload });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async getAssignedGateByStatus(payload?: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/assigned-gate`, { params: { status: payload } }); 
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async updateAssignedGateApprove(assignedGateId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/assigned-gate/${assignedGateId}/approve`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  //kalo udah kelar semuanya nanti klik ini wh staffnya
+  static async updateStatusPickingWhStaff(transactionPickingId: string, statusPicking: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/transaction-scan-picking/${transactionPickingId}`, { status: statusPicking });
       return response.data;
     } catch (error: any) {
       throw error.response;

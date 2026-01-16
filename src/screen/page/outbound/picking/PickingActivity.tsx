@@ -6,6 +6,7 @@ import {
   View,
   StyleSheet,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,6 +16,7 @@ import { PickingParamList } from '../../../navigation/outbound/PickingNavigator'
 import OutboundService from '../../../../service/outboundService';
 import { useFocusEffect } from '@react-navigation/native';
 import { OutboundItemParam } from '../../../../interface/outbound/outbound';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingActivity'>;
 
@@ -29,37 +31,10 @@ export default function PickingActivity() {
   const [userIdNewest, setUserIdNewest] = useState('');
 
   const handleAddActivity = () => {
-    navigation.navigate('PickingDetailActivity', { mode: "add", itemBefore: itemBefore.item });
+    navigation.navigate('PickingDetailActivity', { mode: "add", itemBefore: itemBefore.item, activity: pickingList  });
   };
 
-  const handleSendToWH = async () => {
 
-
-    // Ambil hanya pallet yang status-nya OPEN
-    const createdPallets = pickingList.filter(p => p.status === "OPEN");
-
-    // Kalau tidak ada pallet dengan status OPEN
-    if (createdPallets.length === 0) {
-      showDialog("success", "Semua data sudah dikirim ke WH STAFF!");
-      return;
-    }
-
-    try {
-      showLoadingDialog("Sending to WH Staff...");
-      const payload = {
-        status: "PENDING",
-        inspection_by: userIdNewest,
-        ids: createdPallets.map((item) => item.id),
-      };
-      const res = await OutboundService.updateStatusPickingBulk(payload);
-      hideLoadingDialog();
-      await fetchPicking();
-      showDialog("success", "Berhasil dikirim ke WH Staff!");
-    } catch (error) {
-      hideLoadingDialog();
-      showDialog("error", "Gagal mengirim ke WH Staff!");
-    }
-  };
 
   const fetchPicking = async () => {
     try {
@@ -179,18 +154,54 @@ export default function PickingActivity() {
                 style={styles.activityCard}
               >
                 {/* 🔹 Title Section */}
-                <Text style={{
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <Text style={{
                   fontSize: 18,
                   backgroundColor: '#FFF5E6',
                   paddingVertical: 8,
                   paddingHorizontal: 12,
                   borderRadius: 8,
                   fontWeight: '800',
-                  marginBottom: 12,
                   color: '#333',
-                }}>
+                  flex: 1,
+                  }}>
                   Picking - {index + 1}
-                </Text>
+                  </Text>
+                  <TouchableOpacity
+                  onPress={() => {
+                    // Confirm before delete
+                    Alert.alert(
+                      'Delete Activity',
+                      'Are you sure you want to delete this activity?',
+                      [
+                      {
+                        text: 'Cancel',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Delete',
+                        style: 'destructive',
+                        onPress: async () => {
+                        try {
+                          showLoadingDialog('Deleting...');
+                          await OutboundService.deteleTransactionPickingById(activity.id);
+                          fetchPicking();
+                        } catch (error) {
+                          showDialog('error', 'Failed to delete activity');
+                        } finally {
+                          hideLoadingDialog();
+                        }
+                        },
+                      },
+                      ],
+                      { cancelable: true }
+                    );
+                  }}
+                  style={{ marginLeft: 10, padding: 4 }}
+                  >
+                  <Ionicons name="trash" size={18} color="red" />
+                  </TouchableOpacity>
+                </View>
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Quantity Picked</Text>
                   <Text
@@ -264,13 +275,6 @@ export default function PickingActivity() {
         })()}
 
       </ScrollView>
-
-      {/* Floating Action Button */}
-      {pickingList && pickingList.length === 0 ? (null) : (
-        <TouchableOpacity style={styles.fab} onPress={handleSendToWH}>
-          <Text style={[styles.addButtonText, { color: '#fff' }]}>send to wh staff</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 }

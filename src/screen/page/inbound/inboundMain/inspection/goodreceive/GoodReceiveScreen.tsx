@@ -82,9 +82,9 @@ const GoodReceiveScreen = () => {
 
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
       {/* Info Section */}
-      <View style={styles.infoCard}>
+      <View style={[styles.infoCard, { width: "100%" }]}>
         <Text style={styles.infoTitle}>Inbound Planning Number</Text>
         <View style={styles.row}>
           <Ionicons name="book" size={18} color="black" />
@@ -102,8 +102,8 @@ const GoodReceiveScreen = () => {
       </View>
 
       {/* Scrollable Dynamic Card List */}
-      <View style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+      <View style={{ flex: 1, width: "100%" }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ alignItems: "center" }}>
           <GoodReceivedCardList
             items={mergedData}
             onCheck={handleCheck}
@@ -116,7 +116,7 @@ const GoodReceiveScreen = () => {
         <TouchableOpacity
           style={{
             position: "absolute",
-            right: 100,
+            alignSelf: "center",
             bottom: 32,
             backgroundColor: "#421dfaff",
             borderRadius: 28,
@@ -128,15 +128,15 @@ const GoodReceiveScreen = () => {
             // TODO: handle meta button press
             try {
               showLoadingDialog("Integrating to META...")
-              const response = await InboundServices.postIntegrationToOracle(payload.payload.id);
+              await InboundServices.postIntegrationToOracle(payload.payload.id);
               Alert.alert("Success", "Integrated to META successfully.", [
-                                              {
-                                                  text: "OK",
-                                                  onPress: () => {
-                                                      navigation.pop(2);
-                                                  },
-                                              },
-                                          ]);
+                {
+                  text: "OK",
+                  onPress: () => {
+                    navigation.pop(2);
+                  },
+                },
+              ]);
             } catch (error) {
               console.error('Integration error:', error);
               Alert.alert('Error', 'Failed to integrate to META.');

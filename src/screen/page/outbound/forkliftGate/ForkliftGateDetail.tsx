@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -7,9 +7,11 @@ import {
     TextInput,
     ScrollView,
     Modal,
+    Alert,
+    RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ForkliftGateParamList } from "../../../navigation/outbound/ForkliftGateNavigator";
 import OutboundService from "../../../../service/outboundService";
@@ -18,6 +20,7 @@ import { useDialogStore } from "../../../../store/useGlobalDialog";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from "react-native-vision-camera";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
+import { useAuthStore } from "../../../../store/useAuthStore";
 
 type NavigationProp = StackNavigationProp<
     ForkliftGateParamList,
@@ -27,11 +30,13 @@ type NavigationProp = StackNavigationProp<
 export const ForkliftGateDetail = () => {
     const route = useRoute();
     const { item } = route.params as any;
-    console.log("ITEM DETAIL:", item);
+    console.log("Route Params:", route.params);
 
     const navigation = useNavigation<NavigationProp>();
     const [dataOutbound, setDataOutbound] = useState<any>(null);
-
+    const [dataItem, setDataItem] = useState<any>(null);
+    const { user } = useAuthStore();
+    const userId = user?.id || "";
     const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
     // === MODAL STATE ===
@@ -42,6 +47,7 @@ export const ForkliftGateDetail = () => {
     const showDialog = useDialogStore((state) => state.showDialog);
     const [targetGate, setTargetGate] = useState<string>("");
     const [scanGate, setScanGate] = useState<string>("");
+    const [refreshing, setRefreshing] = useState(false);
     // SCANNER STATES
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [scanTarget, setScanTarget] =
@@ -73,23 +79,71 @@ export const ForkliftGateDetail = () => {
         },
     });
 
+
     // === FETCH DETAIL ===
     const fetchOutboundDetail = async () => {
+        const resItem = await OutboundService.getAssignedGateByUserId(userId);
+        const assignedItem = resItem.data.find((d: any) => d.id === item.id);
+        setDataItem(assignedItem);
+
         const res = await OutboundService.getOutboundDetailById(
-            item.outbound_do_id
+            item.outbound_do_id,
+            { transaction_picking_status: "PENDING" }
+
         );
         setDataOutbound(res.data);
     };
 
-    useEffect(() => {
-        fetchOutboundDetail();
+    useFocusEffect(
+        useCallback(() => {
+
+            fetchOutboundDetail();
+        }, [])
+    );
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            await fetchOutboundDetail();
+        } catch (e) {
+            console.log("Refresh error:", e);
+        } finally {
+            setRefreshing(false);
+        }
     }, []);
 
+    const groupByPallet = (tasks: any[]) => {
+        const groups: any = {};
+
+        tasks.forEach((task) => {
+            const scans = task.transactionScanPicking || [];
+
+            scans.forEach((scan: any) => {
+                const palletCode = scan?.palletUse?.pallet_code;
+                if (!palletCode) return;
+
+                if (!groups[palletCode]) {
+                    groups[palletCode] = [];
+                }
+
+                groups[palletCode].push({
+                    sku: task.item?.sku,
+                    taskId: task.id,
+                    task,
+                });
+            });
+        });
+
+        return groups;
+    };
+
+
+
     // === HANDLE OPEN MODAL ===
-    const openModal = (task: any, palletCodes: string[]) => {
+    const openModal = (task: any, palletCodes: string) => {
         setSelectedTask(task);
-        setTargetPallet(palletCodes.join(", "));
-        setTargetGate(item.gate.code);
+        setTargetPallet(palletCodes || "");
+        setTargetGate(dataItem.gate.code);
 
         setScanPallet("");
         setScanGate("");
@@ -108,16 +162,17 @@ export const ForkliftGateDetail = () => {
         if (!canSubmit) return;
 
         const payload = {
-            id: item.id,
-            pallet_id: selectedTask.transactionScanPicking[0].pallet_use_id, // sesuaikan jika berbeda
-            status: "ASSIGNED",
+            pallet_id: selectedTask.transactionScanPicking.find(
+                (i: any) => i.palletUse?.pallet_code === targetPallet
+            )?.palletUse?.id,
+            status: "COMPLETED",
         };
         try {
             showLoadingDialog('Memproses data...');
             await OutboundService.postForkliftScanGate(item.id, payload);
             showDialog('success', 'Pallet dan Gate berhasil di-assign.');
             setModalVisible(false);
-            navigation.goBack();
+            await fetchOutboundDetail();
         } catch (error) {
             showDialog('error', 'Gagal meng-assign Pallet dan Gate.');
         } finally {
@@ -129,7 +184,14 @@ export const ForkliftGateDetail = () => {
 
     return (
         <>
-            <ScrollView style={{ padding: 16 }}>
+            <ScrollView style={{ padding: 16 }} refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    colors={[Colors.secondaryColor]} // Android
+                    tintColor={Colors.secondaryColor} // iOS
+                />
+            }>
                 <Text style={styles.title}>
                     Kamu memiliki {dataOutbound?.outbound_memos.length} memo
                 </Text>
@@ -142,79 +204,127 @@ export const ForkliftGateDetail = () => {
                             <Text style={styles.memoNumber}>{memo.outbound_memo_number}</Text>
                             <Text style={styles.subTitle}>Total Task: {tasks.length}</Text>
 
-                            {tasks.map((task: any, tIndex: number) => {
-                                const scans = task.transactionScanPicking || [];
-                                const palletCodes = scans.map(
-                                    (scan: any) => scan?.palletUse.pallet_code
+                            {(() => {
+                                const palletGroups = groupByPallet(tasks);
+                                const completedPalletCodes = new Set(
+                                    dataItem?.assigned_gate_pallets
+                                        ?.filter((p: any) => p.status === "COMPLETED")
+                                        ?.map((p: any) => p.pallet?.pallet_code)
                                 );
-
-                                // Ambil pallet tujuan tanpa pakai [0]
-                                const assignedPallet = item?.assigned_gate_pallets?.find(
-                                    (p: any) => p.status === "ASSIGNED"
-                                );
-
-                                const palletTujuan = assignedPallet?.pallet?.pallet_code;
-
-                                // Cek match dengan palletCodes
-                                const isMatch =
-                                    Array.isArray(palletCodes) &&
-                                    palletTujuan &&
-                                    palletCodes.includes(palletTujuan);
 
                                 return (
-                                    <View key={task.id} style={styles.taskBox}>
-                                        <View
-                                            style={{
-                                                flexDirection: "row",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                            }}
-                                        >
-                                            <Text style={styles.taskTitle}>
-                                                • Task {tIndex + 1} – Item {task.item?.sku}
-                                            </Text>
+                                    <View style={{ marginTop: 6, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 12 }}>
+                                        <Text style={styles.subTitle}>
+                                            Total Pallet: {Object.keys(palletGroups).length}
+                                        </Text>
 
-                                            {/* === OPEN MODAL === */}
-                                            <TouchableOpacity
-                                                style={{ padding: 8 }}
-                                                onPress={() => {
-                                                    if (!palletCodes || palletCodes.length === 0) {
-                                                        showDialog('error', 'Belum ada pallet tujuan.\nSilakan scan pallet terlebih dahulu.');
-                                                        return;
-                                                    }
-                                                    openModal(task, palletCodes);
-                                                }}
-                                            >
-                                                <Icon name="chevron-right" size={18} color="#888" />
-                                            </TouchableOpacity>
-                                        </View>
+                                        {
+                                            Object.keys(palletGroups).map((palletCode) => {
+                                                // const itemsInPallet = palletGroups[palletCode];
+                                                // console.log("Items in Pallet:", item?.assigned_gate_pallets);
 
-                                        {palletCodes.length === 0 ? (
-                                            <Text style={styles.noPallet}>
-                                                Belum ada pallet di-scan
-                                            </Text>
-                                        ) : (
-                                            <View>
-                                                <Text style={styles.palletLabel}>Pallet hasil scan:</Text>
+                                                // const assignedPallet = item?.assigned_gate_pallets?.find(
+                                                //     (p: any) =>
+                                                //         p.status === "COMPLETED" &&
+                                                //         p.pallet?.pallet_code === palletCode
+                                                // );
 
-                                                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                                    <Text style={styles.palletItem}>
-                                                        {palletCodes.join(", ")}
-                                                    </Text>
+                                                // const palletTujuan = assignedPallet?.pallet?.pallet_code;
+                                                // const isMatch = palletTujuan === palletCode;
+                                                const itemsInPallet = palletGroups[palletCode];
+                                                const isMatch = completedPalletCodes.has(palletCode);
 
-                                                    {isMatch && (
-                                                       <Ionicons name="check-circle" size={16} color="green" style={{ marginLeft: 8 }} />
-                                                    )}
-                                                </View>
-                                            </View>
-                                        )}
+                                                return (
+                                                    <View key={palletCode} style={styles.taskBox}>
+                                                        <View
+                                                            style={{
+                                                                flexDirection: "row",
+                                                                justifyContent: "space-between",
+                                                                alignItems: "center",
+                                                            }}
+                                                        >
+                                                            <Text style={styles.taskTitle}>
+                                                                • Pallet {palletCode}
+                                                            </Text>
+
+                                                            <TouchableOpacity
+                                                                style={{ padding: 8 }}
+                                                                onPress={() => {
+                                                                    openModal(
+                                                                        itemsInPallet[0].task,
+                                                                        palletCode
+                                                                    )
+                                                                }
+                                                                }
+                                                            >
+                                                                <Icon name="chevron-right" size={18} color="#888" />
+                                                            </TouchableOpacity>
+                                                        </View>
+
+                                                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                                            <Text style={styles.palletItem}>
+                                                                Digunakan oleh {itemsInPallet.length} item
+                                                            </Text>
+
+                                                            {isMatch && (
+                                                                <Ionicons
+                                                                    name="check-circle"
+                                                                    size={16}
+                                                                    color="green"
+                                                                    style={{ marginLeft: 8 }}
+                                                                />
+                                                            )}
+                                                        </View>
+
+                                                        <View style={{ marginTop: 6 }}>
+                                                            {itemsInPallet.map((row: any, idx: number) => (
+                                                                <Text key={idx} style={{ color: "#666", marginVertical: 2 }}>
+                                                                    - SKU {row.sku} (Task Ke : {idx + 1} )
+                                                                </Text>
+                                                            ))}
+                                                        </View>
+                                                    </View>
+                                                );
+                                            })
+                                        }
                                     </View>
                                 );
-                            })}
+                            })()}
+
                         </View>
                     );
                 })}
             </ScrollView>
+
+            {/* Floating Button */}
+            {/* {item.status !== "DONE" && (
+                <TouchableOpacity
+                    style={styles.fab}
+                    onPress={() =>
+                        Alert.alert(
+                            "Done Confirmation",
+                            "Are you sure all your tasks are done?",
+                            [
+                                { text: "Cancel", style: "cancel" },
+                                {
+                                    text: "OK",
+                                    onPress: async () => {
+                                        try {
+                                            const res = await OutboundService.updateStatusForkliftGateDone(item.id, "DONE");
+                                            showDialog("success", "All tasks approved successfully!");
+                                            navigation.goBack();
+                                        } catch (error) {
+                                            showDialog("error", "Failed to approve tasks!");
+                                        }
+                                    },
+                                },
+                            ]
+                        )
+                    }
+                >
+                    <Text style={styles.fabText}>All Done</Text>
+                </TouchableOpacity>
+            )} */}
 
             {/* ========================================================= */}
             {/* ====================== MODAL POPUP ====================== */}
@@ -439,4 +549,20 @@ const styles = StyleSheet.create({
         backgroundColor: "red",
     },
     closeText: { textAlign: "center", fontWeight: "600" },
+    fab: {
+        position: "absolute",
+        bottom: 30,
+        left: 30,
+        backgroundColor: "#F26E1F",
+        width: 140,
+        height: 50,
+        borderRadius: 40,
+        justifyContent: "center",
+        alignItems: "center",
+        elevation: 4,
+    },
+    fabText: {
+        color: "white",
+        fontWeight: "700",
+    },
 });

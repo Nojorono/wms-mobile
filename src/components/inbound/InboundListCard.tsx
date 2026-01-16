@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Colors from "../../constants/Colors.ts";
+import { formatDate } from "../../util/helper.ts";
 
 type InboundCardProps = {
   code: string; // CWH02-IN-0625-0001
@@ -39,7 +40,7 @@ const InboundCard: React.FC<InboundCardProps> = ({
         <Ionicons name="cube-outline" size={58} color="black" />
         <View style={{ marginLeft: 8 }}>
           <Text style={styles.plate}>{plate}</Text>
-          <Text style={styles.date}>{date}</Text>
+          <Text style={styles.date}>{formatDate(date)}</Text>
           <Text style={styles.role}>{role}</Text>
         </View>
       </View>

@@ -54,6 +54,7 @@ export default function AssignGateActivity() {
     deviceId: "",
   });
 
+
   const handleDeleteUser = async (gateId: string, assignedUserId: string) => {
     try {
       showLoadingDialog("Removing user...");
@@ -106,15 +107,18 @@ export default function AssignGateActivity() {
           user_phone: formData.contact,
         }
       );
-      console.log("Add User Response:", res);
 
       showDialog("success", "User added to assigned gate.");
     } else if (userMode === "edit" && selectedUser) {
       // ✏️ UPDATE EXISTING
-      console.log("Updating user:", selectedUser);
       await OutboundService.updateAssignedGateUser(
         assignedGate.id,
-        selectedUser.id
+        selectedUser.id,
+        {
+          user_id: formData.deviceId,
+          user_name: formData.name,
+          user_phone: formData.contact,
+        }
       );
 
       showDialog("success", "User updated.");
@@ -122,7 +126,6 @@ export default function AssignGateActivity() {
 
     navigation.goBack();
   } catch (err) {
-    console.log(err);
     showDialog("error", "Failed processing request.");
   } finally {
     hideLoadingDialog();
@@ -145,8 +148,8 @@ export default function AssignGateActivity() {
       );
 
       setUserList(filteredUsers);
-    } catch (error) {
-      console.log("Error:", error);
+    } catch (error:any) {
+      showDialog('error', `Error : ${error.data.message || ''}.`);
     } finally {
       hideLoadingDialog();
     }

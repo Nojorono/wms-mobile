@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -13,7 +13,8 @@ import { useAuthStore } from "../../../../store/useAuthStore";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ForkliftGateParamList } from "../../../navigation/outbound/ForkliftGateNavigator";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useDialogStore } from "../../../../store/useGlobalDialog";
 
 type Pallet = {
     pallet: {
@@ -34,13 +35,14 @@ type GateTask = {
     id: string | number;
     gate: { name: string };
     gate_id?: string;
+    status: string;
     outbound_do: OutboundDO;
     assigned_gate_pallets?: Pallet[];
     // add other GateTask properties if needed
 };
 type NavigationProp = StackNavigationProp<
-  ForkliftGateParamList,
-  "ForkliftGateMain"
+    ForkliftGateParamList,
+    "ForkliftGateMain"
 >;
 
 
@@ -51,16 +53,16 @@ function ForkliftGateScreen() {
     const userId = user?.id || "";
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-     const navigation = useNavigation<NavigationProp>();
-    
+    const navigation = useNavigation<NavigationProp>();
+    const showDialog = useDialogStore((state) => state.showDialog);
+
 
     const fetchData = async () => {
         try {
             const res = await OutboundService.getAssignedGateByUserId(userId);
             setData(res.data);
-            console.log("Fetched gate tasks:", res.data);
-        } catch (err) {
-            console.log("Fetch error:", err);
+        } catch (err:any) {
+            showDialog('error', `Fetch error: ${err.data.message || ''}.`);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -72,9 +74,11 @@ function ForkliftGateScreen() {
         fetchData();
     };
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [])
+    );
 
     if (loading) {
         return (
@@ -101,7 +105,24 @@ function ForkliftGateScreen() {
                     <View key={item.id} style={styles.card}>
                         {/* GATE TUJUAN */}
                         <View style={[styles.gateBanner, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
-                            <Text style={styles.gateTitle}>Gate: {gateName}</Text>
+                            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                <Text style={styles.gateTitle}>{item.outbound_do.outbound_do_number} </Text>
+                                <Text
+                                    style={{
+                                        color: "#FFF",
+                                        fontWeight: "600",
+                                        backgroundColor: item.status === "PENDING" ? "#ff9c07ff" : item.status === "DONE" ? "#4CAF50" : "#888",
+                                        borderRadius: 6,
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 4,
+                                        overflow: "hidden",
+                                        fontSize: 13,
+                                        marginLeft: 8,
+                                    }}
+                                >
+                                    {item.status}
+                                </Text>
+                            </View>
                             <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
                                 <Ionicons name="chevron-right" size={24} color="#FFF" />
                             </TouchableOpacity>
@@ -109,7 +130,8 @@ function ForkliftGateScreen() {
                         </View>
 
                         {/* PALLET HIGHLIGHT */}
-                        <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
+                        <Text style={styles.palletHeader}>{gateName}</Text>
+                        {/* <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
 
                         <View style={styles.palletWrapper}>
                             {pallets.length === 0 && (
@@ -121,7 +143,7 @@ function ForkliftGateScreen() {
                                     <Text style={styles.palletText}>{pallet?.pallet?.pallet_code}</Text>
                                 </View>
                             ))}
-                        </View>
+                        </View> */}
                     </View>
                 );
             })}

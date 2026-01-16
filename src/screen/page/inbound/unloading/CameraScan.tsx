@@ -27,7 +27,8 @@ import ConstantService from "../../../../service/constantService";
 type NavigationProp = StackNavigationProp<UnloadingParamList, "UnloadingMain">;
 
 interface RouteParams {
-  item: { id: string; inbound_id: string; uom: string };
+  item: { id: string; inbound_id: string; uom: string; };
+  // item: any;
   dataExist?: any[];
   payload?: any;
   onScanFinish?: (data: PalletItem | null) => void;
@@ -86,7 +87,7 @@ const CameraScreen = () => {
   // const codeScanner = useCodeScanner({
   //   codeTypes: ["qr", "code-128", "ean-13"],
   //   onCodeScanned: (codes) => {
-      
+
   //     const val = codes[0]?.value ?? "";
   //     if (val) {
 
@@ -103,13 +104,12 @@ const CameraScreen = () => {
     codeTypes: ["qr", "code-128", "ean-13"],
     onCodeScanned: (codes) => {
       const val = codes[0]?.value ?? "";
-      
+
       if (val && !isProcessing) {
         setIsProcessing(true);
-        console.log("Scanned Value:", val);
         setManualInput(val);
         handleAddPallet(val);
-        
+
         // Reset after 2 seconds
         setTimeout(() => {
           setIsProcessing(false);
@@ -148,7 +148,7 @@ const CameraScreen = () => {
     }
   }, [isCameraActive]);
 
-    useEffect(() => {
+  useEffect(() => {
     // tampilkan input setelah 3 detik
     showLoadingDialog("Loading...")
     const timer = setTimeout(() => {
@@ -226,6 +226,12 @@ const CameraScreen = () => {
       if (!palletData) {
         showDialog("error", "Pallet not found or invalid!");
         return;
+      }
+      if (palletData?.items.length > 0) {
+        if (palletData?.items[0]?.item_id !== item.id) {
+          showDialog("error", "Pallet tidak sesuai dengan item inbound!");
+          return;
+        }
       }
 
       if (!palletData.success) {
@@ -307,70 +313,69 @@ const CameraScreen = () => {
     }
 
     const data = {
-    production_date: scan.production_date ?? "",
-    week_number: scan.week ? Number(scan.week) : 0,
-    inbound_id: scan.inbound_id,
-    item_id: scan.item_id,
-    quantity: Number(scan.qty) || 0,
-    uom: scan.uom,
-    user_id: scan.user_id,
-    user_name: scan.user_name,
-    pallet_code: scan.palletNo,
-    status: scan.status,
-    m_warehouse_sub_id: scan.staging_area_id || "",
-  };
-
-  console.log("Data to submit/edit:", data);
-
-  // ✅ Validasi sebelum kirim
-  const requiredFields = [
-    data.production_date,
-    data.week_number,
-    data.quantity,
-    data.m_warehouse_sub_id,
-    data.pallet_code,
-  ];
-
-  const hasMissing = requiredFields.some(
-    (val) => val === "" || val === 0 || val === null
-  );
-
-  if (hasMissing) {
-    showDialog("error", "Tolong Lengkapi semua field sebelum melanjutkan!");
-    return; // hentikan proses
-  }
-
-  if (isEditMode) {
-    const editData = {
       production_date: scan.production_date ?? "",
-      week_number: Number(scan.week) || 0,
+      week_number: scan.week ? Number(scan.week) : 0,
+      inbound_id: scan.inbound_id,
+      item_id: scan.item_id,
       quantity: Number(scan.qty) || 0,
+      uom: scan.uom,
+      user_id: scan.user_id,
+      user_name: scan.user_name,
+      pallet_code: scan.palletNo,
+      status: scan.status,
       m_warehouse_sub_id: scan.staging_area_id || "",
     };
 
-    // 🔁 Validasi juga untuk edit mode
-    const hasEditMissing = Object.values(editData).some(
+
+    // ✅ Validasi sebelum kirim
+    const requiredFields = [
+      data.production_date,
+      data.week_number,
+      data.quantity,
+      data.m_warehouse_sub_id,
+      data.pallet_code,
+    ];
+
+    const hasMissing = requiredFields.some(
       (val) => val === "" || val === 0 || val === null
     );
 
-    if (hasEditMissing) {
-      showDialog("error", "Tolong Lengkapi semua field sebelum edit!");
-      return;
+    if (hasMissing) {
+      showDialog("error", "Tolong Lengkapi semua field sebelum melanjutkan!");
+      return; // hentikan proses
     }
 
-    InboundServices.updateInspectionData(scan.id, editData)
-      .then(() => navigation.goBack())
-      .catch((err) =>
-        showDialog("error", err?.data?.error || "Error while updating pallet!")
+    if (isEditMode) {
+      const editData = {
+        production_date: scan.production_date ?? "",
+        week_number: Number(scan.week) || 0,
+        quantity: Number(scan.qty) || 0,
+        m_warehouse_sub_id: scan.staging_area_id || "",
+      };
+
+      // 🔁 Validasi juga untuk edit mode
+      const hasEditMissing = Object.values(editData).some(
+        (val) => val === "" || val === 0 || val === null
       );
-  } else {
-    InboundServices.postUnloading(data)
-      .then(() => navigation.goBack())
-      .catch((err) =>
-        showDialog("error", err?.data?.error || "Error while Posting Unloading!")
-      );
+
+      if (hasEditMissing) {
+        showDialog("error", "Tolong Lengkapi semua field sebelum edit!");
+        return;
+      }
+
+      InboundServices.updateInspectionData(scan.id, editData)
+        .then(() => navigation.goBack())
+        .catch((err) =>
+          showDialog("error", err?.data?.error || "Error while updating pallet!")
+        );
+    } else {
+      InboundServices.postUnloading(data)
+        .then(() => navigation.goBack())
+        .catch((err) =>
+          showDialog("error", err?.data?.error || "Error while Posting Unloading!")
+        );
+    }
   }
-}
 
   // 🌗 Toggle antara kamera dan scanner hardware
   if (isCameraActive) {
@@ -479,7 +484,7 @@ const CameraScreen = () => {
             </View>
 
             {/* Qty & UOM in one row */}
-            <View style={{ flexDirection: "row", alignItems: "center"}}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
               <TextInput
                 style={[styles.input, { flex: 1, height: 50 }]}
                 placeholder="Qty"
@@ -489,17 +494,17 @@ const CameraScreen = () => {
                 textAlign="right"
               />
 
-              
-              <View style={{backgroundColor: "#fff",  height: 50, borderRadius: 8, marginLeft: 8, width: 100 }}>
+
+              <View style={{ backgroundColor: "#fff", height: 50, borderRadius: 8, marginLeft: 8, width: 100 }}>
                 <Picker
                   selectedValue={scan.uom ?? ""}
                   onValueChange={(itemValue) =>
                     updatePallet("uom", itemValue)
                   }
-                  style={{alignItems: "center", color: "#111"}}
+                  style={{ alignItems: "center", color: "#111" }}
                   dropdownIconColor="#111"
                 >
-                  <Picker.Item label="Uom" value="" style={{ fontSize: 13,color: "#111" }} />
+                  <Picker.Item label="Uom" value="" style={{ fontSize: 13, color: "#111" }} />
                   {uom.map((item: any) => (
                     <Picker.Item
                       key={item.code}
@@ -534,7 +539,7 @@ const CameraScreen = () => {
               </Text>
             </TouchableOpacity>
 
-               {/* Week */}
+            {/* Week */}
             <TextInput
               style={[styles.input, { backgroundColor: "#fef9c3", marginTop: 8 }]}
               placeholder="Week (auto)"

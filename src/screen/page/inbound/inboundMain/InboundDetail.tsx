@@ -12,6 +12,8 @@ import {
     Modal,
     Pressable,
     Image,
+    Platform,
+    PermissionsAndroid,
 } from "react-native";
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
@@ -151,6 +153,28 @@ export default function InboundDetail() {
     const showDialog = useDialogStore((state) => state.showDialog);
     const confirm = useConfirmationStore();
     const [refreshing, setRefreshing] = useState(false);
+
+    const requestCameraPermission = async () => {
+  if (Platform.OS !== "android") return true;
+
+  const granted = await PermissionsAndroid.check(
+    PermissionsAndroid.PERMISSIONS.CAMERA
+  );
+
+  if (granted) return true;
+
+  const result = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.CAMERA,
+    {
+      title: "Camera Permission",
+      message: "App membutuhkan akses kamera untuk mengambil foto",
+      buttonPositive: "OK",
+      buttonNegative: "Batal",
+    }
+  );
+
+  return result === PermissionsAndroid.RESULTS.GRANTED;
+};
     type PhotoMeta = {
         url: string;
         bucket: string;
@@ -218,7 +242,6 @@ export default function InboundDetail() {
             setStatus(response.data.status); // Update status dari response
             const inbound_dos = response.data.inbound_dos;
             setMergedData(mergeInboundDos(inbound_dos));
-            console.log('Fetched inbound data:', response.data);
             setPhotos({
                 segel: response.data.photo_seal
                     ? {
@@ -313,48 +336,55 @@ export default function InboundDetail() {
         );
     };
 
-    const handleUpload = async (type: "segel" | "barang" | "nopol") => {
-        try {
-            const result = await launchCamera({
-                mediaType: "photo",
-                quality: 0.4,
-                cameraType: "back",
-                saveToPhotos: false,
-            });
+   const handleUpload = async (type: "segel" | "barang" | "nopol") => {
+  try {
+    const hasPermission = await requestCameraPermission();
 
-            if (result.didCancel) return;
+    if (!hasPermission) {
+      Alert.alert(
+        "Permission ditolak",
+        "Camera permission diperlukan untuk mengambil foto"
+      );
+      return;
+    }
 
-            const file = result.assets?.[0];
-            if (!file) return;
+    const result = await launchCamera({
+      mediaType: "photo",
+      quality: 0.4,
+      cameraType: "back",
+      saveToPhotos: false,
+    });
 
-            showLoadingDialog("Uploading photo...");
+    if (result.didCancel) return;
 
-            const s3 = await InboundServices.postdPhotoToS3(
-                file,
-                `${type}`
-            );
+    const file = result.assets?.[0];
+    if (!file) return;
 
-            const data = s3.data;
+    showLoadingDialog("Uploading photo...");
 
-            // simpan metadata
-            setPhotos((prev) => ({
-                ...prev,
-                [type]: {
-                    url: data.url,
-                    bucket: data.bucket,
-                    key: data.key,
-                    size: data.size,
-                },
-            }));
-            setDirty(true);
-            showDialog("success", `Photo ${type} uploaded`);
-        } catch (error) {
-            console.error(error);
-            showDialog("error", "Upload failed");
-        } finally {
-            hideLoadingDialog();
-        }
-    };
+    const s3 = await InboundServices.postdPhotoToS3(file, `${type}`);
+    const data = s3.data;
+
+    setPhotos((prev) => ({
+      ...prev,
+      [type]: {
+        url: data.url,
+        bucket: data.bucket,
+        key: data.key,
+        size: data.size,
+      },
+    }));
+
+    setDirty(true);
+    showDialog("success", `Photo ${type} uploaded`);
+  } catch (error) {
+    console.error(error);
+    showDialog("error", "Upload failed");
+  } finally {
+    hideLoadingDialog();
+  }
+};
+
 
     const handleDelete = async (type: "segel" | "barang" | "nopol") => {
         try {
@@ -409,7 +439,7 @@ export default function InboundDetail() {
     const hadInitial = initialPhotos.segel && initialPhotos.barang && initialPhotos.nopol;
 
     const shouldShowSubmit = !hadInitial || dirty;
-    const submitLabel = dirty ? "Edit" : "Submit";
+    const submitLabel = dirty ? "Upload" : "Submit";
 
  useEffect(() => {
   const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {

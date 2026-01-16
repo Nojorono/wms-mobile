@@ -13,6 +13,7 @@ export type HomeStackParamList = {
     inboundIndex: undefined;
     outBoundIndex: undefined;
     scannerIndex: undefined;
+    movementIndex: undefined;
 };
 
 
@@ -40,7 +41,7 @@ const HomeStackNavigator = () => {
                     }}>
                         <Image source={require('../../assets/images/icon-white-nna.png')}
                             style={{ width: 100, height: 22, resizeMode: 'contain' }} />
-                        
+
                         <TouchableOpacity
                             style={{ marginRight: 15 }}
                             onPress={() => {
@@ -50,7 +51,7 @@ const HomeStackNavigator = () => {
                                 }, false
                                 );
                             }
-                        }
+                            }
                         >
                             <Ionicons
                                 name="sign-out-alt"

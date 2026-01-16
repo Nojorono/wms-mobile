@@ -37,9 +37,11 @@ const OutboundCard: React.FC<OutboundCardProps> = ({
       {/* Middle: Icon + Info */}
       <View style={styles.infoRow}>
         <Ionicons name="cube-outline" size={58} color="black" />
-        <View style={{ marginLeft: 8 }}>
+        <View style={{ marginLeft: 8, flex: 1 }}>
           <Text style={styles.plate}>{subTitle}</Text>
-          <Text style={styles.date}>{origin}</Text>
+          <Text style={styles.date} numberOfLines={0} ellipsizeMode="tail">
+            {origin}
+          </Text>
           <Text style={styles.role}>{role}</Text>
         </View>
       </View>
@@ -57,57 +59,57 @@ const OutboundCard: React.FC<OutboundCardProps> = ({
 export default OutboundCard;
 
 const styles = StyleSheet.create({
-    card: {
-        backgroundColor: "#fff",
-        borderRadius: 12,
-        padding: 16,
-        marginVertical: 8,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    headerRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 12,
-    },
-    code: {
-        fontSize: 20, // lebih besar
-        fontWeight: "bold",
-        color: "#000",
-    },
-    infoRow: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        marginBottom: 12,
-    },
-    plate: {
-        fontSize: 18, // lebih besar
-        fontWeight: "600",
-        color: "#000",
-    },
-    date: {
-        fontSize: 16, // lebih besar
-        color: "#333",
-        marginTop: 2,
-    },
-    role: {
-        fontSize: 16, // lebih besar
-        color: "#333",
-        marginTop: 2,
-    },
-    statusBadge: {
-        alignSelf: "flex-start",
-        paddingVertical: 6,
-        paddingHorizontal: 16,
-        borderRadius: 12,
-    },
-    statusText: {
-        fontSize: 16, // lebih besar
-        fontWeight: "500",
-        color: "#fff",
-    },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  code: {
+    fontSize: 20, // lebih besar
+    fontWeight: "bold",
+    color: "#000",
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  plate: {
+    fontSize: 18, // lebih besar
+    fontWeight: "600",
+    color: "#000",
+  },
+  date: {
+    fontSize: 13, // lebih besar
+    color: "#333",
+    marginTop: 2,
+  },
+  role: {
+    fontSize: 16, // lebih besar
+    color: "#333",
+    marginTop: 2,
+  },
+  statusBadge: {
+    alignSelf: "flex-start",
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 16, // lebih besar
+    fontWeight: "500",
+    color: "#fff",
+  },
 });

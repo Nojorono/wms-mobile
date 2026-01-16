@@ -22,12 +22,14 @@ interface User {
     roleId: number;
     createdAt: string;
     updatedAt: string;
+    userDetail?: any;
 }
 
 interface AuthState {
     isAuthenticated: boolean;
     user: User | null;
     accessToken: string | null;
+    refreshToken?: string | null;
     setAuthenticated: (status: boolean) => void;
     setUser: (user: User) => void;
     setToken: (token: string) => void;

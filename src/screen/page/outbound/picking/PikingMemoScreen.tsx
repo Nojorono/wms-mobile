@@ -19,6 +19,7 @@ import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import { PickingParamList } from '../../../navigation/outbound/PickingNavigator.tsx';
 import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
 import { memoOutboundData, outboundData } from '../../../../dummy/outboundData.js';
+import { formatDate } from '../../../../util/helper.ts';
 
 type NavigationProp = StackNavigationProp<PickingParamList, 'PickingDoMain'>;
 
@@ -129,9 +130,9 @@ useFocusEffect(
             
                   key={i}
                   title={ item.outbound_memo_number}
-                  subTitle={ item.destination}
-                  origin={item.type}
-                  status={item.delivery_date}
+                  subTitle={ item.type}
+                  origin={item.destination}
+                  status={formatDate(item.delivery_date)}
                   statusColor={statusColor}
                   onClick={() => navigation.navigate('PickingSku', { item })}
                 />

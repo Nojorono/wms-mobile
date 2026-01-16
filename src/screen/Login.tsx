@@ -101,7 +101,7 @@ export default function LoginScreen() {
                     await AsyncStorage.multiRemove(['rememberedEmail', 'rememberedPassword', 'rememberMe',]);
                 }
 
-                setToken(res.data.token);
+                setToken(res.data.accessToken);
                 setUser(res.data.user);
                 setAuthenticated(true);
                 Toast.show({ type: 'success', text1: 'Login Successful' });

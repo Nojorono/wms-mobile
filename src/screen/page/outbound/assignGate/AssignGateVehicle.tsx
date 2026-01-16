@@ -8,7 +8,7 @@ import {
     ScrollView,
     RefreshControl,
 } from "react-native";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, set } from "react-hook-form";
 import OutboundService from "../../../../service/outboundService";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
@@ -23,12 +23,14 @@ interface Payload {
     license_plate: string;
     driver_name: string;
     driver_phone: string;
+    container_number?: string;
 }
 type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>;
 
 export default function AssignGateVehicle() {
     const [data, setData] = useState<Payload | null>(null);
     const [dataAssigned, setDataAssigned] = useState<any>(null);
+    const [dataAssignedLoading, setDataAssignedLoading] = useState<any>(null);
     const [isEdit, setIsEdit] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -50,6 +52,7 @@ export default function AssignGateVehicle() {
             license_plate: "",
             driver_name: "",
             driver_phone: "",
+            container_number: "",
         }
     });
 
@@ -58,13 +61,19 @@ export default function AssignGateVehicle() {
             showLoadingDialog("Loading...");
             const response = await OutboundService.getOutboundDetailById(params.item.id);
             const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
+            if (assignedGate.data.length > 0) {
+                const assignedLoading = await OutboundService.getAssignedLoadingByDoId(assignedGate.data[0].id);
+                setDataAssignedLoading(assignedLoading.data);
+            }
             setDataAssigned(assignedGate.data);
 
+
             const newData = {
-            expedition: response?.data?.expedition ?? "",
-            license_plate: response?.data?.license_plate ?? "",
-            driver_name: response?.data?.driver_name ?? "",
-            driver_phone: response?.data?.driver_phone ?? "",
+                expedition: response?.data?.expedition ?? "",
+                license_plate: response?.data?.license_plate ?? "",
+                driver_name: response?.data?.driver_name ?? "",
+                driver_phone: response?.data?.driver_phone ?? "",
+                container_number: response?.data?.container_number ?? "",
             };
 
             setData(newData);
@@ -96,6 +105,8 @@ export default function AssignGateVehicle() {
     };
 
     const onSubmit = async (values: Payload) => {
+        // Remove seal_number from payload before sending
+        // const { seal_number, ...payload } = values;
         try {
             showLoadingDialog("Updating vehicle information...");
             const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, values);
@@ -136,7 +147,9 @@ export default function AssignGateVehicle() {
 
     return (
         <ScrollView
-            style={styles.container}
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.contentseal}
+            keyboardShouldPersistTaps="handled"
             refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
@@ -149,6 +162,7 @@ export default function AssignGateVehicle() {
                     {renderInput("License Plate", "license_plate", "Contoh: B1234ABC")}
                     {renderInput("Driver Name", "driver_name", "Contoh: John Doe")}
                     {renderInput("Driver Phone", "driver_phone", "Contoh: 081234567890")}
+                    {renderInput("Container Number", "container_number", "Contoh: C099372")}
 
                     <TouchableOpacity
                         style={styles.saveButton}
@@ -173,6 +187,9 @@ export default function AssignGateVehicle() {
 
                         <Text style={styles.itemTitle}>Driver Phone</Text>
                         <Text style={styles.itemValue}>{data.driver_phone}</Text>
+
+                        <Text style={styles.itemTitle}>Container Number</Text>
+                        <Text style={styles.itemValue}>{data.container_number}</Text>
 
                         <TouchableOpacity
                             style={styles.editButton}
@@ -242,12 +259,12 @@ export default function AssignGateVehicle() {
                                         </Text>
                                     </View>
 
-                                    
+
                                     <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
                                         <Icon name="edit" size={16} color="#007AFF" />
                                     </TouchableOpacity>
 
-                                   
+
                                     <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
                                         <Icon name="trash" size={16} color="red" />
                                     </TouchableOpacity>
@@ -258,7 +275,7 @@ export default function AssignGateVehicle() {
                         <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign gate</Text>
                     )}
 
-                   {dataAssigned.length < 1 && (
+                    {dataAssigned.length < 1 && (
                         <TouchableOpacity
                             style={styles.assignButton}
                             onPress={() => navigation.navigate('AssignGateActivity', { item: params.item })}
@@ -266,14 +283,86 @@ export default function AssignGateVehicle() {
                             <Text style={styles.assignButtonText}>Assign Gate</Text>
                         </TouchableOpacity>
                     )}
+
+
+                    {dataAssigned && dataAssigned.length > 0 && (
+                        <>
+                            <Text style={styles.header}>List Assign Helper Loading</Text>
+
+                            {dataAssignedLoading && dataAssignedLoading.length > 0 ? (
+                                dataAssignedLoading.map((ag: any, index: number) => {
+                                    const handleDeleteHelperLoading = () => {
+                                        confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
+                                            try {
+                                                showLoadingDialog("Deleting...");
+                                                await OutboundService.deleteAssignedLoadingHelper(ag.assigned_gate_id, ag.id);
+                                                showDialog("success", "Assigned gate deleted!");
+                                                fetchData();
+                                            } catch (err) {
+                                                showDialog("error", "Failed to delete assigned gate.");
+                                            } finally {
+                                                hideLoadingDialog();
+                                            }
+                                        }, false
+                                        );
+                                    };
+
+                                    const handleEdit = () => {
+                                        navigation.navigate('AssignGateLoading', {
+                                            item: params.item,
+                                            mode: "edit",
+                                            assignedGate: ag,   // kirim data lengkap
+                                        });
+                                    };
+
+                                    return (
+                                        <View key={ag.id} style={styles.compactCard}>
+                                            <Text style={styles.indexNumber}>{index + 1}</Text>
+
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.compactText}>
+                                                    <Text style={styles.bold}>User:</Text> {ag?.helper_name ?? "-"}
+                                                </Text>
+
+                                                <Text style={styles.compactText}>
+                                                    <Text style={styles.bold}>Device :</Text>{" "}
+                                                    {ag?.helper_phone ?? "-"}
+                                                </Text>
+                                            </View>
+
+                                            <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+                                                <Icon name="edit" size={16} color="#007AFF" />
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity style={styles.actionButton} onPress={handleDeleteHelperLoading}>
+                                                <Icon name="trash" size={16} color="red" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    );
+                                })
+                            ) : (
+                                <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign helper untuk loading</Text>
+                            )}
+
+                            <TouchableOpacity
+                                style={styles.assignButton}
+                                onPress={() => navigation.navigate('AssignGateLoading', { item: dataAssigned[0] })}
+                            >
+                                <Text style={styles.assignButtonText}>Assign Helper Loading</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                    {/* )} */}
                 </>
+
+
             )}
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    seal: {
         flex: 1,
         padding: 18,
         backgroundColor: "#F8F9FA",
@@ -389,6 +478,11 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         marginRight: 6,
         color: "#000",
+    }, contentseal: {
+        padding: 18,
+        paddingBottom: 40, // 🔴 INI PENTING supaya button tidak kepotong
+        backgroundColor: "#F8F9FA",
+        flexGrow: 1,       // 🔴 WAJIB untuk scroll penuh
     },
 
 

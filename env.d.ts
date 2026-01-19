@@ -1,4 +1,4 @@
 declare module '@env' {
-  export const API_URL: string;
+  export const REACT_NATIVE_API_URL: string;
   export const API_TIMEOUT: string;
 }

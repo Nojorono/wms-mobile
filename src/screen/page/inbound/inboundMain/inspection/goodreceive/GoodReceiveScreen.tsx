@@ -54,7 +54,13 @@ const GoodReceiveScreen = () => {
       const inbound = response.data;
       const dataInspection: any = mergeGoodReceive(inbound);
 
-      setMergedData(dataInspection);
+      // Urutkan data: status === "PENDING" di atas
+      const sortedData = [
+        ...dataInspection.filter((item: any) => item.inspection_status === "PENDING"),
+        ...dataInspection.filter((item: any) => item.inspection_status !== "PENDING"),
+      ];
+
+      setMergedData(sortedData);
     } catch (error) {
       hideLoadingDialog()
       console.error('Error fetching inspection data:', error);

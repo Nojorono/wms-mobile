@@ -31,6 +31,15 @@ class ConstantService {
       throw new Error('Get uom failed: ' + error.message);
     }
   }
+
+  static async getSuppliers(): Promise<any> {
+       try {
+      const response = await axiosInstance.get('master-supplier/attribute7', { params: { attribute7: "FREIGHT (FRG)",} });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
 }
 
 export default ConstantService;

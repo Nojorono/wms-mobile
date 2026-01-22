@@ -7,8 +7,10 @@ import {
     TextInput,
     ScrollView,
     RefreshControl,
+    FlatList, // Import FlatList
+    Keyboard, // Import Keyboard
 } from "react-native";
-import { useForm, Controller, set } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import OutboundService from "../../../../service/outboundService";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
@@ -17,9 +19,11 @@ import { AssignGateParamList } from "../../../navigation/outbound/AssignGateNavi
 import { StackNavigationProp } from "@react-navigation/stack";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
+import ConstantService from "../../../../service/constantService";
 
 interface Payload {
     expedition: string;
+    vendor_id?: string | null; // Tambahkan vendor_id
     license_plate: string;
     driver_name: string;
     driver_phone: string;
@@ -31,6 +35,12 @@ export default function AssignGateVehicle() {
     const [data, setData] = useState<Payload | null>(null);
     const [dataAssigned, setDataAssigned] = useState<any>(null);
     const [dataAssignedLoading, setDataAssignedLoading] = useState<any>(null);
+    
+    // Vendor / Expedition Search State
+    const [dataVendor, setDataVendor] = useState<any[]>([]);
+    const [filteredVendor, setFilteredVendor] = useState<any[]>([]);
+    const [showVendorList, setShowVendorList] = useState(false);
+
     const [isEdit, setIsEdit] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -45,10 +55,13 @@ export default function AssignGateVehicle() {
         control,
         handleSubmit,
         reset,
+        setValue, // Ambil setValue untuk update manual
+        watch, // Ambil watch untuk memantau nilai
         formState: { errors }
     } = useForm<Payload>({
         defaultValues: {
             expedition: "",
+            vendor_id: null,
             license_plate: "",
             driver_name: "",
             driver_phone: "",
@@ -61,15 +74,19 @@ export default function AssignGateVehicle() {
             showLoadingDialog("Loading...");
             const response = await OutboundService.getOutboundDetailById(params.item.id);
             const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
+            const resVendor = await ConstantService.getSuppliers();
+            console.log('Vendors fetched:', resVendor);
+            
             if (assignedGate.data.length > 0) {
                 const assignedLoading = await OutboundService.getAssignedLoadingByDoId(assignedGate.data[0].id);
                 setDataAssignedLoading(assignedLoading.data);
             }
             setDataAssigned(assignedGate.data);
-
+            setDataVendor(resVendor.data || []); // Pastikan array
 
             const newData = {
                 expedition: response?.data?.expedition ?? "",
+                vendor_id: response?.data?.vendor_id ?? null, // Mapping jika ada
                 license_plate: response?.data?.license_plate ?? "",
                 driver_name: response?.data?.driver_name ?? "",
                 driver_phone: response?.data?.driver_phone ?? "",
@@ -77,10 +94,9 @@ export default function AssignGateVehicle() {
             };
 
             setData(newData);
-
-            // Reset form biar input terisi otomatis
             reset(newData);
         } catch (error) {
+            console.log("Fetch data failed:", error);
             showDialog("error", "Gagal mengambil data kendaraan dan assigned gate.");
         } finally {
             hideLoadingDialog();
@@ -93,8 +109,6 @@ export default function AssignGateVehicle() {
         }, [])
     );
 
-
-    // Refresh control
     const onRefresh = async () => {
         setRefreshing(true);
         try {
@@ -105,10 +119,9 @@ export default function AssignGateVehicle() {
     };
 
     const onSubmit = async (values: Payload) => {
-        // Remove seal_number from payload before sending
-        // const { seal_number, ...payload } = values;
         try {
             showLoadingDialog("Updating vehicle information...");
+            // Kirim values (termasuk vendor_id jika ada, atau expedition string biasa)
             const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, values);
             showDialog("success", "Vehicle information updated successfully!");
             await fetchData();
@@ -120,8 +133,86 @@ export default function AssignGateVehicle() {
         }
     };
 
+    // --- Logic Search Expedition ---
+    const handleSearchExpedition = (text: string) => {
+        setValue("expedition", text);
+        
+        // Jika user mengetik, kita anggap ini free text dulu (kosongkan ID)
+        // Kecuali user nanti klik salah satu item dari list
+        setValue("vendor_id", null); 
+
+        if (text && dataVendor.length > 0) {
+            const filtered = dataVendor.filter((item) => 
+                item.VENDOR_NAME?.toLowerCase().includes(text.toLowerCase())
+            );
+            setFilteredVendor(filtered);
+            setShowVendorList(true);
+        } else {
+            setShowVendorList(false);
+        }
+    };
+
+    const handleSelectVendor = (item: any) => {
+        setValue("expedition", item.VENDOR_NAME); // Tampilkan nama vendor
+        setValue("vendor_id", item.VENDOR_ID);    // Simpan ID vendor
+        setShowVendorList(false);
+        Keyboard.dismiss();
+    };
+
+    // --- Render Input Component ---
+
+    // Khusus untuk Expedition (Searchable)
+    const renderExpeditionInput = () => (
+        <View style={{ marginBottom: 16, zIndex: 10 }}> 
+            <Text style={styles.label}>Expedition</Text>
+            <Controller
+                control={control}
+                name="expedition"
+                rules={{ required: "Expedition wajib diisi" }}
+                render={({ field: { value } }) => (
+                    <View>
+                        <TextInput
+                            placeholder="Cari atau isi manual..."
+                            style={[
+                                styles.input,
+                                errors.expedition ? { borderColor: "red" } : {}
+                            ]}
+                            value={value}
+                            onChangeText={handleSearchExpedition}
+                            onFocus={() => {
+                                // Tampilkan list lagi jika ada value saat focus
+                                if (value && dataVendor.length > 0) handleSearchExpedition(value);
+                            }}
+                        />
+                        
+                        {/* Dropdown Search Results */}
+                        {showVendorList && filteredVendor.length > 0 && (
+                            <View style={styles.dropdownContainer}>
+                                <ScrollView style={styles.dropdownScroll} nestedScrollEnabled={true}>
+                                    {filteredVendor.map((item, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={styles.dropdownItem}
+                                            onPress={() => handleSelectVendor(item)}
+                                        >
+                                            <Text style={styles.dropdownText}>{item.VENDOR_NAME}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
+                            </View>
+                        )}
+                    </View>
+                )}
+            />
+            {errors.expedition && (
+                <Text style={styles.error}>{errors.expedition?.message}</Text>
+            )}
+        </View>
+    );
+
+    // Input Biasa
     const renderInput = (label: string, name: keyof Payload, placeholder: string) => (
-        <View style={{ marginBottom: 16 }}>
+        <View style={{ marginBottom: 16, zIndex: 1 }}>
             <Text style={styles.label}>{label}</Text>
             <Controller
                 control={control}
@@ -134,7 +225,7 @@ export default function AssignGateVehicle() {
                             styles.input,
                             errors[name] ? { borderColor: "red" } : {}
                         ]}
-                        value={value}
+                        value={value as string}
                         onChangeText={onChange}
                     />
                 )}
@@ -149,7 +240,7 @@ export default function AssignGateVehicle() {
         <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={styles.contentseal}
-            keyboardShouldPersistTaps="handled"
+            keyboardShouldPersistTaps="handled" // Penting agar klik dropdown tidak close keyboard duluan
             refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
@@ -158,7 +249,9 @@ export default function AssignGateVehicle() {
 
             {!data || isEdit ? (
                 <View style={styles.card}>
-                    {renderInput("Expedition", "expedition", "Contoh: JNE Express")}
+                    {/* Render Expedition secara khusus */}
+                    {renderExpeditionInput()}
+                    
                     {renderInput("License Plate", "license_plate", "Contoh: B1234ABC")}
                     {renderInput("Driver Name", "driver_name", "Contoh: John Doe")}
                     {renderInput("Driver Phone", "driver_phone", "Contoh: 081234567890")}
@@ -195,7 +288,7 @@ export default function AssignGateVehicle() {
                             style={styles.editButton}
                             onPress={() => {
                                 setIsEdit(true);
-                                reset(data); // pastikan form terisi saat edit
+                                reset(data);
                             }}
                         >
                             <Text style={styles.editButtonText}>Edit Data</Text>
@@ -203,7 +296,7 @@ export default function AssignGateVehicle() {
                     </View>
 
                     <Text style={styles.header}>List Assign Gate</Text>
-
+                    {/* ... Bagian Assign Gate tetap sama ... */}
                     {dataAssigned && dataAssigned.length > 0 ? (
                         dataAssigned.map((ag: any, index: number) => {
                             const sortedUsers = [...(ag.assigned_gate_users ?? [])].sort(
@@ -211,15 +304,11 @@ export default function AssignGateVehicle() {
                             );
                             const latestUser = sortedUsers[0];
 
-                            const pallets = (ag.assigned_gate_pallets ?? []).map(
-                                (p: any) => p?.pallet?.pallet_code
-                            );
-
                             const handleDelete = () => {
                                 confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
                                     try {
                                         showLoadingDialog("Deleting...");
-                                        const res = await OutboundService.deleteAssignedGate(ag.id);
+                                        await OutboundService.deleteAssignedGate(ag.id);
                                         showDialog("success", "Assigned gate deleted!");
                                         fetchData();
                                     } catch (err) {
@@ -227,44 +316,34 @@ export default function AssignGateVehicle() {
                                     } finally {
                                         hideLoadingDialog();
                                     }
-                                }, false
-                                );
+                                }, false);
                             };
 
                             const handleEdit = () => {
                                 navigation.navigate('AssignGateActivity', {
                                     item: params.item,
                                     mode: "edit",
-                                    assignedGate: ag,   // kirim data lengkap
+                                    assignedGate: ag,
                                 });
                             };
 
                             return (
                                 <View key={ag.id} style={styles.compactCard}>
                                     <Text style={styles.indexNumber}>{index + 1}</Text>
-
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.compactText}>
                                             <Text style={styles.bold}>Gate:</Text> {ag.gate.code ?? "-"}
                                         </Text>
-
                                         <Text style={styles.compactText}>
                                             <Text style={styles.bold}>User:</Text> {latestUser?.user_name ?? "-"}
                                         </Text>
-
                                         <Text style={styles.compactText}>
-                                            <Text style={styles.bold}>Device :</Text>{" "}
-                                            {/* {pallets.length > 0 ? pallets.join(", ") : "-"} */}
-                                            {latestUser?.user.username ?? "-"}
+                                            <Text style={styles.bold}>Device :</Text> {latestUser?.user.username ?? "-"}
                                         </Text>
                                     </View>
-
-
                                     <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
                                         <Icon name="edit" size={16} color="#007AFF" />
                                     </TouchableOpacity>
-
-
                                     <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
                                         <Icon name="trash" size={16} color="red" />
                                     </TouchableOpacity>
@@ -283,12 +362,11 @@ export default function AssignGateVehicle() {
                             <Text style={styles.assignButtonText}>Assign Gate</Text>
                         </TouchableOpacity>
                     )}
-
-
+                    
+                    {/* ... Bagian Assign Helper Loading tetap sama ... */}
                     {dataAssigned && dataAssigned.length > 0 && (
                         <>
                             <Text style={styles.header}>List Assign Helper Loading</Text>
-
                             {dataAssignedLoading && dataAssignedLoading.length > 0 ? (
                                 dataAssignedLoading.map((ag: any, index: number) => {
                                     const handleDeleteHelperLoading = () => {
@@ -303,37 +381,31 @@ export default function AssignGateVehicle() {
                                             } finally {
                                                 hideLoadingDialog();
                                             }
-                                        }, false
-                                        );
+                                        }, false);
                                     };
 
-                                    const handleEdit = () => {
+                                    const handleEditHelper = () => {
                                         navigation.navigate('AssignGateLoading', {
                                             item: params.item,
                                             mode: "edit",
-                                            assignedGate: ag,   // kirim data lengkap
+                                            assignedGate: ag, 
                                         });
                                     };
 
                                     return (
                                         <View key={ag.id} style={styles.compactCard}>
                                             <Text style={styles.indexNumber}>{index + 1}</Text>
-
                                             <View style={{ flex: 1 }}>
                                                 <Text style={styles.compactText}>
                                                     <Text style={styles.bold}>User:</Text> {ag?.helper_name ?? "-"}
                                                 </Text>
-
                                                 <Text style={styles.compactText}>
-                                                    <Text style={styles.bold}>Device :</Text>{" "}
-                                                    {ag?.helper_phone ?? "-"}
+                                                    <Text style={styles.bold}>Device :</Text> {ag?.helper_phone ?? "-"}
                                                 </Text>
                                             </View>
-
-                                            <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+                                            <TouchableOpacity style={styles.actionButton} onPress={handleEditHelper}>
                                                 <Icon name="edit" size={16} color="#007AFF" />
                                             </TouchableOpacity>
-
                                             <TouchableOpacity style={styles.actionButton} onPress={handleDeleteHelperLoading}>
                                                 <Icon name="trash" size={16} color="red" />
                                             </TouchableOpacity>
@@ -352,10 +424,7 @@ export default function AssignGateVehicle() {
                             </TouchableOpacity>
                         </>
                     )}
-                    {/* )} */}
                 </>
-
-
             )}
         </ScrollView>
     );
@@ -371,6 +440,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "600",
         marginBottom: 16,
+        marginTop: 10,
     },
     actionButton: {
         padding: 6,
@@ -438,6 +508,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         borderRadius: 16,
         alignItems: "center",
+        marginBottom: 20,
     },
     assignButtonText: {
         color: "white",
@@ -453,7 +524,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         elevation: 2,
         marginBottom: 8,
-        flexWrap: "wrap",
     },
     compactText: {
         fontSize: 13,
@@ -464,26 +534,49 @@ const styles = StyleSheet.create({
     bold: {
         fontWeight: "600",
     },
-    divider: {
-        marginHorizontal: 6,
-        color: "#999",
-    },
-    assignedHeader: {
-        fontSize: 16,
-        fontWeight: "600",
-        marginBottom: 6,
-    },
     indexNumber: {
         fontSize: 13,
         fontWeight: "700",
         marginRight: 6,
         color: "#000",
-    }, contentseal: {
+    }, 
+    contentseal: {
         padding: 18,
-        paddingBottom: 40, // 🔴 INI PENTING supaya button tidak kepotong
+        paddingBottom: 40,
         backgroundColor: "#F8F9FA",
-        flexGrow: 1,       // 🔴 WAJIB untuk scroll penuh
+        flexGrow: 1,
     },
-
-
+    // --- Style Baru untuk Dropdown ---
+    dropdownContainer: {
+        position: 'absolute',
+        top: 50, // Sesuaikan dengan tinggi Input
+        left: 0,
+        right: 0,
+        backgroundColor: 'white',
+        borderWidth: 1,
+        borderColor: '#DDD',
+        borderRadius: 8,
+        elevation: 5, // Android shadow
+        shadowColor: "#000", // iOS shadow
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        zIndex: 1000,
+        maxHeight: 200, // Batasi tinggi dropdown
+    },
+    dropdownScroll: {
+        width: '100%',
+    },
+    dropdownItem: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#EEE',
+    },
+    dropdownText: {
+        fontSize: 14,
+        color: '#333',
+    },
 });

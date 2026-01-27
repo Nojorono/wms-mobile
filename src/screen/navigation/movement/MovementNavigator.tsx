@@ -3,12 +3,14 @@ import Colors from '../../../constants/Colors';
 import { Image, View } from 'react-native';
 import React from 'react';
 import MovementIndex from '../../page/Movement.tsx';
+import MoveLocationNavigator from './MoveLocationNavigator.tsx';
 
 
 
 export type MovementParamList = {
   MovementIndex: undefined;
   MovementMain: undefined;
+  MoveLocationNavigator: undefined;
 };
 
 const MovementStack = createStackNavigator<MovementParamList>();
@@ -39,6 +41,17 @@ const MovementStackNavigator = () => (
             />
           </View>
         ),
+      }}
+    />
+     <MovementStack.Screen
+      name="MoveLocationNavigator"
+      component={MoveLocationNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
       }}
     />
    

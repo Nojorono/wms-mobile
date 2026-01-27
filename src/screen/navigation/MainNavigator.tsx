@@ -55,7 +55,13 @@ const MainNavigator = () => (
         currentRoute !== "" &&
         currentRoute !== 'OutboundIndex';
 
-      const hideTabBar = isInboundHidden || isOutboundHidden;
+        const isMovemnetHidden =
+        route.name === 'Movement' &&
+        currentRoute !== null &&
+        currentRoute !== "" &&
+        currentRoute !== 'MovementIndex';
+
+      const hideTabBar = isInboundHidden || isOutboundHidden || isMovemnetHidden;
 
       return {
         tabBarIcon: ({ color }) => {

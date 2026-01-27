@@ -60,7 +60,7 @@ function MovementIndex() {
                         {roleName === ROLES.DRIVER_FORKLIFT && (
                             <MenuCard
                                 title={"Move Like Jagger"}
-                            //   onPress={() => navigation.navigate("OutboundForkliftGate")}
+                              onPress={() => navigation.navigate("MoveLocationNavigator")}
                             />
                         )}
 

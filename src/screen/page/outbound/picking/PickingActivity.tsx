@@ -91,7 +91,8 @@ export default function PickingActivity() {
               shadowRadius: 4,
             }}
           >
-            {itemBefore.item.item.description}
+            {itemBefore.item.item.sku}
+        
           </Text>
 
           <View style={{ alignItems: 'center', marginBottom: 12 }}>

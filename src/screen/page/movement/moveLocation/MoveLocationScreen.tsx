@@ -16,7 +16,6 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
-import { ROLES } from '../../../../constants/Roles.ts';
 import { MoveLocationParamList } from '../../../navigation/movement/MoveLocationNavigator.tsx';
 import MovementCard from '../../../../components/movement/MovementCard.tsx';
 
@@ -25,7 +24,6 @@ type NavigationProp = StackNavigationProp<MoveLocationParamList, 'MoveLocationMa
 function MoveLocationScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [MoveLocationList, setMoveLocationList] = useState<any[]>([]);
-  const [searchText, setSearchText] = useState('');
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -98,7 +96,8 @@ useFocusEffect(
               }
 
               return (
-                <MovementCard
+                <>
+                 <MovementCard
                   key={item.id}
                   Title='MOVEMENT'
                   source={item.MoveLocation_number}
@@ -111,11 +110,34 @@ useFocusEffect(
                     // navigation.navigate('MoveLocationDetail', { item })
                 }
                 />
+                
+                </>
+               
               );
             })
           )}
+            
         </View>
       </ScrollView>
+      <View style={{ position: 'absolute', left: 0, right: 0, bottom: 20, alignItems: 'center' }}>
+            <TouchableOpacity
+              style={{
+              backgroundColor: '#FF9800',
+              borderRadius: 30,
+              paddingVertical: 16,
+              paddingHorizontal: 24,
+              elevation: 5,
+              flexDirection: 'row',
+              alignItems: 'center',
+              }}
+              onPress={() => navigation.navigate('MoveLocationCreate')}
+              activeOpacity={0.8}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+              + Create Movement
+              </Text>
+            </TouchableOpacity>
+            </View>
     </View>
   );
 }

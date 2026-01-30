@@ -456,9 +456,9 @@ export default function PickingDetailActivity() {
         ellipsizeMode="tail"
           >
         {mode === 'edit'
-          ? itemBefore?.item?.description
-          : itemBefore?.item?.item?.description ||
-          itemBefore?.item?.description ||
+          ? itemBefore?.item?.sku
+          : itemBefore?.item?.item?.sku ||
+          itemBefore?.item?.sku ||
           'Picking Activity'}
           </Text>
         </View>

@@ -127,6 +127,7 @@ export default function AssignGateVehicle() {
             await fetchData();
             setIsEdit(false);
         } catch (error) {
+            console.log("Update vehicle failed:", error);
             showDialog("error", "Failed to update vehicle information.");
         } finally {
             hideLoadingDialog();
@@ -154,7 +155,7 @@ export default function AssignGateVehicle() {
 
     const handleSelectVendor = (item: any) => {
         setValue("expedition", item.VENDOR_NAME); // Tampilkan nama vendor
-        setValue("vendor_id", item.VENDOR_ID);    // Simpan ID vendor
+        setValue("vendor_id", item.VENDOR_ID.toString());    // Simpan ID vendor
         setShowVendorList(false);
         Keyboard.dismiss();
     };

@@ -34,7 +34,7 @@ class ConstantService {
 
   static async getSuppliers(): Promise<any> {
        try {
-      const response = await axiosInstance.get('master-supplier/attribute7', { params: { attribute7: "FREIGHT (FRG)",} });
+      const response = await axiosInstance.get('master-supplier/attribute7', { params: { ATTRIBUTE7: "FREIGHT (FRG)",} });
       return response.data;
     } catch (error: any) {
       throw error.response;

@@ -49,7 +49,7 @@ function OutboundIndex() {
             }
           ]}
         >
-          <Text style={styles.activitiesHeaderText}>Inbound Menu</Text>
+          <Text style={styles.activitiesHeaderText}>Outbound Menu</Text>
         </View>
         <ScrollView
           contentContainerStyle={[styles.menuContainer, { paddingTop: 60 }]}

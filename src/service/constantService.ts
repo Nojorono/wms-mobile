@@ -40,6 +40,15 @@ class ConstantService {
       throw error.response;
     }
   }
+
+  static async getInventoryTracking(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/inventory-tracking/warehouse');
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
 }
 
 export default ConstantService;

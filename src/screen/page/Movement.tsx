@@ -59,8 +59,8 @@ function MovementIndex() {
                     <View style={styles.menuCard}>
                         {roleName === ROLES.DRIVER_FORKLIFT && (
                             <MenuCard
-                                title={"Move Like Jagger"}
-                              onPress={() => navigation.navigate("MoveLocationNavigator")}
+                                title={"Move"}
+                            //   onPress={() => navigation.navigate("MoveLocationNavigator")}
                             />
                         )}
 
@@ -68,7 +68,7 @@ function MovementIndex() {
                             <>
                                 <MenuCard
                                     title={"Move Location"}
-                                // onPress={() => navigation.navigate("OutboundInspection")}
+                                    onPress={() => navigation.navigate("MoveLocationNavigator")}
                                 />
                                 <MenuCard
                                     title={"Update Inventory"}

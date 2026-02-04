@@ -40,7 +40,7 @@ function ForkliftMovementScreen() {
             console.log("Fetching ForkliftMovement for userId:", userId);
             const response = await MovementService.getMoveLocationForklift(userId);
             console.log("ForkliftMovement response data:", response.data);
-            setForkliftMovementList(response.data.data || []);
+            setForkliftMovementList(response.data || []);
         } catch (error) {
             hideLoadingDialog();
             showDialog('error', 'Error while Fetching Data ForkliftMovement!');

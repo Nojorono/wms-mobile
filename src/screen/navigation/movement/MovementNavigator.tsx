@@ -4,6 +4,7 @@ import { Image, View } from 'react-native';
 import React from 'react';
 import MovementIndex from '../../page/Movement.tsx';
 import MoveLocationNavigator from './MoveLocationNavigator.tsx';
+import ForkliftMovementStackNavigator from './ForkliftMovementNavigator.tsx';
 
 
 
@@ -11,6 +12,7 @@ export type MovementParamList = {
   MovementIndex: undefined;
   MovementMain: undefined;
   MoveLocationNavigator: undefined;
+  ForkliftMovementNavigator: undefined;
 };
 
 const MovementStack = createStackNavigator<MovementParamList>();
@@ -46,6 +48,17 @@ const MovementStackNavigator = () => (
      <MovementStack.Screen
       name="MoveLocationNavigator"
       component={MoveLocationNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+      <MovementStack.Screen
+      name="ForkliftMovementNavigator"
+      component={ForkliftMovementStackNavigator}
       options={{
         headerShown: false,
         headerTintColor: '#fff',

@@ -39,8 +39,8 @@ const MovementCard: React.FC<MovementCardProps> = ({
       <View style={styles.infoRow}>
         <Ionicons name="cube-outline" size={58} color="black" />
         <View style={{ marginLeft: 8 }}>
-          <Text style={styles.source}>{source}</Text>
           <Text style={styles.date}>{formatDate(date)}</Text>
+          <Text style={styles.source}>{source}</Text>
           <Text style={styles.destination}>{destination}</Text>
         </View>
       </View>
@@ -96,8 +96,9 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     destination: {
-        fontSize: 16, // lebih besar
-        color: "#333",
+         fontSize: 18, // lebih besar
+        fontWeight: "600",
+        color: "#000",
         marginTop: 2,
     },
     statusBadge: {

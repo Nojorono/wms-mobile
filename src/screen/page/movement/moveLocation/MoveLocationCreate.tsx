@@ -25,8 +25,8 @@ type PalletItem = {
 type SelectedPallet = {
   pallet_id: string;
   pallet_code: string;
-  inventory_tracking_id: string;
   currentItems: {
+    inventory_tracking_id: string;
     item_id: string;
     item_name: string;
     week_number: number;
@@ -36,24 +36,6 @@ type SelectedPallet = {
 };
 
 
-type MovementPayload = {
-  movement_number: string;
-  movement_type: 'GOOD_STOCK' | string;
-  pallets: SelectedPallet[];
-  source_warehouse_id: string;
-  source_warehouse_sub_id: string;
-  source_bin_id: string;
-  destination_warehouse_id: string;
-  destination_warehouse_sub_id: string;
-  destination_bin_id: string;
-  status: 'PENDING' | string;
-  notes: string;
-  users: {
-    user_id: string;
-    user_name: string;
-    user_phone: string;
-  }[];
-};
 
 const SUB_INVENTORIES = [
   { label: 'Good Stock', value: 'GOOD_STOCK' },
@@ -76,9 +58,10 @@ type WarehouseBinGroup = {
     name: string;
   };
   pallets: {
-    id: string;
+    pallet_id: string;
     pallet_code: string;
     currentItems: {
+      inventory_tracking_id: string; // ✅ PINDAH KE SINI
       item_id: string;
       item_name: string;
       week_number: number;
@@ -88,44 +71,63 @@ type WarehouseBinGroup = {
   }[];
 };
 
+
 const groupByWarehouseBin = (data: any[]): WarehouseBinGroup[] => {
   const map = new Map<string, WarehouseBinGroup>();
 
-  data.forEach(item => {
-    // ❌ skip yang tidak punya BIN (GATE)
-    if (!item.warehouseBin || !item.warehouse_bin_id) return;
+  data.forEach(row => {
+    if (!row.warehouseBin || !row.warehouse_bin_id || !row.pallet) return;
 
-    const binId = item.warehouse_bin_id;
+    const binId = row.warehouse_bin_id;
 
     if (!map.has(binId)) {
       map.set(binId, {
-        warehouse: item.warehouse,
-        warehouseSub: item.warehouseSub,
-        warehouseBin: item.warehouseBin,
+        warehouse: row.warehouse,
+        warehouseSub: row.warehouseSub,
+        warehouseBin: row.warehouseBin,
         pallets: [],
       });
     }
 
     const group = map.get(binId)!;
 
-    // hindari duplicate pallet
-    const exists = group.pallets.some(
-      p => p.id === item.pallet.id
+    // cari / buat pallet
+    let pallet = group.pallets.find(
+      p => p.pallet_id === row.pallet.id
     );
 
-    if (!exists) {
-      group.pallets.push(item.pallet);
+    if (!pallet) {
+      pallet = {
+        pallet_id: row.pallet.id,
+        pallet_code: row.pallet.pallet_code,
+        currentItems: [],
+      };
+      group.pallets.push(pallet);
     }
+
+    // 🔥 LOOP currentItems dari pallet
+    row.pallet.currentItems.forEach((ci: any) => {
+      pallet!.currentItems.push({
+        inventory_tracking_id: row.id, // inventory_tracking
+        item_id: ci.item_id,
+        item_name: ci.item_name,
+        week_number: ci.week_number,
+        current_quantity: ci.current_quantity,
+        uom: ci.uom,
+      });
+    });
   });
 
   return Array.from(map.values());
 };
 
 
+
+
+
 const MoveLocationCreate: React.FC = () => {
   const [pallets, setPallets] = useState<SelectedPallet[]>([]);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [notes, setNotes] = useState<string>('');
   const [sourceLocation, setSourceLocation] = useState('');
   const [subInventory, setSubInventory] = useState('');
   const [warehouse, setWarehouse] = useState<WarehouseBinGroup[]>([]);
@@ -216,6 +218,7 @@ const MoveLocationCreate: React.FC = () => {
 
     ConstantService.getInventoryTracking()
       .then((res) => {
+        console.log('Inventory Tracking data:', res.data);
         const groupedWarehouse = groupByWarehouseBin(res.data);
         setWarehouse(groupedWarehouse);
       })
@@ -228,15 +231,16 @@ const MoveLocationCreate: React.FC = () => {
     item: WarehouseBinGroup['pallets'][0]
   ) => {
     setPallets(prev => {
-      const exists = prev.find(p => p.pallet_id === item.id);
+      const exists = prev.find(
+        p => p.pallet_id === item.pallet_id
+      );
       if (exists) return prev;
 
       return [
         ...prev,
         {
-          pallet_id: item.id,
+          pallet_id: item.pallet_id,
           pallet_code: item.pallet_code,
-          inventory_tracking_id: item.id, // sesuaikan backend
           currentItems: item.currentItems,
         },
       ];
@@ -246,26 +250,22 @@ const MoveLocationCreate: React.FC = () => {
   };
 
 
+  const palletPayload = pallets.flatMap(pallet =>
+    pallet.currentItems.map(ci => ({
+      pallet_id: pallet.pallet_id,
+      inventory_tracking_id: ci.inventory_tracking_id,
+    }))
+  );
 
-  const payload: MovementPayload = {
-    movement_number: 'MOV-20240101-0001',
+
+
+  const payload: any = {
     movement_type: subInventory,
-    pallets,
+    pallets: palletPayload,
     source_warehouse_id: selectedWarehouse?.warehouse.id || '',
     source_warehouse_sub_id: selectedWarehouse?.warehouseSub.id || '',
     source_bin_id: selectedWarehouse?.warehouseBin.id || '',
-    destination_warehouse_id: 'string',
-    destination_warehouse_sub_id: 'string',
-    destination_bin_id: 'string',
     status: 'PENDING',
-    notes,
-    users: [
-      {
-        user_id: 'uuid-user-1',
-        user_name: 'John Doe',
-        user_phone: '+6281234567890',
-      },
-    ],
   };
 
   const isDisabled: boolean = pallets.length === 0;
@@ -400,85 +400,87 @@ const MoveLocationCreate: React.FC = () => {
 
           <Text style={styles.label}>Item</Text>
           <View style={[
-        styles.dropdown,
-        !selectedWarehouse && { opacity: 0.5 }
+            styles.dropdown,
+            !selectedWarehouse && { opacity: 0.5 }
           ]}>
-        <Picker
-          selectedValue={selectedItem}
-          onValueChange={(value) => setSelectedItem(value)}
-        >
-          <Picker.Item label="-- Semua Item --" value="" />
-          {availableItems.map(item => (
-            <Picker.Item
-          key={item}
-          label={item}
-          value={item}
-            />
-          ))}
-        </Picker>
+            <Picker
+              selectedValue={selectedItem}
+              onValueChange={(value) => setSelectedItem(value)}
+            >
+              <Picker.Item label="-- Semua Item --" value="" />
+              {availableItems.map(item => (
+                <Picker.Item
+                  key={item}
+                  label={item}
+                  value={item}
+                />
+              ))}
+            </Picker>
           </View>
 
           <Text style={styles.label}>Week</Text>
           <View style={[
-        styles.dropdown,
-        !selectedWarehouse && { opacity: 0.5 }
+            styles.dropdown,
+            !selectedWarehouse && { opacity: 0.5 }
           ]}>
-        <Picker
-          selectedValue={selectedWeek}
-          onValueChange={(value) => setSelectedWeek(value)}
-        >
-          <Picker.Item label="-- Semua Week --" value="" />
-          {availableWeeks.map(week => (
-            <Picker.Item
-          key={week}
-          label={`Week ${week}`}
-          value={week}
-            />
-          ))}
-        </Picker>
+            <Picker
+              selectedValue={selectedWeek}
+              onValueChange={(value) => setSelectedWeek(value)}
+            >
+              <Picker.Item label="-- Semua Week --" value="" />
+              {availableWeeks.map(week => (
+                <Picker.Item
+                  key={week}
+                  label={`Week ${week}`}
+                  value={week}
+                />
+              ))}
+            </Picker>
           </View>
 
           {/* LIST PALLET */}
+          {/* LIST PALLET */}
           <FlatList
-        data={filteredPallets}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.modalItem}
-            onPress={() => onSelectPallet(item)}
-          >
-            <Text style={{ fontWeight: '600' }}>
-          {item.pallet_code}
-            </Text>
+            data={filteredPallets}
+            keyExtractor={(item) => item.pallet_id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => onSelectPallet(item)}
+              >
+                <Text style={{ fontWeight: '600' }}>
+                  {item.pallet_code}
+                </Text>
 
-            {item.currentItems.map(ci => (
-          <Text
-            key={`${item.id}-${ci.item_id}`}
-            style={{ fontSize: 12 }}
-          >
-            {ci.item_name} • Week {ci.week_number} • Qty: {ci.current_quantity} {ci.uom}
-          </Text>
-            ))}
-          </TouchableOpacity>
-        )}
+                {item.currentItems.map(ci => (
+                  <Text
+                    key={`${item.pallet_id}-${ci.inventory_tracking_id}`} // ✅
+                    style={{ fontSize: 12 }}
+                  >
+                    {ci.item_name} • Week {ci.week_number} • Qty: {ci.current_quantity} {ci.uom}
+                  </Text>
+                ))}
+              </TouchableOpacity>
+            )}
           />
 
+
           <TouchableOpacity
-        disabled={!selectedWarehouse}
-        style={[
-          styles.addPallet,
-          !selectedWarehouse && { backgroundColor: '#E0E0E0' }
-        ]}
-        onPress={() => setModalVisible(true)}
+            disabled={!selectedWarehouse}
+            style={[
+              styles.addPallet,
+              !selectedWarehouse && { backgroundColor: '#E0E0E0' }
+            ]}
+            onPress={() => setModalVisible(true)}
           >
-        <Text>+ Add Pallet</Text>
+            <Text>+ Add Pallet</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-        style={styles.closeBtn}
-        onPress={() => setModalVisible(false)}
+            style={styles.closeBtn}
+            onPress={() => setModalVisible(false)}
           >
-        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Tutup</Text>
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Tutup</Text>
           </TouchableOpacity>
         </View>
       </Modal>

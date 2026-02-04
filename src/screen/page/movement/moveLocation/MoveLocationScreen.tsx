@@ -18,6 +18,7 @@ import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import { MoveLocationParamList } from '../../../navigation/movement/MoveLocationNavigator.tsx';
 import MovementCard from '../../../../components/movement/MovementCard.tsx';
+import MovementService from '../../../../service/movementService.ts';
 
 type NavigationProp = StackNavigationProp<MoveLocationParamList, 'MoveLocationMain'>;
 
@@ -35,8 +36,8 @@ function MoveLocationScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List MoveLocation Planning');
-    //   const response = await MoveLocationServices.getMoveLocationList(selectedFilter || 'CREATED');
-      setMoveLocationList([]);
+      const response = await MovementService.getInventoryMovement();
+      setMoveLocationList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data MoveLocation!');
@@ -87,7 +88,7 @@ useFocusEffect(
           ) : (
             MoveLocationList.map((item: any) => {
               let statusColor;
-              if (item.status === 'CREATED') {
+              if (item.status === 'PENDING') {
                 statusColor = '#228B22';
               } else if (item.status === 'COMPLETED') {
                 statusColor = '#FFB347';
@@ -99,10 +100,10 @@ useFocusEffect(
                 <>
                  <MovementCard
                   key={item.id}
-                  Title='MOVEMENT'
-                  source={item.MoveLocation_number}
-                  destination={item.license_plate}
-                  date={item.arrival_date}
+                  Title={item.movement_number}
+                  source={`Source: ${item.sourceBin?.name ?? "Unknown"}`}
+                  destination={`Destination: ${item.destinationBin?.name ?? "Unknown"}`}
+                  date={item.createdAt}
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => 

@@ -13,9 +13,11 @@ import {
   Alert,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { useFocusEffect } from '@react-navigation/native';
+import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import ConstantService from '../../../../service/constantService';
 import MovementService from '../../../../service/movementService';
+import { MoveLocationParamList } from '../../../navigation/movement/MoveLocationNavigator';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 // --- TYPES (Tetap Sama) ---
 type SelectedPallet = {
@@ -37,6 +39,8 @@ type WarehouseBinGroup = {
   warehouseBin: { id: string; code: string; name: string };
   pallets: SelectedPallet[];
 };
+
+type NavigationProp = StackNavigationProp<MoveLocationParamList, 'MoveLocationMain'>;
 
 const SUB_INVENTORIES = [
   { label: 'Good Stock', value: 'GOOD_STOCK' },
@@ -84,7 +88,7 @@ const MoveLocationCreate: React.FC = () => {
   const [warehouse, setWarehouse] = useState<WarehouseBinGroup[]>([]);
   const [filteredWarehouse, setFilteredWarehouse] = useState<WarehouseBinGroup[]>([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState<WarehouseBinGroup | null>(null);
-
+  const navigation = useNavigation<NavigationProp>();
   const [selectedItem, setSelectedItem] = useState<string>('');
   const [selectedWeek, setSelectedWeek] = useState<number | ''>('');
 
@@ -148,7 +152,13 @@ const MoveLocationCreate: React.FC = () => {
 
     console.log('PAYLOAD SIAP DIKIRIM:', payload);
     MovementService.postInventoryMovementNew(payload);
-    Alert.alert("Success", "Movement Request telah dibuat (cek console)");
+      Alert.alert("Success", "Movement completed successfully");
+               navigation.dispatch(
+                   CommonActions.reset({
+                       index: 0,
+                       routes: [{ name: "ForkliftMovementMain" }],
+                   })
+               );
   };
 
   const isDisabled = pallets.length === 0 || !subInventory || !selectedWarehouse;

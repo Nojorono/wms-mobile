@@ -47,11 +47,11 @@ function MoveLocationScreen() {
     }
   };
 
-useFocusEffect(
-  useCallback(() => {
-    fetchMoveLocation();
-  }, [])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchMoveLocation();
+    }, [])
+  );
 
 
   return (
@@ -98,7 +98,7 @@ useFocusEffect(
 
               return (
                 <>
-                 <MovementCard
+                  <MovementCard
                   key={item.id}
                   Title={item.movement_number}
                   source={`Source: ${item.sourceBin?.name ?? "Unknown"}`}
@@ -106,39 +106,44 @@ useFocusEffect(
                   date={item.createdAt}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => 
-                  console.log('Clicked MoveLocation:', item)
-                    // navigation.navigate('MoveLocationDetail', { item })
-                }
-                />
-                
+                  onClick={() => {
+                    if (!item.destinationBin) {
+                    Alert.alert(
+                      'Info',
+                      'Item belum di-assign destination.'
+                    );
+                    return;
+                    }
+                    navigation.navigate('MoveLocationDetail', { item });
+                  }}
+                  />
                 </>
-               
+
               );
             })
           )}
-            
+
         </View>
       </ScrollView>
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 20, alignItems: 'center' }}>
-            <TouchableOpacity
-              style={{
-              backgroundColor: '#FF9800',
-              borderRadius: 30,
-              paddingVertical: 16,
-              paddingHorizontal: 24,
-              elevation: 5,
-              flexDirection: 'row',
-              alignItems: 'center',
-              }}
-              onPress={() => navigation.navigate('MoveLocationCreate')}
-              activeOpacity={0.8}
-            >
-              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
-              + Create Movement
-              </Text>
-            </TouchableOpacity>
-            </View>
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#FF9800',
+            borderRadius: 30,
+            paddingVertical: 16,
+            paddingHorizontal: 24,
+            elevation: 5,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+          onPress={() => navigation.navigate('MoveLocationCreate')}
+          activeOpacity={0.8}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+            + Create Movement
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }

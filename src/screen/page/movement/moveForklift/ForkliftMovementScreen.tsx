@@ -25,7 +25,6 @@ type NavigationProp = StackNavigationProp<ForkliftMovementParamList, 'ForkliftMo
 function ForkliftMovementScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [ForkliftMovementList, setForkliftMovementList] = useState<any[]>([]);
-
     const styles = GlobalStyles();
     const { user } = useAuthStore();
     const userId = user?.id ?? '';
@@ -37,7 +36,6 @@ function ForkliftMovementScreen() {
         try {
             setRefreshing(true);
             showLoadingDialog('Loading List ForkliftMovement Planning');
-            console.log("Fetching ForkliftMovement for userId:", userId);
             const response = await MovementService.getMoveLocationForklift(userId);
             console.log("ForkliftMovement response data:", response.data);
             setForkliftMovementList(response.data || []);
@@ -89,7 +87,7 @@ function ForkliftMovementScreen() {
                             <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
                         </View>
                     ) : (
-                        ForkliftMovementList.map((item: any) => {
+                        ForkliftMovementList.map((item: any, index: number) => {
                             let statusColor;
                             if (item.status === 'PENDING') {
                                 statusColor = '#228B22';
@@ -102,7 +100,7 @@ function ForkliftMovementScreen() {
                             return (
                                 <>
                                     <MovementCard
-                                        key={item.id}
+                                        key={index}
                                         Title={item.movement_number}
                                         source={`Source: ${item.sourceBin?.name ?? "Unknown"}`}
                                         destination={`Destination: ${item.destinationBin?.name ?? "Unknown"}`}
@@ -110,8 +108,8 @@ function ForkliftMovementScreen() {
                                         status={item.status}
                                         statusColor={statusColor}
                                         onClick={() =>
-                                            console.log('Clicked ForkliftMovement:', item)
-                                            // navigation.navigate('ForkliftMovementDetail', { item })
+                                            // console.log('Clicked ForkliftMovement:', item)
+                                            navigation.navigate('ForkliftPallet', { item })
                                         }
                                     />
 

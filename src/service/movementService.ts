@@ -29,6 +29,15 @@ class MovementService {
         }
     }
 
+       static async postInspectionByPallet(data: any): Promise<any> {
+        try {
+            const response = await axiosInstance.post(`/inventory-movement/inspect-pallet`, data);
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
+
     static async postInventoryMovementNew(data: any): Promise<any> {
         try {
             const response = await axiosInstance.post(`/inventory-movement`, data);

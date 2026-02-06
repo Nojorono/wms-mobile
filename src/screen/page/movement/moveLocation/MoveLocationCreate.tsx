@@ -89,8 +89,6 @@ const MoveLocationCreate: React.FC = () => {
   const [filteredWarehouse, setFilteredWarehouse] = useState<WarehouseBinGroup[]>([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState<WarehouseBinGroup | null>(null);
   const navigation = useNavigation<NavigationProp>();
-  const [selectedItem, setSelectedItem] = useState<string>('');
-  const [selectedWeek, setSelectedWeek] = useState<number | ''>('');
 
   const palletsInSelectedBin = selectedWarehouse?.pallets || [];
 
@@ -150,7 +148,6 @@ const MoveLocationCreate: React.FC = () => {
       status: 'PENDING',
     };
 
-    console.log('PAYLOAD SIAP DIKIRIM:', payload);
     MovementService.postInventoryMovementNew(payload);
       Alert.alert("Success", "Movement completed successfully");
                navigation.dispatch(

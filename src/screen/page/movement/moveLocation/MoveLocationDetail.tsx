@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,29 +8,57 @@ import {
     FlatList,
     StatusBar,
     ScrollView,
-    TextInput,
-    Keyboard,
     Alert,
+    RefreshControl,
 } from 'react-native';
-import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Camera, useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MoveLocationParamList } from '../../../navigation/movement/MoveLocationNavigator';
+import { useDialogStore } from '../../../../store/useGlobalDialog';
+import { useLoadingDialogStore } from '../../../../store/useLoadingStore';
+import MovementService from '../../../../service/movementService';
+import Colors from '../../../../constants/Colors';
 type NavigationProp = StackNavigationProp<MoveLocationParamList, 'MoveLocationMain'>;
 
 const MoveLocationDetail = () => {
     const route = useRoute();
     const navigation = useNavigation<NavigationProp>();
     const payload = route.params as any;
-    const item = payload.item; // Objek movement utama
-    console.log("MoveLocationDetail payload:", payload);
+    const dataBefore = payload.item; // Objek movement utama
+    const [item, setItem] = useState<any>({});
+    const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
+    const showDialog = useDialogStore((state) => state.showDialog);
+    const [refreshing, setRefreshing] = useState(false);
 
-    // --- Action: Final Submit ---
-    const handleNext = async () => {
+    const fetchMoveLocation = async () => {
         try {
-            // Ambil data pallet pertama (asumsi hanya satu pallet per movement)
-            const palletItem = item.pallets[0];
+            setRefreshing(true);
+            showLoadingDialog('Loading List MoveLocation Planning');
+            const response = await MovementService.getInventoryMovement();
+            const foundItem = (response.data || []).find((d: any) => d.id === dataBefore.id);
+            console.log('FOUND ITEM DETAIL:', foundItem);
+            setItem(foundItem || {});
+        } catch (error) {
+            hideLoadingDialog();
+            showDialog('error', 'Error while Fetching Data MoveLocation!');
+        } finally {
+            hideLoadingDialog();
+            setRefreshing(false);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchMoveLocation();
+        }, [])
+    );
+
+
+    // --- Action: Confirm Per Pallet ---
+    const handleConfirmPallet = async (palletItem: any) => {
+        try {
+            showLoadingDialog('Submitting movement...');
 
             const payloadSubmit = {
                 inventory_movement_id: item.id,
@@ -41,17 +69,26 @@ const MoveLocationDetail = () => {
                 destination_bin_id: item.destination_bin_id,
             };
 
-            console.log("Submitting payload:", payloadSubmit);
-            // await MovementService.postForkliftMovement(payloadSubmit);
-            Alert.alert("Success", "Movement completed successfully");
-            navigation.dispatch(
-                CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: "MoveLocationMain" }],
-                })
-            );
+            await MovementService.postInspectionByPallet(payloadSubmit);
+
+            Alert.alert("Success", `Pallet ${palletItem.pallet.pallet_code} moved successfully`, [
+                {
+                    text: "OK",
+                    onPress: () => {
+                        // Jika ingin kembali ke list setelah satu pallet selesai
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [{ name: "MoveLocationMain" }],
+                            })
+                        );
+                    }
+                }
+            ]);
         } catch (error) {
             Alert.alert("Error", "Failed to complete task");
+        } finally {
+            hideLoadingDialog();
         }
     };
 
@@ -70,31 +107,69 @@ const MoveLocationDetail = () => {
         </View>
     );
 
-    const renderPalletItem = ({ item: palletItem }: { item: any }) => (
-        <View style={styles.card}>
-            <View style={styles.cardRow}>
-                <View style={styles.iconContainer}>
-                    <Icon name="forklift" size={28} color="#1A1A1A" />
-                </View>
-                <View style={styles.detailsContainer}>
-                    <Text style={styles.palletCode}>{palletItem.pallet.pallet_code}</Text>
-                    <Text style={styles.labelSource}>Loc: {item.destinationWarehouseSub.name}</Text>
-                </View>
-                <View style={styles.destinationContainer}>
-                    <View style={styles.qtyRow}>
+    const renderPalletItem = ({ item: palletItem }: { item: any }) => {
+        const isFullConfirmed =
+            palletItem.inventoryTracking?.warehouse_bin_id === item.destination_bin_id &&
+            palletItem.inventoryTracking?.warehouse_sub_id === item.destination_warehouse_sub_id;
+
+
+
+        return (
+            <View style={styles.card}>
+                <View style={styles.cardRow}>
+                    <View style={styles.iconContainer}>
+                        <Icon name="forklift" size={28} color="#1A1A1A" />
+                    </View>
+                    <View style={styles.detailsContainer}>
+                        <Text style={styles.palletCode}>{palletItem.pallet.pallet_code}</Text>
+                        <Text style={styles.labelSource}>Loc: {item.destinationWarehouseSub?.name}</Text>
                         <Text style={styles.qtyText}>
                             {palletItem.pallet.currentQuantity} {palletItem.pallet.uom}
                         </Text>
                     </View>
+                    <View style={styles.destinationContainer}>
+                        <View style={styles.qtyRow}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.confirmBtnSmall,
+                                    isFullConfirmed && { backgroundColor: '#E9ECEF' }
+                                ]}
+                                onPress={() => !isFullConfirmed && handleConfirmPallet(palletItem)}
+                                disabled={isFullConfirmed}
+                            >
+                                <Icon
+                                    name={isFullConfirmed ? "check-circle" : "checkbox-blank-circle-outline"}
+                                    size={18}
+                                    color={isFullConfirmed ? "#16a34a" : "#FFF"}
+                                />
+                                <Text
+                                    style={[
+                                        styles.confirmBtnText,
+                                        isFullConfirmed && { color: '#ADB5BD' }
+                                    ]}
+                                >
+                                    CONFIRM
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
             </View>
-        </View>
-    );
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={fetchMoveLocation}
+                        colors={[Colors.primeColor]}
+                    />
+                }>
                 <SummaryCard />
 
                 <Text style={styles.sectionHeader}>Pallets in this movement</Text>
@@ -106,15 +181,6 @@ const MoveLocationDetail = () => {
                     scrollEnabled={false}
                 />
             </ScrollView>
-
-            {/* Bottom Match Indicator & Next Button */}
-            <View style={styles.footer}>
-              
-                    <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
-                        <Text style={styles.btnTextLarge}>CONFIRM</Text>
-                    </TouchableOpacity>
-               
-            </View>
         </SafeAreaView>
     );
 };
@@ -155,7 +221,17 @@ const styles = StyleSheet.create({
     nextBtn: { backgroundColor: '#16a34a', padding: 18, borderRadius: 16, alignItems: 'center', elevation: 4 },
     btnTextLarge: { color: '#FFF', fontWeight: '800', fontSize: 16, letterSpacing: 1 },
     waitingBadge: { backgroundColor: '#E9ECEF', padding: 15, borderRadius: 12, alignItems: 'center' },
-    waitingText: { color: '#ADB5BD', fontWeight: '600' }
+    waitingText: { color: '#ADB5BD', fontWeight: '600' },
+    confirmBtnSmall: {
+        flexDirection: 'row',
+        backgroundColor: '#16a34a',
+        paddingHorizontal: 8,
+        paddingVertical: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    confirmBtnText: { color: '#FFF', fontWeight: '700', fontSize: 13, marginLeft: 8 },
 });
 
 export default MoveLocationDetail;

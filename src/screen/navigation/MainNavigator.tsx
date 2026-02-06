@@ -100,7 +100,7 @@ const MainNavigator = () => (
       }}
     />
  <Tab.Screen name="Home" component={HomeStackNavigator} />
- <Tab.Screen name="Movement" component={MovementStackNavigator} />
+ {/* <Tab.Screen name="Movement" component={MovementStackNavigator} /> */}
  <Tab.Screen name="Scanner" component={ScannerStackNavigator} />
  
     <Tab.Screen

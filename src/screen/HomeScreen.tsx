@@ -83,7 +83,7 @@ function HomeScreen() {
 
 
           </View>
-          <View style={stylez.rowWithMargin}>
+          {/* <View style={stylez.rowWithMargin}>
             <TouchableOpacity
               style={[stylez.cardx, stylez.flexOne, stylez.marginRight8]}
               onPress={() => {
@@ -95,7 +95,7 @@ function HomeScreen() {
               <Ionicons name="box" size={32} color={Colors.primeColor} />
               <Text style={stylez.titlex}>Movement</Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
       </ScrollView>
     </View>

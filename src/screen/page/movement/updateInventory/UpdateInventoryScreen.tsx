@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   View,
   RefreshControl,
-  TextInput,
   TouchableOpacity,
 } from 'react-native';
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
@@ -22,30 +20,51 @@ import { UpdateInventoryParamList } from '../../../navigation/movement/UpdateInv
 
 type NavigationProp = StackNavigationProp<UpdateInventoryParamList, 'UpdateInventoryMain'>;
 
+// Definisi Filter Status
+const STATUS_OPTIONS = [
+  { label: 'All', value: '' },
+  { label: 'Pending Assignment', value: 'PENDING_ASSIGNMENT' },
+  { label: 'Helper Action', value: 'PENDING_HELPER_ACTION' },
+  { label: 'Inspection', value: 'PENDING_INSPECTION' },
+  { label: 'Approved', value: 'APPROVED' },
+  { label: 'Rejected', value: 'REJECTED' },
+  { label: 'Completed', value: 'COMPLETED' },
+  { label: 'Cancelled', value: 'CANCELLED' },
+];
+
 function UpdateInventoryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [UpdateInventoryList, setUpdateInventoryList] = useState<any[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState('');
 
   const styles = GlobalStyles();
-  const { user } = useAuthStore();
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const fetchUpdateInventory = async () => {
+  const fetchUpdateInventory = async (statusFilter = selectedStatus) => {
     try {
       setRefreshing(true);
-      showLoadingDialog('Loading List UpdateInventory Planning');
-      const response = await MovementService.getUpdateInventory({status:'', limit:100});
+      showLoadingDialog('Loading List UpdateInventory');
+      const response = await MovementService.getUpdateInventoryList({ 
+        status: statusFilter, 
+        limit: 100 
+      });
+      console.log('Fetched Update Inventory:', response);
       setUpdateInventoryList(response.data || []);
     } catch (error) {
-      hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data UpdateInventory!');
+      console.error('Fetch Update Inventory Error:', error);
     } finally {
       hideLoadingDialog();
       setRefreshing(false);
     }
   };
+
+  // Trigger fetch saat status berubah
+  useEffect(() => {
+    fetchUpdateInventory();
+  }, [selectedStatus]);
 
   useFocusEffect(
     useCallback(() => {
@@ -53,17 +72,15 @@ function UpdateInventoryScreen() {
     }, [navigation])
   );
 
-
   return (
     <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
       <ScrollView
         contentContainerStyle={styles.menuContainer}
-        stickyHeaderIndices={[2]}
         style={styles.scrollViewContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={fetchUpdateInventory}
+            onRefresh={() => fetchUpdateInventory()}
             colors={[Colors.primeColor]}
           />
         }
@@ -72,7 +89,7 @@ function UpdateInventoryScreen() {
           <View
             style={[
               styles.activitiesHeader,
-              { borderBottomWidth: 2, borderBottomColor: '#ccc' },
+              { borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 10 },
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
@@ -80,55 +97,72 @@ function UpdateInventoryScreen() {
             </Text>
           </View>
 
+          {/* 🔍 FILTER STATUS - Sekarang di bawah Judul */}
+          <View style={localStyles.filterWrapper}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {STATUS_OPTIONS.map((item) => {
+                const isActive = selectedStatus === item.value;
+                return (
+                  <TouchableOpacity
+                    key={item.label}
+                    onPress={() => setSelectedStatus(item.value)}
+                    style={[
+                      localStyles.chip,
+                      isActive && { backgroundColor: Colors.primeColor, borderColor: Colors.primeColor }
+                    ]}
+                  >
+                    <Text style={[
+                      localStyles.chipText,
+                      isActive && { color: '#fff', fontWeight: 'bold' }
+                    ]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
           {/* 📦 List Card */}
           {UpdateInventoryList.length === 0 ? (
-            <View style={{ alignItems: 'center', marginTop: 40 }}>
+            <View style={{ alignItems: 'center', marginTop: 40, marginBottom: 40 }}>
               <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
             </View>
           ) : (
             UpdateInventoryList.map((item: any, index: number) => {
-              let statusColor;
-              if (item.status === 'APPROVED') {
-                statusColor = '#228B22';
-              } else if (item.status === 'PENDING') {
-                statusColor = '#FFB347';
-              } else {
-                statusColor = '#696969';
-              }
+              // Pewarnaan status
+              let statusColor = '#696969'; // Default Gray
+              if (['APPROVED', 'COMPLETED'].includes(item.status)) statusColor = '#228B22';
+              if (['REJECTED', 'CANCELLED'].includes(item.status)) statusColor = '#DC3545';
+              if (item.status.startsWith('PENDING')) statusColor = '#FFB347';
 
               return (
-                <React.Fragment key={item.updateNumber ?? index}>
-                  <MovementCard
-                    Title={item.updateNumber}
-                    source={`${item.updateType ?? "Unknown"}`}
-                    destination={``}
-                    date={item.createdAt}
-                    status={item.status}
-                    statusColor={statusColor}
-                    onClick={() => {
-                    //   navigation.navigate('UpdateInventoryDetail', { item });
-                    }}
-                  />
-                </React.Fragment>
+                <MovementCard
+                  key={item.updateNumber ?? index}
+                  Title={item.updateNumber}
+                  source={`${item.updateType ?? "Unknown"}`}
+                  destination={``}
+                  date={item.createdAt}
+                  status={item.status}
+                  statusColor={statusColor}
+                  onClick={() => {
+                    // navigation.navigate('UpdateInventoryDetail', { item });
+                  }}
+                />
               );
             })
           )}
-
         </View>
+        {/* Padding bawah agar list tidak tertutup tombol Floating */}
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Floating Button */}
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 20, alignItems: 'center' }}>
         <TouchableOpacity
-          style={{
-            backgroundColor: '#FF9800',
-            borderRadius: 30,
-            paddingVertical: 16,
-            paddingHorizontal: 24,
-            elevation: 5,
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-        //   onPress={() => navigation.navigate('UpdateInventoryCreate')}
+          style={localStyles.fab}
           activeOpacity={0.8}
+          // onPress={() => navigation.navigate('UpdateInventoryCreate')}
         >
           <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
             + Create Update
@@ -142,25 +176,36 @@ function UpdateInventoryScreen() {
 export default UpdateInventoryScreen;
 
 const localStyles = StyleSheet.create({
-  searchInput: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: '#333',
+  filterWrapper: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    marginBottom: 10
   },
-  filterButton: {
+  chip: {
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 6,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#ddd',
     marginRight: 8,
     backgroundColor: '#fff',
   },
-  filterText: {
-    fontSize: 13,
-    color: '#333',
+  chipText: {
+    fontSize: 12,
+    color: '#666',
   },
+  fab: {
+    backgroundColor: '#FF9800',
+    borderRadius: 30,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    flexDirection: 'row',
+    alignItems: 'center',
+  }
 });

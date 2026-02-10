@@ -57,9 +57,13 @@ class MovementService {
     }
 
     //UPDATE INVENTORY
-    static async getUpdateInventory(data: any): Promise<any> {
+    static async getUpdateInventoryList(data?: any): Promise<any> {
         try {
-            const response = await axiosInstance.get(`/pallet-update`,  data );
+            const params: any = { limit: data?.limit || 100 };
+            if (data?.status && data.status !== '') {
+                params.status = data.status;
+            }
+            const response = await axiosInstance.get(`/pallet-update`, { params });
             return response.data;
         } catch (error: any) {
             throw error.response;

@@ -132,12 +132,11 @@ const MoveLocationCreate: React.FC = () => {
   // --- LOGIKA PAYLOAD AND SUBMIT ---
   const handleConfirmMovement = () => {
     // 🔥 DATA YANG ANDA MINTA TETAP DI SINI
-    const palletPayload = pallets.flatMap(pallet =>
-      pallet.currentItems.map(ci => ({
-        pallet_id: pallet.pallet_id,
-        inventory_tracking_id: ci.inventory_tracking_id,
-      }))
-    );
+    const palletPayload = pallets.map(pallet => ({
+      pallet_id: pallet.pallet_id,
+      inventory_tracking_id: pallet.currentItems[0]?.inventory_tracking_id,
+    }));
+
 
     const payload: any = {
       movement_type: subInventory,
@@ -147,15 +146,10 @@ const MoveLocationCreate: React.FC = () => {
       source_bin_id: selectedWarehouse?.warehouseBin.id || '',
       status: 'PENDING',
     };
-
+    console.log("Submitting payload:", payload);
     MovementService.postInventoryMovementNew(payload);
-      Alert.alert("Success", "Movement completed successfully");
-               navigation.dispatch(
-                   CommonActions.reset({
-                       index: 0,
-                       routes: [{ name: "ForkliftMovementMain" }],
-                   })
-               );
+    Alert.alert("Success", "Movement completed successfully");
+    navigation.pop(2);
   };
 
   const isDisabled = pallets.length === 0 || !subInventory || !selectedWarehouse;
@@ -163,7 +157,7 @@ const MoveLocationCreate: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Move Location</Text>
         <Text style={styles.headerSubtitle}>Kelola perpindahan stok pallet</Text>
@@ -220,8 +214,8 @@ const MoveLocationCreate: React.FC = () => {
 
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionLabel}>List Pallet</Text>
-              <TouchableOpacity 
-                style={[styles.miniAddBtn, !selectedWarehouse && styles.disabledMiniBtn]} 
+              <TouchableOpacity
+                style={[styles.miniAddBtn, !selectedWarehouse && styles.disabledMiniBtn]}
                 onPress={() => setModalVisible(true)}
                 disabled={!selectedWarehouse}
               >
@@ -274,9 +268,9 @@ const MoveLocationCreate: React.FC = () => {
               <TouchableOpacity style={styles.modalItem} onPress={() => onSelectPallet(item)}>
                 <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.pallet_code}</Text>
                 {item.currentItems.map((ci, idx) => (
-                   <Text key={idx} style={{ fontSize: 12, color: '#666' }}>
-                     - {ci.item_name} (Qty: {ci.current_quantity})
-                   </Text>
+                  <Text key={idx} style={{ fontSize: 12, color: '#666' }}>
+                    - {ci.item_name} (Qty: {ci.current_quantity})
+                  </Text>
                 ))}
               </TouchableOpacity>
             )}
@@ -296,10 +290,10 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontSize: 13, color: '#666', marginTop: 2 },
   paddingContainer: { padding: 16 },
   sectionLabel: { fontSize: 15, fontWeight: '700', color: '#444', marginBottom: 10 },
-  card: { 
-    backgroundColor: '#FFF', 
-    borderRadius: 12, 
-    padding: 16, 
+  card: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 20,
     ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3 }, android: { elevation: 2 } })
   },
@@ -313,13 +307,13 @@ const styles = StyleSheet.create({
   miniAddBtn: { backgroundColor: '#00B894', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 15 },
   disabledMiniBtn: { backgroundColor: '#CCC' },
   miniAddBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 12 },
-  palletCard: { 
-    flexDirection: 'row', 
-    backgroundColor: '#FFF', 
-    marginHorizontal: 16, 
-    marginBottom: 8, 
-    borderRadius: 10, 
-    padding: 16, 
+  palletCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 10,
+    padding: 16,
     alignItems: 'center',
     borderLeftWidth: 4,
     borderLeftColor: '#FF6A00'

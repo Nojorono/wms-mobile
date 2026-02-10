@@ -86,7 +86,7 @@ function MoveLocationScreen() {
               <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
             </View>
           ) : (
-            MoveLocationList.map((item: any) => {
+            MoveLocationList.map((item: any, index: number) => {
               let statusColor;
               if (item.status === 'PENDING') {
                 statusColor = '#228B22';
@@ -97,28 +97,26 @@ function MoveLocationScreen() {
               }
 
               return (
-                <>
+                <React.Fragment key={item.movement_number ?? index}>
                   <MovementCard
-                  key={item.id}
-                  Title={item.movement_number}
-                  source={`Source: ${item.sourceBin?.name ?? "Unknown"}`}
-                  destination={`Destination: ${item.destinationBin?.name ?? "Unknown"}`}
-                  date={item.createdAt}
-                  status={item.status}
-                  statusColor={statusColor}
-                  onClick={() => {
-                    if (!item.destinationBin) {
-                    Alert.alert(
-                      'Info',
-                      'Item belum di-assign destination.'
-                    );
-                    return;
-                    }
-                    navigation.navigate('MoveLocationDetail', { item });
-                  }}
+                    Title={item.movement_number}
+                    source={`Source: ${item.sourceBin?.name ?? "Unknown"}`}
+                    destination={`Destination: ${item.destinationBin?.name ?? "Unknown"}`}
+                    date={item.createdAt}
+                    status={item.status}
+                    statusColor={statusColor}
+                    onClick={() => {
+                      if (!item.destinationBin) {
+                        Alert.alert(
+                          'Info',
+                          'Item belum di-assign destination.'
+                        );
+                        return;
+                      }
+                      navigation.navigate('MoveLocationDetail', { item });
+                    }}
                   />
-                </>
-
+                </React.Fragment>
               );
             })
           )}

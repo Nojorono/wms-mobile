@@ -104,7 +104,8 @@ const ForkliftDestination = () => {
             };
 
             console.log("Submitting payload:", payloadSubmit);
-            // await MovementService.postForkliftMovement(payloadSubmit);
+            const response = await MovementService.postForkliftMovement(payloadSubmit);
+            console.log("Response:", response);
             Alert.alert("Success", "Movement completed successfully");
             navigation.dispatch(
                 CommonActions.reset({

@@ -13,6 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ForkliftMovementParamList } from '../../../navigation/movement/ForkliftMovementNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useDialogStore } from '../../../../store/useGlobalDialog';
 
 
 type NavigationProp = StackNavigationProp<ForkliftMovementParamList, 'ForkliftMovementMain'>;
@@ -20,7 +21,7 @@ type NavigationProp = StackNavigationProp<ForkliftMovementParamList, 'ForkliftMo
 const ForkliftPallet = () => {
     const route = useRoute();
     const payload = route.params as any
-
+  const showDialog = useDialogStore((state) => state.showDialog);
     const navigation = useNavigation<NavigationProp>();
     const totalPallets = payload.item.pallets.length;
     const scannedPallets = payload.item.pallets.filter((p: any) => p.is_completed).length;
@@ -48,45 +49,48 @@ const ForkliftPallet = () => {
         <TouchableOpacity
             style={styles.card}
             onPress={() => {
-                navigation.navigate('ForkliftDestination', { pallet: item, item: payload.item })
+            if (!item.is_completed) {
+                navigation.navigate('ForkliftDestination', { pallet: item, item: payload.item });
+            } else {
+                // Show popup if already completed
+               showDialog("success", "Kamu sudah memindahkan pallet ini.");
             }
-            }
+            }}
         >
             <View style={styles.cardRow}>
-                {/* Left: Icon */}
-                <View style={styles.iconContainer}>
-                    <Icon name="forklift" size={28} color="#1A1A1A" />
-                </View>
+            {/* Left: Icon */}
+            <View style={styles.iconContainer}>
+                <Icon name="forklift" size={28} color="#1A1A1A" />
+            </View>
 
-                {/* Center: Details */}
-                <View style={styles.detailsContainer}>
-                    <Text style={styles.palletCode}>{item.pallet.pallet_code}</Text>
+            {/* Center: Details */}
+            <View style={styles.detailsContainer}>
+                <Text style={styles.palletCode}>{item.pallet.pallet_code}</Text>
 
-                    <Text style={styles.labelSource}>Source</Text>
-                    <Text style={styles.productName}>
-                        {/* Using Source Info from JSON as placeholder for Product Name if not available */}
-                        Bin: {payload.item.sourceBin.code}
-                    </Text>
-                </View>
+                <Text style={styles.labelSource}>Source</Text>
+                <Text style={styles.productName}>
+                Bin: {payload.item.sourceBin.code}
+                </Text>
+            </View>
 
-                {/* Right: Destination Info */}
-                <View style={styles.destinationContainer}>
-                    <View style={styles.qtyRow}>
-                        <Text style={styles.qtyText}>
-                            {item.pallet.currentQuantity} {item.pallet.uom}
-                        </Text>
-                        <Icon name="arrow-right" size={20} color="#FF6B00" style={{ marginLeft: 4 }} />
-                    </View>
+            {/* Right: Destination Info */}
+            <View style={styles.destinationContainer}>
+                <View style={styles.qtyRow}>
+                <Text style={styles.qtyText}>
+                    {item.pallet.currentQuantity} {item.pallet.uom}
+                </Text>
+                <Icon name="arrow-right" size={20} color="#FF6B00" style={{ marginLeft: 4 }} />
                 </View>
+            </View>
             </View>
 
             {/* Status Badge */}
             <View style={styles.statusBadgeContainer}>
-                <View style={[styles.statusBadge, item.is_completed ? styles.statusDone : styles.statusMoving]}>
-                    <Text style={[styles.statusText, item.is_completed ? styles.textDone : styles.textMoving]}>
-                        {item.is_completed ? "Completed" : "Moving"}
-                    </Text>
-                </View>
+            <View style={[styles.statusBadge, item.is_completed ? styles.statusDone : styles.statusMoving]}>
+                <Text style={[styles.statusText, item.is_completed ? styles.textDone : styles.textMoving]}>
+                {item.is_completed ? "Completed" : "Moving"}
+                </Text>
+            </View>
             </View>
         </TouchableOpacity>
     );
@@ -100,7 +104,7 @@ const ForkliftPallet = () => {
 
                 {/* Destination Section Header */}
                 <Text style={styles.sectionHeader}>
-                    Destination: {payload.item.destinationWarehouseSub.name}
+                    Destination: {payload.item.destinationBin.name}
                 </Text>
 
                 {/* List of Pallets */}

@@ -55,6 +55,16 @@ class MovementService {
             throw error.response;
         }
     }
+
+    //UPDATE INVENTORY
+    static async getUpdateInventory(data: any): Promise<any> {
+        try {
+            const response = await axiosInstance.get(`/pallet-update`,  data );
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    } 
 }
 
 export default MovementService;

@@ -72,7 +72,7 @@ function MovementIndex() {
                                 />
                                 <MenuCard
                                     title={"Update Inventory"}
-                                // onPress={() => navigation.navigate("OutboundAssignGate")}
+                                onPress={() => navigation.navigate("UpdateInventoryNavigator")}
                                 />
                                 {/* <MenuCard
                   title={"Update Inventory"}

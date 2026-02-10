@@ -203,34 +203,40 @@ const MoveLocationDetail = () => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={fetchMoveLocation}
-                        colors={[Colors.primeColor]}
-                    />
-                }>
-                <SummaryCard />
-
-                <Text style={styles.sectionHeader}>Pallets in this movement</Text>
-
-                <FlatList
-                    data={item.pallets}
-                    renderItem={renderPalletItem}
-                    keyExtractor={(item) => item.id.toString()}
-                    scrollEnabled={false}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+                <RefreshControl
+                refreshing={refreshing}
+                onRefresh={fetchMoveLocation}
+                colors={[Colors.primeColor]}
                 />
+            }>
+            <SummaryCard />
+
+            <Text style={styles.sectionHeader}>Pallets in this movement</Text>
+
+            <FlatList
+                data={item.pallets}
+                renderItem={renderPalletItem}
+                keyExtractor={(item) => item.id.toString()}
+                scrollEnabled={false}
+            />
             </ScrollView>
             {isAllPalletConfirmed && (
-                <View style={styles.footer}>
-                    <TouchableOpacity
-                        style={styles.nextBtn}
-                        onPress={handleCompleteMovement}
-                    >
-                        <Text style={styles.btnTextLarge}>Complete This</Text>
-                    </TouchableOpacity>
-                </View>
+            <View style={styles.footer}>
+                <TouchableOpacity
+                style={[
+                    styles.nextBtn,
+                    item.status === 'COMPLETED' && { backgroundColor: '#ADB5BD' }
+                ]}
+                onPress={handleCompleteMovement}
+                disabled={item.status === 'COMPLETED'}
+                >
+                <Text style={styles.btnTextLarge}>
+                    {item.status === 'COMPLETED' ? 'Completed' : 'Complete This'}
+                </Text>
+                </TouchableOpacity>
+            </View>
             )}
         </SafeAreaView>
     );

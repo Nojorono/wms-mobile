@@ -36,7 +36,7 @@ function MoveLocationScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List MoveLocation Planning');
-      const response = await MovementService.getInventoryMovement();
+      const response = await MovementService.getInventoryMovement({status:'', limit:100});
       setMoveLocationList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
@@ -50,7 +50,7 @@ function MoveLocationScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchMoveLocation();
-    }, [])
+    }, [navigation])
   );
 
 
@@ -76,7 +76,7 @@ function MoveLocationScreen() {
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List MoveLocation Planning
+              List Move Location
             </Text>
           </View>
 
@@ -88,9 +88,9 @@ function MoveLocationScreen() {
           ) : (
             MoveLocationList.map((item: any, index: number) => {
               let statusColor;
-              if (item.status === 'PENDING') {
+              if (item.status === 'APPROVED') {
                 statusColor = '#228B22';
-              } else if (item.status === 'COMPLETED') {
+              } else if (item.status === 'PENDING') {
                 statusColor = '#FFB347';
               } else {
                 statusColor = '#696969';

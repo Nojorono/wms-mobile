@@ -31,11 +31,52 @@ const MoveLocationDetail = () => {
     const showDialog = useDialogStore((state) => state.showDialog);
     const [refreshing, setRefreshing] = useState(false);
 
+    const isAllPalletConfirmed =
+        Array.isArray(item.pallets) &&
+        item.pallets.length > 0 &&
+        item.pallets.every((palletItem: any) =>
+            palletItem.inventoryTracking?.warehouse_bin_id === item.destination_bin_id &&
+            palletItem.inventoryTracking?.warehouse_sub_id === item.destination_warehouse_sub_id
+        );
+
+    const handleCompleteMovement = () => {
+        Alert.alert(
+            'Complete Movement',
+            'Are you sure want to complete this movement?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Yes',
+                    onPress: async () => {
+                        // navigation.dispatch(
+                        //     CommonActions.reset({
+                        //         index: 0,
+                        //         routes: [{ name: 'MoveLocationMain' }],
+                        //     })
+                        // );
+                        try {
+                            showLoadingDialog('Completing movement...');
+                            const response = await MovementService.updateInventoryMovementStatus(item.id, {status:'COMPLETED'});
+                            console.log('Movement marked as COMPLETED:', response);
+                            Alert.alert('Success', 'Movement completed successfully');
+                        } catch (error) {
+                            console.log('Error completing movement:', error);
+                            Alert.alert('Error', 'Failed to complete movement');
+                        } finally {
+                            hideLoadingDialog();
+                        }
+                    }
+                },
+            ]
+        );
+    };
+
+
     const fetchMoveLocation = async () => {
         try {
             setRefreshing(true);
             showLoadingDialog('Loading List MoveLocation Planning');
-            const response = await MovementService.getInventoryMovement();
+            const response = await MovementService.getInventoryMovement({ status: '', limit: 100 });
             const foundItem = (response.data || []).find((d: any) => d.id === dataBefore.id);
             console.log('FOUND ITEM DETAIL:', foundItem);
             setItem(foundItem || {});
@@ -181,13 +222,23 @@ const MoveLocationDetail = () => {
                     scrollEnabled={false}
                 />
             </ScrollView>
+            {isAllPalletConfirmed && (
+                <View style={styles.footer}>
+                    <TouchableOpacity
+                        style={styles.nextBtn}
+                        onPress={handleCompleteMovement}
+                    >
+                        <Text style={styles.btnTextLarge}>Complete This</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
-    scrollContent: { paddingHorizontal: 20, paddingTop: 10 },
+    scrollContent: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 120, },
 
     // Summary
     summaryCard: { backgroundColor: '#D1DEE8', borderRadius: 16, padding: 20, marginBottom: 20 },

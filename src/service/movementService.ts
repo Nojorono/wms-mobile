@@ -2,9 +2,9 @@ import axiosInstance from '../config/axiosInstance.ts';
 
 
 class MovementService {
-    static async getInventoryMovement(): Promise<any> {
+    static async getInventoryMovement(data: any): Promise<any> {
         try {
-            const response = await axiosInstance.get(`/inventory-movement`, { params: { status: "PENDING", } });
+            const response = await axiosInstance.get(`/inventory-movement`, { data });
             return response.data;
         } catch (error: any) {
             throw error.response;
@@ -41,6 +41,15 @@ class MovementService {
     static async postInventoryMovementNew(data: any): Promise<any> {
         try {
             const response = await axiosInstance.post(`/inventory-movement`, data);
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
+
+    static async updateInventoryMovementStatus(id: string, data: any): Promise<any> {
+        try {
+            const response = await axiosInstance.patch(`/inventory-movement/${id}`, data);
             return response.data;
         } catch (error: any) {
             throw error.response;

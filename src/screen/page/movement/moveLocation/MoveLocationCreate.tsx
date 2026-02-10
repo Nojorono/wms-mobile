@@ -149,7 +149,7 @@ const MoveLocationCreate: React.FC = () => {
     console.log("Submitting payload:", payload);
     MovementService.postInventoryMovementNew(payload);
     Alert.alert("Success", "Movement completed successfully");
-    navigation.pop(2);
+    navigation.goBack();
   };
 
   const isDisabled = pallets.length === 0 || !subInventory || !selectedWarehouse;

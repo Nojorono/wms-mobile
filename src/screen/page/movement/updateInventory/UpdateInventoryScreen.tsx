@@ -162,7 +162,7 @@ function UpdateInventoryScreen() {
         <TouchableOpacity
           style={localStyles.fab}
           activeOpacity={0.8}
-          // onPress={() => navigation.navigate('UpdateInventoryCreate')}
+          onPress={() => navigation.navigate('UpdateInventoryCreate')}
         >
           <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
             + Create Update

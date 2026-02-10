@@ -2,6 +2,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors.ts';
 import React from 'react';
 import UpdateInventoryScreen from '../../page/movement/updateInventory/UpdateInventoryScreen.tsx';
+import UpdateInventoryCreate from '../../page/movement/updateInventory/UpdateInventoryCreate.tsx';
 
 
 
@@ -29,7 +30,7 @@ const UpdateInventoryStackNavigator = () => (
         },
       }}
     />
-    {/* <UpdateInventoryStack.Screen
+     <UpdateInventoryStack.Screen
       name="UpdateInventoryCreate"
       component={UpdateInventoryCreate}
       options={{
@@ -43,7 +44,7 @@ const UpdateInventoryStackNavigator = () => (
         },
       }}
     />
-     <UpdateInventoryStack.Screen
+    {/* <UpdateInventoryStack.Screen
       name="UpdateInventoryDetail"
       component={UpdateInventoryDetail}
       options={{

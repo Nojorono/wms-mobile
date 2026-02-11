@@ -136,10 +136,48 @@ const MoveLocationDetail = () => {
     // --- Components ---
     const SummaryCard = () => (
         <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Move Location ID</Text>
-            <View style={styles.idRow}>
-                <Icon name="package-variant-closed" size={20} color="#1A1A1A" />
-                <Text style={styles.idText}>{item.movement_number}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View>
+                    <Text style={styles.summaryLabel}>Move Location ID</Text>
+                    <View style={styles.idRow}>
+                        <Icon name="package-variant-closed" size={20} color="#1A1A1A" />
+                        <Text style={styles.idText}>{item.movement_number}</Text>
+                    </View>
+                </View>
+                <TouchableOpacity
+                    onPress={() => {
+                        Alert.alert(
+                            'Delete Movement',
+                            'Are you sure you want to delete this movement?',
+                            [
+                                { text: 'Cancel', style: 'cancel' },
+                                {
+                                    text: 'Delete',
+                                    style: 'destructive',
+                                    onPress: async () => {
+                                        try {
+                                            showLoadingDialog('Deleting movement...');
+                                            await MovementService.deleteInventoryMovement(item.id);
+                                            Alert.alert('Success', 'Movement deleted successfully');
+                                            navigation.dispatch(
+                                                CommonActions.reset({
+                                                    index: 0,
+                                                    routes: [{ name: 'MoveLocationMain' }],
+                                                })
+                                            );
+                                        } catch (error) {
+                                            Alert.alert('Error', 'Failed to delete movement');
+                                        } finally {
+                                            hideLoadingDialog();
+                                        }
+                                    }
+                                }
+                            ]
+                        );
+                    }}
+                >
+                    <Icon name="trash-can-outline" size={22} color="#FF3B30" />
+                </TouchableOpacity>
             </View>
             <View style={styles.destInfo}>
                 <Text style={styles.destLabel}>Target Bin:</Text>
@@ -173,10 +211,14 @@ const MoveLocationDetail = () => {
                             <TouchableOpacity
                                 style={[
                                     styles.confirmBtnSmall,
-                                    isFullConfirmed && { backgroundColor: '#E9ECEF' }
+                                    (isFullConfirmed || !item.destination_bin_id) && { backgroundColor: '#E9ECEF' }
                                 ]}
-                                onPress={() => !isFullConfirmed && handleConfirmPallet(palletItem)}
-                                disabled={isFullConfirmed}
+                                onPress={() => {
+                                    if (!isFullConfirmed && item.destination_bin_id) {
+                                        handleConfirmPallet(palletItem);
+                                    }
+                                }}
+                                disabled={isFullConfirmed || !item.destination_bin_id}
                             >
                                 <Icon
                                     name={isFullConfirmed ? "check-circle" : "checkbox-blank-circle-outline"}
@@ -222,22 +264,60 @@ const MoveLocationDetail = () => {
                 scrollEnabled={false}
             />
             </ScrollView>
-            {isAllPalletConfirmed && (
             <View style={styles.footer}>
-                <TouchableOpacity
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                {item.destination_bin_id && (
+                    <TouchableOpacity
+                        style={[
+                            styles.nextBtn,
+                            { backgroundColor: '#FF3B30', flex: 1, marginLeft: 10 }
+                        ]}
+                        onPress={() => {
+                            Alert.alert(
+                                'Reject Movement',
+                                'Are you sure want to reject this movement?',
+                                [
+                                    { text: 'Cancel', style: 'cancel' },
+                                    {
+                                        text: 'Yes',
+                                        onPress: async () => {
+                                            try {
+                                                showLoadingDialog('Rejecting movement...');
+                                                await MovementService.updateInventoryMovementStatus(item.id, { status: 'REJECTED' });
+                                                Alert.alert('Success', 'Movement rejected successfully');
+                                            } catch (error) {
+                                                Alert.alert('Error', 'Failed to reject movement');
+                                            } finally {
+                                                hideLoadingDialog();
+                                            }
+                                        }
+                                    }
+                                ]
+                            );
+                        }}
+                        disabled={item.status === 'REJECTED'}
+                    >
+                        <Text style={styles.btnTextLarge}>
+                            {item.status === 'REJECTED' ? 'Rejected' : 'Reject'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+                {isAllPalletConfirmed && <TouchableOpacity
                 style={[
                     styles.nextBtn,
-                    item.status === 'COMPLETED' && { backgroundColor: '#ADB5BD' }
+                    item.status === 'COMPLETED' && { backgroundColor: '#ADB5BD' },
+                    { flex: 1, marginLeft: 10 }
                 ]}
                 onPress={handleCompleteMovement}
                 disabled={item.status === 'COMPLETED'}
                 >
                 <Text style={styles.btnTextLarge}>
-                    {item.status === 'COMPLETED' ? 'Completed' : 'Complete This'}
+                    {item.status === 'COMPLETED' ? 'Completed' : 'Complete'}
                 </Text>
                 </TouchableOpacity>
+}
             </View>
-            )}
+            </View>
         </SafeAreaView>
     );
 };

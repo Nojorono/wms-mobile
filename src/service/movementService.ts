@@ -56,6 +56,15 @@ class MovementService {
         }
     }
 
+    static async deleteInventoryMovement(id: string): Promise<any> {
+        try {
+            const response = await axiosInstance.delete(`/inventory-movement/${id}`);   
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
+
     //UPDATE INVENTORY
     static async getUpdateInventoryList(data?: any): Promise<any> {
         try {

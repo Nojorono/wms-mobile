@@ -50,7 +50,7 @@ function MoveLocationScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchMoveLocation();
-    }, [navigation])
+    }, [])
   );
 
 
@@ -106,13 +106,13 @@ function MoveLocationScreen() {
                     status={item.status}
                     statusColor={statusColor}
                     onClick={() => {
-                      if (!item.destinationBin) {
-                        Alert.alert(
-                          'Info',
-                          'Item belum di-assign destination.'
-                        );
-                        return;
-                      }
+                      // if (!item.destinationBin) {
+                      //   Alert.alert(
+                      //     'Info',
+                      //     'Item belum di-assign destination.'
+                      //   );
+                      //   return;
+                      // }
                       navigation.navigate('MoveLocationDetail', { item });
                     }}
                   />

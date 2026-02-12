@@ -13,9 +13,9 @@ class ConstantService {
     }
   }
 
-  static async getItems(idInboundPlan:string): Promise<any> {
+  static async getItems(idInboundPlan: string): Promise<any> {
     try {
-      const response = await axiosInstance.get(`inbound-plan/`+idInboundPlan);
+      const response = await axiosInstance.get(`inbound-plan/` + idInboundPlan);
       return response.data
     } catch (error: any) {
       console.error('Get items failed:', error);
@@ -33,17 +33,40 @@ class ConstantService {
   }
 
   static async getSuppliers(): Promise<any> {
-       try {
-      const response = await axiosInstance.get('master-supplier/attribute7', { params: { ATTRIBUTE7: "FREIGHT (FRG)",} });
+    try {
+      const response = await axiosInstance.get('master-supplier/attribute7', { params: { ATTRIBUTE7: "FREIGHT (FRG)", } });
       return response.data;
     } catch (error: any) {
       throw error.response;
     }
   }
 
-  static async getInventoryTracking(): Promise<any> {
+  static async getInventoryTracking(subId: string, binId?: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('/inventory-tracking/warehouse');
+      const response = await axiosInstance.get('/inventory-tracking/warehouse', {
+        params: {
+          warehouse_sub_id: subId,
+          warehouse_bin_id: binId,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async getSubWarehouse(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/master-warehouse-sub');
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async getBinsBySubWareHouseId(subWarehouseId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/master-warehouse-bin/warehouse-sub/${subWarehouseId}`);
       return response.data;
     } catch (error: any) {
       throw error.response;

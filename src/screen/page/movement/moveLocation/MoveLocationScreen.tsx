@@ -47,6 +47,7 @@ function MoveLocationScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List MoveLocation Planning');
       const response = await MovementService.getInventoryMovement({status: statusFilter, limit:100});
+      console.log("MoveLocation response data:", response.data);
       setMoveLocationList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
@@ -144,7 +145,7 @@ function MoveLocationScreen() {
                 <React.Fragment key={item.movement_number ?? index}>
                   <MovementCard
                     Title={item.movement_number}
-                    source={`Source: ${item.sourceBin?.name ?? "Unknown"}`}
+                    source={`Source: ${item.sourceBin?.name ?? item.sourceWarehouseSub?.name ?? "Unknown"}`}
                     destination={`Destination: ${item.destinationBin?.name ?? "Unknown"}`}
                     date={item.createdAt}
                     status={item.status}

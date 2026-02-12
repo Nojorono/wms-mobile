@@ -91,7 +91,7 @@ function ForkliftMovementScreen() {
                             let statusColor;
                             if (item.status === 'PENDING') {
                                 statusColor = '#228B22';
-                            } else if (item.status === 'COMPLETED') {
+                            } else if (item.status === 'APPROVED') {
                                 statusColor = '#FFB347';
                             } else {
                                 statusColor = '#696969';

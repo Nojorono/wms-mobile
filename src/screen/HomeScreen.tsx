@@ -93,7 +93,7 @@ function HomeScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="box" size={32} color={Colors.primeColor} />
-              <Text style={stylez.titlex}>Movement</Text>
+              <Text style={stylez.titlex}>Inventory</Text>
             </TouchableOpacity>
           </View>
         </View>

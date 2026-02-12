@@ -50,7 +50,7 @@ function MovementIndex() {
                         }
                     ]}
                 >
-                    <Text style={styles.activitiesHeaderText}>Movement Menu</Text>
+                    <Text style={styles.activitiesHeaderText}>Inventory Menu</Text>
                 </View>
                 <ScrollView
                     contentContainerStyle={[styles.menuContainer, { paddingTop: 60 }]}

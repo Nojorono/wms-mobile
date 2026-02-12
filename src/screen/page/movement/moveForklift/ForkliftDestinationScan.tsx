@@ -26,6 +26,10 @@ const ForkliftDestination = () => {
     const navigation = useNavigation<NavigationProp>();
     const payload = route.params as any;
     const item = payload.item; // Objek movement utama
+    const pallets = payload.pallet; // Objek pallet yang dipilih
+
+    console.log("ForkliftDestination payload:", payload);
+
 
     // --- State Management ---
     const [manualInput, setManualInput] = useState('');
@@ -133,20 +137,21 @@ const ForkliftDestination = () => {
         </View>
     );
 
-    const renderPalletItem = ({ item: palletItem }: { item: any }) => (
+    const renderPalletItem = ({ item }: { item: any }) => (
+        // console.log("Rendering pallet item:", palletItem),
         <View style={styles.card}>
             <View style={styles.cardRow}>
                 <View style={styles.iconContainer}>
                     <Icon name="forklift" size={28} color="#1A1A1A" />
                 </View>
                 <View style={styles.detailsContainer}>
-                    <Text style={styles.palletCode}>{palletItem.pallet.pallet_code}</Text>
-                    <Text style={styles.labelSource}>Loc: {item.destinationWarehouseSub.name}</Text>
+                    <Text style={styles.palletCode}>{item.pallet.pallet_code}</Text>
+                    {/* <Text style={styles.labelSource}>Loc: {item.destinationWarehouseSub.name}</Text> */}
                 </View>
                 <View style={styles.destinationContainer}>
                     <View style={styles.qtyRow}>
                         <Text style={styles.qtyText}>
-                            {palletItem.pallet.currentQuantity} {palletItem.pallet.uom}
+                            {item.pallet.currentQuantity} {item.pallet.uom}
                         </Text>
                         <Icon name="check-circle" size={20} color={matched ? "#27AE60" : "#CED4DA"} style={{ marginLeft: 4 }} />
                     </View>
@@ -178,13 +183,17 @@ const ForkliftDestination = () => {
                 <SummaryCard />
 
                 <Text style={styles.sectionHeader}>Pallets in this movement</Text>
-
+                {/* 
                 <FlatList
                     data={item.pallets}
                     renderItem={renderPalletItem}
                     keyExtractor={(item) => item.id.toString()}
                     scrollEnabled={false}
-                />
+                /> */}
+
+                <View style={{ marginBottom: 12 }}>
+                    {renderPalletItem({ item: pallets })}
+                </View>
 
                 {/* Input & Scanner Control Section */}
                 <View style={styles.scannerSection}>

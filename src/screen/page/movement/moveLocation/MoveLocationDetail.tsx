@@ -31,6 +31,11 @@ const MoveLocationDetail = () => {
     const showDialog = useDialogStore((state) => state.showDialog);
     const [refreshing, setRefreshing] = useState(false);
 
+    const hasIncompletePallet =
+    Array.isArray(item.pallets) &&
+    item.pallets.some((p: any) => p.is_completed === true);
+
+
     const isAllPalletConfirmed =
         Array.isArray(item.pallets) &&
         item.pallets.length > 0 &&
@@ -144,7 +149,7 @@ const MoveLocationDetail = () => {
                         <Text style={styles.idText}>{item.movement_number}</Text>
                     </View>
                 </View>
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     onPress={() => {
                         Alert.alert(
                             'Delete Movement',
@@ -177,7 +182,7 @@ const MoveLocationDetail = () => {
                     }}
                 >
                     <Icon name="trash-can-outline" size={22} color="#FF3B30" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
             <View style={styles.destInfo}>
                 <Text style={styles.destLabel}>Target Bin:</Text>
@@ -211,14 +216,14 @@ const MoveLocationDetail = () => {
                             <TouchableOpacity
                                 style={[
                                     styles.confirmBtnSmall,
-                                    (isFullConfirmed || !item.destination_bin_id) && { backgroundColor: '#E9ECEF' }
+                                    (isFullConfirmed || !item.destination_bin_id || palletItem.is_completed === false) && { backgroundColor: '#E9ECEF' }
                                 ]}
                                 onPress={() => {
-                                    if (!isFullConfirmed && item.destination_bin_id) {
+                                    if (!isFullConfirmed && item.destination_bin_id && palletItem.is_completed !== false) {
                                         handleConfirmPallet(palletItem);
                                     }
                                 }}
-                                disabled={isFullConfirmed || !item.destination_bin_id}
+                                disabled={isFullConfirmed || !item.destination_bin_id || palletItem.is_completed === false}
                             >
                                 <Icon
                                     name={isFullConfirmed ? "check-circle" : "checkbox-blank-circle-outline"}
@@ -228,7 +233,7 @@ const MoveLocationDetail = () => {
                                 <Text
                                     style={[
                                         styles.confirmBtnText,
-                                        isFullConfirmed && { color: '#ADB5BD' }
+                                        (isFullConfirmed || palletItem.is_completed === false) && { color: '#ADB5BD' }
                                     ]}
                                 >
                                     CONFIRM
@@ -266,7 +271,7 @@ const MoveLocationDetail = () => {
             </ScrollView>
             <View style={styles.footer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    {item.destination_bin_id && (
+                    {!hasIncompletePallet && (
                         <TouchableOpacity
                             style={[
                                 styles.nextBtn,

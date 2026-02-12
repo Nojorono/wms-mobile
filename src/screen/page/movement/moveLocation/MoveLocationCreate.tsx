@@ -92,18 +92,6 @@ const MoveLocationCreate: React.FC = () => {
 
   const palletsInSelectedBin = selectedWarehouse?.pallets || [];
 
-  const availableItems = React.useMemo(() => {
-    const set = new Set<string>();
-    palletsInSelectedBin.forEach(p => p.currentItems.forEach(ci => ci.item_name && set.add(ci.item_name)));
-    return Array.from(set);
-  }, [palletsInSelectedBin]);
-
-  const availableWeeks = React.useMemo(() => {
-    const set = new Set<number>();
-    palletsInSelectedBin.forEach(p => p.currentItems.forEach(ci => ci.week_number !== undefined && set.add(ci.week_number)));
-    return Array.from(set).sort((a, b) => a - b);
-  }, [palletsInSelectedBin]);
-
   const onSearchLocation = (text: string) => {
     setSourceLocation(text);
     if (!text) { setFilteredWarehouse([]); return; }
@@ -176,10 +164,10 @@ const MoveLocationCreate: React.FC = () => {
           <View style={styles.paddingContainer}>
             <Text style={styles.sectionLabel}>Konfigurasi Lokasi</Text>
             <View style={styles.card}>
-              <Text style={styles.inputLabel}>Lokasi Sumber (Cari Bin)</Text>
+              <Text style={styles.inputLabel}>Lokasi Sumber</Text>
               <View style={styles.searchRow}>
                 <TextInput
-                  placeholder="Ketik kode BIN..."
+                  placeholder="Masukan kode sumber lokasi"
                   value={sourceLocation}
                   onChangeText={onSearchLocation}
                   style={styles.input}

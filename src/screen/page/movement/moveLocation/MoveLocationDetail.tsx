@@ -56,7 +56,7 @@ const MoveLocationDetail = () => {
                         // );
                         try {
                             showLoadingDialog('Completing movement...');
-                            const response = await MovementService.updateInventoryMovementStatus(item.id, {status:'COMPLETED'});
+                            const response = await MovementService.updateInventoryMovementStatus(item.id, { status: 'COMPLETED' });
                             console.log('Movement marked as COMPLETED:', response);
                             Alert.alert('Success', 'Movement completed successfully');
                         } catch (error) {
@@ -245,78 +245,85 @@ const MoveLocationDetail = () => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
             <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            refreshControl={
-                <RefreshControl
-                refreshing={refreshing}
-                onRefresh={fetchMoveLocation}
-                colors={[Colors.primeColor]}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={fetchMoveLocation}
+                        colors={[Colors.primeColor]}
+                    />
+                }>
+                <SummaryCard />
+
+                <Text style={styles.sectionHeader}>Pallets in this movement</Text>
+
+                <FlatList
+                    data={item.pallets}
+                    renderItem={renderPalletItem}
+                    keyExtractor={(item) => item.id.toString()}
+                    scrollEnabled={false}
                 />
-            }>
-            <SummaryCard />
-
-            <Text style={styles.sectionHeader}>Pallets in this movement</Text>
-
-            <FlatList
-                data={item.pallets}
-                renderItem={renderPalletItem}
-                keyExtractor={(item) => item.id.toString()}
-                scrollEnabled={false}
-            />
             </ScrollView>
             <View style={styles.footer}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                {item.destination_bin_id && (
-                    <TouchableOpacity
-                        style={[
-                            styles.nextBtn,
-                            { backgroundColor: '#FF3B30', flex: 1, marginLeft: 10 }
-                        ]}
-                        onPress={() => {
-                            Alert.alert(
-                                'Reject Movement',
-                                'Are you sure want to reject this movement?',
-                                [
-                                    { text: 'Cancel', style: 'cancel' },
-                                    {
-                                        text: 'Yes',
-                                        onPress: async () => {
-                                            try {
-                                                showLoadingDialog('Rejecting movement...');
-                                                await MovementService.updateInventoryMovementStatus(item.id, { status: 'REJECTED' });
-                                                Alert.alert('Success', 'Movement rejected successfully');
-                                            } catch (error) {
-                                                Alert.alert('Error', 'Failed to reject movement');
-                                            } finally {
-                                                hideLoadingDialog();
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    {item.destination_bin_id && (
+                        <TouchableOpacity
+                            style={[
+                                styles.nextBtn,
+                                { backgroundColor: '#FF3B30', flex: 1, marginLeft: 10 }
+                            ]}
+                            onPress={() => {
+                                Alert.alert(
+                                    'Reject Movement',
+                                    'Are you sure want to reject this movement?',
+                                    [
+                                        { text: 'Cancel', style: 'cancel' },
+                                        {
+                                            text: 'Yes',
+                                            onPress: async () => {
+                                                try {
+                                                    showLoadingDialog('Rejecting movement...');
+                                                    await MovementService.updateInventoryMovementStatus(item.id, { status: 'CANCELLED' });
+                                                    Alert.alert('Success', 'Movement cancelled successfully');
+                                                    navigation.dispatch(
+                                                        CommonActions.reset({
+                                                            index: 0,
+                                                            routes: [{ name: 'MoveLocationMain' }],
+                                                        })
+                                                    );
+
+                                                } catch (error) {
+                                                    Alert.alert('Error', 'Failed to cancel movement');
+                                                } finally {
+                                                    hideLoadingDialog();
+                                                }
                                             }
                                         }
-                                    }
-                                ]
-                            );
-                        }}
-                        disabled={item.status === 'REJECTED'}
+                                    ]
+                                );
+                            }}
+                            disabled={item.status === 'CANCELLED'}
+                        >
+                            <Text style={styles.btnTextLarge}>
+                                {item.status === 'CANCELLED' ? 'Cancelled' : 'Cancel'}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                    {isAllPalletConfirmed && <TouchableOpacity
+                        style={[
+                            styles.nextBtn,
+                            item.status === 'COMPLETED' && { backgroundColor: '#ADB5BD' },
+                            { flex: 1, marginLeft: 10 }
+                        ]}
+                        onPress={handleCompleteMovement}
+                        disabled={item.status === 'COMPLETED'}
                     >
                         <Text style={styles.btnTextLarge}>
-                            {item.status === 'REJECTED' ? 'Rejected' : 'Reject'}
+                            {item.status === 'COMPLETED' ? 'Completed' : 'Complete'}
                         </Text>
                     </TouchableOpacity>
-                )}
-                {isAllPalletConfirmed && <TouchableOpacity
-                style={[
-                    styles.nextBtn,
-                    item.status === 'COMPLETED' && { backgroundColor: '#ADB5BD' },
-                    { flex: 1, marginLeft: 10 }
-                ]}
-                onPress={handleCompleteMovement}
-                disabled={item.status === 'COMPLETED'}
-                >
-                <Text style={styles.btnTextLarge}>
-                    {item.status === 'COMPLETED' ? 'Completed' : 'Complete'}
-                </Text>
-                </TouchableOpacity>
-}
-            </View>
+                    }
+                </View>
             </View>
         </SafeAreaView>
     );

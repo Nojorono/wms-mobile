@@ -22,9 +22,19 @@ import MovementService from '../../../../service/movementService.ts';
 
 type NavigationProp = StackNavigationProp<MoveLocationParamList, 'MoveLocationMain'>;
 
+const STATUS_OPTIONS = [
+  { label: 'All', value: '' },
+  { label: 'Pending', value: 'PENDING' },
+  { label: 'Approved', value: 'APPROVED' },
+  { label: 'Completed', value: 'COMPLETED' },
+  { label: 'Cancelled', value: 'CANCELLED' },
+];
+
+
 function MoveLocationScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [MoveLocationList, setMoveLocationList] = useState<any[]>([]);
+    const [selectedStatus, setSelectedStatus] = useState('');
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -32,11 +42,11 @@ function MoveLocationScreen() {
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const fetchMoveLocation = async () => {
+  const fetchMoveLocation = async (statusFilter = selectedStatus) => {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List MoveLocation Planning');
-      const response = await MovementService.getInventoryMovement({status:'', limit:100});
+      const response = await MovementService.getInventoryMovement({status: statusFilter, limit:100});
       setMoveLocationList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
@@ -46,6 +56,11 @@ function MoveLocationScreen() {
       setRefreshing(false);
     }
   };
+
+    // Trigger fetch saat status berubah
+    useEffect(() => {
+      fetchMoveLocation();
+    }, [selectedStatus]);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,7 +78,7 @@ function MoveLocationScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={fetchMoveLocation}
+            onRefresh={() => fetchMoveLocation()}
             colors={[Colors.primeColor]}
           />
         }
@@ -80,6 +95,32 @@ function MoveLocationScreen() {
             </Text>
           </View>
 
+          {/* 🔍 FILTER STATUS - Sekarang di bawah Judul */}
+          <View style={localStyles.filterWrapper}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {STATUS_OPTIONS.map((item) => {
+                const isActive = selectedStatus === item.value;
+                return (
+                  <TouchableOpacity
+                    key={item.label}
+                    onPress={() => setSelectedStatus(item.value)}
+                    style={[
+                      localStyles.chip,
+                      isActive && { backgroundColor: Colors.primeColor, borderColor: Colors.primeColor }
+                    ]}
+                  >
+                    <Text style={[
+                      localStyles.chipText,
+                      isActive && { color: '#fff', fontWeight: 'bold' }
+                    ]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
           {/* 📦 List Card */}
           {MoveLocationList.length === 0 ? (
             <View style={{ alignItems: 'center', marginTop: 40 }}>
@@ -92,7 +133,10 @@ function MoveLocationScreen() {
                 statusColor = '#228B22';
               } else if (item.status === 'PENDING') {
                 statusColor = '#FFB347';
-              } else {
+              }else if (item.status === 'CANCELLED') {
+                statusColor = '#f54222';
+              } 
+              else {
                 statusColor = '#696969';
               }
 
@@ -149,25 +193,36 @@ function MoveLocationScreen() {
 export default MoveLocationScreen;
 
 const localStyles = StyleSheet.create({
-  searchInput: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: '#333',
+  filterWrapper: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    marginBottom: 10
   },
-  filterButton: {
+  chip: {
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 6,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#ddd',
     marginRight: 8,
     backgroundColor: '#fff',
   },
-  filterText: {
-    fontSize: 13,
-    color: '#333',
+  chipText: {
+    fontSize: 12,
+    color: '#666',
   },
+  fab: {
+    backgroundColor: '#FF9800',
+    borderRadius: 30,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    flexDirection: 'row',
+    alignItems: 'center',
+  }
 });

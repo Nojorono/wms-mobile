@@ -4,7 +4,11 @@ import axiosInstance from '../config/axiosInstance.ts';
 class MovementService {
     static async getInventoryMovement(data: any): Promise<any> {
         try {
-            const response = await axiosInstance.get(`/inventory-movement`, { data });
+             const params: any = { limit: data?.limit || 100 };
+            if (data?.status && data.status !== '') {
+                params.status = data.status;
+            }
+            const response = await axiosInstance.get(`/inventory-movement`, { params });
             return response.data;
         } catch (error: any) {
             throw error.response;

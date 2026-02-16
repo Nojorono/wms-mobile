@@ -19,6 +19,15 @@ class ScannerService {
       throw error.response;
     }
   }
+
+  static async getItemById(itemId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/master-item/${itemId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
 }
 
 export default ScannerService;

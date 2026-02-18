@@ -32,7 +32,7 @@ class ScannerService {
   //UPDATE PALLET
   static async updatePalletById(palletId: string, payload: any): Promise<any> {
     try {
-      const response = await axiosInstance.put(`/master-pallet/${palletId}`, payload);
+      const response = await axiosInstance.patch(`/master-pallet/${palletId}`, payload);
       return response.data;
     } catch (error: any) {
       throw error.response;

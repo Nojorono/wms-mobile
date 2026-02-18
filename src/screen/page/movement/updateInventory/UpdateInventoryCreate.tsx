@@ -166,6 +166,11 @@ const CreateUpdateScreen = () => {
         if (activeItems.length === 1) {
           const selectedPallet = activeItems[0];
           const mockItemMaster = await ScannerService.getItemById(selectedPallet.item_id);
+          console.log("Fetched Item Master", mockItemMaster);
+          if (!mockItemMaster.data.bal_per_dus || !mockItemMaster.data.press_per_bal || !mockItemMaster.data.bks_per_press || !mockItemMaster.data.btg_per_bks) {
+            Alert.alert('Error', `Setup item untuk SKU ${mockItemMaster.data.sku} belum lengkap. Hubungi administrator.`);
+            return;
+          }
           setItemMaster(mockItemMaster.data);
           setPalletData(selectedPallet);
           if (updateType === 'SPLIT_PALLET') setSelectedValue(selectedPallet.id);
@@ -192,7 +197,7 @@ const CreateUpdateScreen = () => {
     }
   };
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     if (!palletData || !selectedValue) {
       Alert.alert('Error', 'Data belum lengkap.');
       return;
@@ -207,6 +212,7 @@ const CreateUpdateScreen = () => {
       let payload: any;
 
       if (isSplitPallet) {
+        // ... (kode split pallet tetap sama)
         payload = {
           updateType: "SPLIT_PALLET",
           status: "PENDING_HELPER_ACTION",
@@ -226,16 +232,25 @@ const CreateUpdateScreen = () => {
           assigned: [
             {
               userId: selectedDeviceId,
-              // userName: assignedUserName,
               assignedAt: new Date().toISOString()
             }
           ]
         };
-        // await MovementService.postSplitPallet(payload);
       } else {
         const newQty = isUomUpdate 
           ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue) 
           : palletData.current_quantity;
+
+        // --- TAMBAHAN LOGIKA UPDATE PALLET JIKA UPDATE UOM ---
+        if (isUomUpdate) {
+          const palletUpdatePayload = {
+            capacity: newQty,
+          };
+
+          // Panggil service update master pallet
+          await ScannerService.updatePalletById(palletData.pallet_id || palletData.id, palletUpdatePayload);
+        }
+        // ---------------------------------------------------
 
         payload = {
           updateType: "UPDATE_PROD_CODE_UOM",
@@ -266,12 +281,25 @@ const CreateUpdateScreen = () => {
             weekNumber: weekNumber
           }
         };
+
         if (isUomUpdate) payload.uom = selectedValue;
         else payload.productionCode = selectedValue;
-        //tambahan disini
-        // updatePalletById(palletData.id, payload_ganti uom);
+
+       // 3. Jalankan Update Inventory
+      try {
         await MovementService.postUpdateInventory(payload);
+      } catch (invError) {
+        // --- LOGIKA ROLLBACK ---
+        // Jika postUpdateInventory GAGAL, kembalikan capacity master pallet ke awal
+        if (isUomUpdate) {
+          console.log("Inventory Update failed, rolling back pallet capacity...");
+          await ScannerService.updatePalletById(palletData.pallet_id || palletData.id, {
+            capacity: palletData.current_quantity,
+          });
+        }
+        throw invError;
       }
+    }
 
       Alert.alert('Berhasil', 'Data berhasil diproses');
       navigation.goBack();

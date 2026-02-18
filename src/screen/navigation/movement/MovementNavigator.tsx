@@ -6,6 +6,7 @@ import MovementIndex from '../../page/Movement.tsx';
 import MoveLocationNavigator from './MoveLocationNavigator.tsx';
 import ForkliftMovementStackNavigator from './ForkliftMovementNavigator.tsx';
 import UpdateInventoryStackNavigator from './UpdateInventoryNavigator.tsx';
+import HelperMovementStackNavigator from './HelperMovementNavigator.tsx';
 
 
 
@@ -15,6 +16,7 @@ export type MovementParamList = {
   MoveLocationNavigator: undefined;
   ForkliftMovementNavigator: undefined;
   UpdateInventoryNavigator:undefined;
+  HelperMovementNavigator: undefined;
 };
 
 const MovementStack = createStackNavigator<MovementParamList>();
@@ -80,7 +82,17 @@ const MovementStackNavigator = () => (
         },
       }}
     />
-   
+    <MovementStack.Screen
+      name="HelperMovementNavigator"
+      component={HelperMovementStackNavigator}
+      options={{
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
   </MovementStack.Navigator>
 );
 

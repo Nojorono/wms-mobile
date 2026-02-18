@@ -91,6 +91,15 @@ class MovementService {
             throw error.response;
         }
     }
+
+    static async postUpdateInventorySplit(data: any): Promise<any> {
+        try {
+            const response = await axiosInstance.post(`/pallet-update/split`, data);
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
 }
 
 export default MovementService;

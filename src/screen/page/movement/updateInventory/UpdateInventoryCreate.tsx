@@ -41,6 +41,7 @@ const CreateUpdateScreen = () => {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [splitQty, setSplitQty] = useState(''); // State baru untuk input qty split
 
   const { user } = useAuthStore();
   const userId = user?.id || 'uuid-user-123';
@@ -60,7 +61,7 @@ const CreateUpdateScreen = () => {
         // Fetch Forklift Drivers
         const resList = await UserServices.getUserList();
         const filtered = (resList?.data || []).filter(
-          (u: any) => u?.role?.name?.toUpperCase() === ROLES.DRIVER_FORKLIFT.toUpperCase()
+          (u: any) => u?.role?.name?.toUpperCase() === ROLES.HELPER.toUpperCase()
         );
         setDevices(filtered);
 
@@ -167,7 +168,7 @@ const CreateUpdateScreen = () => {
           const selectedPallet = activeItems[0];
           const mockItemMaster = await ScannerService.getItemById(selectedPallet.item_id);
           console.log("Fetched Item Master", mockItemMaster);
-          if (!mockItemMaster.data.bal_per_dus || !mockItemMaster.data.press_per_bal || !mockItemMaster.data.bks_per_press || !mockItemMaster.data.btg_per_bks) {
+          if (updateType === 'UPDATE_UOM' && (!mockItemMaster.data.bal_per_dus || !mockItemMaster.data.press_per_bal || !mockItemMaster.data.bks_per_press || !mockItemMaster.data.btg_per_bks)) {
             Alert.alert('Error', `Setup item untuk SKU ${mockItemMaster.data.sku} belum lengkap. Hubungi administrator.`);
             return;
           }
@@ -212,7 +213,6 @@ const handleSubmit = async () => {
       let payload: any;
 
       if (isSplitPallet) {
-        // ... (kode split pallet tetap sama)
         payload = {
           updateType: "SPLIT_PALLET",
           status: "PENDING_HELPER_ACTION",
@@ -224,7 +224,7 @@ const handleSubmit = async () => {
             sequence: 1,
             palletId: palletData.pallet_id || palletData.id,
             itemId: palletData.item_id,
-            quantity: palletData.current_quantity,
+           quantity: Number(splitQty),
             uom: palletData.uom,
             productionDate: palletData.production_date,
             weekNumber: palletData.week_number
@@ -232,10 +232,18 @@ const handleSubmit = async () => {
           assigned: [
             {
               userId: selectedDeviceId,
+              // userName: assignedUserName,
               assignedAt: new Date().toISOString()
             }
           ]
         };
+        try{
+          await MovementService.postUpdateInventorySplit(payload);
+        }catch(splitError){
+          Alert.alert('Error', 'Gagal memproses split pallet. Pastikan data sudah benar dan coba lagi.');
+          setLoading(false);
+          return;
+        }
       } else {
         const newQty = isUomUpdate 
           ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue) 
@@ -365,6 +373,15 @@ const handleSubmit = async () => {
               {/* KHUSUS SPLIT PALLET: INPUT DEVICE & SEARCH USER */}
               {updateType === 'SPLIT_PALLET' && (
                 <View style={{ marginTop: 10 }}>
+                  {/* INPUT QTY SPLIT */}
+                  <Text style={styles.label}>Quantity yang akan di-Split ({palletData.uom})</Text>
+                  <TextInput 
+                    style={[styles.input, { marginBottom: 15 }]} 
+                    placeholder="Masukkan Qty..." 
+                    keyboardType="numeric"
+                    value={splitQty}
+                    onChangeText={setSplitQty}
+                  />
                    <Text style={styles.label}>Device (Scanner)</Text>
                    <View style={styles.pickerContainer}>
                       <Picker selectedValue={selectedDeviceId} onValueChange={(v) => setSelectedDeviceId(v)}>

@@ -84,8 +84,8 @@ function MovementIndex() {
                         {roleName === ROLES.HELPER && (
                             <>
                                 <MenuCard
-                                    title={"PICKING"}
-                                // onPress={() => navigation.navigate("OutboundPicking")}
+                                    title={"Update Inventory Helper"}
+                                onPress={() => navigation.navigate("HelperMovementNavigator")}
                                 />
                                 {/* <MenuCard
                   title={"LOADING"}

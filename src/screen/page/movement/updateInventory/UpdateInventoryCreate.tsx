@@ -15,6 +15,12 @@ import ScannerService from '../../../../service/palletServices';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import InboundServices from '../../../../service/inboundServices';
 import DatePicker from 'react-native-date-picker';
+import MovementService from '../../../../service/movementService';
+import { UpdateInventoryParamList } from '../../../navigation/movement/UpdateInventoryNavigator.tsx';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type NavigationProp = StackNavigationProp<UpdateInventoryParamList, 'UpdateInventoryMain'>;
 
 const CreateUpdateScreen = () => {
   const [updateType, setUpdateType] = useState('UPDATE_PROD_CODE');
@@ -25,10 +31,12 @@ const CreateUpdateScreen = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
   const userId = user?.id || 'uuid-user-123';
+  
+    const navigation = useNavigation<NavigationProp>();
 
   // State Date Picker & Week
   const [openPicker, setOpenPicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(''); 
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [weekNumber, setWeekNumber] = useState<string | null>(null);
   const [tempDate, setTempDate] = useState(new Date());
 
@@ -155,7 +163,6 @@ const CreateUpdateScreen = () => {
           weekNumber: palletData.week_number
         },
         scan: {
-          scanNumber: `SCAN-${Date.now()}`,
           scanDate: new Date().toISOString(),
           scanByUserId: userId,
           palletId: palletData.id,
@@ -163,7 +170,8 @@ const CreateUpdateScreen = () => {
           quantity: newQty,
           uom: isUomUpdate ? selectedValue : palletData.uom,
           productionDate: isProdCodeUpdate ? selectedValue : palletData.production_date,
-          status: "PENDING"
+          status: "PENDING",
+          weekNumber: weekNumber
         }
       };
 
@@ -174,9 +182,10 @@ const CreateUpdateScreen = () => {
       }
 
       console.log('Final Payload:', payload);
-      // await ScannerService.postUpdatePallet(payload);
+      await MovementService.postUpdateInventory(payload);
       Alert.alert('Berhasil', 'Data berhasil diperbarui');
-      
+      navigation.goBack();
+
       // Reset
       setPalletData(null);
       setSelectedValue('');
@@ -185,6 +194,7 @@ const CreateUpdateScreen = () => {
       setPalletNo('');
     } catch (error) {
       Alert.alert('Error', 'Gagal mengirim data');
+      console.log('Submit Error:', error);
     } finally {
       setLoading(false);
     }
@@ -198,9 +208,9 @@ const CreateUpdateScreen = () => {
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={updateType}
-              onValueChange={(v) => { 
-                setUpdateType(v); 
-                setSelectedValue(''); 
+              onValueChange={(v) => {
+                setUpdateType(v);
+                setSelectedValue('');
                 setSelectedDate('');
                 setWeekNumber(null);
               }}>
@@ -268,45 +278,45 @@ const CreateUpdateScreen = () => {
                 </View>
               )}
 
-             {selectedValue !== '' && (
-  <View style={styles.previewCard}>
-    <Text style={styles.previewTitle}>PRATINJAU PERUBAHAN</Text>
-    <View style={styles.previewRow}>
-      {/* --- DATA DARI (LAMA) --- */}
-      <View style={styles.previewCol}>
-        <Text style={styles.smallLabel}>DARI</Text>
-        <Text style={{ fontWeight: '500' }}>
-          {updateType === 'UPDATE_PROD_CODE' 
-            ? `Week ${palletData.week_number}` 
-            : palletData.uom}
-        </Text>
-        <Text style={styles.previewQty}>
-          {palletData.current_quantity} {palletData.uom}
-        </Text>
-      </View>
+              {selectedValue !== '' && (
+                <View style={styles.previewCard}>
+                  <Text style={styles.previewTitle}>PRATINJAU PERUBAHAN</Text>
+                  <View style={styles.previewRow}>
+                    {/* --- DATA DARI (LAMA) --- */}
+                    <View style={styles.previewCol}>
+                      <Text style={styles.smallLabel}>DARI</Text>
+                      <Text style={{ fontWeight: '500' }}>
+                        {updateType === 'UPDATE_PROD_CODE'
+                          ? `Week ${palletData.week_number}`
+                          : palletData.uom}
+                      </Text>
+                      <Text style={styles.previewQty}>
+                        {palletData.current_quantity} {palletData.uom}
+                      </Text>
+                    </View>
 
-      <Text style={styles.arrow}>➔</Text>
+                    <Text style={styles.arrow}>➔</Text>
 
-      {/* --- DATA MENJADI (BARU) --- */}
-      <View style={styles.previewCol}>
-        <Text style={styles.smallLabel}>MENJADI</Text>
-        <Text style={{ color: '#FF6B00', fontWeight: 'bold' }}>
-          {updateType === 'UPDATE_PROD_CODE' 
-            ? (weekNumber ? `Week ${weekNumber}` : '-') 
-            : selectedValue}
-        </Text>
-        <Text style={[styles.previewQty, { color: '#FF6B00', fontWeight: 'bold' }]}>
-          {updateType === 'UPDATE_UOM'
-            ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue)
-            : palletData.current_quantity} 
-          {' '}
-          {/* Tampilkan UOM baru jika update UOM, jika tidak tampilkan UOM lama */}
-          {updateType === 'UPDATE_UOM' ? selectedValue : palletData.uom}
-        </Text>
-      </View>
-    </View>
-  </View>
-)}
+                    {/* --- DATA MENJADI (BARU) --- */}
+                    <View style={styles.previewCol}>
+                      <Text style={styles.smallLabel}>MENJADI</Text>
+                      <Text style={{ color: '#FF6B00', fontWeight: 'bold' }}>
+                        {updateType === 'UPDATE_PROD_CODE'
+                          ? (weekNumber ? `Week ${weekNumber}` : '-')
+                          : selectedValue}
+                      </Text>
+                      <Text style={[styles.previewQty, { color: '#FF6B00', fontWeight: 'bold' }]}>
+                        {updateType === 'UPDATE_UOM'
+                          ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue)
+                          : palletData.current_quantity}
+                        {' '}
+                        {/* Tampilkan UOM baru jika update UOM, jika tidak tampilkan UOM lama */}
+                        {updateType === 'UPDATE_UOM' ? selectedValue : palletData.uom}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
             </>
           )}
         </View>

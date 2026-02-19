@@ -121,12 +121,12 @@ const CreateUpdateScreen = () => {
 
   const calculateNewQty = (currentQty: number, fromUom: string, toUom: string) => {
     if (!itemMaster || !fromUom || !toUom || fromUom === toUom) return currentQty;
-    type UomType = 'DUS' | 'BAL' | 'PRESS' | 'BKS' | 'BTG';
-    const units: UomType[] = ['DUS', 'BAL', 'PRESS', 'BKS', 'BTG'];
+    type UomType = 'DUS' | 'BAL' | 'PRS' | 'BKS' | 'BTG';
+    const units: UomType[] = ['DUS', 'BAL', 'PRS', 'BKS', 'BTG'];
     const factor: Record<UomType, number> = {
       DUS: itemMaster.bal_per_dus || 1,
       BAL: itemMaster.press_per_bal || 1,
-      PRESS: itemMaster.bks_per_press || 1,
+      PRS: itemMaster.bks_per_press || 1,
       BKS: itemMaster.btg_per_bks || 1,
       BTG: 1
     };
@@ -451,7 +451,7 @@ const handleSubmit = async () => {
                   <View style={styles.pickerContainer}>
                     <Picker selectedValue={selectedValue} onValueChange={(val) => setSelectedValue(val)}>
                       <Picker.Item label="-- Pilih UOM --" value="" />
-                      {['DUS', 'BAL', 'PRESS', 'BKS', 'BTG'].map(u => (<Picker.Item key={u} label={u} value={u} />))}
+                      {['DUS', 'BAL', 'PRS', 'BKS', 'BTG'].map(u => (<Picker.Item key={u} label={u} value={u} />))}
                     </Picker>
                   </View>
                 </View>

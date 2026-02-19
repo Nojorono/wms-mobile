@@ -109,7 +109,7 @@ function UpdateHelperScreen() {
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => {
-                    navigation.navigate('UpdateHelperDetail');
+                    navigation.navigate('UpdateHelperDetail', { item });
                   }}
                 />
               );

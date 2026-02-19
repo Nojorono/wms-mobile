@@ -10,7 +10,7 @@ import UpdateHelperDetail from '../../page/movement/updateHelper/UpdateHelperDet
 
 export type HelperMovementParamList = {
   HelperMovementMain: undefined;
-    UpdateHelperDetail:  undefined;
+    UpdateHelperDetail:  {item:any};
 };
 
 const HelperMovementStack = createStackNavigator<HelperMovementParamList>();

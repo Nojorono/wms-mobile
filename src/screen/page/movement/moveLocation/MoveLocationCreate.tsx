@@ -27,7 +27,7 @@ type SelectedPallet = {
 
 const SUB_INVENTORIES = [
   { label: 'Good Stock', value: 'GOOD_STOCK' },
-  { label: 'Bad Stock', value: 'BAD_STOCK' },
+  // { label: 'Bad Stock', value: 'BAD_STOCK' },
 ];
 
 const MoveLocationCreate: React.FC = () => {
@@ -208,9 +208,9 @@ const MoveLocationCreate: React.FC = () => {
           <View style={styles.palletCard}>
             <View style={{ flex: 1 }}>
               <Text style={styles.palletCode}>{item.pallet_code}</Text>
-              {item.currentItems.map((ci, idx) => (
+                {item.currentItems.filter(ci => ci.current_quantity > 0).map((ci, idx) => (
                 <Text key={idx} style={styles.palletDetail}>• {ci.item_name} ({ci.current_quantity} {ci.uom})</Text>
-              ))}
+                ))}
             </View>
             <TouchableOpacity onPress={() => togglePalletSelection(item)}>
               <Text style={{ color: 'red', fontWeight: 'bold' }}>Hapus</Text>
@@ -248,11 +248,11 @@ const MoveLocationCreate: React.FC = () => {
                   onPress={() => togglePalletSelection(item)}
                 >
                   <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.pallet_code}</Text>
-                    {isSelected && <Text style={{color: '#FF6A00', fontWeight: 'bold'}}>✓ Terpilih</Text>}
+                  <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.pallet_code}</Text>
+                  {isSelected && <Text style={{color: '#FF6A00', fontWeight: 'bold'}}>✓ Terpilih</Text>}
                   </View>
-                  {item.currentItems.map((ci, idx) => (
-                    <Text key={idx} style={{ fontSize: 13, color: '#555' }}>- {ci.item_name} (Qty: {ci.current_quantity})</Text>
+                  {item.currentItems.filter(ci => ci.current_quantity > 0).map((ci, idx) => (
+                  <Text key={idx} style={{ fontSize: 13, color: '#555' }}>- {ci.item_name} (Qty: {ci.current_quantity})</Text>
                   ))}
                 </TouchableOpacity>
               );

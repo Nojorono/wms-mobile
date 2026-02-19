@@ -163,6 +163,20 @@ const CreateUpdateScreen = () => {
       const activeItems = (mockPalletRes.data || []).filter((item: any) => item.current_quantity > 0);
 
       if (activeItems.length > 0) {
+        const palletId = mockPalletRes.data[0].id;
+        
+        // Check if pallet exists in validateItems
+        const validateItems = await MovementService.getUpdateInventoryList({ status: 'PENDING_HELPER_ACTION', limit: 100 });
+        const isInValidateList = validateItems?.data?.some((validateItem: any) =>
+          validateItem.items?.some((item: any) => item.palletId === palletId)
+        );
+
+        if (isInValidateList) {
+          Alert.alert('Error', 'Pallet sudah digunakan untuk task ke helper. Tidak dapat diproses.');
+          setLoading(false);
+          return;
+        }
+
         setPalletItems(activeItems);
         if (activeItems.length === 1) {
           const selectedPallet = activeItems[0];
@@ -476,9 +490,18 @@ const handleSubmit = async () => {
 
       <View style={{ padding: 16 }}>
         <TouchableOpacity
-          style={[styles.submitBtn, (!palletData || !selectedValue || (updateType === 'SPLIT_PALLET' && (!selectedDeviceId || !assignedUserName))) && { backgroundColor: '#CCC' }]}
-          onPress={handleSubmit}
-          disabled={!palletData || !selectedValue || (updateType === 'SPLIT_PALLET' && (!selectedDeviceId || !assignedUserName))}
+          style={[styles.submitBtn, (!palletData || !selectedValue || (updateType === 'SPLIT_PALLET' && (!selectedDeviceId || !assignedUserName || !splitQty))) && { backgroundColor: '#CCC' }]}
+          onPress={() => {
+            Alert.alert(
+              'Konfirmasi',
+              `Anda yakin ingin melanjutkan ${updateType === 'SPLIT_PALLET' ? 'split pallet' : 'perubahan data'} ini?`,
+              [
+                { text: 'Batal', onPress: () => {}, style: 'cancel' },
+                { text: 'Lanjutkan', onPress: handleSubmit }
+              ]
+            );
+          }}
+          disabled={!palletData || !selectedValue || (updateType === 'SPLIT_PALLET' && (!selectedDeviceId || !assignedUserName || !splitQty))}
         >
           <Text style={styles.submitText}>{updateType === 'SPLIT_PALLET' ? 'Proses Split Pallet' : 'Konfirmasi Perubahan'}</Text>
         </TouchableOpacity>

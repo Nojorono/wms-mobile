@@ -3,12 +3,14 @@ import Colors from '../../../constants/Colors.ts';
 import { Image, View } from 'react-native';
 import React from 'react';
 import UpdateHelperScreen from '../../page/movement/updateHelper/UpdateHelperScreen.tsx';
+import UpdateHelperDetail from '../../page/movement/updateHelper/UpdateHelperDetail.tsx';
 
 
 
 
 export type HelperMovementParamList = {
   HelperMovementMain: undefined;
+    UpdateHelperDetail:  undefined;
 };
 
 const HelperMovementStack = createStackNavigator<HelperMovementParamList>();
@@ -29,9 +31,9 @@ const HelperMovementStackNavigator = () => (
         },
       }}
     />
-    {/* <HelperMovementStack.Screen
-      name="HelperPallet"
-      component={HelperPallet}
+    <HelperMovementStack.Screen
+      name="UpdateHelperDetail"
+      component={UpdateHelperDetail}
       options={{
         headerShown: true,
         headerTintColor: '#fff',
@@ -42,7 +44,7 @@ const HelperMovementStackNavigator = () => (
           borderBottomWidth: 0, // Remove any border
         },
       }}
-    /> */}
+    />
 
   </HelperMovementStack.Navigator>
 );

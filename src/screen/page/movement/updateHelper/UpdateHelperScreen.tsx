@@ -16,9 +16,9 @@ import { useLoadingDialogStore } from '../../../../store/useLoadingStore.ts';
 import { useDialogStore } from '../../../../store/useGlobalDialog.ts';
 import MovementCard from '../../../../components/movement/MovementCard.tsx';
 import MovementService from '../../../../service/movementService.ts';
-import { UpdateInventoryParamList } from '../../../navigation/movement/UpdateInventoryNavigator.tsx';
+import { HelperMovementParamList } from '../../../navigation/movement/HelperMovementNavigator.tsx';
 
-type NavigationProp = StackNavigationProp<UpdateInventoryParamList, 'UpdateInventoryMain'>;
+type NavigationProp = StackNavigationProp<HelperMovementParamList, 'HelperMovementMain'>;
 
 function UpdateHelperScreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -109,7 +109,7 @@ function UpdateHelperScreen() {
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => {
-                    // navigation.navigate('UpdateInventoryDetail', { item });
+                    navigation.navigate('UpdateHelperDetail');
                   }}
                 />
               );

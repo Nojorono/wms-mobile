@@ -5,6 +5,7 @@ import { useAuthStore } from '../../../../store/useAuthStore.ts';
 
 // Asumsi ScannerService sudah diimport
 import ScannerService from '../../../../service/palletServices.ts';
+import MovementService from '../../../../service/movementService.ts';
 
 export const UpdateHelperDetail = () => {
     const route = useRoute();
@@ -88,23 +89,27 @@ export const UpdateHelperDetail = () => {
         }
     };
 
-    const executeSubmit = () => {
-        const submitPayload = {
+    const executeSubmit = async() => {
+        try {
+            const submitPayload = {
             palletUpdateId: payload.item.id,
             scanDate: new Date().toISOString(),
             scanByUserId: userId,
-            palletId: sourceItemDetail.palletId,
-            targetPalletId: targetItemsApi[0]?.id || null, // Ambil palletId dari target jika ada
+            palletId: targetItemsApi[0]?.id,
             itemId: sourceItemDetail.itemId,
             quantity: sourceItemDetail.quantity,
             uom: sourceItemDetail.uom,
             productionDate: sourceItemDetail.productionDate,
-            weekNumber: sourceItemDetail.weekNumber || 1,
+            // weekNumber: sourceItemDetail.weekNumber || null,
             notes: "Proses split pallet",
             status: "PENDING"
-        };
-        console.log("Submitting:", submitPayload);
-        Alert.alert("Berhasil", "Data berhasil dikirim!");
+            };
+            await MovementService.postPalletUpdateScanHelper(submitPayload);
+            Alert.alert("Berhasil", "Data berhasil dikirim!");
+        } catch (error) {
+            Alert.alert("Error", "Gagal mengirim data. Silakan coba lagi.");
+            console.error("Submit error:", error);
+        }
     };
 
     return (
@@ -129,7 +134,6 @@ export const UpdateHelperDetail = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* FIX: Jangan gunakan .map() karena sourceItemDetail adalah Object */}
                 {sourceItemDetail && (
                     <View style={styles.infoBox}>
                         <View style={styles.infoItem}>

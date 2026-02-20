@@ -100,6 +100,16 @@ class MovementService {
             throw error.response;
         }
     }
+
+    // Helper Movement
+    static async postPalletUpdateScanHelper(data: any): Promise<any> {
+        try {
+            const response = await axiosInstance.post(`/pallet-update/scan`, data);
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
 }
 
 export default MovementService;

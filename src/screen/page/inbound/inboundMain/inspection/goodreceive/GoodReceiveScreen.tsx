@@ -109,7 +109,7 @@ const GoodReceiveScreen = () => {
 
       {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1, width: "100%" }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ alignItems: "center" }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{width: "100%", paddingHorizontal: 16 }}>
           <GoodReceivedCardList
             items={mergedData}
             onCheck={handleCheck}

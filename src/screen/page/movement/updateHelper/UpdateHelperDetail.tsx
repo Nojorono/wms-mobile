@@ -1,59 +1,84 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 
 import ScannerService from '../../../../service/palletServices.ts';
 import MovementService from '../../../../service/movementService.ts';
 import { HelperMovementParamList } from '../../../navigation/movement/HelperMovementNavigator.tsx';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-
-
-
 
 type NavigationProp = StackNavigationProp<HelperMovementParamList, 'HelperMovementMain'>;
 
 export const UpdateHelperDetail = () => {
     const route = useRoute();
+    const navigation = useNavigation<NavigationProp>();
     const payload = route.params as any;
-    const itemData = payload.item; // Data JSON yang Anda berikan
+    const itemData = payload.item; 
     const { user } = useAuthStore();
     const userId = user?.id || 'uuid-user-123';
-    
-      const navigation = useNavigation<NavigationProp>();
 
+    // Deteksi Tipe Update
     const isMergeType = itemData.updateType === 'MERGE_PALLET';
 
+    // State untuk Pallet Sumber (Hanya digunakan jika SPLIT)
+    const [sourcePalletNo, setSourcePalletNo] = useState('');
+    const [isLoadingSource, setIsLoadingSource] = useState(false);
+    const [isSourceValid, setIsSourceValid] = useState(isMergeType); // Jika merge, otomatis dianggap valid
+    const [sourceItemDetail, setSourceItemDetail] = useState<any>(null);
+
+    // State untuk Pallet Tujuan
     const [targetPalletNo, setTargetPalletNo] = useState('');
     const [isLoadingTarget, setIsLoadingTarget] = useState(false);
     const [targetPalletData, setTargetPalletData] = useState<any>(null);
     const [isTargetValid, setIsTargetValid] = useState(false);
 
-    // Menghitung total QTY dari semua item yang akan di-merge
+    // Menghitung total QTY (khusus Merge)
     const totalQtyToMove = useMemo(() => {
         return itemData.items.reduce((acc: number, curr: any) => acc + curr.quantity, 0);
     }, [itemData.items]);
 
-    // Check Pallet Tujuan (Flow Sekarang)
-    const checkTargetPallet = async () => {
-        if (!targetPalletNo) return Alert.alert("Peringatan", "Masukkan nomor pallet tujuan");
-
-        setIsLoadingTarget(true);
-        setTargetPalletData(null);
-        setIsTargetValid(false);
+    // 1. Cek Pallet Sumber (Hanya untuk SPLIT)
+    const checkSourcePallet = async () => {
+        if (!sourcePalletNo) return Alert.alert("Peringatan", "Masukkan nomor pallet sumber");
+        setIsLoadingSource(true);
 
         try {
+            const res = await ScannerService.getPalletByCode(sourcePalletNo);
+            const palletData = res.data || [];
+            const matchedItem = itemData.items.find((i: any) => i.palletId === palletData[0]?.id);
+
+            if (matchedItem) {
+                setIsSourceValid(true);
+                setSourceItemDetail(matchedItem);
+                Alert.alert("Success", "Pallet Sumber tervalidasi.");
+            } else {
+                Alert.alert("Error", "Pallet tidak terdaftar dalam instruksi ini.");
+            }
+        } catch (error) {
+            Alert.alert("Error", "Gagal mengambil data pallet sumber.");
+        } finally {
+            setIsLoadingSource(false);
+        }
+    };
+
+    // 2. Cek Pallet Tujuan
+    const checkTargetPallet = async () => {
+        if (!targetPalletNo) return Alert.alert("Peringatan", "Masukkan nomor pallet tujuan");
+        if (!isSourceValid) return Alert.alert("Peringatan", "Validasi pallet sumber dulu");
+
+        setIsLoadingTarget(true);
+        try {
             const res = await ScannerService.getPalletByCode(targetPalletNo);
-            const targetData = res.data?.[0]; // Ambil data pallet pertama
+            const targetData = res.data?.[0];
 
             if (targetData) {
-                // Validasi UOM: Bandingkan dengan UOM item pertama di list
-                const requiredUom = itemData.items[0]?.uom;
+                // Ambil UOM acuan (dari source detail jika split, atau dari list pertama jika merge)
+                const requiredUom = isMergeType ? itemData.items[0]?.uom : sourceItemDetail?.uom;
+                
                 if (targetData.uom && targetData.uom !== requiredUom) {
-                    Alert.alert("Error", `UOM tidak cocok. Pallet tujuan memiliki UOM ${targetData.uom}, sedangkan item memerlukan ${requiredUom}`);
+                    Alert.alert("Error", `UOM tidak cocok. Butuh: ${requiredUom}`);
                 } else {
-                    console.log("Pallet tujuan valid:", targetData);
                     setTargetPalletData(targetData);
                     setIsTargetValid(true);
                     Alert.alert("Success", "Pallet tujuan valid.");
@@ -70,24 +95,24 @@ export const UpdateHelperDetail = () => {
 
     const executeSubmit = async () => {
         try {
-            // Karena ini MERGE, kita mengirim instruksi update berdasarkan pallet tujuan
             const submitPayload = {
                 palletUpdateId: itemData.id,
                 scanDate: new Date().toISOString(),
                 scanByUserId: userId,
                 palletId: targetPalletData.id,
-                itemId: targetPalletData.item_id,
-                quantity: totalQtyToMove,
-                uom: targetPalletData.uom,
-                productionDate: targetPalletData?.production_date || new Date().toISOString(),
+                // Jika merge, gunakan total list, jika split gunakan qty item yang dicheck
+                quantity: isMergeType ? totalQtyToMove : sourceItemDetail.quantity,
+                itemId: isMergeType ? targetPalletData.item_id : sourceItemDetail.itemId,
+                uom: isMergeType ? targetPalletData.uom : sourceItemDetail.uom,
+                productionDate: targetPalletData?.production_date,
                 weekNumber: targetPalletData?.week_number,
-                notes: "Merge Pallet Process via Mobile",
+                notes: isMergeType ? "Merge Pallet Process" : "Split Pallet Process",
                 status: "PENDING"
             };
-            console.log("Payload for Merge Submit:", submitPayload);
+
             await MovementService.postPalletUpdateScanHelper(submitPayload);
-            Alert.alert("Berhasil", "Proses Merge berhasil dikirim!");
-             navigation.goBack();
+            Alert.alert("Berhasil", "Data berhasil dikirim!");
+            navigation.goBack();
         } catch (error) {
             Alert.alert("Error", "Gagal mengirim data.");
         }
@@ -98,46 +123,61 @@ export const UpdateHelperDetail = () => {
             <View style={styles.header}>
                 <Text style={styles.label}>Update Number</Text>
                 <Text style={styles.title}>{itemData.updateNumber}</Text>
-                <View style={styles.badge}>
+                <View style={[styles.badge, { backgroundColor: isMergeType ? '#E2E8F0' : '#FFEDD5' }]}>
                     <Text style={styles.badgeText}>{itemData.updateType}</Text>
                 </View>
             </View>
 
-            {/* Bagian 1: Daftar Pallet Sumber (Otomatis Tampil) */}
+            {/* Bagian 1: SUMBER */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}>1. Daftar Pallet Sumber</Text>
-                {itemData.items.map((item: any, index: number) => (
-                    <View key={index} style={styles.listItem}>
-                        <View>
+                <Text style={styles.sectionTitle}>1. Pallet Sumber</Text>
+                
+                {isMergeType ? (
+                    // Tampilan MERGE: Langsung List
+                    itemData.items.map((item: any, index: number) => (
+                        <View key={index} style={styles.listItem}>
                             <Text style={styles.listPalletCode}>{item.pallet.pallet_code}</Text>
-                            <Text style={styles.listSubText}>ID: {item.palletId.substring(0, 8)}...</Text>
+                            <Text style={styles.listQty}>{item.quantity} {item.uom}</Text>
                         </View>
-                        <View style={{ alignItems: 'flex-end' }}>
-                            <Text style={styles.listQty}>{item.quantity}</Text>
-                            <Text style={styles.listSubText}>{item.uom}</Text>
+                    ))
+                ) : (
+                    // Tampilan SPLIT: Input Scan
+                    <>
+                        <View style={styles.inputGroup}>
+                            <TextInput
+                                style={[styles.input, isSourceValid && styles.inputSuccess]}
+                                placeholder="Scan Pallet Sumber"
+                                value={sourcePalletNo}
+                                onChangeText={(txt) => { setSourcePalletNo(txt); setIsSourceValid(false); }}
+                            />
+                            <TouchableOpacity style={[styles.checkButton, isSourceValid && styles.validBtn]} onPress={checkSourcePallet} disabled={isLoadingSource}>
+                                {isLoadingSource ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.checkButtonText}>{isSourceValid ? "OK" : "CHECK"}</Text>}
+                            </TouchableOpacity>
                         </View>
-                    </View>
-                ))}
-                <View style={styles.totalBox}>
-                    <Text style={styles.totalLabel}>Total Qty Akan Dipindah:</Text>
-                    <Text style={styles.totalValue}>{totalQtyToMove} {itemData.items[0]?.uom}</Text>
-                </View>
+                        {isSourceValid && sourceItemDetail && (
+                            <View style={styles.infoBox}>
+                                <Text style={styles.infoLabel}>Qty Available: <Text style={styles.infoValue}>{sourceItemDetail.pallet.currentQuantity} {sourceItemDetail.uom}</Text></Text>
+                                <Text style={styles.infoLabel}>Qty to Split: <Text style={styles.infoValue}>{sourceItemDetail.quantity} {sourceItemDetail.uom}</Text></Text>
+                            </View>
+                        )}
+                    </>
+                )}
             </View>
 
-            {/* Bagian 2: Pallet Tujuan (Harus Scan) */}
+            {/* Bagian 2: TUJUAN */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}>2. Scan Pallet Tujuan</Text>
+                <Text style={styles.sectionTitle}>2. Pallet Tujuan</Text>
                 <View style={styles.inputGroup}>
                     <TextInput
                         style={[styles.input, isTargetValid && styles.inputSuccess]}
-                        placeholder="Input/Scan Pallet Tujuan"
+                        placeholder="Scan Pallet Tujuan"
                         value={targetPalletNo}
                         onChangeText={(txt) => { setTargetPalletNo(txt); setIsTargetValid(false); }}
                     />
                     <TouchableOpacity 
                         style={[styles.checkButton, isTargetValid && styles.validBtn]} 
                         onPress={checkTargetPallet} 
-                        disabled={isLoadingTarget}
+                        disabled={isLoadingTarget || (!isMergeType && !isSourceValid)}
                     >
                         {isLoadingTarget ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.checkButtonText}>{isTargetValid ? "OK" : "CHECK"}</Text>}
                     </TouchableOpacity>
@@ -145,31 +185,25 @@ export const UpdateHelperDetail = () => {
 
                 {isTargetValid && targetPalletData && (
                     <View style={styles.infoBoxSummary}>
-                        <Text style={styles.summaryTitle}>Detail Pallet Tujuan:</Text>
+                        <Text style={styles.summaryTitle}>Kalkulasi Hasil:</Text>
                         <View style={styles.rowBetween}>
-                            <Text style={styles.infoLabel}>Kode Pallet:</Text>
-                            <Text style={styles.infoValue}>{targetPalletNo}</Text>
+                            <Text style={styles.infoLabel}>Qty Eksisting:</Text>
+                            <Text style={styles.infoValue}>{targetPalletData.current_quantity || 0}</Text>
                         </View>
                         <View style={styles.rowBetween}>
-                            <Text style={styles.infoLabel}>Qty Saat Ini:</Text>
-                            <Text style={styles.infoValue}>{targetPalletData.current_quantity || 0} {targetPalletData.uom}</Text>
-                        </View>
-                        <View style={[styles.rowBetween, styles.borderTop, { marginTop: 8, paddingTop: 8 }]}>
-                            <Text style={[styles.infoLabel, { color: '#1e293b', fontWeight: 'bold' }]}>Total Setelah Merge:</Text>
-                            <Text style={[styles.infoValue, { color: '#16a34a', fontSize: 18 }]}>
-                                {(targetPalletData.currentQuantity || 0) + totalQtyToMove} {targetPalletData.uom}
-                            </Text>
+                            <Text style={styles.infoLabel}>Qty Masuk:</Text>
+                            <Text style={styles.infoValue}>{isMergeType ? totalQtyToMove : sourceItemDetail?.quantity}</Text>
                         </View>
                     </View>
                 )}
             </View>
 
             <TouchableOpacity
-                style={[styles.button, !isTargetValid && styles.disabledButton]}
-                onPress={() => Alert.alert("Konfirmasi", "Gabungkan semua pallet sumber ke pallet tujuan?", [{ text: "Batal" }, { text: "Ya, Proses", onPress: executeSubmit }])}
-                disabled={!isTargetValid}
+                style={[styles.button, (!isSourceValid || !isTargetValid) && styles.disabledButton, { backgroundColor: isMergeType ? '#0F172A' : '#ff853a' }]}
+                onPress={executeSubmit}
+                disabled={!isSourceValid || !isTargetValid}
             >
-                <Text style={styles.buttonText}>PROSES MERGE PALLET</Text>
+                <Text style={styles.buttonText}>PROSES SEKARANG</Text>
             </TouchableOpacity>
         </ScrollView>
     );
@@ -180,30 +214,26 @@ const styles = StyleSheet.create({
     header: { marginBottom: 20, alignItems: 'center' },
     label: { fontSize: 12, color: '#64748b', fontWeight: '600' },
     title: { fontSize: 24, fontWeight: 'bold', color: '#1e293b' },
-    badge: { backgroundColor: '#E2E8F0', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginTop: 4 },
+    badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginTop: 4 },
     badgeText: { fontSize: 10, fontWeight: 'bold', color: '#475569' },
-    card: { backgroundColor: 'white', padding: 16, borderRadius: 12, marginBottom: 16, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+    card: { backgroundColor: 'white', padding: 16, borderRadius: 12, marginBottom: 16, elevation: 3 },
     sectionTitle: { fontSize: 15, fontWeight: 'bold', color: '#334155', marginBottom: 12 },
-    listItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-    listPalletCode: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
-    listQty: { fontSize: 16, fontWeight: 'bold', color: '#2563eb' },
-    listSubText: { fontSize: 11, color: '#94a3b8' },
-    totalBox: { marginTop: 12, padding: 12, backgroundColor: '#F1F5F9', borderRadius: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    totalLabel: { fontSize: 13, fontWeight: '600', color: '#475569' },
-    totalValue: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
+    listItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+    listPalletCode: { fontSize: 14, fontWeight: 'bold', color: '#1e293b' },
+    listQty: { fontSize: 14, color: '#2563eb', fontWeight: '600' },
     inputGroup: { flexDirection: 'row', gap: 10 },
-    input: { flex: 1, borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, paddingHorizontal: 12, height: 48, color: '#000', backgroundColor: '#fff' },
+    input: { flex: 1, borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, paddingHorizontal: 12, height: 48, color: '#000' },
     inputSuccess: { borderColor: '#22c55e', backgroundColor: '#f0fdf4' },
     checkButton: { backgroundColor: '#3b82f6', justifyContent: 'center', minWidth: 80, alignItems: 'center', borderRadius: 8 },
     validBtn: { backgroundColor: '#22c55e' },
     checkButtonText: { color: 'white', fontWeight: 'bold' },
-    infoBoxSummary: { backgroundColor: '#F0F9FF', marginTop: 16, borderRadius: 8, borderWidth: 1, borderColor: '#BAE6FD', padding: 12 },
-    summaryTitle: { fontSize: 13, fontWeight: 'bold', color: '#0369a1', marginBottom: 8 },
-    rowBetween: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+    infoBox: { marginTop: 10, padding: 8, backgroundColor: '#f8fafc', borderRadius: 4 },
+    infoBoxSummary: { backgroundColor: '#F0F9FF', marginTop: 16, borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#BAE6FD' },
+    summaryTitle: { fontSize: 12, fontWeight: 'bold', color: '#0369a1', marginBottom: 5 },
+    rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
     infoLabel: { fontSize: 12, color: '#64748b' },
-    infoValue: { fontSize: 14, fontWeight: 'bold', color: '#1e293b' },
-    borderTop: { borderTopWidth: 1, borderTopColor: '#cbd5e1' },
-    button: { backgroundColor: '#ff853a', padding: 18, borderRadius: 10, alignItems: 'center', marginTop: 10, marginBottom: 40 },
+    infoValue: { fontSize: 13, fontWeight: 'bold', color: '#1e293b' },
+    button: { padding: 18, borderRadius: 10, alignItems: 'center', marginTop: 10, marginBottom: 40 },
     disabledButton: { backgroundColor: '#94a3b8' },
     buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 });

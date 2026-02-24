@@ -101,6 +101,15 @@ class MovementService {
         }
     }
 
+    static async postUpdateInventoryMerge(data: any): Promise<any> {
+        try {
+            const response = await axiosInstance.post(`/pallet-update/merge`, data);
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
+
     // Helper Movement
     static async postPalletUpdateScanHelper(data: any): Promise<any> {
         try {

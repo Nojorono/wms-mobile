@@ -14,12 +14,13 @@ import { Picker } from '@react-native-picker/picker';
 import ScannerService from '../../../../service/palletServices';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import InboundServices from '../../../../service/inboundServices';
-import UserServices from '../../../../service/userServices'; // Import UserServices
+import UserServices from '../../../../service/userServices';
 import DatePicker from 'react-native-date-picker';
 import MovementService from '../../../../service/movementService';
 import { UpdateInventoryParamList } from '../../../navigation/movement/UpdateInventoryNavigator.tsx';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import ConstantService from '../../../../service/constantService';
 
 import { ROLES } from "../../../../constants/Roles";
 
@@ -33,39 +34,131 @@ const CreateUpdateScreen = () => {
   const [itemMaster, setItemMaster] = useState<any>(null);
   const [selectedValue, setSelectedValue] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // State Baru untuk Split Pallet & Search User
+
+  // State Merge Pallet
+  const [mergePallets, setMergePallets] = useState<any[]>([]);
+
+  // State Split Pallet & Search User
   const [devices, setDevices] = useState<any[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [assignedUserName, setAssignedUserName] = useState('');
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [splitQty, setSplitQty] = useState(''); // State baru untuk input qty split
+  const [splitQty, setSplitQty] = useState('');
 
   const { user } = useAuthStore();
   const userId = user?.id || 'uuid-user-123';
-  
   const navigation = useNavigation<NavigationProp>();
 
-  // State Date Picker & Week
   const [openPicker, setOpenPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [weekNumber, setWeekNumber] = useState<string | null>(null);
   const [tempDate, setTempDate] = useState(new Date());
 
-  // Fetch Devices & User Management
+  // State Baru untuk Search Lokasi (Merge Pallet)
+  const [subWarehouses, setSubWarehouses] = useState<any[]>([]);
+  const [filteredSubs, setFilteredSubs] = useState<any[]>([]);
+  const [searchSub, setSearchSub] = useState('');
+  const [selectedSub, setSelectedSub] = useState<any>(null);
+  const [bins, setBins] = useState<any[]>([]);
+  const [selectedBin, setSelectedBin] = useState<any>(null);
+  const [availablePallets, setAvailablePallets] = useState<any[]>([]);
+
+
+  // Effect untuk ambil data Sub Warehouse saat pertama kali pilih MERGE_PALLET
+  useEffect(() => {
+    if (updateType === 'MERGE_PALLET') {
+      ConstantService.getSubWarehouse()
+        .then(res => setSubWarehouses(res.data))
+        .catch(err => console.log("Err SubWH", err));
+    }
+  }, [updateType]);
+
+  // Fungsi Fetch Pallet dari Inventory Tracking
+  const fetchPalletsFromInventory = (subId: string, binId?: string) => {
+    setLoading(true);
+    // Menggunakan API inventory tracking sesuai contoh referensi kamu
+    ConstantService.getInventoryTracking(subId, binId || '')
+      .then(res => {
+        // Transform data agar sesuai dengan struktur yang dibutuhkan
+        const transformed = res.data.map((row: any) => ({
+          pallet_id: row.pallet.id,
+          pallet_code: row.pallet.pallet_code,
+          inventory_tracking_id: row.id,
+          // Mengambil item pertama sebagai referensi validasi (asumsi 1 pallet 1 jenis item saat mau merge)
+          item_id: row.pallet.currentItems?.[0]?.item_id,
+          item_name: row.pallet.currentItems?.[0]?.item_name,
+          uom: row.pallet.currentItems?.[0]?.uom,
+          week_number: row.pallet.currentItems?.[0]?.week_number,
+          current_quantity: row.pallet.currentItems?.[0]?.current_quantity,
+          production_date: row.pallet.currentItems?.[0]?.production_date,
+        }));
+        setAvailablePallets(transformed);
+      })
+      .catch(err => Alert.alert("Error", "Gagal mengambil data pallet"))
+      .finally(() => setLoading(false));
+  };
+
+  const onSelectSub = (sub: any) => {
+    setSelectedSub(sub);
+    setSearchSub(sub.code);
+    setFilteredSubs([]);
+    setSelectedBin(null);
+    setAvailablePallets([]);
+
+    ConstantService.getBinsBySubWareHouseId(sub.id)
+      .then(res => setBins(res.data))
+      .catch(() => setBins([]));
+
+    fetchPalletsFromInventory(sub.id);
+  };
+
+  const onSelectBin = (bin: any) => {
+    if (selectedBin?.id === bin.id) {
+      setSelectedBin(null);
+      fetchPalletsFromInventory(selectedSub.id);
+    } else {
+      setSelectedBin(bin);
+      fetchPalletsFromInventory(selectedSub.id, bin.id);
+    }
+  };
+
+  const handleAddPalletToMerge = (pallet: any) => {
+    // 1. Validasi: Apakah sudah ada di list?
+    if (mergePallets.find(p => p.pallet_id === pallet.pallet_id)) {
+      Alert.alert("Perhatian", "Pallet sudah masuk dalam daftar.");
+      return;
+    }
+
+    // 2. Validasi: Item, UOM, dan Week harus sama dengan pallet pertama yang sudah masuk
+    if (mergePallets.length > 0) {
+      const first = mergePallets[0];
+      const isMatch =
+        pallet.item_id === first.item_id &&
+        pallet.uom === first.uom &&
+        String(pallet.week_number) === String(first.week_number);
+
+      if (!isMatch) {
+        Alert.alert(
+          "Validasi Gagal",
+          `Item harus sama! \nKriteria: \n- Item: ${first.item_name} \n- UOM: ${first.uom} \n- Week: ${first.week_number}`
+        );
+        return;
+      }
+    }
+
+    setMergePallets([...mergePallets, pallet]);
+  };
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch Forklift Drivers
         const resList = await UserServices.getUserList();
         const filtered = (resList?.data || []).filter(
           (u: any) => u?.role?.name?.toUpperCase() === ROLES.HELPER.toUpperCase()
         );
         setDevices(filtered);
-
-        // Fetch User Management untuk Search
         const resManage = await UserServices.getUserManagementList();
         setAllUsers(resManage?.data || []);
       } catch (err) {
@@ -78,8 +171,8 @@ const CreateUpdateScreen = () => {
   const handleNameChange = (text: string) => {
     setAssignedUserName(text);
     if (text.trim().length > 0) {
-      const filtered = allUsers.filter(u => 
-        u.name?.toLowerCase().includes(text.toLowerCase()) || 
+      const filtered = allUsers.filter(u =>
+        u.name?.toLowerCase().includes(text.toLowerCase()) ||
         (u.phone && u.phone.includes(text))
       );
       setSearchResults(filtered);
@@ -107,7 +200,7 @@ const CreateUpdateScreen = () => {
       const minggu = res?.data?.[0]?.MINGGU?.toString() || null;
       if (minggu) {
         setWeekNumber(minggu);
-        setSelectedValue(dateStr); 
+        setSelectedValue(dateStr);
       } else {
         setWeekNumber(null);
         setSelectedValue('');
@@ -130,21 +223,18 @@ const CreateUpdateScreen = () => {
       BKS: itemMaster.btg_per_bks || 1,
       BTG: 1
     };
-
     const convertToBase = (qty: number, uom: UomType) => {
       let totalBtg = qty;
       let startIndex = units.indexOf(uom);
       for (let i = startIndex; i < units.length - 1; i++) totalBtg *= factor[units[i]];
       return totalBtg;
     };
-
     const convertFromBase = (btgQty: number, targetUom: UomType) => {
       let finalQty = btgQty;
       let targetIndex = units.indexOf(targetUom);
       for (let i = units.length - 2; i >= targetIndex; i--) finalQty /= factor[units[i]];
       return finalQty;
     };
-
     try {
       const baseQty = convertToBase(currentQty, fromUom as UomType);
       const result = convertFromBase(baseQty, toUom as UomType);
@@ -157,38 +247,58 @@ const CreateUpdateScreen = () => {
       Alert.alert('Perhatian', 'Silahkan input atau scan nomor pallet');
       return;
     }
+
+    // Simpan nomor pallet dari inputan ke variabel lokal sebelum loading/hit API
+    const currentScannedCode = palletNo;
+
     setLoading(true);
     try {
-      const mockPalletRes = await ScannerService.getPalletByCode(palletNo);
+      const mockPalletRes = await ScannerService.getPalletByCode(currentScannedCode);
       const activeItems = (mockPalletRes.data || []).filter((item: any) => item.current_quantity > 0);
 
       if (activeItems.length > 0) {
-        const palletId = mockPalletRes.data[0].id;
-        
-        // Check if pallet exists in validateItems
-        const validateItems = await MovementService.getUpdateInventoryList({ status: 'PENDING_HELPER_ACTION', limit: 100 });
-        const isInValidateList = validateItems?.data?.some((validateItem: any) =>
-          validateItem.items?.some((item: any) => item.palletId === palletId)
-        );
+        if (updateType === 'MERGE_PALLET') {
+          // Tambahkan pallet_code dari inputan user (currentScannedCode) ke setiap item
+          const newPallets = activeItems.map((item: any) => ({
+            ...item,
+            pallet_code: currentScannedCode // Menyimpan data inputan sebelum search
+          }));
 
-        if (isInValidateList) {
-          Alert.alert('Error', 'Pallet sudah digunakan untuk task ke helper. Tidak dapat diproses.');
-          setLoading(false);
-          return;
-        }
+          const isExist = mergePallets.find(p => p.pallet_code === currentScannedCode);
+          if (isExist) {
+            Alert.alert('Info', 'Pallet ini sudah ada di daftar merge');
+          } else {
+            setMergePallets([...mergePallets, ...newPallets]);
+            setPalletNo(''); // Reset input setelah berhasil
+          }
+        } else {
+          // Logic Original (Split / Update Prod Code / UOM)
+          const palletId = mockPalletRes.data[0].id;
+          const validateItems = await MovementService.getUpdateInventoryList({ status: 'PENDING_HELPER_ACTION', limit: 100 });
+          const isInValidateList = validateItems?.data?.some((validateItem: any) =>
+            validateItem.items?.some((item: any) => item.palletId === palletId)
+          );
 
-        setPalletItems(activeItems);
-        if (activeItems.length === 1) {
-          const selectedPallet = activeItems[0];
-          const mockItemMaster = await ScannerService.getItemById(selectedPallet.item_id);
-          console.log("Fetched Item Master", mockItemMaster);
-          if (updateType === 'UPDATE_UOM' && (!mockItemMaster.data.bal_per_dus || !mockItemMaster.data.press_per_bal || !mockItemMaster.data.bks_per_press || !mockItemMaster.data.btg_per_bks)) {
-            Alert.alert('Error', `Setup item untuk SKU ${mockItemMaster.data.sku} belum lengkap. Hubungi administrator.`);
+          if (isInValidateList) {
+            Alert.alert('Error', 'Pallet sudah digunakan untuk task ke helper. Tidak dapat diproses.');
+            setLoading(false);
             return;
           }
-          setItemMaster(mockItemMaster.data);
-          setPalletData(selectedPallet);
-          if (updateType === 'SPLIT_PALLET') setSelectedValue(selectedPallet.id);
+
+          setPalletItems(activeItems);
+          if (activeItems.length === 1) {
+            const selectedPallet = activeItems[0];
+            const mockItemMaster = await ScannerService.getItemById(selectedPallet.item_id);
+            setItemMaster(mockItemMaster.data);
+
+            // Simpan juga pallet_code ke palletData tunggal
+            setPalletData({
+              ...selectedPallet,
+              pallet_code: currentScannedCode
+            });
+
+            if (updateType === 'SPLIT_PALLET') setSelectedValue(selectedPallet.id);
+          }
         }
       } else {
         Alert.alert('Gagal', 'Pallet tidak ditemukan atau kosong.');
@@ -200,33 +310,60 @@ const CreateUpdateScreen = () => {
     }
   };
 
+  const handleDeleteMergePallet = (index: number) => {
+    const deletedPallet = mergePallets[index];
+    const newList = mergePallets.filter((_, i) => i !== index);
+    setMergePallets(newList);
+  };
+
   const handleSelectItemSplit = async (itemId: string) => {
     const selected = palletItems.find(i => i.id === itemId);
     if (selected) {
-        setLoading(true);
-        const mockItemMaster = await ScannerService.getItemById(selected.item_id);
-        setItemMaster(mockItemMaster.data);
-        setPalletData(selected);
-        setSelectedValue(itemId);
-        setLoading(false);
+      setLoading(true);
+      const mockItemMaster = await ScannerService.getItemById(selected.item_id);
+      setItemMaster(mockItemMaster.data);
+      setPalletData(selected);
+      setSelectedValue(itemId);
+      setLoading(false);
     }
   };
 
-const handleSubmit = async () => {
-    if (!palletData || !selectedValue) {
+  const handleSubmit = async () => {
+    if (updateType === 'MERGE_PALLET') {
+      if (mergePallets.length < 2  || !selectedDeviceId || !assignedUserName) {
+        Alert.alert('Error', 'Data Merge belum lengkap (Minimal 2 pallet, pilih target, dan pilih helper).');
+        return;
+      }
+    } else if (!palletData || !selectedValue) {
       Alert.alert('Error', 'Data belum lengkap.');
       return;
     }
 
     setLoading(true);
     try {
-      const isSplitPallet = updateType === 'SPLIT_PALLET';
-      const isUomUpdate = updateType === 'UPDATE_UOM';
-      const isProdCodeUpdate = updateType === 'UPDATE_PROD_CODE';
-
       let payload: any;
-
-      if (isSplitPallet) {
+      if (updateType === 'MERGE_PALLET') {
+        payload = {
+          updateType: "MERGE_PALLET",
+          status: "PENDING_HELPER_ACTION",
+          initiatedByUserId: userId,
+          inspectionStatus: "PENDING",
+          inspectionByUserId: userId,
+          notes: "Merge pallet request via mobile",
+          completedDate: new Date().toISOString(),
+          items: mergePallets.map((p, idx) => ({
+            sequence: idx + 1,
+            palletId: p.pallet_id || p.id,
+            itemId: p.item_id,
+            productionDate: p.production_date,
+            weekNumber: p.week_number,
+            quantity: p.current_quantity,
+            uom: p.uom
+          })),
+          assigned: [{ userId: selectedDeviceId, assignedAt: new Date().toISOString() }]
+        };
+        await MovementService.postUpdateInventoryMerge(payload);
+      } else if (updateType === 'SPLIT_PALLET') {
         payload = {
           updateType: "SPLIT_PALLET",
           status: "PENDING_HELPER_ACTION",
@@ -238,41 +375,22 @@ const handleSubmit = async () => {
             sequence: 1,
             palletId: palletData.pallet_id || palletData.id,
             itemId: palletData.item_id,
-           quantity: Number(splitQty),
+            quantity: Number(splitQty),
             uom: palletData.uom,
             productionDate: palletData.production_date,
             weekNumber: palletData.week_number
           },
-          assigned: [
-            {
-              userId: selectedDeviceId,
-              // userName: assignedUserName,
-              assignedAt: new Date().toISOString()
-            }
-          ]
+          assigned: [{ userId: selectedDeviceId, assignedAt: new Date().toISOString() }]
         };
-        try{
-          await MovementService.postUpdateInventorySplit(payload);
-        }catch(splitError){
-          Alert.alert('Error', 'Gagal memproses split pallet. Pastikan data sudah benar dan coba lagi.');
-          setLoading(false);
-          return;
-        }
+        await MovementService.postUpdateInventorySplit(payload);
       } else {
-        const newQty = isUomUpdate 
-          ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue) 
-          : palletData.current_quantity;
+        const isUomUpdate = updateType === 'UPDATE_UOM';
+        const isProdCodeUpdate = updateType === 'UPDATE_PROD_CODE';
+        const newQty = isUomUpdate ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue) : palletData.current_quantity;
 
-        // --- TAMBAHAN LOGIKA UPDATE PALLET JIKA UPDATE UOM ---
         if (isUomUpdate) {
-          const palletUpdatePayload = {
-            capacity: newQty,
-          };
-
-          // Panggil service update master pallet
-          await ScannerService.updatePalletById(palletData.pallet_id || palletData.id, palletUpdatePayload);
+          await ScannerService.updatePalletById(palletData.pallet_id || palletData.id, { capacity: newQty });
         }
-        // ---------------------------------------------------
 
         payload = {
           updateType: "UPDATE_PROD_CODE_UOM",
@@ -284,7 +402,7 @@ const handleSubmit = async () => {
           completedDate: new Date().toISOString(),
           item: {
             sequence: 1,
-            palletId: palletData.id,
+            palletId: palletData.pallet_id || palletData.id,
             itemId: palletData.item_id,
             quantity: palletData.current_quantity,
             uom: palletData.uom,
@@ -294,7 +412,7 @@ const handleSubmit = async () => {
           scan: {
             scanDate: new Date().toISOString(),
             scanByUserId: userId,
-            palletId: palletData.id,
+            palletId: palletData.pallet_id || palletData.id,
             itemId: palletData.item_id,
             quantity: newQty,
             uom: isUomUpdate ? selectedValue : palletData.uom,
@@ -304,30 +422,20 @@ const handleSubmit = async () => {
           }
         };
 
-        if (isUomUpdate) payload.uom = selectedValue;
-        else payload.productionCode = selectedValue;
-
-       // 3. Jalankan Update Inventory
-      try {
-        await MovementService.postUpdateInventory(payload);
-      } catch (invError) {
-        // --- LOGIKA ROLLBACK ---
-        // Jika postUpdateInventory GAGAL, kembalikan capacity master pallet ke awal
-        if (isUomUpdate) {
-          console.log("Inventory Update failed, rolling back pallet capacity...");
-          await ScannerService.updatePalletById(palletData.pallet_id || palletData.id, {
-            capacity: palletData.current_quantity,
-          });
+        try {
+          await MovementService.postUpdateInventory(payload);
+        } catch (invError) {
+          if (isUomUpdate) {
+            await ScannerService.updatePalletById(palletData.pallet_id || palletData.id, { capacity: palletData.current_quantity });
+          }
+          throw invError;
         }
-        throw invError;
       }
-    }
-
       Alert.alert('Berhasil', 'Data berhasil diproses');
       navigation.goBack();
-    } catch (error) {
-      Alert.alert('Error', 'Gagal mengirim data');
+    } catch (error: any) {
       console.log("Submit error", error);
+      Alert.alert('Error', error?.data?.message || 'Gagal memproses data');
     } finally {
       setLoading(false);
     }
@@ -345,106 +453,206 @@ const handleSubmit = async () => {
                 setUpdateType(v);
                 setSelectedValue('');
                 setPalletData(null);
-                setWeekNumber(null);
-                setSelectedDate('');
+                setMergePallets([]);
               }}>
               <Picker.Item label="Update Production Code" value="UPDATE_PROD_CODE" />
               <Picker.Item label="Update UOM" value="UPDATE_UOM" />
               <Picker.Item label="Split Pallet" value="SPLIT_PALLET" />
+              <Picker.Item label="Merge Pallet" value="MERGE_PALLET" />
             </Picker>
           </View>
+          {updateType === 'MERGE_PALLET' ? (
+            /* --- FLOW MERGE PALLET BARU --- */
+            <View>
+              <Text style={styles.label}>Cari Lokasi (Zone/Sub Warehouse)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Scan kode Zone..."
+                value={searchSub}
+                onChangeText={(t) => {
+                  setSearchSub(t);
+                  // Tambahkan kondisi t.trim().length > 0
+                  if (t.trim().length > 0) {
+                    const filtered = subWarehouses.filter(s =>
+                      s.code.toLowerCase().includes(t.toLowerCase())
+                    );
+                    setFilteredSubs(filtered);
+                  } else {
+                    // Jika kosong, kosongkan list sugesti
+                    setFilteredSubs([]);
+                  }
+                }}
+              />
+              {filteredSubs.length > 0 && (
+                <View style={styles.dropdown}>
+                  {filteredSubs.map((item) => (
+                    <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => onSelectSub(item)}>
+                      <Text>{item.code}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
 
-          <Text style={styles.label}>Nomor Pallet</Text>
-          <View style={styles.searchRow}>
-            <TextInput style={styles.input} placeholder="Scan Pallet..." value={palletNo} onChangeText={setPalletNo} />
-            <TouchableOpacity style={styles.scanBtn} onPress={handleCheckPallet}>
-              {loading ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.scanIcon}>🔍</Text>}
-            </TouchableOpacity>
-          </View>
+              {selectedSub && (
+                <>
+                  <Text style={[styles.label, { marginTop: 15 }]}>Pilih Bin (Opsional)</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', marginBottom: 10 }}>
+                    {bins.map((bin) => (
+                      <TouchableOpacity
+                        key={bin.id}
+                        style={[styles.binChip, selectedBin?.id === bin.id && styles.binChipActive]}
+                        onPress={() => onSelectBin(bin)}
+                      >
+                        <Text style={{ color: selectedBin?.id === bin.id ? '#FFF' : '#333' }}>{bin.code}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+
+                  <Text style={styles.label}>Pilih Pallet dari Lokasi ini:</Text>
+                  {loading ? <ActivityIndicator color="#FF6B00" /> : (
+                    <View style={{ maxHeight: 200, borderWidth: 1, borderColor: '#EEE', borderRadius: 8 }}>
+                      <ScrollView nestedScrollEnabled={true}>
+                        {availablePallets.map((p) => (
+                          <TouchableOpacity
+                            key={p.pallet_id}
+                            style={styles.palletSelectItem}
+                            onPress={() => handleAddPalletToMerge(p)}
+                          >
+                            <Text style={{ fontWeight: 'bold' }}>{p.pallet_code}</Text>
+                            <Text style={{ fontSize: 11 }}>{p.item_name} | {p.current_quantity} {p.uom} | W{p.week_number}</Text>
+                          </TouchableOpacity>
+                        ))}
+                        {availablePallets.length === 0 && <Text style={{ padding: 10, textAlign: 'center' }}>Tidak ada pallet</Text>}
+                      </ScrollView>
+                    </View>
+                  )}
+                </>
+              )}
+
+
+            </View>
+          ) : (
+            /* --- FLOW LAMA (SCAN PALLET) --- */
+            <>
+              <Text style={styles.label}>Nomor Pallet</Text>
+              <View style={styles.searchRow}>
+                <TextInput style={styles.input} placeholder="Scan Pallet..." value={palletNo} onChangeText={setPalletNo} />
+                <TouchableOpacity style={styles.scanBtn} onPress={handleCheckPallet}>
+                  <Text style={styles.scanIcon}>🔍</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          {/* LIST PALLET UNTUK MERGE DENGAN FUNGSI DELETE */}
+          {updateType === 'MERGE_PALLET' && mergePallets.length > 0 && (
+            <View style={{ marginBottom: 15 }}>
+              <Text style={styles.label}>Daftar Pallet Akan Di-Merge:</Text>
+              {mergePallets.map((item, idx) => (
+                <View key={idx} style={styles.mergeItemCard}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.palletCodeLabel}>{item.pallet_code || 'N/A'}</Text>
+                    <Text style={styles.itemInfoText}>{item.item_name}</Text>
+                    <Text style={styles.qtyInfoText}>{item.current_quantity} {item.uom} | Week {item.week_number}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => handleDeleteMergePallet(idx)}
+                  >
+                    <Text style={styles.deleteText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
 
           {updateType === 'SPLIT_PALLET' && palletItems.length > 0 && (
             <>
               <Text style={styles.label}>Pilih Item yang akan di Split</Text>
               <View style={styles.pickerContainer}>
                 <Picker selectedValue={selectedValue} onValueChange={handleSelectItemSplit}>
-                    <Picker.Item label="-- Pilih Item --" value="" />
-                    {palletItems.map((item, index) => (
-                        <Picker.Item key={index} label={`${item.item_name} (${item.current_quantity} ${item.uom})`} value={item.id} />
-                    ))}
+                  <Picker.Item label="-- Pilih Item --" value="" />
+                  {palletItems.map((item, index) => (
+                    <Picker.Item key={index} label={`${item.item_name} (${item.current_quantity} ${item.uom})`} value={item.id} />
+                  ))}
                 </Picker>
               </View>
             </>
           )}
 
-          {palletData && (
+          {/* SECTION HELPER */}
+          {(updateType === 'SPLIT_PALLET' || updateType === 'MERGE_PALLET') && (
+            (palletData || mergePallets.length > 0) && (
+              <View style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 15 }}>
+                {updateType === 'SPLIT_PALLET' && (
+                  <>
+                    <Text style={styles.label}>Quantity yang akan di-Split ({palletData?.uom})</Text>
+                    <TextInput
+                      style={[styles.input, { marginBottom: 15 }]}
+                      placeholder="Masukkan Qty..."
+                      keyboardType="numeric"
+                      value={splitQty}
+                      onChangeText={setSplitQty}
+                    />
+                  </>
+                )}
+
+                <Text style={styles.label}>Device (Scanner Helper)</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker selectedValue={selectedDeviceId} onValueChange={(v) => setSelectedDeviceId(v)}>
+                    <Picker.Item label="-- Pilih Device --" value="" />
+                    {devices.map((d: any) => (
+                      <Picker.Item key={d.id} label={d.username || d.name || "-"} value={d.id} />
+                    ))}
+                  </Picker>
+                </View>
+
+                <Text style={styles.label}>Input User Name (Helper)</Text>
+                <View style={{ zIndex: 100 }}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Search name or phone..."
+                    value={assignedUserName}
+                    onChangeText={handleNameChange}
+                  />
+                  {showDropdown && searchResults.length > 0 && (
+                    <View style={styles.dropdown}>
+                      <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled">
+                        {searchResults.map((item) => (
+                          <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => handleSelectUser(item)}>
+                            <Text style={styles.dropdownName}>{item.name}</Text>
+                            <Text style={styles.dropdownPhone}>{item.phone || 'No Phone'}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )
+          )}
+
+          {/* DATA SAAT INI (TIPE LAIN) */}
+          {palletData && updateType !== 'MERGE_PALLET' && (
             <>
               <View style={styles.infoBox}>
-                <Text style={styles.infoTitle}>DATA SAAT INI</Text>
+                <Text style={styles.infoTitle}>DATA SAAT INI (Pallet: {palletData.pallet_code})</Text>
                 <Text>{palletData.item_name} | Week {palletData.week_number}</Text>
                 <Text style={{ fontWeight: 'bold' }}>{palletData.current_quantity} {palletData.uom}</Text>
               </View>
-
-              {/* KHUSUS SPLIT PALLET: INPUT DEVICE & SEARCH USER */}
-              {updateType === 'SPLIT_PALLET' && (
-                <View style={{ marginTop: 10 }}>
-                  {/* INPUT QTY SPLIT */}
-                  <Text style={styles.label}>Quantity yang akan di-Split ({palletData.uom})</Text>
-                  <TextInput 
-                    style={[styles.input, { marginBottom: 15 }]} 
-                    placeholder="Masukkan Qty..." 
-                    keyboardType="numeric"
-                    value={splitQty}
-                    onChangeText={setSplitQty}
-                  />
-                   <Text style={styles.label}>Device (Scanner)</Text>
-                   <View style={styles.pickerContainer}>
-                      <Picker selectedValue={selectedDeviceId} onValueChange={(v) => setSelectedDeviceId(v)}>
-                        <Picker.Item label="-- Pilih Device --" value="" />
-                        {devices.map((d: any) => (
-                          <Picker.Item key={d.id} label={d.username || d.name || "-"} value={d.id} />
-                        ))}
-                      </Picker>
-                   </View>
-
-                   <Text style={styles.label}>Input User Name</Text>
-                   <View style={{ zIndex: 100 }}>
-                      <TextInput 
-                        style={styles.input} 
-                        placeholder="Search name or phone..." 
-                        value={assignedUserName} 
-                        onChangeText={handleNameChange}
-                        onFocus={() => { if(searchResults.length > 0) setShowDropdown(true); }}
-                      />
-                      {showDropdown && searchResults.length > 0 && (
-                        <View style={styles.dropdown}>
-                          <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled">
-                            {searchResults.map((item) => (
-                              <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => handleSelectUser(item)}>
-                                <Text style={styles.dropdownName}>{item.name}</Text>
-                                <Text style={styles.dropdownPhone}>{item.phone || 'No Phone'}</Text>
-                              </TouchableOpacity>
-                            ))}
-                          </ScrollView>
-                        </View>
-                      )}
-                   </View>
-                </View>
-              )}
-
-              {/* LOGIC LAMA: DATE PICKER & UOM PICKER */}
+              {/* UI Prod Code / UOM logic tetap sama */}
               {updateType === 'UPDATE_PROD_CODE' && (
                 <View style={{ marginTop: 10 }}>
                   <Text style={styles.label}>Update Production Date</Text>
                   <TouchableOpacity style={[styles.input, { justifyContent: "center" }]} onPress={() => setOpenPicker(true)}>
                     <Text style={{ color: selectedDate ? "#111" : "#9ca3af" }}>{selectedDate || "Pilih Tanggal Produksi"}</Text>
                   </TouchableOpacity>
-                  <DatePicker modal open={openPicker} date={tempDate} mode="date" 
-                    onConfirm={(date) => { setOpenPicker(false); setSelectedDate(formatDate(date)); fetchWeek(formatDate(date)); }} 
-                    onCancel={() => setOpenPicker(false)} 
+                  <DatePicker modal open={openPicker} date={tempDate} mode="date"
+                    onConfirm={(date) => { setOpenPicker(false); setSelectedDate(formatDate(date)); fetchWeek(formatDate(date)); }}
+                    onCancel={() => setOpenPicker(false)}
                   />
                 </View>
               )}
-
               {updateType === 'UPDATE_UOM' && (
                 <View style={{ marginTop: 10 }}>
                   <Text style={styles.label}>Update UOM</Text>
@@ -456,33 +664,6 @@ const handleSubmit = async () => {
                   </View>
                 </View>
               )}
-
-              {/* PREVIEW CARD (DIPERTAHANKAN) */}
-              {updateType !== 'SPLIT_PALLET' && selectedValue !== '' && (
-                <View style={styles.previewCard}>
-                  <Text style={styles.previewTitle}>PRATINJAU PERUBAHAN</Text>
-                  <View style={styles.previewRow}>
-                    <View style={styles.previewCol}>
-                      <Text style={styles.smallLabel}>DARI</Text>
-                      <Text style={{ fontWeight: '500' }}>
-                        {updateType === 'UPDATE_PROD_CODE' ? `Week ${palletData.week_number}` : palletData.uom}
-                      </Text>
-                      <Text style={styles.previewQty}>{palletData.current_quantity} {palletData.uom}</Text>
-                    </View>
-                    <Text style={styles.arrow}>➔</Text>
-                    <View style={styles.previewCol}>
-                      <Text style={styles.smallLabel}>MENJADI</Text>
-                      <Text style={{ color: '#FF6B00', fontWeight: 'bold' }}>
-                        {updateType === 'UPDATE_PROD_CODE' ? (weekNumber ? `Week ${weekNumber}` : '-') : selectedValue}
-                      </Text>
-                      <Text style={[styles.previewQty, { color: '#FF6B00', fontWeight: 'bold' }]}>
-                        {updateType === 'UPDATE_UOM' ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue) : palletData.current_quantity}
-                        {' '}{updateType === 'UPDATE_UOM' ? selectedValue : palletData.uom}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              )}
             </>
           )}
         </View>
@@ -490,20 +671,22 @@ const handleSubmit = async () => {
 
       <View style={{ padding: 16 }}>
         <TouchableOpacity
-          style={[styles.submitBtn, (!palletData || !selectedValue || (updateType === 'SPLIT_PALLET' && (!selectedDeviceId || !assignedUserName || !splitQty))) && { backgroundColor: '#CCC' }]}
+          style={[styles.submitBtn,
+          ((updateType !== 'MERGE_PALLET' && (!palletData || !selectedValue)) ||
+            (updateType === 'MERGE_PALLET' && (mergePallets.length < 2 ))) && { backgroundColor: '#CCC' }
+          ]}
           onPress={() => {
-            Alert.alert(
-              'Konfirmasi',
-              `Anda yakin ingin melanjutkan ${updateType === 'SPLIT_PALLET' ? 'split pallet' : 'perubahan data'} ini?`,
-              [
-                { text: 'Batal', onPress: () => {}, style: 'cancel' },
-                { text: 'Lanjutkan', onPress: handleSubmit }
-              ]
-            );
+            Alert.alert('Konfirmasi', `Anda yakin ingin melanjutkan?`, [
+              { text: 'Batal', style: 'cancel' },
+              { text: 'Lanjutkan', onPress: handleSubmit }
+            ]);
           }}
-          disabled={!palletData || !selectedValue || (updateType === 'SPLIT_PALLET' && (!selectedDeviceId || !assignedUserName || !splitQty))}
+          disabled={
+            (updateType !== 'MERGE_PALLET' && (!palletData || !selectedValue)) ||
+            (updateType === 'MERGE_PALLET' && (mergePallets.length < 2 ))
+          }
         >
-          <Text style={styles.submitText}>{updateType === 'SPLIT_PALLET' ? 'Proses Split Pallet' : 'Konfirmasi Perubahan'}</Text>
+          <Text style={styles.submitText}>PROSES</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -520,18 +703,28 @@ const styles = StyleSheet.create({
   input: { flex: 1, backgroundColor: '#F9F9F9', borderRadius: 8, paddingHorizontal: 12, height: 45, borderWidth: 1, borderColor: '#EEE' },
   scanBtn: { backgroundColor: '#FF6B00', width: 50, justifyContent: 'center', alignItems: 'center', borderTopRightRadius: 8, borderBottomRightRadius: 8 },
   scanIcon: { color: '#FFF', fontSize: 18 },
-  infoBox: { padding: 12, backgroundColor: '#E1E9F0', borderRadius: 8, marginBottom: 15 },
+  infoBox: { padding: 12, backgroundColor: '#E1E9F0', borderRadius: 8, marginBottom: 10 },
   infoTitle: { fontSize: 10, color: '#555', marginBottom: 4 },
-  previewCard: { marginTop: 10, padding: 15, backgroundColor: '#FFFEEA', borderRadius: 10, borderWidth: 1, borderColor: '#F2E675' },
-  previewTitle: { fontSize: 11, fontWeight: 'bold', color: '#856404', marginBottom: 10, textAlign: 'center' },
-  previewRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
-  previewCol: { alignItems: 'center' },
-  previewQty: { fontSize: 12, color: '#777' },
-  smallLabel: { fontSize: 9, color: '#999' },
-  arrow: { fontSize: 20, color: '#CCC' },
+
+  // Styles Baru untuk Merge List
+  mergeItemCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    alignItems: 'center'
+  },
+  palletCodeLabel: { fontSize: 13, fontWeight: 'bold', color: '#FF6B00' },
+  itemInfoText: { fontSize: 12, color: '#333' },
+  qtyInfoText: { fontSize: 11, color: '#666' },
+  deleteBtn: { backgroundColor: '#FEE2E2', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  deleteText: { color: '#EF4444', fontWeight: 'bold' },
+
   submitBtn: { backgroundColor: '#FF6B00', padding: 16, borderRadius: 10, alignItems: 'center' },
   submitText: { color: '#FFF', fontWeight: 'bold' },
-  // Tambahan style untuk Search Dropdown
   dropdown: {
     position: 'absolute',
     top: 45,
@@ -547,6 +740,9 @@ const styles = StyleSheet.create({
   dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
   dropdownName: { fontSize: 14, fontWeight: 'bold', color: '#333' },
   dropdownPhone: { fontSize: 12, color: '#888' },
+  binChip: { padding: 8, backgroundColor: '#EEE', borderRadius: 8, marginRight: 8, borderWidth: 1, borderColor: '#DDD' },
+  binChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  palletSelectItem: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#EEE' },
 });
 
 export default CreateUpdateScreen;

@@ -119,6 +119,25 @@ class MovementService {
             throw error.response;
         }
     }
+
+    //inspection
+    static async approveInspectionMerge(idUpdate: string, data: any): Promise<any> {
+        try {
+            const response = await axiosInstance.get(`/pallet-update/approve-merge-pallet/${idUpdate}`, { params: data });
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
+
+     static async approveInspectionSplit(idUpdate: string, data: any): Promise<any> {
+        try {
+            const response = await axiosInstance.get(`/pallet-update/approve-split-pallet/${idUpdate}`, { params: data });
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
 }
 
 export default MovementService;

@@ -146,7 +146,15 @@ function UpdateInventoryScreen() {
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => {
-                    // navigation.navigate('UpdateInventoryDetail', { item });
+                      
+                      if (item.status === 'PENDING_HELPER_ACTION' && item.scans && item.scans.length > 0) {
+                        navigation.navigate('UpdateInventoryInspection', { item });
+                      } else if (item.status !== 'PENDING_HELPER_ACTION') {
+                        showDialog('error', 'Hanya Pending Helper Action yang bisa diinspeksi');
+                      } else {
+                        showDialog('error', 'Belum ada scan yang dilakukan oleh helper');
+                      }
+                   
                   }}
                 />
               );

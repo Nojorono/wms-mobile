@@ -3,13 +3,14 @@ import Colors from '../../../constants/Colors.ts';
 import React from 'react';
 import UpdateInventoryScreen from '../../page/movement/updateInventory/UpdateInventoryScreen.tsx';
 import UpdateInventoryCreate from '../../page/movement/updateInventory/UpdateInventoryCreate.tsx';
+import UpdateInventoryInspection from '../../page/movement/updateInventory/UpdateInventoryInspection.tsx';
 
 
 
 export type UpdateInventoryParamList = {
   UpdateInventoryMain: undefined;
   UpdateInventoryCreate: undefined;
-  UpdateInventoryDetail: {item:any};
+  UpdateInventoryInspection: {item:any};
 };
 
 const UpdateInventoryStack = createStackNavigator<UpdateInventoryParamList>();
@@ -44,9 +45,9 @@ const UpdateInventoryStackNavigator = () => (
         },
       }}
     />
-    {/* <UpdateInventoryStack.Screen
-      name="UpdateInventoryDetail"
-      component={UpdateInventoryDetail}
+    <UpdateInventoryStack.Screen
+      name="UpdateInventoryInspection"
+      component={UpdateInventoryInspection}
       options={{
         headerShown: true,
         headerTintColor: '#fff',
@@ -57,7 +58,7 @@ const UpdateInventoryStackNavigator = () => (
           borderBottomWidth: 0, // Remove any border
         },
       }}
-    /> */}
+    />
 
   </UpdateInventoryStack.Navigator>
 );

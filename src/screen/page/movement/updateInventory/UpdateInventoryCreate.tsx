@@ -23,6 +23,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import ConstantService from '../../../../service/constantService';
 
 import { ROLES } from "../../../../constants/Roles";
+import { compareScanWithReference } from '../../inbound/service/inboundService.ts';
 
 type NavigationProp = StackNavigationProp<UpdateInventoryParamList, 'UpdateInventoryMain'>;
 
@@ -330,7 +331,7 @@ const CreateUpdateScreen = () => {
 
   const handleSubmit = async () => {
     if (updateType === 'MERGE_PALLET') {
-      if (mergePallets.length < 2  || !selectedDeviceId || !assignedUserName) {
+      if (mergePallets.length < 2 || !selectedDeviceId || !assignedUserName) {
         Alert.alert('Error', 'Data Merge belum lengkap (Minimal 2 pallet, pilih target, dan pilih helper).');
         return;
       }
@@ -418,11 +419,17 @@ const CreateUpdateScreen = () => {
             uom: isUomUpdate ? selectedValue : palletData.uom,
             productionDate: isProdCodeUpdate ? selectedValue : palletData.production_date,
             status: "PENDING",
-            weekNumber: weekNumber
+            weekNumber: Number(weekNumber)
           }
         };
+        if (isUomUpdate) {
+          payload.uom = selectedValue;
+        } else {
+          payload.productionCode = selectedValue;
+        }
 
         try {
+          // console.log("Payload for Update Inventory:", payload);
           await MovementService.postUpdateInventory(payload);
         } catch (invError) {
           if (isUomUpdate) {
@@ -532,7 +539,7 @@ const CreateUpdateScreen = () => {
 
             </View>
           ) : (
-            /* --- FLOW LAMA (SCAN PALLET) --- */
+
             <>
               <Text style={styles.label}>Nomor Pallet</Text>
               <View style={styles.searchRow}>
@@ -664,6 +671,45 @@ const CreateUpdateScreen = () => {
                   </View>
                 </View>
               )}
+              {selectedValue !== '' && (
+                <View style={styles.previewCard}>
+                  <Text style={styles.previewTitle}>PRATINJAU PERUBAHAN</Text>
+                  <View style={styles.previewRow}>
+                    {/* --- DATA DARI (LAMA) --- */}
+                    <View style={styles.previewCol}>
+                      <Text style={styles.smallLabel}>DARI</Text>
+                      <Text style={{ fontWeight: '500' }}>
+                        {updateType === 'UPDATE_PROD_CODE'
+                          ? `Week ${palletData.week_number}`
+                          : palletData.uom}
+                      </Text>
+                      <Text style={styles.previewQty}>
+                        {palletData.current_quantity} {palletData.uom}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.arrow}>➔</Text>
+
+                    {/* --- DATA MENJADI (BARU) --- */}
+                    <View style={styles.previewCol}>
+                      <Text style={styles.smallLabel}>MENJADI</Text>
+                      <Text style={{ color: '#FF6B00', fontWeight: 'bold' }}>
+                        {updateType === 'UPDATE_PROD_CODE'
+                          ? (weekNumber ? `Week ${weekNumber}` : '-')
+                          : selectedValue}
+                      </Text>
+                      <Text style={[styles.previewQty, { color: '#FF6B00', fontWeight: 'bold' }]}>
+                        {updateType === 'UPDATE_UOM'
+                          ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue)
+                          : palletData.current_quantity}
+                        {' '}
+                        {/* Tampilkan UOM baru jika update UOM, jika tidak tampilkan UOM lama */}
+                        {updateType === 'UPDATE_UOM' ? selectedValue : palletData.uom}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
             </>
           )}
         </View>
@@ -673,7 +719,7 @@ const CreateUpdateScreen = () => {
         <TouchableOpacity
           style={[styles.submitBtn,
           ((updateType !== 'MERGE_PALLET' && (!palletData || !selectedValue)) ||
-            (updateType === 'MERGE_PALLET' && (mergePallets.length < 2 ))) && { backgroundColor: '#CCC' }
+            (updateType === 'MERGE_PALLET' && (mergePallets.length < 2))) && { backgroundColor: '#CCC' }
           ]}
           onPress={() => {
             Alert.alert('Konfirmasi', `Anda yakin ingin melanjutkan?`, [
@@ -683,7 +729,7 @@ const CreateUpdateScreen = () => {
           }}
           disabled={
             (updateType !== 'MERGE_PALLET' && (!palletData || !selectedValue)) ||
-            (updateType === 'MERGE_PALLET' && (mergePallets.length < 2 ))
+            (updateType === 'MERGE_PALLET' && (mergePallets.length < 2))
           }
         >
           <Text style={styles.submitText}>PROSES</Text>
@@ -743,6 +789,13 @@ const styles = StyleSheet.create({
   binChip: { padding: 8, backgroundColor: '#EEE', borderRadius: 8, marginRight: 8, borderWidth: 1, borderColor: '#DDD' },
   binChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   palletSelectItem: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  previewCard: { marginTop: 10, padding: 15, backgroundColor: '#FFFEEA', borderRadius: 10, borderWidth: 1, borderColor: '#F2E675' },
+  previewTitle: { fontSize: 11, fontWeight: 'bold', color: '#856404', marginBottom: 10, textAlign: 'center' },
+  previewRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  previewCol: { alignItems: 'center' },
+  previewQty: { fontSize: 12, color: '#777' },
+  smallLabel: { fontSize: 9, color: '#999' },
+  arrow: { fontSize: 20, color: '#CCC' },
 });
 
 export default CreateUpdateScreen;

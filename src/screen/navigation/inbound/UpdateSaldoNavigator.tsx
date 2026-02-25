@@ -20,6 +20,7 @@ const UpdateSaldoStackNavigator = () => (
       name="UpdateSaldoMain"
       component={UpdateSaldoScreen}
       options={{
+        headerTitle: 'Update Saldo',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -34,6 +35,7 @@ const UpdateSaldoStackNavigator = () => (
       name="UpdateSaldoDetail"
       component={UpdateSaldoDetail}
       options={{
+        headerTitle: 'Update Saldo Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {

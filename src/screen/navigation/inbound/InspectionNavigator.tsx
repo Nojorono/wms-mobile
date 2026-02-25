@@ -23,6 +23,7 @@ const InspectionStackNavigator = () => (
       name="InspectionMain"
       component={InspectionScreen}
       options={{
+        headerTitle: 'Inspection',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -37,6 +38,7 @@ const InspectionStackNavigator = () => (
       name="InspectionDetail"
       component={InspectionDetail}
       options={{
+        headerTitle: 'Inspection Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -48,6 +50,7 @@ const InspectionStackNavigator = () => (
       name="GoodReceive"
       component={GoodReceiveScreen}
       options={{
+        headerTitle: 'Good Receive',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -59,6 +62,7 @@ const InspectionStackNavigator = () => (
       name="GoodReceiveDetail"
       component={GoodReceiveDetail}
       options={{
+        headerTitle: 'Good Receive Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {

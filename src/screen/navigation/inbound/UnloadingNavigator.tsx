@@ -26,6 +26,7 @@ const UnloadingStackNavigator = () => (
       name="UnloadingMain"
       component={UnloadingScreen}
       options={{
+        headerTitle: 'Unloading',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -40,6 +41,7 @@ const UnloadingStackNavigator = () => (
       name="UnloadingDetail"
       component={UnloadingDetailScreen}
       options={{
+        headerTitle: 'Unloading Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -51,6 +53,7 @@ const UnloadingStackNavigator = () => (
       name="UnloadingScan"
      component={UnloadingScanScreen}
       options={{
+        headerTitle: 'Unloading Scan',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -62,6 +65,7 @@ const UnloadingStackNavigator = () => (
       name="CameraScreen"
       component={CameraScreen}
       options={{
+        headerTitle: 'Scan Unloading',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {

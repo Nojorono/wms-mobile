@@ -21,6 +21,7 @@ const ForkLiftStackNavigator = () => (
       name="ForkLiftMain"
       component={ForkLiftScreen}
       options={{
+        headerTitle: 'Forklift',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -35,6 +36,7 @@ const ForkLiftStackNavigator = () => (
       name="ForkLiftDetail"
       component={ForkLiftDetailScreen}
       options={{
+        headerTitle: 'Forklift Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -46,6 +48,7 @@ const ForkLiftStackNavigator = () => (
       name="CameraScreen"
       component={CameraScreenForkLift}
       options={{
+        headerTitle: 'Scan Forklift',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {

@@ -439,7 +439,7 @@ export default function InboundDetail() {
     const hadInitial = initialPhotos.segel && initialPhotos.barang && initialPhotos.nopol;
 
     const shouldShowSubmit = !hadInitial || dirty;
-    const submitLabel = dirty ? "Upload" : "Submit";
+    const submitLabel = dirty ? "Upload" : "Upload";
 
  useEffect(() => {
   const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {

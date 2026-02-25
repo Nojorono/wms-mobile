@@ -67,6 +67,7 @@ const InboundStackNavigator = () => (
       name="InboundMain"
       component={InboundScreen}
       options={{
+        headerTitle: 'Inbound',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -80,6 +81,7 @@ const InboundStackNavigator = () => (
       name="InboundDetail"
       component={InboundDetail}
       options={{
+        headerTitle: 'Inbound Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -91,6 +93,7 @@ const InboundStackNavigator = () => (
       name="CheckerScreen"
       component={CheckerScreen}
       options={{
+        headerTitle: 'Helper List',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -102,6 +105,7 @@ const InboundStackNavigator = () => (
       name="UnloadingNavigator"
       component={UnloadingNavigator}
       options={{
+        headerTitle: 'Unloading',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
@@ -113,6 +117,7 @@ const InboundStackNavigator = () => (
       name="InspectionNavigator"
       component={InspectionNavigator}
       options={{
+        headerTitle: 'Inspection',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
@@ -124,6 +129,7 @@ const InboundStackNavigator = () => (
       name="UpdateSaldoNavigator"
       component={UpdateSaldoNavigator}
       options={{
+        headerTitle: 'Update Saldo',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
@@ -135,6 +141,7 @@ const InboundStackNavigator = () => (
       name="ForkLiftNavigator"
       component={ForkLiftNavigator}
       options={{
+        headerTitle: 'Forklift',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {

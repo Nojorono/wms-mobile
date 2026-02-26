@@ -80,24 +80,6 @@ const CameraScreen = () => {
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const [showInput, setShowInput] = useState(false);
 
-  // console.log("Inbound Item:", item);
-  // console.log("Existing Data:", dataExist);
-
-  // 🧠 QR / Barcode via kamera
-  // const codeScanner = useCodeScanner({
-  //   codeTypes: ["qr", "code-128", "ean-13"],
-  //   onCodeScanned: (codes) => {
-
-  //     const val = codes[0]?.value ?? "";
-  //     if (val) {
-
-  //       console.log("Scanned Value:", val);
-  //       setManualInput(val);
-  //       handleAddPallet(val);
-  //     }
-  //   },
-  // });
-
   const [isProcessing, setIsProcessing] = useState(false);
 
   const codeScanner = useCodeScanner({

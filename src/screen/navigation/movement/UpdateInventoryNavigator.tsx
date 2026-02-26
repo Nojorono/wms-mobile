@@ -21,6 +21,7 @@ const UpdateInventoryStackNavigator = () => (
       name="UpdateInventoryMain"
       component={UpdateInventoryScreen}
       options={{
+        headerTitle: 'Update Inventory',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -35,6 +36,7 @@ const UpdateInventoryStackNavigator = () => (
       name="UpdateInventoryCreate"
       component={UpdateInventoryCreate}
       options={{
+        headerTitle: 'Create Update Inventory',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -49,6 +51,7 @@ const UpdateInventoryStackNavigator = () => (
       name="UpdateInventoryInspection"
       component={UpdateInventoryInspection}
       options={{
+        headerTitle: 'Update Inventory Inspection',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {

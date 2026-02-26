@@ -53,6 +53,7 @@ const MovementStackNavigator = () => (
       name="MoveLocationNavigator"
       component={MoveLocationNavigator}
       options={{
+        headerTitle: 'Move Location',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
@@ -64,6 +65,7 @@ const MovementStackNavigator = () => (
       name="ForkliftMovementNavigator"
       component={ForkliftMovementStackNavigator}
       options={{
+        headerTitle: 'Forklift Movement',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
@@ -75,6 +77,7 @@ const MovementStackNavigator = () => (
       name="UpdateInventoryNavigator"
       component={UpdateInventoryStackNavigator}
       options={{
+        headerTitle: 'Update Inventory',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
@@ -86,6 +89,7 @@ const MovementStackNavigator = () => (
       name="HelperMovementNavigator"
       component={HelperMovementStackNavigator}
       options={{
+        headerTitle: 'Update Helper',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {

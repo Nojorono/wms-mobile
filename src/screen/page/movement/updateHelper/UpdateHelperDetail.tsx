@@ -50,7 +50,10 @@ export const UpdateHelperDetail = () => {
 
             if (matchedItem) {
                 setIsSourceValid(true);
-                setSourceItemDetail(matchedItem);
+                setSourceItemDetail({
+                    ...matchedItem,
+                    week_number: palletData[0]?.week_number
+                });
                 Alert.alert("Success", "Pallet Sumber tervalidasi.");
             } else {
                 Alert.alert("Error", "Pallet tidak terdaftar dalam instruksi ini.");
@@ -104,11 +107,12 @@ export const UpdateHelperDetail = () => {
                 quantity: isMergeType ? totalQtyToMove : sourceItemDetail.quantity,
                 itemId: isMergeType ? targetPalletData.item_id : sourceItemDetail.itemId,
                 uom: isMergeType ? targetPalletData.uom : sourceItemDetail.uom,
-                productionDate: targetPalletData?.production_date,
-                weekNumber: targetPalletData?.week_number,
+                productionDate: sourceItemDetail?.productionDate,
+                weekNumber: sourceItemDetail?.week_number,
                 notes: isMergeType ? "Merge Pallet Process" : "Split Pallet Process",
                 status: "PENDING"
             };
+            console.log("Submit Payload:", submitPayload, sourceItemDetail);
 
             await MovementService.postPalletUpdateScanHelper(submitPayload);
             Alert.alert("Berhasil", "Data berhasil dikirim!");

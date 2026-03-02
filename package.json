@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
+    "android": "react-native run-android --port 8082",
     "android:prod": "set ENVFILE=.env.production && cd android && gradlew assembleRelease",
     "aab:prod": "set ENVFILE=.env.production && cd android && gradlew bundleRelease",
     "ios": "react-native run-ios",
     "lint": "eslint .",
-    "start": "react-native start",
+    "start": "react-native start --port 8082",
     "test": "jest"
   },
   "dependencies": {
@@ -29,7 +29,7 @@
     "react-native-gesture-handler": "^2.26.0",
     "react-native-get-random-values": "^1.11.0",
     "react-native-image-picker": "^8.2.1",
-    "react-native-pager-view": "^6.5.0",
+    "react-native-pager-view": "^6.7.1",
     "react-native-safe-area-context": "^5.4.1",
     "react-native-screens": "^4.11.1",
     "react-native-table-component": "^1.2.2",

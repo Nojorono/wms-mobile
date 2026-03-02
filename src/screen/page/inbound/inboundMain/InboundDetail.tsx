@@ -214,8 +214,25 @@ export default function InboundDetail() {
     const handleAccept = () => {
         confirm.show("accept", "Are you sure to approve this?", async () => {
             try {
-                await InboundServices.updateStatusInbound(payload.item.id, { status: 'UNLOADING' });
-                navigationInbound.navigate("CheckerScreen", { item: payload.item });
+                showLoadingDialog("Approving inbound...");
+                 const res = await InboundServices.updatePhotoToInbound(payload.item.id, {
+                        photo_seal: photos.segel?.url,
+                        photo_condition: photos.barang?.url,
+                        photo_license_plate: photos.nopol?.url,
+                    });
+                
+
+                try {
+                    showLoadingDialog("Submitting photos...");
+                   await InboundServices.updateStatusInbound(payload.item.id, { status: 'UNLOADING' });
+                    showDialog("success", "Photos submitted successfully");
+                    navigationInbound.navigate("CheckerScreen", { item: payload.item });
+                } catch (err) {
+                    console.error(err);
+                    showDialog("error", "Failed to submit photos");
+                } finally {
+                    hideLoadingDialog();
+                }
             } catch (error) {
                 console.error('Error Accepting inbound:', error);
                 showDialog('error', 'Error while Accepting Inbound!' + error);
@@ -416,24 +433,24 @@ export default function InboundDetail() {
         }
     };
 
-    const handleSubmit = async () => {
-        try {
-            showLoadingDialog("Submitting photos...");
-            // TODO: API upload
-            const res = await InboundServices.updatePhotoToInbound(payload.item.id, {
-                photo_seal: photos.segel?.url,
-                photo_condition: photos.barang?.url,
-                photo_license_plate: photos.nopol?.url,
-            });
-            showDialog("success", "Photos submitted successfully");
+    // const handleSubmit = async () => {
+    //     try {
+    //         showLoadingDialog("Submitting photos...");
+    //         // TODO: API upload
+    //         const res = await InboundServices.updatePhotoToInbound(payload.item.id, {
+    //             photo_seal: photos.segel?.url,
+    //             photo_condition: photos.barang?.url,
+    //             photo_license_plate: photos.nopol?.url,
+    //         });
+    //         showDialog("success", "Photos submitted successfully");
 
-            // success ...
-        } catch (err) {
-            console.error(err);
-        } finally {
-            hideLoadingDialog();
-        }
-    };
+    //         // success ...
+    //     } catch (err) {
+    //         console.error(err);
+    //     } finally {
+    //         hideLoadingDialog();
+    //     }
+    // };
 
     const allUploaded = photos.segel && photos.barang && photos.nopol;
     const hadInitial = initialPhotos.segel && initialPhotos.barang && initialPhotos.nopol;
@@ -537,20 +554,22 @@ export default function InboundDetail() {
                                     />
 
                                     {/* Delete button - floating at top right */}
-                                    <TouchableOpacity
-                                        onPress={() => handleDelete(key)}
-                                        style={{
-                                            position: "absolute",
-                                            top: 6,
-                                            right: 6,
-                                            backgroundColor: "rgba(255,255,255,0.8)",
-                                            borderRadius: 16,
-                                            padding: 4,
-                                            zIndex: 10,
-                                        }}
-                                    >
-                                        <Ionicons name="trash" size={20} color="#DC2626" />
-                                    </TouchableOpacity>
+                                    {status !== "UNLOADING" && (
+                                        <TouchableOpacity
+                                            onPress={() => handleDelete(key)}
+                                            style={{
+                                                position: "absolute",
+                                                top: 6,
+                                                right: 6,
+                                                backgroundColor: "rgba(255,255,255,0.8)",
+                                                borderRadius: 16,
+                                                padding: 4,
+                                                zIndex: 10,
+                                            }}
+                                        >
+                                            <Ionicons name="trash" size={20} color="#DC2626" />
+                                        </TouchableOpacity>
+                                    )}
                                 </>
                             ) : (
                                 <TouchableOpacity
@@ -571,7 +590,7 @@ export default function InboundDetail() {
 
             {/* Submit button */}
 
-            {shouldShowSubmit && (
+            {/* {shouldShowSubmit && (
                 <TouchableOpacity
                     onPress={handleSubmit}
                     disabled={!allUploaded}
@@ -586,7 +605,7 @@ export default function InboundDetail() {
                         {submitLabel}
                     </Text>
                 </TouchableOpacity>
-            )}
+            )} */}
 
 
 

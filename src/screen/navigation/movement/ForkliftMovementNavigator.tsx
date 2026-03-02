@@ -23,6 +23,7 @@ const ForkliftMovementStackNavigator = () => (
       name="ForkliftMovementMain"
       component={ForkliftMovementScreen}
       options={{
+        headerTitle: 'Forklift Movement',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -37,6 +38,7 @@ const ForkliftMovementStackNavigator = () => (
       name="ForkliftPallet"
       component={ForkliftPallet}
       options={{
+          headerTitle: 'Scan Pallet',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -51,6 +53,7 @@ const ForkliftMovementStackNavigator = () => (
       name="ForkliftDestination"
       component={ForkliftDestination}
       options={{
+          headerTitle: 'Scan Destination',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {

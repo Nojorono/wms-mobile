@@ -290,6 +290,24 @@ const CreateUpdateScreen = () => {
           if (activeItems.length === 1) {
             const selectedPallet = activeItems[0];
             const mockItemMaster = await ScannerService.getItemById(selectedPallet.item_id);
+            
+            // Validasi data item master
+            if (updateType === 'UPDATE_UOM') {
+                if (!mockItemMaster.data || 
+                mockItemMaster.data.bal_per_dus === null ||
+                mockItemMaster.data.bal_per_dus === 0 ||
+                mockItemMaster.data.press_per_bal === null ||
+                mockItemMaster.data.press_per_bal === 0 ||
+                mockItemMaster.data.bks_per_press === null ||
+                mockItemMaster.data.bks_per_press === 0 ||
+                mockItemMaster.data.btg_per_bks === null ||
+                mockItemMaster.data.btg_per_bks === 0) {
+                Alert.alert('Error', 'Data item belum lengkap. Silahkan hubungi administrasi');
+                setLoading(false);
+                return;
+                }
+            }
+            
             setItemMaster(mockItemMaster.data);
 
             // Simpan juga pallet_code ke palletData tunggal
@@ -392,7 +410,14 @@ const CreateUpdateScreen = () => {
         if (isUomUpdate) {
           await ScannerService.updatePalletById(palletData.pallet_id || palletData.id, { capacity: newQty });
         }
+        console.log("Payload for Update Inventory:", selectedValue)
 
+        const formattedDate = isProdCodeUpdate 
+          ? new Date(selectedValue).toISOString() 
+          : selectedValue;
+
+          console.log("Formatted Date for Payload:", formattedDate);
+        
         payload = {
           updateType: "UPDATE_PROD_CODE_UOM",
           status: "COMPLETED",
@@ -407,8 +432,8 @@ const CreateUpdateScreen = () => {
             itemId: palletData.item_id,
             quantity: palletData.current_quantity,
             uom: palletData.uom,
-            productionDate: palletData.production_date,
-            weekNumber: palletData.week_number
+            productionDate: palletData.production_date || "2026-01-05T00:00:00.000Z",
+            weekNumber: Number(palletData.week_number) || 1 
           },
           scan: {
             scanDate: new Date().toISOString(),
@@ -417,9 +442,9 @@ const CreateUpdateScreen = () => {
             itemId: palletData.item_id,
             quantity: newQty,
             uom: isUomUpdate ? selectedValue : palletData.uom,
-            productionDate: isProdCodeUpdate ? selectedValue : palletData.production_date,
+            productionDate: isProdCodeUpdate ? formattedDate : palletData.production_date,
             status: "PENDING",
-            weekNumber: Number(weekNumber)
+            weekNumber: weekNumber
           }
         };
         if (isUomUpdate) {
@@ -427,6 +452,8 @@ const CreateUpdateScreen = () => {
         } else {
           payload.productionCode = selectedValue;
         }
+
+        console.log("Payload for Update Inventory:", payload);
 
         try {
           // console.log("Payload for Update Inventory:", payload);
@@ -442,7 +469,15 @@ const CreateUpdateScreen = () => {
       navigation.goBack();
     } catch (error: any) {
       console.log("Submit error", error);
-      Alert.alert('Error', error?.data?.message || 'Gagal memproses data');
+
+      const rawMessage = error?.data?.message || 'Gagal memproses data';
+
+      // Safely convert Array to String if necessary
+      const finalMessage = Array.isArray(rawMessage)
+        ? rawMessage.join(', ')
+        : String(rawMessage);
+
+      Alert.alert('Error', finalMessage);
     } finally {
       setLoading(false);
     }
@@ -560,7 +595,7 @@ const CreateUpdateScreen = () => {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.palletCodeLabel}>{item.pallet_code || 'N/A'}</Text>
                     <Text style={styles.itemInfoText}>{item.item_name}</Text>
-                    <Text style={styles.qtyInfoText}>{item.current_quantity} {item.uom} | Week {item.week_number}</Text>
+                    <Text style={styles.qtyInfoText}>{item.current_quantity} {item.uom} | Week {item.week_number ?? 0}</Text>
                   </View>
                   <TouchableOpacity
                     style={styles.deleteBtn}
@@ -642,73 +677,73 @@ const CreateUpdateScreen = () => {
           {/* DATA SAAT INI (TIPE LAIN) */}
           {palletData && updateType !== 'MERGE_PALLET' && (
             <>
-              <View style={styles.infoBox}>
-                <Text style={styles.infoTitle}>DATA SAAT INI (Pallet: {palletData.pallet_code})</Text>
-                <Text>{palletData.item_name} | Week {palletData.week_number}</Text>
-                <Text style={{ fontWeight: 'bold' }}>{palletData.current_quantity} {palletData.uom}</Text>
+              <View style={[styles.infoBox, { marginTop: 55 }]}>
+              <Text style={styles.infoTitle}>DATA SAAT INI (Pallet: {palletData.pallet_code})</Text>
+              <Text>{palletData.item_name} | Week {palletData.week_number}</Text>
+              <Text style={{ fontWeight: 'bold' }}>{palletData.current_quantity} {palletData.uom}</Text>
               </View>
               {/* UI Prod Code / UOM logic tetap sama */}
               {updateType === 'UPDATE_PROD_CODE' && (
-                <View style={{ marginTop: 10 }}>
-                  <Text style={styles.label}>Update Production Date</Text>
-                  <TouchableOpacity style={[styles.input, { justifyContent: "center" }]} onPress={() => setOpenPicker(true)}>
-                    <Text style={{ color: selectedDate ? "#111" : "#9ca3af" }}>{selectedDate || "Pilih Tanggal Produksi"}</Text>
-                  </TouchableOpacity>
-                  <DatePicker modal open={openPicker} date={tempDate} mode="date"
-                    onConfirm={(date) => { setOpenPicker(false); setSelectedDate(formatDate(date)); fetchWeek(formatDate(date)); }}
-                    onCancel={() => setOpenPicker(false)}
-                  />
-                </View>
+              <View style={{ marginTop: 10 }}>
+                <Text style={styles.label}>Update Production Date</Text>
+                <TouchableOpacity style={[styles.input, { justifyContent: "center" }]} onPress={() => setOpenPicker(true)}>
+                <Text style={{ color: selectedDate ? "#111" : "#9ca3af" }}>{selectedDate || "Pilih Tanggal Produksi"}</Text>
+                </TouchableOpacity>
+                <DatePicker modal open={openPicker} date={tempDate} mode="date"
+                onConfirm={(date) => { setOpenPicker(false); setSelectedDate(formatDate(date)); fetchWeek(formatDate(date)); }}
+                onCancel={() => setOpenPicker(false)}
+                />
+              </View>
               )}
               {updateType === 'UPDATE_UOM' && (
-                <View style={{ marginTop: 10 }}>
-                  <Text style={styles.label}>Update UOM</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker selectedValue={selectedValue} onValueChange={(val) => setSelectedValue(val)}>
-                      <Picker.Item label="-- Pilih UOM --" value="" />
-                      {['DUS', 'BAL', 'PRS', 'BKS', 'BTG'].map(u => (<Picker.Item key={u} label={u} value={u} />))}
-                    </Picker>
-                  </View>
+              <View style={{ marginTop: 10 }}>
+                <Text style={styles.label}>Update UOM</Text>
+                <View style={styles.pickerContainer}>
+                <Picker selectedValue={selectedValue} onValueChange={(val) => setSelectedValue(val)}>
+                  <Picker.Item label="-- Pilih UOM --" value="" />
+                  {['DUS', 'BAL', 'PRS', 'BKS', 'BTG'].map(u => (<Picker.Item key={u} label={u} value={u} />))}
+                </Picker>
                 </View>
+              </View>
               )}
-              {selectedValue !== '' && (
-                <View style={styles.previewCard}>
-                  <Text style={styles.previewTitle}>PRATINJAU PERUBAHAN</Text>
-                  <View style={styles.previewRow}>
-                    {/* --- DATA DARI (LAMA) --- */}
-                    <View style={styles.previewCol}>
-                      <Text style={styles.smallLabel}>DARI</Text>
-                      <Text style={{ fontWeight: '500' }}>
-                        {updateType === 'UPDATE_PROD_CODE'
-                          ? `Week ${palletData.week_number}`
-                          : palletData.uom}
-                      </Text>
-                      <Text style={styles.previewQty}>
-                        {palletData.current_quantity} {palletData.uom}
-                      </Text>
-                    </View>
-
-                    <Text style={styles.arrow}>➔</Text>
-
-                    {/* --- DATA MENJADI (BARU) --- */}
-                    <View style={styles.previewCol}>
-                      <Text style={styles.smallLabel}>MENJADI</Text>
-                      <Text style={{ color: '#FF6B00', fontWeight: 'bold' }}>
-                        {updateType === 'UPDATE_PROD_CODE'
-                          ? (weekNumber ? `Week ${weekNumber}` : '-')
-                          : selectedValue}
-                      </Text>
-                      <Text style={[styles.previewQty, { color: '#FF6B00', fontWeight: 'bold' }]}>
-                        {updateType === 'UPDATE_UOM'
-                          ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue)
-                          : palletData.current_quantity}
-                        {' '}
-                        {/* Tampilkan UOM baru jika update UOM, jika tidak tampilkan UOM lama */}
-                        {updateType === 'UPDATE_UOM' ? selectedValue : palletData.uom}
-                      </Text>
-                    </View>
-                  </View>
+              {selectedValue !== '' && updateType !== 'SPLIT_PALLET' && updateType !== 'MERGE_PALLET' && (
+              <View style={styles.previewCard}>
+                <Text style={styles.previewTitle}>PRATINJAU PERUBAHAN</Text>
+                <View style={styles.previewRow}>
+                {/* --- DATA DARI (LAMA) --- */}
+                <View style={styles.previewCol}>
+                  <Text style={styles.smallLabel}>DARI</Text>
+                  <Text style={{ fontWeight: '500' }}>
+                  {updateType === 'UPDATE_PROD_CODE'
+                    ? `Week ${palletData.week_number}`
+                    : palletData.uom}
+                  </Text>
+                  <Text style={styles.previewQty}>
+                  {palletData.current_quantity} {palletData.uom}
+                  </Text>
                 </View>
+
+                <Text style={styles.arrow}>➔</Text>
+
+                {/* --- DATA MENJADI (BARU) --- */}
+                <View style={styles.previewCol}>
+                  <Text style={styles.smallLabel}>MENJADI</Text>
+                  <Text style={{ color: '#FF6B00', fontWeight: 'bold' }}>
+                  {updateType === 'UPDATE_PROD_CODE'
+                    ? (weekNumber ? `Week ${weekNumber}` : '-')
+                    : selectedValue}
+                  </Text>
+                  <Text style={[styles.previewQty, { color: '#FF6B00', fontWeight: 'bold' }]}>
+                  {updateType === 'UPDATE_UOM'
+                    ? calculateNewQty(palletData.current_quantity, palletData.uom, selectedValue)
+                    : palletData.current_quantity}
+                  {' '}
+                  {/* Tampilkan UOM baru jika update UOM, jika tidak tampilkan UOM lama */}
+                  {updateType === 'UPDATE_UOM' ? selectedValue : palletData.uom}
+                  </Text>
+                </View>
+                </View>
+              </View>
               )}
             </>
           )}

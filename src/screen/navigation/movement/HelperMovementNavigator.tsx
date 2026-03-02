@@ -21,6 +21,7 @@ const HelperMovementStackNavigator = () => (
       name="HelperMovementMain"
       component={UpdateHelperScreen}
       options={{
+        headerTitle: 'Update Helper',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -35,6 +36,7 @@ const HelperMovementStackNavigator = () => (
       name="UpdateHelperDetail"
       component={UpdateHelperDetail}
       options={{
+        headerTitle: 'Update Helper Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {

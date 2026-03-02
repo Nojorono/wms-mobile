@@ -21,6 +21,7 @@ const MoveLocationStackNavigator = () => (
       name="MoveLocationMain"
       component={MoveLocationScreen}
       options={{
+        headerTitle: 'Move Location',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -35,6 +36,7 @@ const MoveLocationStackNavigator = () => (
       name="MoveLocationCreate"
       component={MoveLocationCreate}
       options={{
+        headerTitle: 'Create Move Location',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
@@ -49,6 +51,7 @@ const MoveLocationStackNavigator = () => (
       name="MoveLocationDetail"
       component={MoveLocationDetail}
       options={{
+        headerTitle: 'Move Location Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {

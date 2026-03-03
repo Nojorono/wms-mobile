@@ -14,7 +14,8 @@ export const UpdateHelperDetail = () => {
     const route = useRoute();
     const navigation = useNavigation<NavigationProp>();
     const payload = route.params as any;
-    const itemData = payload.item; 
+    const itemData = payload.item;
+    console.log("Received Item Data:", itemData);
     const { user } = useAuthStore();
     const userId = user?.id || 'uuid-user-123';
 

@@ -239,8 +239,16 @@ const CreateUpdateScreen = () => {
     try {
       const baseQty = convertToBase(currentQty, fromUom as UomType);
       const result = convertFromBase(baseQty, toUom as UomType);
-      return Number.isInteger(result) ? result : parseFloat(result.toFixed(2));
-    } catch (e) { return currentQty; }
+      
+      if (!Number.isInteger(result)) {
+        Alert.alert('Error', 'Konversi menghasilkan nilai desimal. Jumlah tidak dapat dikonversi.');
+        return currentQty;
+      }
+      
+      return result;
+    } catch (e) { 
+      return currentQty; 
+    }
   };
 
   const handleCheckPallet = async () => {

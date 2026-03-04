@@ -10,6 +10,89 @@ import { HelperMovementParamList } from '../../../navigation/movement/HelperMove
 import { Camera, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 
+const dummyData = {
+    "id": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
+    "updateNumber": "MPU-2026-0003",
+    "updateType": "MERGE_PALLET",
+    "uom": null,
+    "productionCode": null,
+    "status": "PENDING_HELPER_ACTION",
+    "initiatedByUserId": "683c079d-45cc-4e8d-a0e7-9f9e7db4eb0f",
+    "inspectionStatus": "PENDING",
+    "inspectionByUserId": "683c079d-45cc-4e8d-a0e7-9f9e7db4eb0f",
+    "notes": "Merge pallet request via mobile",
+    "completedDate": "2026-03-03T03:59:26.823Z",
+    "items": [
+        {
+            "id": "023b4910-c77d-459e-b07f-733ee204910b",
+            "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
+            "sequence": 1,
+            "palletId": "f906dbfc-5523-4cb0-8623-95e6ce46bcb7",
+            "pallet": {
+                "id": "f906dbfc-5523-4cb0-8623-95e6ce46bcb7",
+                "pallet_code": "SPLIT-01",
+                "uom": "DUS",
+                "currentQuantity": 43
+            },
+            "itemId": "90df9437-5790-43bd-a84f-f970d50c350b",
+            "quantity": 43,
+            "uom": "DUS",
+            "productionDate": "2026-02-26T04:20:43.000Z",
+            "createdAt": "2026-03-03T03:59:28.079Z",
+            "updatedAt": "2026-03-03T03:59:28.079Z"
+        },
+        {
+            "id": "248d146f-daef-46fd-acf7-115a2efbf49e",
+            "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
+            "sequence": 2,
+            "palletId": "9469996c-f947-48c7-b967-b7f6604cdb4f",
+            "pallet": {
+                "id": "9469996c-f947-48c7-b967-b7f6604cdb4f",
+                "pallet_code": "PAL-002",
+                "uom": "DUS",
+                "currentQuantity": 28
+            },
+            "itemId": "90df9437-5790-43bd-a84f-f970d50c350b",
+            "quantity": 27,
+            "uom": "DUS",
+            "productionDate": "2026-02-26T00:00:00.000Z",
+            "createdAt": "2026-03-03T03:59:28.079Z",
+            "updatedAt": "2026-03-03T03:59:28.079Z"
+        },
+        {
+      "id": "248d146f-daef-46fd-acf7-115a2333rxxxx",
+      "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
+      "sequence": 3,
+      "palletId": "9469996c-f947-48c7-b967-b7f6604xxxxxx",
+      "pallet": {
+        "id": "9469996c-f947-48c7-b967-b7f6604cxxxx",
+        "pallet_code": "PAL-002",
+        "uom": "DUS",
+        "currentQuantity": 28
+      },
+      "itemId": "90df9437-5790-43bd-a84f-f970d50cxxx",
+      "quantity": 1,
+      "uom": "DUS",
+      "productionDate": "2026-02-26T00:00:00.000Z",
+      "createdAt": "2026-03-03T03:59:28.079Z",
+      "updatedAt": "2026-03-03T03:59:28.079Z"
+    }
+    ],
+    "scans": [],
+    "assigned": [
+        {
+            "id": "69ee20ed-6fa6-4da4-9ff0-7de763b8a01d",
+            "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
+            "userId": "aab1117f-57ff-4da8-9a0d-a651064b9625",
+            "assignedAt": "2026-03-03T03:59:26.823Z",
+            "createdAt": "2026-03-03T03:59:28.079Z",
+            "updatedAt": "2026-03-03T03:59:28.079Z"
+        }
+    ],
+    "createdAt": "2026-03-03T03:59:28.079Z",
+    "updatedAt": "2026-03-03T03:59:28.079Z"
+}
+
 
 type NavigationProp = StackNavigationProp<HelperMovementParamList, 'HelperMovementMain'>;
 
@@ -22,8 +105,9 @@ export const UpdateHelperDetail = () => {
     const route = useRoute();
     const navigation = useNavigation<NavigationProp>();
     const payload = route.params as any;
+    // const itemData = dummyData;
     const itemData = payload.item;
-    console.log("Received Item Data:", itemData);
+
     const { user } = useAuthStore();
     const userId = user?.id || 'uuid-user-123';
 
@@ -122,6 +206,14 @@ export const UpdateHelperDetail = () => {
     const checkTargetPallet = async () => {
         if (!targetPalletNo) return Alert.alert("Peringatan", "Masukkan nomor pallet tujuan");
         if (!isSourceValid) return Alert.alert("Peringatan", "Validasi pallet sumber dulu");
+        if (isMergeType) {
+                    const palletExists = itemData.items.some((item: any) => item.pallet.pallet_code === targetPalletNo);
+                    if (!palletExists) {
+                        Alert.alert("Error", "Pallet tujuan tidak sesuai dengan list instruksi.");
+                        setIsLoadingTarget(false);
+                        return;
+                    }
+                }
 
         setIsLoadingTarget(true);
         try {
@@ -149,31 +241,59 @@ export const UpdateHelperDetail = () => {
         }
     };
 
-    const executeSubmit = async () => {
-        try {
+   const executeSubmit = async () => {
+    try {
+        // 1. Kelompokkan items berdasarkan itemId
+        // Kita gunakan reduce untuk membuat object grouping
+        const groupedItems = itemData.items.reduce((acc: any, curr: any) => {
+            const key = curr.itemId;
+            if (!acc[key]) {
+                // Jika belum ada, buat entry baru (clone objectnya)
+                acc[key] = { ...curr };
+            } else {
+                // Jika sudah ada, tambahkan quantity-nya
+                acc[key].quantity += curr.quantity;
+            }
+            return acc;
+        }, {});
+
+        // 2. Ubah object grouping kembali menjadi array
+        const finalItemsToSubmit = Object.values(groupedItems);
+
+        // 3. Looping untuk hit API
+        // Menggunakan for...of agar bisa menggunakan await dengan benar
+        for (const item of finalItemsToSubmit as any[]) {
             const submitPayload = {
                 palletUpdateId: itemData.id,
                 scanDate: new Date().toISOString(),
                 scanByUserId: userId,
                 palletId: targetPalletData.id,
-                // Jika merge, gunakan total list, jika split gunakan qty item yang dicheck
-                quantity: isMergeType ? totalQtyToMove : sourceItemDetail.quantity,
-                itemId: isMergeType ? targetPalletData.item_id : sourceItemDetail.itemId,
-                uom: isMergeType ? targetPalletData.uom : sourceItemDetail.uom,
-                productionDate: sourceItemDetail?.productionDate,
-                weekNumber: sourceItemDetail?.week_number,
+                
+                // Gunakan data dari item hasil grouping
+                quantity: isMergeType ? item.quantity : sourceItemDetail.quantity,
+                itemId: isMergeType ? item.itemId : sourceItemDetail.itemId,
+                uom: isMergeType ? item.uom : sourceItemDetail.uom,
+                
+                // Mengambil production date dari item terkait
+                productionDate: isMergeType ? item.productionDate : sourceItemDetail?.productionDate,
+                weekNumber: isMergeType ? targetPalletData?.week_number : sourceItemDetail?.week_number,
+                
                 notes: isMergeType ? "Merge Pallet Process" : "Split Pallet Process",
                 status: "PENDING"
             };
-            console.log("Submit Payload:", submitPayload, sourceItemDetail);
 
+            console.log("Submitting Payload for Item:", item.itemId, submitPayload);
             await MovementService.postPalletUpdateScanHelper(submitPayload);
-            Alert.alert("Berhasil", "Data berhasil dikirim!");
-            navigation.goBack();
-        } catch (error) {
-            Alert.alert("Error", "Gagal mengirim data.");
         }
-    };
+
+        Alert.alert("Berhasil", "Semua data berhasil digabungkan dan dikirim!");
+        navigation.goBack();
+
+    } catch (error) {
+        console.error("Submit Error:", error);
+        Alert.alert("Error", "Gagal mengirim satu atau beberapa data.");
+    }
+};
 
     return (
         <ScrollView style={styles.container}>
@@ -216,6 +336,7 @@ export const UpdateHelperDetail = () => {
                     itemData.items.map((item: any, index: number) => (
                         <View key={index} style={styles.listItem}>
                             <Text style={styles.listPalletCode}>{item.pallet.pallet_code}</Text>
+                            <Text style={styles.listPalletCode}>{item.itemId.substring(item.itemId.length - 8)}</Text>
                             <Text style={styles.listQty}>{item.quantity} {item.uom}</Text>
                         </View>
                     ))

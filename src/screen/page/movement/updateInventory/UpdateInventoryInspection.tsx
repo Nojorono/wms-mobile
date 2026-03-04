@@ -127,38 +127,42 @@ const UpdateInventoryInspection = () => {
           <Text style={styles.buttonText}>REJECT</Text>
         </TouchableOpacity> */}
 
-                {itemData.status !== 'PENDING_HELPER_ACTION' && 
-                 itemData.status !== 'COMPLETED' && 
-                 itemData.status !== 'APPROVED' && (
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.approveButton]}
-                        onPress={async () => {
-                            try {
-                                showLoadingDialog("waiting for approval...");
-                                
-                                if (itemData.updateType === 'SPLIT_PALLET') {
-                                    await MovementService.approveInspectionSplit(itemData.id, {
-                                        inspectionByUserId: userId
-                                    });
-                                } else if (itemData.updateType === 'MERGE_PALLET') {
-                                    await MovementService.approveInspectionMerge(itemData.id, {
-                                        inspectionByUserId: userId
-                                    });
-                                }
-                                
-                                hideLoadingDialog();
-                                showDialog('success', 'Inventory inspection approved successfully!');
-                                navigation.goBack();
-                            } catch (error:any) {
-                                hideLoadingDialog();
-                                console.error('Error approving inventory update:', error);
-                                showDialog('error', error?.data?.message || 'Error while approving inventory update!');
-                            }
-                        }}
-                    >
-                        <Text style={styles.buttonText}>APPROVE</Text>
-                    </TouchableOpacity>
-                )}
+               {
+    /* Pastikan bukan status final (COMPLETED/APPROVED) */
+    itemData.status !== 'COMPLETED' && 
+    itemData.status !== 'APPROVED' && 
+    /* Izinkan jika statusnya bukan PENDING_HELPER_ACTION ATAU jika ada data scan */
+    (itemData.status === 'PENDING_HELPER_ACTION' && itemData.scans && itemData.scans.length > 0) && (
+        <TouchableOpacity
+            style={[styles.actionButton, styles.approveButton]}
+            onPress={async () => {
+                try {
+                    showLoadingDialog("waiting for approval...");
+                    
+                    if (itemData.updateType === 'SPLIT_PALLET') {
+                        await MovementService.approveInspectionSplit(itemData.id, {
+                            inspectionByUserId: userId
+                        });
+                    } else if (itemData.updateType === 'MERGE_PALLET') {
+                        await MovementService.approveInspectionMerge(itemData.id, {
+                            inspectionByUserId: userId
+                        });
+                    }
+                    
+                    hideLoadingDialog();
+                    showDialog('success', 'Inventory inspection approved successfully!');
+                    navigation.goBack();
+                } catch (error:any) {
+                    hideLoadingDialog();
+                    console.error('Error approving inventory update:', error);
+                    showDialog('error', error?.data?.message || 'Error while approving inventory update!');
+                }
+            }}
+        >
+            <Text style={styles.buttonText}>APPROVE</Text>
+        </TouchableOpacity>
+    )
+}
             </View>
         </SafeAreaView>
     );

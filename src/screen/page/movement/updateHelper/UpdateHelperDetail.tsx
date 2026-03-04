@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
@@ -7,10 +7,18 @@ import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import ScannerService from '../../../../service/palletServices.ts';
 import MovementService from '../../../../service/movementService.ts';
 import { HelperMovementParamList } from '../../../navigation/movement/HelperMovementNavigator.tsx';
+import { Camera, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
+
 
 type NavigationProp = StackNavigationProp<HelperMovementParamList, 'HelperMovementMain'>;
 
 export const UpdateHelperDetail = () => {
+    // --- State Camera ---
+    const [isScannerVisible, setIsScannerVisible] = useState(false);
+    const [scannerTarget, setScannerTarget] = useState<'source' | 'target'>('source');
+    const [hasPermission, setHasPermission] = useState(false);
+
     const route = useRoute();
     const navigation = useNavigation<NavigationProp>();
     const payload = route.params as any;
@@ -33,6 +41,50 @@ export const UpdateHelperDetail = () => {
     const [isLoadingTarget, setIsLoadingTarget] = useState(false);
     const [targetPalletData, setTargetPalletData] = useState<any>(null);
     const [isTargetValid, setIsTargetValid] = useState(false);
+
+    // Cek Izin Kamera
+    useEffect(() => {
+        (async () => {
+            const status = await Camera.requestCameraPermission();
+            setHasPermission(status === 'granted');
+        })();
+    }, []);
+
+    // Konfigurasi Code Scanner
+    const codeScanner = useCodeScanner({
+        codeTypes: ['qr', 'code-128', 'ean-13'], // sesuaikan dengan jenis barcode pallet
+        onCodeScanned: (codes) => {
+            if (codes.length > 0 && isScannerVisible) {
+                const value = codes[0].value;
+                if (value) {
+                    handleScanSuccess(value);
+                }
+            }
+        }
+    });
+
+    const devices = useCameraDevices();
+    const device = devices.find((d) => d.position === 'back');
+
+    // Fungsi handle hasil scan
+    const handleScanSuccess = (value: string) => {
+        setIsScannerVisible(false);
+        if (scannerTarget === 'source') {
+            setSourcePalletNo(value);
+            setIsSourceValid(false);
+        } else {
+            setTargetPalletNo(value);
+            setIsTargetValid(false);
+        }
+    };
+
+    const openScanner = (target: 'source' | 'target') => {
+        if (!hasPermission) {
+            return Alert.alert("Error", "Izin kamera ditolak");
+        }
+        setScannerTarget(target);
+        setIsScannerVisible(true);
+    };
 
     // Menghitung total QTY (khusus Merge)
     const totalQtyToMove = useMemo(() => {
@@ -79,7 +131,7 @@ export const UpdateHelperDetail = () => {
             if (targetData) {
                 // Ambil UOM acuan (dari source detail jika split, atau dari list pertama jika merge)
                 const requiredUom = isMergeType ? itemData.items[0]?.uom : sourceItemDetail?.uom;
-                
+
                 if (targetData.uom && targetData.uom !== requiredUom) {
                     Alert.alert("Error", `UOM tidak cocok. Butuh: ${requiredUom}`);
                 } else {
@@ -125,6 +177,28 @@ export const UpdateHelperDetail = () => {
 
     return (
         <ScrollView style={styles.container}>
+            <Modal visible={isScannerVisible} animationType="slide">
+                <View style={styles.scannerContainer}>
+                    {device && (
+                        <Camera
+                            style={StyleSheet.absoluteFill}
+                            device={device}
+                            isActive={isScannerVisible}
+                            codeScanner={codeScanner}
+                        />
+                    )}
+                    <View style={styles.scannerOverlay}>
+                        <Text style={styles.scannerText}>Scanning {scannerTarget === 'source' ? 'Source' : 'Target'} Pallet...</Text>
+                        <TouchableOpacity
+                            style={styles.closeScanner}
+                            onPress={() => setIsScannerVisible(false)}
+                        >
+                            <Text style={{ color: 'white', fontWeight: 'bold' }}>BATAL</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             <View style={styles.header}>
                 <Text style={styles.label}>Update Number</Text>
                 <Text style={styles.title}>{itemData.updateNumber}</Text>
@@ -135,8 +209,8 @@ export const UpdateHelperDetail = () => {
 
             {/* Bagian 1: SUMBER */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}> {isMergeType ? "1. Pallet Sumber" : "1. Split Menggunakan "+itemData.items[0]?.pallet?.pallet_code}</Text>
-                
+                <Text style={styles.sectionTitle}> {isMergeType ? "1. Pallet Sumber" : "1. Split Menggunakan " + itemData.items[0]?.pallet?.pallet_code}</Text>
+
                 {isMergeType ? (
                     // Tampilan MERGE: Langsung List
                     itemData.items.map((item: any, index: number) => (
@@ -155,6 +229,11 @@ export const UpdateHelperDetail = () => {
                                 value={sourcePalletNo}
                                 onChangeText={(txt) => { setSourcePalletNo(txt); setIsSourceValid(false); }}
                             />
+                            {/* TOMBOL SCAN BARU */}
+                            <TouchableOpacity style={styles.scanBtn} onPress={() => openScanner('source')}>
+
+                                <Ionicons name="barcode" size={16} color="white" />
+                            </TouchableOpacity>
                             <TouchableOpacity style={[styles.checkButton, isSourceValid && styles.validBtn]} onPress={checkSourcePallet} disabled={isLoadingSource}>
                                 {isLoadingSource ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.checkButtonText}>{isSourceValid ? "OK" : "CHECK"}</Text>}
                             </TouchableOpacity>
@@ -179,9 +258,13 @@ export const UpdateHelperDetail = () => {
                         value={targetPalletNo}
                         onChangeText={(txt) => { setTargetPalletNo(txt); setIsTargetValid(false); }}
                     />
-                    <TouchableOpacity 
-                        style={[styles.checkButton, isTargetValid && styles.validBtn]} 
-                        onPress={checkTargetPallet} 
+                    {/* TOMBOL SCAN BARU */}
+                    <TouchableOpacity style={styles.scanBtn} onPress={() => openScanner('target')}>
+                        <Ionicons name="barcode" size={16} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.checkButton, isTargetValid && styles.validBtn]}
+                        onPress={checkTargetPallet}
                         disabled={isLoadingTarget || (!isMergeType && !isSourceValid)}
                     >
                         {isLoadingTarget ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.checkButtonText}>{isTargetValid ? "OK" : "CHECK"}</Text>}
@@ -204,7 +287,10 @@ export const UpdateHelperDetail = () => {
             </View>
 
             <TouchableOpacity
-                style={[styles.button, (!isSourceValid || !isTargetValid) && styles.disabledButton, { backgroundColor: isMergeType ? '#0F172A' : '#ff853a' }]}
+                style={[
+                    styles.button,
+                    { backgroundColor: (!isSourceValid || !isTargetValid) ? '#94a3b8' : '#fb7c2d' }
+                ]}
                 onPress={executeSubmit}
                 disabled={!isSourceValid || !isTargetValid}
             >
@@ -226,10 +312,16 @@ const styles = StyleSheet.create({
     listItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
     listPalletCode: { fontSize: 14, fontWeight: 'bold', color: '#1e293b' },
     listQty: { fontSize: 14, color: '#2563eb', fontWeight: '600' },
-    inputGroup: { flexDirection: 'row', gap: 10 },
     input: { flex: 1, borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, paddingHorizontal: 12, height: 48, color: '#000' },
     inputSuccess: { borderColor: '#22c55e', backgroundColor: '#f0fdf4' },
-    checkButton: { backgroundColor: '#3b82f6', justifyContent: 'center', minWidth: 80, alignItems: 'center', borderRadius: 8 },
+    checkButton: {
+        backgroundColor: '#3b82f6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 8,
+        height: 48,
+        width: 70, // Lebar tetap untuk tombol Check
+    },
     validBtn: { backgroundColor: '#22c55e' },
     checkButtonText: { color: 'white', fontWeight: 'bold' },
     infoBox: { marginTop: 10, padding: 8, backgroundColor: '#f8fafc', borderRadius: 4 },
@@ -241,6 +333,26 @@ const styles = StyleSheet.create({
     button: { padding: 18, borderRadius: 10, alignItems: 'center', marginTop: 10, marginBottom: 40 },
     disabledButton: { backgroundColor: '#94a3b8' },
     buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+    inputGroup: { flexDirection: 'row', gap: 5, alignItems: 'center' }, // perkecil gap agar muat
+    scanBtn: {
+        backgroundColor: '#6366f1',
+        paddingHorizontal: 12,
+        height: 48,
+        borderRadius: 8,
+        justifyContent: 'center',
+    },
+    scanBtnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
+    // Scanner Styles
+    scannerContainer: { flex: 1, backgroundColor: 'black' },
+    scannerOverlay: {
+        flex: 1,
+        backgroundColor: 'transparent',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        paddingBottom: 50
+    },
+    scannerText: { color: 'white', marginBottom: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 },
+    closeScanner: { backgroundColor: '#ef4444', padding: 15, borderRadius: 10, width: '80%', alignItems: 'center' }
 });
 
 export default UpdateHelperDetail;

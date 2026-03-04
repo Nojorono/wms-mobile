@@ -135,7 +135,7 @@ export const UpdateHelperDetail = () => {
 
             {/* Bagian 1: SUMBER */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}>1. Pallet Sumber</Text>
+                <Text style={styles.sectionTitle}> {isMergeType ? "1. Pallet Sumber" : "1. Split Menggunakan "+itemData.items[0]?.pallet?.pallet_code}</Text>
                 
                 {isMergeType ? (
                     // Tampilan MERGE: Langsung List

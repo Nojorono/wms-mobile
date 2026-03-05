@@ -96,6 +96,18 @@ export default function InspectionUpdateActivity() {
     },
   });
 
+  // Letakkan ini di atas bagian return (di dalam komponen)
+const isDataChanged = (() => {
+  if (mode !== 'edit' || !activity) return false;
+
+  const isQtyChanged = String(qtyPicking) !== String(activity.quantity_picked);
+  const isPalletSumberChanged = palletSumber !== (activity.palletSource?.pallet_code || '');
+  const isPalletPickingChanged = palletPicking !== (activity.palletUse?.pallet_code || '');
+  
+  // Jika salah satu berubah, return true
+  return isQtyChanged || isPalletSumberChanged || isPalletPickingChanged;
+})();
+
   const handleApproveAction = async (type: "APPROVE" | "FINAL") => {
     if (!activity) return;
 
@@ -679,7 +691,7 @@ export default function InspectionUpdateActivity() {
       </View>
 
       {/* APPROVE BUTTONS */}
-
+{!isDataChanged && (
       <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
         
           {activity.status === "PENDING" && (
@@ -718,7 +730,7 @@ export default function InspectionUpdateActivity() {
           )}
 
       </View>
-
+)}
 
       {/* SUBMIT */}
       <TouchableOpacity

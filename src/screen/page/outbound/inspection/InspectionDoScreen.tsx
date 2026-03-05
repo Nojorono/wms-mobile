@@ -24,8 +24,8 @@ import OutboundService from '../../../../service/outboundService.ts';
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
 const FILTER_OPTIONS = [
   'PENDING',
-  'APPROVED',
   'IN_PROGRESS',
+  'APPROVED',
   'CANCELLED'
 ];
 

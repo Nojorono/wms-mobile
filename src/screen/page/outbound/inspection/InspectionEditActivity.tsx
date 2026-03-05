@@ -293,7 +293,7 @@ export default function InspectionUpdateActivity() {
       quantity_picked: Number(qtyPicking),
       uom: itemBefore.uom,
       week_number: itemBefore.week_number,
-      status: 'OPEN',
+      status: 'PENDING',
       inspection_by: itemBefore.memo?.requestor || itemBefore.requestor,
       user_id: userId,
       user_name: userName,

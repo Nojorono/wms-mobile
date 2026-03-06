@@ -9,6 +9,7 @@ import MovementService from '../../../../service/movementService.ts';
 import { HelperMovementParamList } from '../../../navigation/movement/HelperMovementNavigator.tsx';
 import { Camera, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
+import { set } from 'react-hook-form';
 
 const dummyData = {
     "id": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
@@ -125,6 +126,9 @@ export const UpdateHelperDetail = () => {
     const [isLoadingTarget, setIsLoadingTarget] = useState(false);
     const [targetPalletData, setTargetPalletData] = useState<any>(null);
     const [isTargetValid, setIsTargetValid] = useState(false);
+    const [capacityTarget, setCapacityTarget] = useState<any>(null);
+
+    
 
     // Cek Izin Kamera
     useEffect(() => {
@@ -175,6 +179,7 @@ export const UpdateHelperDetail = () => {
         return itemData.items.reduce((acc: number, curr: any) => acc + curr.quantity, 0);
     }, [itemData.items]);
 
+
     // 1. Cek Pallet Sumber (Hanya untuk SPLIT)
     const checkSourcePallet = async () => {
         if (!sourcePalletNo) return Alert.alert("Peringatan", "Masukkan nomor pallet sumber");
@@ -218,9 +223,33 @@ export const UpdateHelperDetail = () => {
         setIsLoadingTarget(true);
         try {
             const res = await ScannerService.getPalletByCode(targetPalletNo);
-            const targetData = res.data?.[0];
-
+            const targetData = res.data?.find((pallet: any) => 
+                pallet.current_quantity !== 0 && 
+                itemData.items.some((item: any) => item.itemId === pallet.item_id)
+            );
             if (targetData) {
+                
+            const response = await ScannerService.getPalletDetailById(targetData.id);
+            const capacityLimit = response.data.capacity; // Ambil nilai kapasitas
+            setCapacityTarget(capacityLimit);
+
+            // --- LOGIKA VALIDASI KAPASITAS DI SINI ---
+            // Hitung berapa qty yang mau dipindah
+            const qtyToMove = isMergeType ? totalQtyToMove : (sourceItemDetail?.quantity || 0);
+            // Hitung total setelah digabung (qty lama + qty baru)
+            const projectedTotal = (targetData.current_quantity || 0) + qtyToMove;
+
+            if (projectedTotal > capacityLimit) {
+                Alert.alert(
+                    "Error: Kapasitas Penuh", 
+                    `Kapasitas pallet (${capacityLimit}) tidak mencukupi.\n` +
+                    `Kapasitas yang dibutuhkan: ${projectedTotal}\n`
+                );
+                setIsTargetValid(false);
+                return; // Berhenti di sini
+            }
+
+           
                 // Ambil UOM acuan (dari source detail jika split, atau dari list pertama jika merge)
                 const requiredUom = isMergeType ? itemData.items[0]?.uom : sourceItemDetail?.uom;
 
@@ -329,7 +358,7 @@ export const UpdateHelperDetail = () => {
 
             {/* Bagian 1: SUMBER */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}> {isMergeType ? "1. Pallet Sumber" : "1. Split Menggunakan " + itemData.items[0]?.pallet?.pallet_code}</Text>
+                <Text style={styles.sectionTitle}> {isMergeType ? "1. Source Pallet" : "1. Split Using " + itemData.items[0]?.pallet?.pallet_code}</Text>
 
                 {isMergeType ? (
                     // Tampilan MERGE: Langsung List
@@ -371,7 +400,7 @@ export const UpdateHelperDetail = () => {
 
             {/* Bagian 2: TUJUAN */}
             <View style={styles.card}>
-                <Text style={styles.sectionTitle}>2. Pallet Tujuan</Text>
+                <Text style={styles.sectionTitle}>2. Pallet Destination</Text>
                 <View style={styles.inputGroup}>
                     <TextInput
                         style={[styles.input, isTargetValid && styles.inputSuccess]}
@@ -394,15 +423,15 @@ export const UpdateHelperDetail = () => {
 
                 {isTargetValid && targetPalletData && (
                     <View style={styles.infoBoxSummary}>
-                        <Text style={styles.summaryTitle}>Kalkulasi Hasil:</Text>
-                        <View style={styles.rowBetween}>
+                        <Text style={styles.summaryTitle}>VALID DESTINATION</Text>
+                        {/* <View style={styles.rowBetween}>
                             <Text style={styles.infoLabel}>Qty Eksisting:</Text>
                             <Text style={styles.infoValue}>{targetPalletData.current_quantity || 0}</Text>
                         </View>
                         <View style={styles.rowBetween}>
                             <Text style={styles.infoLabel}>Qty Masuk:</Text>
                             <Text style={styles.infoValue}>{isMergeType ? totalQtyToMove : sourceItemDetail?.quantity}</Text>
-                        </View>
+                        </View> */}
                     </View>
                 )}
             </View>
@@ -415,7 +444,7 @@ export const UpdateHelperDetail = () => {
                 onPress={executeSubmit}
                 disabled={!isSourceValid || !isTargetValid}
             >
-                <Text style={styles.buttonText}>PROSES SEKARANG</Text>
+                <Text style={styles.buttonText}>PROCESS</Text>
             </TouchableOpacity>
         </ScrollView>
     );

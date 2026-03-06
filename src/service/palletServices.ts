@@ -39,6 +39,15 @@ class ScannerService {
     }
   }
 
+  static async getPalletDetailById(palletId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/master-pallet/${palletId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
 }
 
 export default ScannerService;

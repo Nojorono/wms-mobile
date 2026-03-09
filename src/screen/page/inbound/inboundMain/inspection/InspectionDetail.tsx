@@ -154,8 +154,8 @@ const InspectionDetail = () => {
             await InboundServices.approveInspectionById(editingItem.id, "COMPLETED")
             await fetchData();
             setEditingItem(null);
-        } catch (error) {
-            showDialog("error", "Failed to Approve!");
+        } catch (error:any) {
+            showDialog("error", "Failed to Approve!, " + (error?.data?.message?.toString() || ""));
         } finally {
             hideLoadingDialog();
         }

@@ -217,12 +217,17 @@ const CameraScreen = () => {
       }
 
       if (!palletData.success) {
-        showDialog("error", palletData.message || "Something went wrong!");
-        return;
+        if (palletData.pallet_status?.current_quantity === 0) {
+          showDialog("success", "Pallet bisa digunakan!");
+        } else {
+          showDialog("error", palletData.message || "Something went wrong!");
+          return;
+        }
       }
 
       if (palletData.data && palletData.data.success === false) {
-        showDialog("error", palletData.data.message || "Pallet invalid!");
+        showDialog("error", "Pallet invalid!");
+        console.error('Pallet invalid:', palletData.data.message);
         return;
       }
 

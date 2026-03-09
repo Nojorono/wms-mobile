@@ -25,6 +25,7 @@ type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain
 const FILTER_OPTIONS = [
   'PENDING',
   'IN_PROGRESS',
+  'COMPLETED',
   'APPROVED',
   'CANCELLED'
 ];
@@ -54,7 +55,12 @@ function InspectionDoScreen() {
         // status:"PENDING"
       }
       const response = await OutboundService.getOutboundDoList(data);
-      setInspectionList(response.data || []);
+      const sortedData = (response.data || []).sort((a: any, b: any) => {
+        if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+        if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
+        return 0;
+      });
+      setInspectionList(sortedData);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Inspection!');

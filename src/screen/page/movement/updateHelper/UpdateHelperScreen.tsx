@@ -6,6 +6,7 @@ import {
   View,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
@@ -99,20 +100,27 @@ function UpdateHelperScreen() {
               if (['REJECTED', 'CANCELLED'].includes(item.status)) statusColor = '#DC3545';
               if (item.status.startsWith('PENDING')) statusColor = '#FFB347';
 
-              return (
+                return (
                 <MovementCard
                   key={item.updateNumber ?? index}
                   Title={item.updateNumber}
                   source={`${item.updateType ?? "Unknown"}`}
                   destination={``}
                   date={item.createdAt}
-                  status={item.status}
-                  statusColor={statusColor}
+                  status={item.scans && item.scans.length > 0 ? "NEED_INSPECTION" : item.status}
+                  statusColor={item.scans && item.scans.length > 0 ? "#228B22" : statusColor}
                   onClick={() => {
+                  if (item.scans && item.scans.length > 0) {
+                    Alert.alert(
+                      "Pending Inspection",
+                      "This movement is awaiting inspection review"
+                    );
+                  } else {
                     navigation.navigate('UpdateHelperDetail', { item });
+                  }
                   }}
                 />
-              );
+                );
             })
           )}
         </View>

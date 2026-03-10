@@ -777,7 +777,7 @@ const CreateUpdateScreen = () => {
 
                 <Text style={styles.label}>Device (Scanner Helper)</Text>
                 <View style={styles.pickerContainer}>
-                  <Picker selectedValue={selectedDeviceId} onValueChange={(v) => setSelectedDeviceId(v)}>
+                  <Picker selectedValue={selectedDeviceId} enabled={!showDropdown} onValueChange={(v) => setSelectedDeviceId(v)}>
                     <Picker.Item label="-- Pilih Device --" value="" />
                     {devices.map((d: any) => (
                       <Picker.Item key={d.id} label={d.username || d.name || "-"} value={d.id} />

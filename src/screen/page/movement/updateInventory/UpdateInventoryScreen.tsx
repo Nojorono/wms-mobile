@@ -23,13 +23,13 @@ type NavigationProp = StackNavigationProp<UpdateInventoryParamList, 'UpdateInven
 // Definisi Filter Status
 const STATUS_OPTIONS = [
   { label: 'All', value: '' },
-  { label: 'Pending Assignment', value: 'PENDING_ASSIGNMENT' },
+  // { label: 'Pending Assignment', value: 'PENDING_ASSIGNMENT' },
   { label: 'Helper Action', value: 'PENDING_HELPER_ACTION' },
-  { label: 'Inspection', value: 'PENDING_INSPECTION' },
+  // { label: 'Inspection', value: 'PENDING_INSPECTION' },
   { label: 'Approved', value: 'APPROVED' },
-  { label: 'Rejected', value: 'REJECTED' },
-  { label: 'Completed', value: 'COMPLETED' },
-  { label: 'Cancelled', value: 'CANCELLED' },
+  // { label: 'Rejected', value: 'REJECTED' },
+  // { label: 'Completed', value: 'COMPLETED' },
+  // { label: 'Cancelled', value: 'CANCELLED' },
 ];
 
 function UpdateInventoryScreen() {
@@ -50,8 +50,14 @@ function UpdateInventoryScreen() {
         status: statusFilter, 
         limit: 100 
       });
-      console.log('Fetched Update Inventory:', response);
-      setUpdateInventoryList(response.data || []);
+      const data = response.data || [];
+      // Sort: PENDING_HELPER_ACTION di paling atas
+      const sortedData = data.sort((a: any, b: any) => {
+        if (a.status === 'PENDING_HELPER_ACTION') return -1;
+        if (b.status === 'PENDING_HELPER_ACTION') return 1;
+        return 0;
+      });
+      setUpdateInventoryList(sortedData);
     } catch (error) {
       showDialog('error', 'Error while Fetching Data UpdateInventory!');
       console.error('Fetch Update Inventory Error:', error);

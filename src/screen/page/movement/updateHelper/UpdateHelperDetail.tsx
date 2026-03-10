@@ -225,10 +225,10 @@ export const UpdateHelperDetail = () => {
             const res = await ScannerService.getPalletByCode(targetPalletNo);
             const targetData = res.data?.find((pallet: any) => 
                 pallet.current_quantity !== 0 && 
-                itemData.items.some((item: any) => item.itemId === pallet.item_id)
+                itemData.items.some((item: any) => item.itemId === pallet.item_id) &&
+                itemData.items.some((item: any) => item.weekNumber === pallet.week_number) // Cek apakah pallet tujuan ada di list instruksi
             );
             if (targetData) {
-                
             const response = await ScannerService.getPalletDetailById(targetData.id);
             const capacityLimit = response.data.capacity; // Ambil nilai kapasitas
             setCapacityTarget(capacityLimit);
@@ -237,13 +237,11 @@ export const UpdateHelperDetail = () => {
             // Hitung berapa qty yang mau dipindah
             const qtyToMove = isMergeType ? totalQtyToMove : (sourceItemDetail?.quantity || 0);
             // Hitung total setelah digabung (qty lama + qty baru)
-            const projectedTotal = (targetData.current_quantity || 0) + qtyToMove;
-
-            if (projectedTotal > capacityLimit) {
+            if (qtyToMove > capacityLimit) {
                 Alert.alert(
                     "Error: Kapasitas Penuh", 
                     `Kapasitas pallet (${capacityLimit}) tidak mencukupi.\n` +
-                    `Kapasitas yang dibutuhkan: ${projectedTotal}\n`
+                    `Kapasitas yang dibutuhkan: ${qtyToMove}\n`
                 );
                 setIsTargetValid(false);
                 return; // Berhenti di sini
@@ -365,7 +363,7 @@ export const UpdateHelperDetail = () => {
                     itemData.items.map((item: any, index: number) => (
                         <View key={index} style={styles.listItem}>
                             <Text style={styles.listPalletCode}>{item.pallet.pallet_code}</Text>
-                            <Text style={styles.listPalletCode}>{item.itemId.substring(item.itemId.length - 8)}</Text>
+                            <Text style={styles.listPalletCode}>{item.itemSku}</Text>
                             <Text style={styles.listQty}>{item.quantity} {item.uom}</Text>
                         </View>
                     ))

@@ -48,7 +48,7 @@ function NewInspectionMemo() {
       setRefreshing(true);
       showLoadingDialog("Loading...");
 
-      const data = { limit: 100, transaction_picking_status: "PENDING" };
+      const data = { limit: 100 };
       const response = await OutboundService.getOutboundDoList(data);
 
       const list = response?.data || [];
@@ -103,7 +103,6 @@ function NewInspectionMemo() {
           items: mergedItems,
         };
       });
-      console.log("Processed Memo List: ", processed);
 
 
       setMemoList(processed);
@@ -147,7 +146,6 @@ function NewInspectionMemo() {
 
     memoList.forEach((group: any) => {
       group.items.forEach((item: any) => {
-        console.log("Item Scan Detail for Pallet Use:", item);
         item.scan_detail?.forEach((scan: any) => {
           if (scan.palletUse) {
             set.add(scan.palletUse.pallet_code);
@@ -273,9 +271,7 @@ function NewInspectionMemo() {
                         try {
                           for (const memoGroup of memoList) {
                             for (const item of memoGroup.items) {
-                              console.log("Item Scan Detail:", item);
-                              console.log("Updating picking id:", item.transaction_picking?.id);
-                              await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "COMPLETED");
+                              await OutboundService.updateTransactionPickingStatus(item.transaction_picking?.id, { status: "COMPLETED" });
                             }
                           }
                           showDialog("success", "All tasks approved successfully!");

@@ -87,6 +87,15 @@ class OutboundService {
     }
   }
 
+   static async updateTransactionPickingStatus(transactionPickingId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/transaction-picking/${transactionPickingId}`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
   static async deteleTransactionPickingById(transactionPickingId: string): Promise<any> {
     try {
       const response = await axiosInstance.delete(`/transaction-scan-picking/${transactionPickingId}`);

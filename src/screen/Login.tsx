@@ -172,14 +172,14 @@ export default function LoginScreen() {
                 <Text style={styles.rememberText}>Remember Me</Text>
             </View>
             <CustomButton
-                title="Masuk"
+                title="Login"
                 onPress={handleSubmit(handleLogin)}
                 style={styles.button}
                 textStyle={styles.buttonText}
             />
 
             <TouchableOpacity onPress={() => navigation.replace('ForgotPassword')}>
-                <Text style={styles.forgot}>Lupa Password?</Text>
+                <Text style={styles.forgot}>Forgot Password?</Text>
             </TouchableOpacity>
 
             <Toast />

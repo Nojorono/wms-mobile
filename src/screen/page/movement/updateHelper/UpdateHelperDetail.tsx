@@ -61,23 +61,23 @@ const dummyData = {
             "updatedAt": "2026-03-03T03:59:28.079Z"
         },
         {
-      "id": "248d146f-daef-46fd-acf7-115a2333rxxxx",
-      "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
-      "sequence": 3,
-      "palletId": "9469996c-f947-48c7-b967-b7f6604xxxxxx",
-      "pallet": {
-        "id": "9469996c-f947-48c7-b967-b7f6604cxxxx",
-        "pallet_code": "PAL-002",
-        "uom": "DUS",
-        "currentQuantity": 28
-      },
-      "itemId": "90df9437-5790-43bd-a84f-f970d50cxxx",
-      "quantity": 1,
-      "uom": "DUS",
-      "productionDate": "2026-02-26T00:00:00.000Z",
-      "createdAt": "2026-03-03T03:59:28.079Z",
-      "updatedAt": "2026-03-03T03:59:28.079Z"
-    }
+            "id": "248d146f-daef-46fd-acf7-115a2333rxxxx",
+            "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
+            "sequence": 3,
+            "palletId": "9469996c-f947-48c7-b967-b7f6604xxxxxx",
+            "pallet": {
+                "id": "9469996c-f947-48c7-b967-b7f6604cxxxx",
+                "pallet_code": "PAL-002",
+                "uom": "DUS",
+                "currentQuantity": 28
+            },
+            "itemId": "90df9437-5790-43bd-a84f-f970d50cxxx",
+            "quantity": 1,
+            "uom": "DUS",
+            "productionDate": "2026-02-26T00:00:00.000Z",
+            "createdAt": "2026-03-03T03:59:28.079Z",
+            "updatedAt": "2026-03-03T03:59:28.079Z"
+        }
     ],
     "scans": [],
     "assigned": [
@@ -128,7 +128,7 @@ export const UpdateHelperDetail = () => {
     const [isTargetValid, setIsTargetValid] = useState(false);
     const [capacityTarget, setCapacityTarget] = useState<any>(null);
 
-    
+
 
     // Cek Izin Kamera
     useEffect(() => {
@@ -212,43 +212,43 @@ export const UpdateHelperDetail = () => {
         if (!targetPalletNo) return Alert.alert("Peringatan", "Masukkan nomor pallet tujuan");
         if (!isSourceValid) return Alert.alert("Peringatan", "Validasi pallet sumber dulu");
         if (isMergeType) {
-                    const palletExists = itemData.items.some((item: any) => item.pallet.pallet_code === targetPalletNo);
-                    if (!palletExists) {
-                        Alert.alert("Error", "Pallet tujuan tidak sesuai dengan list instruksi.");
-                        setIsLoadingTarget(false);
-                        return;
-                    }
-                }
+            const palletExists = itemData.items.some((item: any) => item.pallet.pallet_code === targetPalletNo);
+            if (!palletExists) {
+                Alert.alert("Error", "Pallet tujuan tidak sesuai dengan list instruksi.");
+                setIsLoadingTarget(false);
+                return;
+            }
+        }
 
         setIsLoadingTarget(true);
         try {
             const res = await ScannerService.getPalletByCode(targetPalletNo);
-            const targetData = res.data?.find((pallet: any) => 
-                pallet.current_quantity !== 0 && 
-                itemData.items.some((item: any) => item.itemId === pallet.item_id) &&
-                itemData.items.some((item: any) => item.weekNumber === pallet.week_number) // Cek apakah pallet tujuan ada di list instruksi
-            );
+            const targetData = res.data?.find((pallet: any) => {
+                // Pallet baru (belum ada item) atau pallet dengan item yang sesuai
+                const isNewPallet = !pallet.item_id || pallet.current_quantity === 0;
+                const isMatchingItem = itemData.items.some((item: any) => item.itemId === pallet.item_id);
+                const isMatchingWeek = itemData.items.some((item: any) => item.weekNumber === pallet.week_number);
+                
+                return isNewPallet || (isMatchingItem && isMatchingWeek);
+            });
+
             if (targetData) {
-            const response = await ScannerService.getPalletDetailById(targetData.id);
-            const capacityLimit = response.data.capacity; // Ambil nilai kapasitas
-            setCapacityTarget(capacityLimit);
+                const response = await ScannerService.getPalletDetailById(targetData.id);
+                const capacityLimit = response.data.capacity;
+                setCapacityTarget(capacityLimit);
 
-            // --- LOGIKA VALIDASI KAPASITAS DI SINI ---
-            // Hitung berapa qty yang mau dipindah
-            const qtyToMove = isMergeType ? totalQtyToMove : (sourceItemDetail?.quantity || 0);
-            // Hitung total setelah digabung (qty lama + qty baru)
-            if (qtyToMove > capacityLimit) {
-                Alert.alert(
-                    "Error: Kapasitas Penuh", 
-                    `Kapasitas pallet (${capacityLimit}) tidak mencukupi.\n` +
-                    `Kapasitas yang dibutuhkan: ${qtyToMove}\n`
-                );
-                setIsTargetValid(false);
-                return; // Berhenti di sini
-            }
+                const qtyToMove = isMergeType ? totalQtyToMove : (sourceItemDetail?.quantity || 0);
+                
+                if (qtyToMove > capacityLimit) {
+                    Alert.alert(
+                        "Error: Kapasitas Penuh",
+                        `Kapasitas pallet (${capacityLimit}) tidak mencukupi.\n` +
+                        `Kapasitas yang dibutuhkan: ${qtyToMove}\n`
+                    );
+                    setIsTargetValid(false);
+                    return;
+                }
 
-           
-                // Ambil UOM acuan (dari source detail jika split, atau dari list pertama jika merge)
                 const requiredUom = isMergeType ? itemData.items[0]?.uom : sourceItemDetail?.uom;
 
                 if (targetData.uom && targetData.uom !== requiredUom) {
@@ -268,59 +268,59 @@ export const UpdateHelperDetail = () => {
         }
     };
 
-   const executeSubmit = async () => {
-    try {
-        // 1. Kelompokkan items berdasarkan itemId
-        // Kita gunakan reduce untuk membuat object grouping
-        const groupedItems = itemData.items.reduce((acc: any, curr: any) => {
-            const key = curr.itemId;
-            if (!acc[key]) {
-                // Jika belum ada, buat entry baru (clone objectnya)
-                acc[key] = { ...curr };
-            } else {
-                // Jika sudah ada, tambahkan quantity-nya
-                acc[key].quantity += curr.quantity;
+    const executeSubmit = async () => {
+        try {
+            // 1. Kelompokkan items berdasarkan itemId
+            // Kita gunakan reduce untuk membuat object grouping
+            const groupedItems = itemData.items.reduce((acc: any, curr: any) => {
+                const key = curr.itemId;
+                if (!acc[key]) {
+                    // Jika belum ada, buat entry baru (clone objectnya)
+                    acc[key] = { ...curr };
+                } else {
+                    // Jika sudah ada, tambahkan quantity-nya
+                    acc[key].quantity += curr.quantity;
+                }
+                return acc;
+            }, {});
+
+            // 2. Ubah object grouping kembali menjadi array
+            const finalItemsToSubmit = Object.values(groupedItems);
+
+            // 3. Looping untuk hit API
+            // Menggunakan for...of agar bisa menggunakan await dengan benar
+            for (const item of finalItemsToSubmit as any[]) {
+                const submitPayload = {
+                    palletUpdateId: itemData.id,
+                    scanDate: new Date().toISOString(),
+                    scanByUserId: userId,
+                    palletId: targetPalletData.id,
+
+                    // Gunakan data dari item hasil grouping
+                    quantity: isMergeType ? item.quantity : sourceItemDetail.quantity,
+                    itemId: isMergeType ? item.itemId : sourceItemDetail.itemId,
+                    uom: isMergeType ? item.uom : sourceItemDetail.uom,
+
+                    // Mengambil production date dari item terkait
+                    productionDate: isMergeType ? item.productionDate : sourceItemDetail?.productionDate,
+                    weekNumber: isMergeType ? targetPalletData?.week_number : sourceItemDetail?.week_number,
+
+                    notes: isMergeType ? "Merge Pallet Process" : "Split Pallet Process",
+                    status: "PENDING"
+                };
+
+                console.log("Submitting Payload for Item:", item.itemId, submitPayload);
+                await MovementService.postPalletUpdateScanHelper(submitPayload);
             }
-            return acc;
-        }, {});
 
-        // 2. Ubah object grouping kembali menjadi array
-        const finalItemsToSubmit = Object.values(groupedItems);
+            Alert.alert("Berhasil", "Semua data berhasil digabungkan dan dikirim!");
+            navigation.goBack();
 
-        // 3. Looping untuk hit API
-        // Menggunakan for...of agar bisa menggunakan await dengan benar
-        for (const item of finalItemsToSubmit as any[]) {
-            const submitPayload = {
-                palletUpdateId: itemData.id,
-                scanDate: new Date().toISOString(),
-                scanByUserId: userId,
-                palletId: targetPalletData.id,
-                
-                // Gunakan data dari item hasil grouping
-                quantity: isMergeType ? item.quantity : sourceItemDetail.quantity,
-                itemId: isMergeType ? item.itemId : sourceItemDetail.itemId,
-                uom: isMergeType ? item.uom : sourceItemDetail.uom,
-                
-                // Mengambil production date dari item terkait
-                productionDate: isMergeType ? item.productionDate : sourceItemDetail?.productionDate,
-                weekNumber: isMergeType ? targetPalletData?.week_number : sourceItemDetail?.week_number,
-                
-                notes: isMergeType ? "Merge Pallet Process" : "Split Pallet Process",
-                status: "PENDING"
-            };
-
-            console.log("Submitting Payload for Item:", item.itemId, submitPayload);
-            await MovementService.postPalletUpdateScanHelper(submitPayload);
+        } catch (error) {
+            console.error("Submit Error:", error);
+            Alert.alert("Error", "Gagal mengirim satu atau beberapa data.");
         }
-
-        Alert.alert("Berhasil", "Semua data berhasil digabungkan dan dikirim!");
-        navigation.goBack();
-
-    } catch (error) {
-        console.error("Submit Error:", error);
-        Alert.alert("Error", "Gagal mengirim satu atau beberapa data.");
-    }
-};
+    };
 
     return (
         <ScrollView style={styles.container}>

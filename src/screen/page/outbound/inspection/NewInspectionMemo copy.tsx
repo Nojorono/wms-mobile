@@ -40,7 +40,7 @@ function NewInspectionMemo() {
   const showDialog = useDialogStore((s) => s.showDialog);
 
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedSku, setSelectedSku] = useState<string | null>(null);
+  const [selectedPalletUse, setSelectedPalletUse] = useState<string | null>(null);
 
 
   const fetchInspection = async () => {
@@ -48,7 +48,7 @@ function NewInspectionMemo() {
       setRefreshing(true);
       showLoadingDialog("Loading...");
 
-      const data = { limit: 100, transaction_picking_status: "PENDING" };
+      const data = { limit: 100 };
       const response = await OutboundService.getOutboundDoList(data);
 
       const list = response?.data || [];
@@ -103,7 +103,6 @@ function NewInspectionMemo() {
           items: mergedItems,
         };
       });
-      console.log("Processed Memo List: ", processed);
 
 
       setMemoList(processed);
@@ -122,14 +121,14 @@ function NewInspectionMemo() {
   );
 
   const filteredMemoList = useMemo(() => {
-    if (!searchKeyword) return memoList;
-
-    const keyword = searchKeyword.toUpperCase();
+    if (!selectedPalletUse) return memoList;
 
     return memoList
       .map((group: any) => {
-        const filteredItems = group.items.filter(
-          (i: any) => i.item?.sku?.toUpperCase() === keyword
+        const filteredItems = group.items.filter((item: any) =>
+          item.scan_detail?.some(
+            (scan: any) => scan.palletUse.pallet_code === selectedPalletUse
+          )
         );
 
         if (filteredItems.length === 0) return null;
@@ -140,22 +139,23 @@ function NewInspectionMemo() {
         };
       })
       .filter(Boolean);
-  }, [memoList, searchKeyword]);
+  }, [memoList, selectedPalletUse]);
 
-  const skuOptions = useMemo(() => {
+  const palletUseOptions = useMemo(() => {
     const set = new Set<string>();
 
     memoList.forEach((group: any) => {
-      group.items.forEach((i: any) => {
-        if (i.item?.sku) {
-          set.add(i.item.sku);
-        }
+      group.items.forEach((item: any) => {
+        item.scan_detail?.forEach((scan: any) => {
+          if (scan.palletUse) {
+            set.add(scan.palletUse.pallet_code);
+          }
+        });
       });
     });
 
     return Array.from(set);
   }, [memoList]);
-
 
 
   return (
@@ -176,18 +176,18 @@ function NewInspectionMemo() {
           </View>
           <View style={{ marginVertical: 12 }}>
             <View style={stylesLocal.pickerWrapper}>
-              <Picker
-                selectedValue={selectedSku}
-                onValueChange={(value) => {
-                  setSelectedSku(value);
-                  setSearchKeyword(value ?? "");
-                }}
-              >
-                <Picker.Item label="-- Select SKU --" value={null} />
-                {skuOptions.map((sku) => (
-                  <Picker.Item key={sku} label={sku} value={sku} />
-                ))}
-              </Picker>
+              <View style={stylesLocal.pickerWrapper}>
+                <Picker
+                  selectedValue={selectedPalletUse}
+                  onValueChange={(value) => setSelectedPalletUse(value)}
+                >
+                  <Picker.Item label="-- Select Pallet Use --" value={null} />
+                  {palletUseOptions.map((use) => (
+                    <Picker.Item key={use} label={use} value={use} />
+                  ))}
+                </Picker>
+              </View>
+
             </View>
           </View>
 
@@ -271,9 +271,7 @@ function NewInspectionMemo() {
                         try {
                           for (const memoGroup of memoList) {
                             for (const item of memoGroup.items) {
-                              console.log("Item Scan Detail:", item);
-                              console.log("Updating picking id:", item.transaction_picking?.id);
-                              await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "COMPLETED");
+                              await OutboundService.updateTransactionPickingStatus(item.transaction_picking?.id, { status: "COMPLETED" });
                             }
                           }
                           showDialog("success", "All tasks approved successfully!");
@@ -328,10 +326,10 @@ const stylesLocal = StyleSheet.create({
     elevation: 4,
   },
   pickerWrapper: {
-  backgroundColor: "#f2f2f2",
-  borderRadius: 10,
-  overflow: "hidden",
-},
+    backgroundColor: "#f2f2f2",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
   searchInput: {
     backgroundColor: "#f2f2f2",
     borderRadius: 10,

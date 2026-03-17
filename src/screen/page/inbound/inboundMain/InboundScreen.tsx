@@ -28,7 +28,7 @@ const FILTER_OPTIONS = [
   'UNLOADING',
   'INSPECTION',
   'READY_INTEGRATION',
-  'INTEGRATED',
+  // 'INTEGRATED',
 ];
 
 function InboundScreen() {

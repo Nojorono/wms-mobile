@@ -21,6 +21,7 @@ const ForkliftGateStackNavigator = () => (
       component={ForkliftGateScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Forklift Gate',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -35,6 +36,7 @@ const ForkliftGateStackNavigator = () => (
       component={ForkliftGateDetail}
       options={{
         headerShown: true,
+        headerTitle: 'Forklift Gate - Detail',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,

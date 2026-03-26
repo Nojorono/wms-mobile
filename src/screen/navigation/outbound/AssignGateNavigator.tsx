@@ -32,6 +32,7 @@ const AssignGateStackNavigator = () => (
       component={AssignGateDoScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Assign Gate',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -59,6 +60,7 @@ const AssignGateStackNavigator = () => (
       component={AssignGateVehicle}
       options={{
         headerShown: true,
+        headerTitle: 'Assign Gate - Vehicle',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -70,6 +72,7 @@ const AssignGateStackNavigator = () => (
       component={AssignGateActivity}
       options={{
         headerShown: true,
+        headerTitle: 'Assign Gate - Activity',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -81,6 +84,7 @@ const AssignGateStackNavigator = () => (
       component={AssignGateLoading}
       options={{
         headerShown: true,
+        headerTitle: 'Assign Gate - Loading',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,

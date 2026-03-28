@@ -50,6 +50,7 @@ const ScannerStackNavigator = () => (
       component={ScanPalletScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Scan Pallet',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -61,6 +62,7 @@ const ScannerStackNavigator = () => (
       component={ScanPalletDetail}
       options={{
         headerShown: true,
+        headerTitle: 'Scan Pallet - Detail',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -69,5 +71,4 @@ const ScannerStackNavigator = () => (
     />
   </ScannerStack.Navigator>
 );
-
 export default ScannerStackNavigator;

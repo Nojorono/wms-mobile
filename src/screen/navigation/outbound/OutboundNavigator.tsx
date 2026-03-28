@@ -60,6 +60,7 @@ const OutboundStackNavigator = () => (
       component={PickingNavigator}
       options={{
         headerShown: false,
+        headerTitle: 'Picking',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -72,6 +73,7 @@ const OutboundStackNavigator = () => (
       component={InspectionNavigator}
       options={{
         headerShown: false,
+        headerTitle: 'Inspection',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -83,6 +85,7 @@ const OutboundStackNavigator = () => (
       component={AssignGateNavigator}
       options={{
         headerShown: false,
+        headerTitle: 'Assign Gate',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -94,6 +97,7 @@ const OutboundStackNavigator = () => (
       component={ForkliftGateNavigator}
       options={{
         headerShown: false,
+        headerTitle: 'Forklift Gate',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -105,6 +109,7 @@ const OutboundStackNavigator = () => (
       component={ApprovalGateScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Gate Approval',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background

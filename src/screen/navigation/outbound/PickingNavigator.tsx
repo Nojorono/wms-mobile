@@ -33,6 +33,7 @@ const PickingStackNavigator = () => (
       component={PickingScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Picking',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -47,6 +48,7 @@ const PickingStackNavigator = () => (
       component={PickingDetailScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Picking - Memo',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -61,6 +63,7 @@ const PickingStackNavigator = () => (
       component={PickingSkuTab}
       options={{
         headerShown: true,
+        headerTitle: 'Picking - SKU',
         headerTintColor: "#fff",
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
@@ -75,6 +78,7 @@ const PickingStackNavigator = () => (
       component={PickingActivity}
       options={{
         headerShown: true,
+          headerTitle: 'Picking - Activity',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -89,6 +93,7 @@ const PickingStackNavigator = () => (
       component={PickingDetailActivity}
       options={{
         headerShown: true,
+          headerTitle: 'Picking - Detail Activity',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background

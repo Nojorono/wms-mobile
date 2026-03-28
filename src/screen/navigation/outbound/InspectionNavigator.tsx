@@ -34,6 +34,7 @@ const InspectionStackNavigator = () => (
       component={InspectionScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Inspection',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -48,6 +49,7 @@ const InspectionStackNavigator = () => (
       component={InspectionMemoScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Inspection - Memo',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -62,6 +64,7 @@ const InspectionStackNavigator = () => (
       component={InspectionSkuScreen}
       options={{
         headerShown: true,
+        headerTitle: 'Inspection - SKU',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -76,6 +79,7 @@ const InspectionStackNavigator = () => (
       component={InspectionActivity}
       options={{
         headerShown: true,
+        headerTitle: 'Inspection - Activity',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -91,6 +95,7 @@ const InspectionStackNavigator = () => (
       component={NewInspectionMemo}
       options={{
         headerShown: true,
+        headerTitle: 'Inspection - Memo',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background
@@ -105,6 +110,7 @@ const InspectionStackNavigator = () => (
       component={InspectionEditActivity}
       options={{
         headerShown: true,
+        headerTitle: 'Inspection - Edit Activity',
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor, // Full header background

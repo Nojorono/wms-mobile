@@ -324,7 +324,7 @@ export default function ApprovalGateScreen() {
                                 console.log("Approve clicked:", item.id);
                                 confirm.show(
                                     "accept",
-                                    "Apakah kamu yakin ingin approve gate ini?",
+                                    "Are you sure want to approve this gate?",
                                     async () => {
                                         try {
                                             showLoadingDialog("Approving Gate...");

@@ -90,9 +90,9 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
 
         Alert.alert(
             "Confirm Approve",
-            "Apakah Anda yakin ingin meng-approve item ini?",
+            "are you sure want to update status to " + nextStatus + "?",
             [
-                { text: "Batal", style: "cancel" },
+                { text: "Cancel", style: "cancel" },
                 {
                     text: "Approve",
                     onPress: async () => {
@@ -106,11 +106,11 @@ const MemoItemCard: React.FC<any> = ({ item, onRefresh }) => {
                             await OutboundService.updateStatusPickingBulk(payload);
                             hideLoadingDialog();
                             await onRefresh();
-                            showDialog("success", "Berhasil Update Status!");
+                            showDialog("success", "Successfully updated status!");
                             setModalVisible(false);
                         } catch (error) {
                             hideLoadingDialog();
-                            showDialog("error", "Gagal Update Status!");
+                            showDialog("error", "Failed to update status!");
                         }
                     },
                 },

@@ -111,9 +111,9 @@ export default function InspectionActivity() {
 
   Alert.alert(
     "Confirm Approve",
-    "Apakah Anda yakin ingin meng-approve item ini?",
+    "Are you sure want to update status to " + nextStatus + "? ",
     [
-      { text: "Batal", style: "cancel" },
+      { text: "Cancel", style: "cancel" },
       {
         text: "Approve",
         onPress: async () => {
@@ -128,11 +128,11 @@ export default function InspectionActivity() {
             const res = await OutboundService.updateStatusPickingBulk(payload);
             hideLoadingDialog();
             await fetchInspection();
-            showDialog("success", "Berhasil dikirim ke WH Staff!");
+            showDialog("success", "Successfully updated status to WH Staff");
             setModalVisible(false);
           } catch (error) {
             hideLoadingDialog();
-            showDialog("error", "Gagal mengirim ke WH Staff!");
+            showDialog("error", "Failed to send to WH Staff!");
           }
         },
       },

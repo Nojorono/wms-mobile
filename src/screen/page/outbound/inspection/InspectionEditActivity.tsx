@@ -116,9 +116,9 @@ const isDataChanged = (() => {
 
     Alert.alert(
       "Confirm Approve",
-      "Apakah Anda yakin ingin meng-approve item ini?",
+      "Are you sure want to update status to " + nextStatus + "? ",
       [
-        { text: "Batal", style: "cancel" },
+        { text: "Cancel", style: "cancel" },
         {
           text: "Approve",
           onPress: async () => {
@@ -131,11 +131,11 @@ const isDataChanged = (() => {
               };
               await OutboundService.updateStatusPickingBulk(payload);
               hideLoadingDialog();
-              showDialog("success", "Berhasil Update Status!");
+              showDialog("success", "Successfully updated status!");
               navigation.goBack();
             } catch (error) {
               hideLoadingDialog();
-              showDialog("error", "Gagal Update Status!");
+              showDialog("error", "Failed to update status!");
             }
           },
         },

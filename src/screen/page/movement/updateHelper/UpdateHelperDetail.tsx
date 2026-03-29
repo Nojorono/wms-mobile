@@ -313,12 +313,12 @@ export const UpdateHelperDetail = () => {
                 await MovementService.postPalletUpdateScanHelper(submitPayload);
             }
 
-            Alert.alert("Berhasil", "Semua data berhasil digabungkan dan dikirim!");
+            Alert.alert("Success", "All data successfully merged and submitted!");
             navigation.goBack();
 
         } catch (error) {
             console.error("Submit Error:", error);
-            Alert.alert("Error", "Gagal mengirim satu atau beberapa data.");
+            Alert.alert("Error", "Failed to submit one or more data.");
         }
     };
 
@@ -340,7 +340,7 @@ export const UpdateHelperDetail = () => {
                             style={styles.closeScanner}
                             onPress={() => setIsScannerVisible(false)}
                         >
-                            <Text style={{ color: 'white', fontWeight: 'bold' }}>BATAL</Text>
+                            <Text style={{ color: 'white', fontWeight: 'bold' }}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

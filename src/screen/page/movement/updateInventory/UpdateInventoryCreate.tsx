@@ -418,7 +418,7 @@ const CreateUpdateScreen = () => {
           }
         }
       } else {
-        Alert.alert('Gagal', 'Pallet tidak ditemukan atau kosong.');
+        Alert.alert('Error', 'Pallet tidak ditemukan atau kosong.');
       }
     } catch (error) {
       Alert.alert('Error', 'Gagal mengambil data');
@@ -563,7 +563,7 @@ const CreateUpdateScreen = () => {
           throw invError;
         }
       }
-      Alert.alert('Berhasil', 'Data berhasil diproses');
+      Alert.alert('Success', 'Data Process completed successfully');
       navigation.goBack();
     } catch (error: any) {
       console.log("Submit error", error);
@@ -585,7 +585,7 @@ const CreateUpdateScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.blueCard}>
-          <Text style={styles.label}>Pilih Tipe Update</Text>
+          <Text style={styles.label}>Select Update Type</Text>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={updateType}
@@ -604,10 +604,10 @@ const CreateUpdateScreen = () => {
           {updateType === 'MERGE_PALLET' ? (
             /* --- FLOW MERGE PALLET BARU --- */
             <View>
-              <Text style={styles.label}>Cari Lokasi (Zone/Sub Warehouse)</Text>
+              <Text style={styles.label}>Search Location (Zone/Sub Warehouse)</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Scan kode Zone..."
+                placeholder="Scan zone code..."
                 value={searchSub}
                 onChangeText={(t) => {
                   setSearchSub(t);
@@ -635,7 +635,7 @@ const CreateUpdateScreen = () => {
 
               {selectedSub && (
                 <>
-                  <Text style={[styles.label, { marginTop: 15 }]}>Pilih Bin (Opsional)</Text>
+                  <Text style={[styles.label, { marginTop: 15 }]}>Select Bin (Optional)</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', marginBottom: 10 }}>
                     {bins.map((bin) => (
                       <TouchableOpacity
@@ -648,7 +648,7 @@ const CreateUpdateScreen = () => {
                     ))}
                   </ScrollView>
 
-                  <Text style={styles.label}>Pilih Pallet dari Lokasi ini:</Text>
+                  <Text style={styles.label}>Select Pallet from this Location:</Text>
                   {loading ? (
                     <ActivityIndicator color="#FF6B00" />
                   ) : (
@@ -680,7 +680,7 @@ const CreateUpdateScreen = () => {
                           ))}
 
                           {availablePallets.length === 0 && (
-                            <Text style={{ padding: 10, textAlign: 'center', width: '100%' }}>Tidak ada pallet</Text>
+                            <Text style={{ padding: 10, textAlign: 'center', width: '100%' }}>No pallets available</Text>
                           )}
                         </View>
                       </ScrollView>
@@ -689,9 +689,9 @@ const CreateUpdateScreen = () => {
                   {showItemPicker && (
                     <View style={[styles.infoBox, { backgroundColor: '#FFF3E0', borderColor: '#FF6B00', borderWidth: 1, marginBottom: 15 }]}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={[styles.label, { color: '#E65100' }]}>Pilih Item dari Pallet {tempSelectedPalletCode}:</Text>
+                        <Text style={[styles.label, { color: '#E65100' }]}>Select Item from Pallet {tempSelectedPalletCode}:</Text>
                         <TouchableOpacity onPress={() => setShowItemPicker(false)}>
-                          <Text style={{ fontWeight: 'bold', color: 'red' }}>Batal</Text>
+                          <Text style={{ fontWeight: 'bold', color: 'red' }}>Cancel</Text>
                         </TouchableOpacity>
                       </View>
                       {availableItemsFromPallet.map((item, idx) => (
@@ -837,7 +837,7 @@ const CreateUpdateScreen = () => {
                           ))
                         ) : (
                           <View style={{ padding: 15 }}>
-                            <Text style={{ textAlign: 'center', color: '#999' }}>User tidak ditemukan</Text>
+                            <Text style={{ textAlign: 'center', color: '#999' }}>User not found</Text>
                           </View>
                         )}
                       </ScrollView>
@@ -852,7 +852,7 @@ const CreateUpdateScreen = () => {
           {palletData && updateType !== 'MERGE_PALLET' && (
             <>
               <View style={[styles.infoBox, { marginTop: 55 }]}>
-                <Text style={styles.infoTitle}>DATA SAAT INI (Pallet: {palletData.pallet_code})</Text>
+                <Text style={styles.infoTitle}>CURRENT DATA (Pallet: {palletData.pallet_code})</Text>
                 <Text>{palletData.item_name} | Week {palletData.week_number}</Text>
                 <Text style={{ fontWeight: 'bold' }}>{palletData.current_quantity} {palletData.uom}</Text>
               </View>
@@ -882,11 +882,11 @@ const CreateUpdateScreen = () => {
               )}
               {selectedValue !== '' && updateType !== 'SPLIT_PALLET' && updateType !== 'MERGE_PALLET' && (
                 <View style={styles.previewCard}>
-                  <Text style={styles.previewTitle}>PRATINJAU PERUBAHAN</Text>
+                  <Text style={styles.previewTitle}>PREVIEW CHANGES</Text>
                   <View style={styles.previewRow}>
                     {/* --- DATA DARI (LAMA) --- */}
                     <View style={styles.previewCol}>
-                      <Text style={styles.smallLabel}>DARI</Text>
+                      <Text style={styles.smallLabel}>FROM</Text>
                       <Text style={{ fontWeight: '500' }}>
                         {updateType === 'UPDATE_PROD_CODE'
                           ? `Week ${palletData.week_number}`
@@ -901,7 +901,7 @@ const CreateUpdateScreen = () => {
 
                     {/* --- DATA MENJADI (BARU) --- */}
                     <View style={styles.previewCol}>
-                      <Text style={styles.smallLabel}>MENJADI</Text>
+                      <Text style={styles.smallLabel}>To</Text>
                       <Text style={{ color: '#FF6B00', fontWeight: 'bold' }}>
                         {updateType === 'UPDATE_PROD_CODE'
                           ? (weekNumber ? `Week ${weekNumber}` : '-')
@@ -931,9 +931,9 @@ const CreateUpdateScreen = () => {
             (updateType === 'MERGE_PALLET' && (mergePallets.length < 2))) && { backgroundColor: '#CCC' }
           ]}
           onPress={() => {
-            Alert.alert('Konfirmasi', `Anda yakin ingin melanjutkan?`, [
-              { text: 'Batal', style: 'cancel' },
-              { text: 'Lanjutkan', onPress: handleSubmit }
+            Alert.alert('Confirmation', `Are you sure you want to proceed?`, [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Continue', onPress: handleSubmit }
             ]);
           }}
           disabled={
@@ -941,7 +941,7 @@ const CreateUpdateScreen = () => {
             (updateType === 'MERGE_PALLET' && (mergePallets.length < 2))
           }
         >
-          <Text style={styles.submitText}>PROSES</Text>
+          <Text style={styles.submitText}>Process</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

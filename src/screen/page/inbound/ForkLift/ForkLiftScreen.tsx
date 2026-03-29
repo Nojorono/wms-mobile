@@ -231,7 +231,7 @@ export default function ForkLiftScreen() {
             setTimeout(() => {
               Alert.alert(
                 'Pilih Mode Scan',
-                'Gunakan hardware scanner atau kamera?',
+                'Select scan mode',
                 [
                   {
                     text: 'Hardware',
@@ -244,7 +244,7 @@ export default function ForkLiftScreen() {
                       setShowCamera(true);
                     },
                   },
-                  { text: 'Batal', style: 'cancel' },
+                  { text: 'Cancel', style: 'cancel' },
                 ]
               );
             }, 100);

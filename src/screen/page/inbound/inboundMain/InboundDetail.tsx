@@ -167,9 +167,9 @@ export default function InboundDetail() {
     PermissionsAndroid.PERMISSIONS.CAMERA,
     {
       title: "Camera Permission",
-      message: "App membutuhkan akses kamera untuk mengambil foto",
+      message: "App needs camera access to take photos",
       buttonPositive: "OK",
-      buttonNegative: "Batal",
+      buttonNegative: "Cancel",
     }
   );
 

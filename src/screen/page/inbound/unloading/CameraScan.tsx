@@ -323,13 +323,27 @@ const CameraScreen = () => {
       data.pallet_code,
     ];
 
-    const hasMissing = requiredFields.some(
-      (val) => val === "" || val === 0 || val === null
-    );
+    const fieldNames = [
+      "production_date",
+      "week_number",
+      "quantity",
+      "staging_area",
+      "pallet_code",
+    ];
+    const missingFields: string[] = [];
 
-    if (hasMissing) {
-      showDialog("error", "Tolong Lengkapi semua field sebelum melanjutkan!");
-      return; // hentikan proses
+    requiredFields.forEach((val, index) => {
+      if (val === "" || val === 0 || val === null) {
+        missingFields.push(fieldNames[index]);
+      }
+    });
+
+    if (missingFields.length > 0) {
+      showDialog(
+        "error",
+        `Please complete these fields: ${missingFields.join(", ")}`
+      );
+      return;
     }
 
     if (isEditMode) {

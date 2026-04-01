@@ -235,38 +235,43 @@ const UnloadingScanScreen = () => {
           </View>
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>Belum ada data pending</Text>
+          <Text style={styles.empty}>No data Pending</Text>
         }
       />
 
       {/* Footer */}
-      <View style={styles.footer}>
-        {pallets.length > 0 && (
-          <TouchableOpacity
-        style={[
-          styles.scanBtn,
-          { flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e" }
-        ]}
-        onPress={async () => {
-          updateStatusAll()
-        }}
-          >
-        <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
-        <Text style={styles.btnText}>Send to WH STAFF</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          style={[styles.scanBtn, { flexDirection: "row", alignItems: "center" }]}
-          onPress={() =>
-        navigation.navigate("CameraScreen", {
-          item: item,
-          dataExist: pallets,
-        })
-          }
-        >
-          <Ionicons name="qr-code-outline" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
+     <View style={[styles.footer, { justifyContent: "space-between", flexDirection: "row" }]}>
+  {/* Kondisi Jika Pallet Ada */}
+  {pallets.length > 0 ? (
+    <TouchableOpacity
+      style={[
+        styles.scanBtn,
+        { flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e" }
+      ]}
+      onPress={async () => {
+        updateStatusAll()
+      }}
+    >
+      <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
+      <Text style={styles.btnText}>Send to WH STAFF</Text>
+    </TouchableOpacity>
+  ) : (
+    <View /> 
+  )}
+
+  {/* Tombol Scan yang akan selalu di kanan jika View di atas ada */}
+  <TouchableOpacity
+    style={[styles.scanBtn, { flexDirection: "row", alignItems: "center" }]}
+    onPress={() =>
+      navigation.navigate("CameraScreen", {
+        item: item,
+        dataExist: pallets,
+      })
+    }
+  >
+    <Ionicons name="qr-code-outline" size={28} color="#fff" />
+  </TouchableOpacity>
+</View>
     </View>
   );
 };

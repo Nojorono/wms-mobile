@@ -8,6 +8,7 @@ import {
     TextInput,
     Modal,
     Pressable,
+    Alert,
 } from "react-native";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { getScanTotals, ItemDetail } from "../../service/inboundService";
@@ -149,11 +150,20 @@ const InspectionDetail = () => {
 
     const handleStatusApprove = async () => {
         try {
-            showLoadingDialog("Approving...");
-            if (!editingItem) return;
-            await InboundServices.approveInspectionById(editingItem.id, "COMPLETED")
-            await fetchData();
-            setEditingItem(null);
+           Alert.alert("confirm", "Are you sure want to approve this inspection?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Approve",
+                onPress: async () => {
+                    showLoadingDialog("Approving...");
+                    if (!editingItem) return;
+                    await InboundServices.approveInspectionById(editingItem.id, "COMPLETED")
+                    await fetchData();
+                    setEditingItem(null);
+                    hideLoadingDialog();
+                }
+            }
+           ]);
         } catch (error:any) {
             showDialog("error", "Failed to Approve!, " + (error?.data?.message?.toString() || ""));
         } finally {

@@ -48,3 +48,14 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 * Change api and fetch on NewMemoInspection
 * Make Pending on top view
 
+## [1.0.6] - 2026-04-01
+
+### CHANGED
+
+* Handle error dialog on camera scan by error field
+* Change style on button dialog 
+
+### Added
+
+* Confirmation dialog on inspection inbound
+

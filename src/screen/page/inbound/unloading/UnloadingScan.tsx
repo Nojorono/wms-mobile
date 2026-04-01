@@ -240,32 +240,32 @@ const UnloadingScanScreen = () => {
       />
 
       {/* Footer */}
-      <View style={[styles.footer, { justifyContent: "space-between" }]}>
-        <TouchableOpacity
-          style={[
-            styles.scanBtn,
-            { flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e" }
-          ]}
-          onPress={async () => {
-            updateStatusAll()
-          }}
-        >
-          <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.btnText}>Send to WH STAFF</Text>
-        </TouchableOpacity>
+      <View style={styles.footer}>
+        {pallets.length > 0 && (
+          <TouchableOpacity
+        style={[
+          styles.scanBtn,
+          { flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e" }
+        ]}
+        onPress={async () => {
+          updateStatusAll()
+        }}
+          >
+        <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
+        <Text style={styles.btnText}>Send to WH STAFF</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={[styles.scanBtn, { flexDirection: "row", alignItems: "center" }]}
           onPress={() =>
-            navigation.navigate("CameraScreen", {
-              item: item,
-              dataExist: pallets,
-            })
+        navigation.navigate("CameraScreen", {
+          item: item,
+          dataExist: pallets,
+        })
           }
         >
           <Ionicons name="qr-code-outline" size={28} color="#fff" />
         </TouchableOpacity>
-
-
       </View>
     </View>
   );

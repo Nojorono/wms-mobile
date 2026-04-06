@@ -59,3 +59,7 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 
 * Confirmation dialog on inspection inbound
 
+### Fixed
+
+* Menu gate forklift not showed up because status "PENDING" change into "COMPLETED"
+

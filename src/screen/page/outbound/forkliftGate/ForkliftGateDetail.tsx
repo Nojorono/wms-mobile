@@ -30,7 +30,6 @@ type NavigationProp = StackNavigationProp<
 export const ForkliftGateDetail = () => {
     const route = useRoute();
     const { item } = route.params as any;
-    console.log("Route Params:", route.params);
 
     const navigation = useNavigation<NavigationProp>();
     const [dataOutbound, setDataOutbound] = useState<any>(null);
@@ -88,7 +87,7 @@ export const ForkliftGateDetail = () => {
 
         const res = await OutboundService.getOutboundDetailById(
             item.outbound_do_id,
-            { transaction_picking_status: "PENDING" }
+            { transaction_picking_status: "COMPLETED" }
 
         );
         setDataOutbound(res.data);

@@ -218,7 +218,13 @@ export default function AssignGateVehicle() {
             <Controller
                 control={control}
                 name={name}
-                rules={{ required: `${label} wajib diisi` }}
+                rules={{ 
+                    required: `${label} wajib diisi`,
+                    ...(name === "driver_phone" && {
+                        minLength: { value: 10, message: "Minimum 10 digit" },
+                        pattern: { value: /^\d+$/, message: "Only numbers are allowed" }
+                    })
+                }}
                 render={({ field: { onChange, value } }) => (
                     <TextInput
                         placeholder={placeholder}
@@ -228,6 +234,7 @@ export default function AssignGateVehicle() {
                         ]}
                         value={value as string}
                         onChangeText={onChange}
+                        keyboardType={name === "driver_phone" ? "numeric" : "default"}
                     />
                 )}
             />

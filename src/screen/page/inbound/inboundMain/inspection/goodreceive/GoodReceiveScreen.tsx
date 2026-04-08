@@ -33,6 +33,7 @@ const GoodReceiveScreen = () => {
   const [mergedData, setMergedData] = useState<any>([]);
   const route = useRoute();
   const payload = route.params as InboundDetailRouteParams;
+  const [statusRecent, setStatusRecent] = useState<string>("");
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const handleCheck = (item: any) => {
     navigation.navigate("GoodReceiveDetail", {
@@ -52,6 +53,7 @@ const GoodReceiveScreen = () => {
       showLoadingDialog("Loading List Good Receive")
       const response = await InboundServices.getInspectionByInboundId(payload.payload.id);
       const inbound = response.data;
+      setStatusRecent(inbound.status);
       const dataInspection: any = mergeGoodReceive(inbound);
 
       // Urutkan data: status === "PENDING" di atas
@@ -59,7 +61,6 @@ const GoodReceiveScreen = () => {
         ...dataInspection.filter((item: any) => item.inspection_status === "PENDING"),
         ...dataInspection.filter((item: any) => item.inspection_status !== "PENDING"),
       ];
-
       setMergedData(sortedData);
     } catch (error) {
       hideLoadingDialog()
@@ -124,12 +125,13 @@ const GoodReceiveScreen = () => {
             position: "absolute",
             alignSelf: "center",
             bottom: 32,
-            backgroundColor: "#421dfaff",
+            backgroundColor: statusRecent === "INTEGRATED" ? "#ccc" : "#421dfaff",
             borderRadius: 28,
             paddingVertical: 14,
             paddingHorizontal: 28,
             elevation: 4,
           }}
+          disabled={statusRecent === "INTEGRATED"}
           onPress={async () => {
             // TODO: handle meta button press
             try {

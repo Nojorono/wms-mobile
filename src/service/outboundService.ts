@@ -305,6 +305,15 @@ class OutboundService {
       throw error.response;
     }
   }
+
+  static async updateStatusAssignedGate(assignedGateId: string, statusAssignedGate: any): Promise<any> {
+    try {
+      const response = await axiosInstance.post(`/assigned-gate/${assignedGateId}/status`, { status: statusAssignedGate });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    } 
+  }
 }
 
 export default OutboundService;

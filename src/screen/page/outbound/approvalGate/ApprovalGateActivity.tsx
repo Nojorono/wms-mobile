@@ -308,49 +308,94 @@ export default function ApprovalGateScreen() {
                         getDOStatus={getDOStatus}
                     />
                     {!collapsedDO[item.doNumber] && (
-                        <TouchableOpacity
-                            style={{
-                                backgroundColor: "#2563EB",
-                                borderRadius: 8,
-                                paddingVertical: 10,
-                                alignItems: "center",
-                                marginTop: -10,
-                                marginBottom: 32,
-                                shadowColor: "#000",
-                                shadowOpacity: 0.08,
-                                shadowRadius: 4,
-                            }}
-                            onPress={async () => {
-                                console.log("Approve clicked:", item.id);
-                                confirm.show(
-                                    "accept",
-                                    "Are you sure want to approve this gate?",
-                                    async () => {
-                                        try {
-                                            showLoadingDialog("Approving Gate...");
-                                            const res = await OutboundService.updateAssignedGateApprove(item.id);
-                                            console.log("Approve response:", res);
-                                            showDialog("success", "Gate approved successfully!");
-                                            await fetchGate();
-                                        } catch (error) {
-                                            console.error("Approve error:", error);
-                                            showDialog("error", "Failed to approve gate!");
-                                        } finally {
-                                            hideLoadingDialog();
+                        <View style={{ flexDirection: "row", gap: 8, marginHorizontal: -12, marginBottom: 12 }}>
+                            <TouchableOpacity
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: "#DC2626",
+                                    borderRadius: 8,
+                                    paddingVertical: 10,
+                                    alignItems: "center",
+                                    shadowColor: "#000",
+                                    shadowOpacity: 0.08,
+                                    shadowRadius: 4,
+                                }}
+                                onPress={async () => {
+                                    console.log("Reject clicked:", item.id);
+                                    confirm.show(
+                                        "decline",
+                                        "Are you sure want to reject this gate?",
+                                        async () => {
+                                            try {
+                                                showLoadingDialog("Rejecting Gate...");
+                                                const res = await OutboundService.updateStatusAssignedGate(item.id,"PENDING");
+                                                console.log("Reject response:", res);
+                                                showDialog("success", "Gate rejected successfully!");
+                                                await fetchGate();
+                                            } catch (error) {
+                                                console.error("Reject error:", error);
+                                                showDialog("error", "Failed to reject gate!");
+                                            } finally {
+                                                hideLoadingDialog();
+                                            }
                                         }
-                                    }
-                                );
-                            }}
-                        >
-                            <Text style={{
-                                color: "#FFF",
-                                fontWeight: "700",
-                                fontSize: 16,
-                                letterSpacing: 0.5,
-                            }}>
-                                APPROVE GATE
-                            </Text>
-                        </TouchableOpacity>
+                                    );
+                                }}
+                            >
+                                <Text style={{
+                                    color: "#FFF",
+                                    fontWeight: "700",
+                                    fontSize: 16,
+                                    letterSpacing: 0.5,
+                                }}>
+                                    REJECT
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: "#2563EB",
+                                    borderRadius: 8,
+                                    paddingVertical: 10,
+                                    alignItems: "center",
+                                    shadowColor: "#000",
+                                    shadowOpacity: 0.08,
+                                    shadowRadius: 4,
+                                }}
+                                onPress={async () => {
+                                    console.log("Approve clicked:", item.id);
+                                    confirm.show(
+                                        "accept",
+                                        "Are you sure want to approve this gate?",
+                                        async () => {
+                                            try {
+                                                showLoadingDialog("Approving Gate...");
+                                                const res = await OutboundService.updateAssignedGateApprove(item.id);
+                                                console.log("Approve response:", res);
+                                                showDialog("success", "Gate approved successfully!");
+                                                await fetchGate();
+                                            } catch (error) {
+                                                console.error("Approve error:", error);
+                                                showDialog("error", "Failed to approve gate!");
+                                            } finally {
+                                                hideLoadingDialog();
+                                            }
+                                        }
+                                    );
+                                }}
+                            >
+                                <Text style={{
+                                    color: "#FFF",
+                                    fontWeight: "700",
+                                    fontSize: 16,
+                                    letterSpacing: 0.5,
+                                }}>
+                                    APPROVE
+                                </Text>
+                            </TouchableOpacity>
+
+                            
+                        </View>
                     )}
                 </View>
             )}

@@ -23,7 +23,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import ConstantService from '../../../../service/constantService';
 
 import { ROLES } from "../../../../constants/Roles";
-import { compareScanWithReference } from '../../inbound/service/inboundService.ts';
+import { Dropdown } from "react-native-element-dropdown";
 
 type NavigationProp = StackNavigationProp<UpdateInventoryParamList, 'UpdateInventoryMain'>;
 
@@ -71,6 +71,12 @@ const CreateUpdateScreen = () => {
   const [showItemPicker, setShowItemPicker] = useState(false);
   const [tempSelectedPalletCode, setTempSelectedPalletCode] = useState('');
 
+  const dropdownDevices = devices.map((d: any) => ({
+  label: d.username || d.name || "-",
+  value: d.id,
+  userDetail: d.userDetail
+}));
+
   const handleAddPalletToMerge = (pallet: any) => {
     // Ambil detail pallet untuk melihat isinya (karena data dari inventory tracking mungkin hanya summary)
     setLoading(true);
@@ -106,8 +112,8 @@ const CreateUpdateScreen = () => {
       const first = mergePallets[0];
       const isMatch =
         // item.item_id === first.item_id &&
-        item.uom === first.uom 
-        // && String(item.week_number) === String(first.week_number);
+        item.uom === first.uom
+      // && String(item.week_number) === String(first.week_number);
 
       if (!isMatch) {
         Alert.alert(
@@ -775,25 +781,43 @@ const CreateUpdateScreen = () => {
                   </>
                 )}
 
-                <Text style={styles.label}>Device (Scanner Helper)</Text>
+                <Text style={styles.label}>Username (Scanner Helper)</Text>
                 <View style={styles.pickerContainer}>
-                  <Picker selectedValue={selectedDeviceId} enabled={!showDropdown} onValueChange={(v) => setSelectedDeviceId(v)}>
-                    <Picker.Item label="-- Pilih Device --" value="" />
-                    {devices.map((d: any) => (
-                      <Picker.Item key={d.id} label={d.username || d.name || "-"} value={d.id} />
-                    ))}
-                  </Picker>
+                  <Dropdown
+  style={styles.dropdown1}
+  data={dropdownDevices}
+  search
+  labelField="label"
+  dropdownPosition="top"
+  valueField="value"
+  placeholder="-- Pilih Device --"
+  searchPlaceholder="Search device..."
+  value={selectedDeviceId}
+  disable={showDropdown}
+  onChange={(item: any) => {
+    console.log("Selected Device ID:", item.value);
+
+    setSelectedDeviceId(item.value);
+
+    const name = `${item?.userDetail?.firstName || ""} ${
+      item?.userDetail?.lastName || "Data not found"
+    }`.trim();
+
+    setAssignedUserName(name);
+  }}
+/>
                 </View>
 
-                <Text style={styles.label}>Input User Name (Helper)</Text>
+                <Text style={styles.label}>Helper Name</Text>
                 {/* Container utama harus memiliki zIndex agar tidak tertutup item di atasnya */}
                 <View style={{ zIndex: 5000, position: 'relative' }}>
                   <TextInput
                     style={styles.input}
-                    placeholder="Search name or phone..."
+                    placeholder="Helper Name..."
                     value={assignedUserName}
-                    onChangeText={handleNameChange}
-                    onFocus={handleFocusInput}
+                    editable={false}
+                  // onChangeText={handleNameChange}
+                  // onFocus={handleFocusInput}
                   />
 
                   {showDropdown && (
@@ -1005,6 +1029,14 @@ const styles = StyleSheet.create({
   previewQty: { fontSize: 12, color: '#777' },
   smallLabel: { fontSize: 9, color: '#999' },
   arrow: { fontSize: 20, color: '#CCC' },
+  dropdown1: {
+  borderWidth: 1,
+  borderColor: "#ccc",
+  borderRadius: 8,
+  paddingHorizontal: 12,
+  height: 50,
+  backgroundColor: "#fafafa",
+},
 });
 
 export default CreateUpdateScreen;

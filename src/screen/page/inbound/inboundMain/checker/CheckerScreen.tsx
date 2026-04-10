@@ -77,7 +77,7 @@ export default function HelperListScreen() {
       <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
         <View style={{ flex: 1, gap: 6 }}>
           <View style={{ flexDirection: "row", marginBottom: 2 }}>
-            <Text style={[styles.label, { width: 90 }]}>Device</Text>
+            <Text style={[styles.label, { width: 90 }]}>Username</Text>
             <Text style={styles.value}>
               { item.user?.username ?? "-"}
             </Text>

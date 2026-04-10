@@ -14,6 +14,7 @@ import InboundServices from "../../../../../service/inboundServices";
 import UserServices from "../../../../../service/userServices";
 import { ROLES } from "../../../../../constants/Roles";
 import { useDialogStore } from "../../../../../store/useGlobalDialog";
+import { Dropdown } from "react-native-element-dropdown";
 
 type HelperModalProps = {
   visible: boolean;
@@ -41,11 +42,7 @@ export default function HelperModal({
   });
 
   const [userList, setUserList] = useState<any[]>([]);
-  const [userManageList, setUserManageList] = useState<any[]>([]);
   const showDialog = useDialogStore((state) => state.showDialog);
-
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
 
@@ -61,8 +58,6 @@ export default function HelperModal({
       } else {
         setFormData({ deviceId: "", name: "", contact: "" });
       }
-      setSearchResults([]);
-      setShowDropdown(false);
     }
   }, [visible, helperData]);
 
@@ -72,9 +67,6 @@ export default function HelperModal({
       showLoadingDialog("Loading Data Users");
 
       const response = await UserServices.getUserList();
-      const responseManage = await UserServices.getUserManagementList();
-
-      setUserManageList(responseManage?.data || []);
 
       const filteredUsers = (response?.data || []).filter(
         (user: any) =>
@@ -93,56 +85,25 @@ export default function HelperModal({
     fetchUserList();
   }, []);
 
-  // === SEARCH AUTOCOMPLETE (MERGED WITH NAME INPUT) ===
-  const handleNameChange = (text: string) => {
-    // set name in form
-    setFormData((prev: FormData) => ({ ...prev, name: text }));
-
-    setShowDropdown(true);
-
-    if (!text.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    const filtered = userManageList.filter((u) =>
-      u.name?.toLowerCase().includes(text.toLowerCase())
-    );
-
-    setSearchResults(filtered);
-  };
-
-  // === SELECT AUTOCOMPLETE USER ===
-  const handleSelectUser = (user: any) => {
-    setFormData((prev: FormData) => ({
-      // hanya overwrite deviceId jika user.id ada; otherwise keep prev.deviceId
-      deviceId: prev.deviceId,
-      name: user.name ?? prev.name,
-      contact: user.phone ?? prev.contact,
-    }));
-
-    setSearchResults([]);
-    setShowDropdown(false);
-  };
-
   // === PICKER (DEVICE ID) CHANGE ===
-  const handlePickerChange = (selectedId: string) => {
-    setFormData((prev: FormData) => ({ ...prev, deviceId: selectedId }));
+const handlePickerChange = (selectedId: string) => {
+  if (!selectedId) {
+    setFormData({
+      deviceId: "",
+      name: "",
+      contact: "",
+    });
+    return;
+  }
 
-    if (!selectedId) return;
+  const foundUser = userList.find((u) => u.id === selectedId);
 
-    const foundInUserList = userList.find((u) => u.id === selectedId);
-    const foundInManage = userManageList.find((u) => u.id === selectedId);
-    const found = foundInUserList || foundInManage;
-
-    if (found) {
-      setFormData((prev: FormData) => ({
-        ...prev,
-        name: found.name || prev.name,
-        contact: found.phone || prev.contact,
-      }));
-    }
-  };
+  setFormData({
+    deviceId: selectedId,
+    name: `${foundUser?.userDetail?.firstName || ""} ${foundUser?.userDetail?.lastName || ""}`.trim(),
+    contact: foundUser?.userDetail?.phone || "",
+  });
+};
 
   // === SAVE DATA ===
   const handleSave = async () => {
@@ -178,21 +139,19 @@ export default function HelperModal({
           </Text>
 
           {/* DEVICE ID */}
-          <Text style={styles.label}>Device ID</Text>
-          <Picker
-            selectedValue={formData.deviceId}
-            onValueChange={(itemValue) => handlePickerChange(String(itemValue))}
-            style={styles.picker}
-          >
-            <Picker.Item label="Select Device" value="" />
-            {userList.map((user) => (
-              <Picker.Item
-                key={user.id}
-                label={user.username || user.name || "-"}
-                value={user.id}
-              />
-            ))}
-          </Picker>
+
+          <Text style={styles.label}>Username</Text>
+          <Dropdown
+  style={styles.dropdownSelect}
+  data={userList}
+  search
+  labelField="username"
+  valueField="id"
+  placeholder="Select Device"
+  searchPlaceholder="Search device..."
+  value={formData.deviceId}
+  onChange={(item) => handlePickerChange(item.id)}
+/>
 
           {/* MERGED NAME INPUT (NOW WITH AUTOCOMPLETE) */}
           <Text style={styles.label}>Name</Text>
@@ -200,29 +159,11 @@ export default function HelperModal({
           <View style={{ zIndex: 100 }}>
             <TextInput
               style={styles.input}
-              placeholder="Search or type name..."
+              placeholder="Name"
               value={formData.name}
-              onChangeText={handleNameChange}
-              onFocus={() => setShowDropdown(true)}
+              editable={false}
+              
             />
-
-            {/* AUTOCOMPLETE DROPDOWN */}
-            {showDropdown && searchResults.length > 0 && (
-              <View style={styles.dropdown}>
-                <ScrollView style={{ maxHeight: 180 }}>
-                  {searchResults.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={styles.dropdownItem}
-                      onPress={() => handleSelectUser(item)}
-                    >
-                      <Text style={styles.dropdownName}>{item.name}</Text>
-                      <Text style={styles.dropdownPhone}>{item.phone}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
           </View>
 
           {/* CONTACT */}
@@ -230,11 +171,8 @@ export default function HelperModal({
           <TextInput
             style={styles.input}
             value={formData.contact}
-            onChangeText={(text) =>
-              setFormData((prev: FormData) => ({ ...prev, contact: text }))
-            }
-            placeholder="Enter contact"
-            keyboardType="phone-pad"
+            placeholder="Contact"
+            editable={false}
           />
 
           {/* BUTTONS */}
@@ -327,4 +265,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FF6B00",
   },
+  dropdownSelect: {
+  borderWidth: 1,
+  borderColor: "#ccc",
+  borderRadius: 10,
+  paddingHorizontal: 12,
+  height: 50,
+  backgroundColor: "#fafafa",
+},
 });

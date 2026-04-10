@@ -7,6 +7,7 @@ import {
     StyleSheet,
     FlatList,
     TouchableOpacity,
+    Modal,
 } from "react-native";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
@@ -144,8 +145,11 @@ export default function ApprovalGateScreen() {
     const listRef = useRef<FlatList>(null);
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [collapsedDO, setCollapsedDO] = useState<Record<string, boolean>>({});
-    
-        const confirm = useConfirmationStore();
+
+    const [summaryModalVisible, setSummaryModalVisible] = useState(false);
+    const [summaryData, setSummaryData] = useState<{ id: any, items: any[] }>({ id: null, items: [] });
+
+    const confirm = useConfirmationStore();
 
     const toggleDO = (doNumber: string) => {
         setCollapsedDO((prev) => ({
@@ -239,7 +243,7 @@ export default function ApprovalGateScreen() {
                     </TouchableOpacity>
 
                     {/* AREA KANAN → APPROVE */}
-                
+
                 </View>
 
                 {!collapsed &&
@@ -269,11 +273,91 @@ export default function ApprovalGateScreen() {
                             ))}
                         </View>
                     ))}
+                <Modal
+                    visible={summaryModalVisible}
+                    transparent={true}
+                    animationType="fade"
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Summary Approval</Text>
+                            <Text style={styles.modalSubtitle}>Total items to be approved:</Text>
+
+                            <ScrollView style={{ maxHeight: 400, marginVertical: 15 }}>
+                                {summaryData.items.map((item, index) => (
+                                    <View key={index} style={styles.summaryRow}>
+                                        <View>
+                                            <Text style={{ fontWeight: '700' }}>{item.sku}</Text>
+                                            <Text style={{ fontSize: 12, color: '#666' }}>UOM: {item.uom}</Text>
+                                        </View>
+                                        <View style={{ alignItems: 'flex-end' }}>
+                                            <Text style={{ fontSize: 12 }}>Loaded</Text>
+                                            <Text style={{ fontWeight: '700', color: '#2563EB' }}>
+                                                {item.qtyLoad}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ))}
+                            </ScrollView>
+
+                            <View style={{ flexDirection: 'row', gap: 10 }}>
+                                <TouchableOpacity
+                                    style={[styles.modalBtn, { backgroundColor: '#9CA3AF' }]}
+                                    onPress={() => setSummaryModalVisible(false)}
+                                >
+                                    <Text style={styles.modalBtnText}>CANCEL</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.modalBtn, { backgroundColor: '#2563EB' }]}
+                                    onPress={async () => {
+                                        setSummaryModalVisible(false);
+                                        // Jalankan Logic Approve Asli
+                                        confirm.show(
+                                            "accept",
+                                            "Confirm approve this gate after review?",
+                                            async () => {
+                                                try {
+                                                    showLoadingDialog("Approving Gate...");
+                                                    await OutboundService.updateAssignedGateApprove(summaryData.id);
+                                                    showDialog("success", "Gate approved successfully!");
+                                                    await fetchGate();
+                                                } catch (e) {
+                                                    showDialog("error", "Failed to approve gate!");
+                                                } finally {
+                                                    hideLoadingDialog();
+                                                }
+                                            }
+                                        );
+                                    }}
+                                >
+                                    <Text style={styles.modalBtnText}>CONFIRM APPROVE</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </View>
         );
     };
 
+    const getSummaryItems = (gateItem: ApprovalGateItem) => {
+        const summaryMap: Record<string, any> = {};
 
+        gateItem.memos.forEach((memo) => {
+            memo.pallets.forEach((pallet) => {
+                pallet.skus.forEach((sku) => {
+                    if (!summaryMap[sku.sku]) {
+                        summaryMap[sku.sku] = { ...sku };
+                    } else {
+                        summaryMap[sku.sku].qtyPicking += sku.qtyPicking;
+                        summaryMap[sku.sku].qtyLoad += sku.qtyLoad;
+                    }
+                });
+            });
+        });
+
+        return Object.values(summaryMap);
+    };
 
 
 
@@ -328,7 +412,7 @@ export default function ApprovalGateScreen() {
                                         async () => {
                                             try {
                                                 showLoadingDialog("Rejecting Gate...");
-                                                const res = await OutboundService.updateStatusAssignedGate(item.id,"PENDING");
+                                                const res = await OutboundService.updateStatusAssignedGate(item.id, "PENDING");
                                                 console.log("Reject response:", res);
                                                 showDialog("success", "Gate rejected successfully!");
                                                 await fetchGate();
@@ -352,49 +436,17 @@ export default function ApprovalGateScreen() {
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: "#2563EB",
-                                    borderRadius: 8,
-                                    paddingVertical: 10,
-                                    alignItems: "center",
-                                    shadowColor: "#000",
-                                    shadowOpacity: 0.08,
-                                    shadowRadius: 4,
-                                }}
-                                onPress={async () => {
-                                    console.log("Approve clicked:", item.id);
-                                    confirm.show(
-                                        "accept",
-                                        "Are you sure want to approve this gate?",
-                                        async () => {
-                                            try {
-                                                showLoadingDialog("Approving Gate...");
-                                                const res = await OutboundService.updateAssignedGateApprove(item.id);
-                                                console.log("Approve response:", res);
-                                                showDialog("success", "Gate approved successfully!");
-                                                await fetchGate();
-                                            } catch (error) {
-                                                console.error("Approve error:", error);
-                                                showDialog("error", "Failed to approve gate!");
-                                            } finally {
-                                                hideLoadingDialog();
-                                            }
-                                        }
-                                    );
+                                style={styles.approveButton} // Gunakan style yang rapi
+                                onPress={() => {
+                                    const items = getSummaryItems(item);
+                                    setSummaryData({ id: item.id, items });
+                                    setSummaryModalVisible(true);
                                 }}
                             >
-                                <Text style={{
-                                    color: "#FFF",
-                                    fontWeight: "700",
-                                    fontSize: 16,
-                                    letterSpacing: 0.5,
-                                }}>
-                                    APPROVE
-                                </Text>
+                                <Text style={styles.buttonText}>REVIEW</Text>
                             </TouchableOpacity>
 
-                            
+
                         </View>
                     )}
                 </View>
@@ -572,6 +624,57 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: "800",
     },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        padding: 20,
+    },
+    modalContent: {
+        backgroundColor: "#FFF",
+        borderRadius: 12,
+        padding: 20,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "800",
+        color: "#111827",
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: "#6B7280",
+        marginTop: 4,
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    modalBtn: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    modalBtnText: {
+        color: '#FFF',
+        fontWeight: '700',
+    },
+    approveButton: {
+        flex: 1,
+        backgroundColor: "#2563EB",
+        borderRadius: 8,
+        paddingVertical: 10,
+        alignItems: "center",
+    },
+    buttonText: {
+        color: "#FFF",
+        fontWeight: "700",
+        fontSize: 16,
+    }
 
 });
 

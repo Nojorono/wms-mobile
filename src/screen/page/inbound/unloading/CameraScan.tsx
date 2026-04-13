@@ -205,7 +205,7 @@ const CameraScreen = () => {
       const res = await InboundServices.getPalletInfo(value);
       const palletData = res?.data;
 
-      if (!palletData) {
+      if (!palletData.success) {
         showDialog("error", "Pallet not found or invalid!");
         return;
       }

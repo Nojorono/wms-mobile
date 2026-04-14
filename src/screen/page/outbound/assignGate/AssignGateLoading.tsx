@@ -17,12 +17,13 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { AssignGateParamList } from "../../../navigation/outbound/AssignGateNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
-import Ionicons from "react-native-vector-icons/FontAwesome5";
+import { Dropdown } from "react-native-element-dropdown";
 
 interface AssignForm {
     name: string;
     contact: string;
     gateId: string;
+    deviceId?: string;
 }
 
 
@@ -40,14 +41,13 @@ export default function AssignGateLoading() {
     const isEdit = params?.mode === "edit";
     const assignedGate = params?.assignedGate || null;
     const [userList, setUserList] = useState<any[]>([]);
-    const [gateList, setGateList] = useState<any[]>([]);
-    const [searchResults, setSearchResults] = useState<any[]>([]);
     const [userMode, setUserMode] = useState<"add" | "edit">("add");
 
     const [formData, setFormData] = useState<AssignForm>({
         gateId: "",
         name: "",
         contact: "",
+        deviceId: "",
     });
 
     const handleSubmit = async () => {
@@ -94,7 +94,7 @@ export default function AssignGateLoading() {
             }
 
             navigation.goBack();
-        } catch (err:any) {
+        } catch (err: any) {
             showDialog("error", `Failed processing request. ${err.data?.message || ''}`);
         } finally {
             hideLoadingDialog();
@@ -102,15 +102,11 @@ export default function AssignGateLoading() {
     };
 
 
-    const fetchUserList = async (roleName = ROLES.DRIVER_FORKLIFT) => {
+    const fetchUserList = async (roleName = ROLES.HELPER) => {
         try {
             showLoadingDialog("Loading Data Users");
 
             const response = await UserServices.getUserList();
-            const responseManage = await UserServices.getUserManagementList();
-            const responseGate = await OutboundService.getGateList();
-            setGateList(responseGate?.data || []);
-            setUserManageList(responseManage?.data || []);
             const filteredUsers = (response?.data || []).filter(
                 (user: any) =>
                     user?.role?.name?.toUpperCase() === roleName.toUpperCase()
@@ -128,12 +124,30 @@ export default function AssignGateLoading() {
         fetchUserList();
     }, []);
 
+    const handlePickerChange = (selectedId: string) => {
+        setFormData((prev) => ({ ...prev, deviceId: selectedId }));
+
+        if (!selectedId) return;
+
+        const foundInUserList = userList.find((u) => u.id === selectedId);
+        const found = foundInUserList
+
+        if (found) {
+            setFormData((prev) => ({
+                ...prev,
+                name: `${found?.userDetail?.firstName || ""} ${found?.userDetail?.lastName || ""}`.trim(),
+                // contact: found?.userDetail?.phone || "",
+                // name:found.username || prev.name,
+                contact: found?.userDetail?.phone ||  prev.contact,
+            }));
+        }
+    };
+
     useEffect(() => {
         if (
             isEdit &&
             assignedGate &&
-            assignedGate.assigned_gate &&
-            gateList.length > 0
+            assignedGate.assigned_gate
         ) {
             setFormData({
                 gateId: assignedGate.assigned_gate.gate_id, // ✅ FIX UTAMA
@@ -143,38 +157,7 @@ export default function AssignGateLoading() {
 
             setUserMode("edit");
         }
-    }, [isEdit, assignedGate, gateList]);
-
-
-
-    const handleNameChange = (text: string) => {
-        setFormData((prev) => ({ ...prev, name: text }));
-        setShowUserDropdown(true);
-
-        if (!text.trim()) {
-            setSearchResults([]);
-            return;
-        }
-
-        const filtered = userManageList.filter((u) =>
-            u.name?.toLowerCase().includes(text.toLowerCase())
-        );
-
-        setSearchResults(filtered);
-    };
-
-
-
-    const handleSelectUser = (user: any) => {
-        setFormData(prev => ({
-            ...prev,
-            name: user.name,
-            contact: user.phone,
-        }));
-
-        setSearchResults([]);
-        setShowUserDropdown(false);
-    };
+    }, [isEdit, assignedGate,]);
 
 
 
@@ -183,37 +166,31 @@ export default function AssignGateLoading() {
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Assign Helper to Gate</Text>
 
-            <Text style={styles.label}>User</Text>
+            <Dropdown
+                style={styles.dropdownSelect}
+                data={userList}
+                search
+                labelField="username"
+                valueField="id"
+                placeholder="Select Device"
+                searchPlaceholder="Search device..."
+                value={formData.deviceId}
+                onChange={(item) => handlePickerChange(item.id)}
+            />
+
+            <Text style={styles.label}>Username</Text>
 
             <View style={{ zIndex: 100 }}>
                 <TextInput
                     style={styles.input}
-                    placeholder="Search or type name..."
+                    placeholder="Auto-filled"
                     value={formData.name}
-                    onChangeText={handleNameChange}
-                    onFocus={() => setShowUserDropdown(true)}
+                    editable={false}
                 />
-
-                {showUserDropdown && searchResults.length > 0 && (
-                    <View style={styles.dropdown}>
-                        <ScrollView style={{ maxHeight: 200 }}>
-                            {searchResults.map((item) => (
-                                <TouchableOpacity
-                                    key={item.id}
-                                    style={styles.dropdownItem}
-                                    onPress={() => handleSelectUser(item)}
-                                >
-                                    <Text style={styles.dropdownName}>{item.name}</Text>
-                                    <Text style={styles.dropdownPhone}>{item.phone}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
-                )}
             </View>
 
             {/* CONTACT */}
-            <Text style={styles.label}>Phone</Text>
+            <Text style={styles.label}>Full Name</Text>
             <TextInput
                 style={styles.input}
                 editable={false}
@@ -369,5 +346,13 @@ const styles = StyleSheet.create({
     },
 
     addUserText: { color: "#fff", fontWeight: "700" },
+    dropdownSelect: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        height: 50,
+        backgroundColor: "#fafafa",
+    },
 
 });

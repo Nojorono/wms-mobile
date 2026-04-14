@@ -343,10 +343,10 @@ export default function AssignGateVehicle() {
                                             <Text style={styles.bold}>Gate:</Text> {ag.gate.code ?? "-"}
                                         </Text>
                                         <Text style={styles.compactText}>
-                                            <Text style={styles.bold}>User:</Text> {latestUser?.user_name ?? "-"}
+                                            <Text style={styles.bold}>Full Name:</Text> {latestUser?.user_name ?? "-"}
                                         </Text>
                                         <Text style={styles.compactText}>
-                                            <Text style={styles.bold}>Device :</Text> {latestUser?.user.username ?? "-"}
+                                            <Text style={styles.bold}>Username :</Text> {latestUser?.user.username ?? "-"}
                                         </Text>
                                     </View>
                                     <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
@@ -405,10 +405,10 @@ export default function AssignGateVehicle() {
                                             <Text style={styles.indexNumber}>{index + 1}</Text>
                                             <View style={{ flex: 1 }}>
                                                 <Text style={styles.compactText}>
-                                                    <Text style={styles.bold}>User:</Text> {ag?.helper_name ?? "-"}
+                                                    <Text style={styles.bold}>Full Name:</Text> {ag?.helper_name ?? "-"}
                                                 </Text>
                                                 <Text style={styles.compactText}>
-                                                    <Text style={styles.bold}>Device :</Text> {ag?.helper_phone ?? "-"}
+                                                    <Text style={styles.bold}>Phone Number :</Text> {ag?.helper_phone ?? "-"}
                                                 </Text>
                                             </View>
                                             <TouchableOpacity style={styles.actionButton} onPress={handleEditHelper}>

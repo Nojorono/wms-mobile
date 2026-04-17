@@ -134,23 +134,39 @@ const GoodReceiveScreen = () => {
           disabled={statusRecent === "INTEGRATED"}
           onPress={async () => {
             // TODO: handle meta button press
-            try {
-              showLoadingDialog("Integrating to META...")
-              await InboundServices.postIntegrationToOracle(payload.payload.id);
-              Alert.alert("Success", "Integrated to META successfully.", [
+            Alert.alert(
+              "Confirmation",
+              "Are you sure you want to integrate to META?",
+              [
+                {
+                  text: "Cancel",
+                  onPress: () => {},
+                  style: "cancel",
+                },
                 {
                   text: "OK",
-                  onPress: () => {
-                    navigation.pop(2);
+                  onPress: async () => {
+                    try {
+                      showLoadingDialog("Integrating to META...");
+                      await InboundServices.postIntegrationToOracle(payload.payload.id);
+                      Alert.alert("Success", "Integrated to META successfully.", [
+                        {
+                          text: "OK",
+                          onPress: () => {
+                            navigation.pop(2);
+                          },
+                        },
+                      ]);
+                    } catch (error) {
+                      console.error('Integration error:', error);
+                      Alert.alert('Error', 'Failed to integrate to META.');
+                    } finally {
+                      hideLoadingDialog();
+                    }
                   },
                 },
-              ]);
-            } catch (error) {
-              console.error('Integration error:', error);
-              Alert.alert('Error', 'Failed to integrate to META.');
-            } finally {
-              hideLoadingDialog()
-            }
+              ]
+            );
           }}
         >
           <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>INTEGRATE TO META</Text>

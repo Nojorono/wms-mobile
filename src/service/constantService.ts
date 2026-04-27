@@ -72,6 +72,15 @@ class ConstantService {
       throw error.response;
     }
   }
+
+    static async getWarehouse(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/master-warehouse');
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
 }
 
 export default ConstantService;

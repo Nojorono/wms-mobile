@@ -1,5 +1,5 @@
 // components/InboundCard.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Dimensions } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { TextInput } from "react-native";
@@ -9,6 +9,8 @@ import { useLoadingDialogStore } from "../../store/useLoadingStore";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { InspectionParamList } from "../../screen/navigation/inbound/InspectionNavigator";
+import { Picker } from "@react-native-picker/picker";
+import ConstantService from "../../service/constantService";
 
 
 interface Detail {
@@ -44,6 +46,10 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
     const navigation = useNavigation<NavigationProp>();
     const { showLoadingDialog, hideLoadingDialog, setLoadingMessage } = useLoadingDialogStore();
     const [details, setDetails] = useState(data.details);
+    const sisaQuantity = data.quantity_scanned - data.details.reduce((acc, item) => acc + (item.quantity_scanned || 0), 0)
+    const [selectedReason, setSelectedReason] = useState("");
+    const [additionalQty, setAdditionalQty] = useState(0);
+    const [dataReason, setDataReason] = useState<any>([]);
 
     const handleScannedChange = (value: string, idx: number) => {
         const newDetails = [...details];
@@ -59,6 +65,18 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
         newDetails[idx].quantity_scanned = numericValue;
         setDetails(newDetails);
     };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await ConstantService.getWarehouse();
+                setDataReason(res.data);
+            } catch (error) {
+                console.error("Failed to fetch good receive details:", error);
+            }
+        };
+        fetchData();
+    }, []);
 
     return (
         <View style={styles.card}>
@@ -132,6 +150,48 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                     </View>
                                 </View>
                             </View>
+                            {index === details.length - 1 && sisaQuantity > 0 && (
+                            <View style={styles.reasonSection}>
+                                <View style={styles.reasonHeader}>
+                                    <Icon name="alert-circle-outline" size={16} color="#E67E22" />
+                                    <Text style={styles.reasonTitle}>Discrepancy Found ({sisaQuantity} items)</Text>
+                                </View>
+
+                                <View style={styles.detailRow}>
+                                    <View style={{ flex: 1.5, marginRight: 8 }}>
+                                        <Text style={styles.detailLabel}>REASON</Text>
+                                        <View style={styles.pickerWrapper}>
+                                            <Picker
+                                                selectedValue={selectedReason}
+                                                onValueChange={(val) => setSelectedReason(val)}
+                                                style={styles.picker}
+                                                dropdownIconColor={Colors.secondaryColor}
+                                            >
+                                                <Picker.Item label="Select Reason" value="" color="#999" style={{ fontSize: 13 }} />
+                                                {dataReason.map((item: any) => (
+                                                    <Picker.Item key={item.id} label={item.name} value={item.id} style={{ fontSize: 13 }} />
+                                                ))}
+                                            </Picker>
+                                        </View>
+                                    </View>
+
+                                    <View style={{ }}>
+                                        <Text style={styles.detailLabel}>QTY ADJ.</Text>
+                                        <View style={[styles.inputWrapper, { borderColor: '#E67E22' }]}>
+                                            <TextInput
+                                                style={[styles.input, { color: '#E67E22' }]}
+                                                value={String(additionalQty)}
+                                                keyboardType="numeric"
+                                                onChangeText={(val) => {
+                                                    const num = Number(val.replace(/[^0-9]/g, ''));
+                                                    if (num <= sisaQuantity) setAdditionalQty(num);
+                                                }}
+                                            />
+                                        </View>
+                                    </View>
+                                </View>
+                            </View>
+                            )} 
                         </View>
                     )}
                     scrollEnabled={false}
@@ -303,6 +363,93 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "700",
         letterSpacing: 0.3,
+    },
+    reasonContainer: {
+        marginTop: 15,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: '#EEE',
+    },
+    // Card Detail
+    detailHeader: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+        paddingBottom: 10,
+        marginBottom: 10,
+    },
+    tagContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F0F4F8',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+        marginRight: 8,
+    },
+    tagText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#444',
+        marginLeft: 4,
+    },
+    detailBody: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    qtyBlock: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    qtyValue: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#222',
+    },
+    uomText: {
+        fontSize: 12,
+        color: '#888',
+        fontWeight: '400',
+    },
+    dividerVertical: {
+        width: 1,
+        height: '80%',
+        backgroundColor: '#EEE',
+    },
+
+    // Reason Section
+    reasonSection: {
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: 2,
+        borderTopColor: '#FFEAA7',
+        borderStyle: 'dashed',
+    },
+    reasonHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    reasonTitle: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#E67E22',
+        marginLeft: 6,
+        textTransform: 'uppercase',
+    },
+    pickerWrapper: {
+        backgroundColor: "#FFF",
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: "#DDD",
+        marginTop: 4,
+        height: 40,
+        justifyContent: 'center',
+    },
+    picker: {
+        width: '100%',
+        height: 40,
     },
 });
 

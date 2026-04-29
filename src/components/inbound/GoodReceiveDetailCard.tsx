@@ -50,6 +50,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
     const [selectedReason, setSelectedReason] = useState("");
     const [additionalQty, setAdditionalQty] = useState(0);
     const [dataReason, setDataReason] = useState<any>([]);
+    console.log("Inbound ID:", inbound_id);
 
     const handleScannedChange = (value: string, idx: number) => {
         const newDetails = [...details];
@@ -70,7 +71,10 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
         const fetchData = async () => {
             try {
                 const res = await ConstantService.getWarehouse();
-                setDataReason(res.data);
+                const filteredData = res.data.filter((item: any) => item.name === "TRACKING");
+                console.log("Filtered Data Reason:", filteredData);
+                setDataReason(filteredData);
+                // setDataReason(res.data);
             } catch (error) {
                 console.error("Failed to fetch good receive details:", error);
             }
@@ -106,7 +110,10 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                 </View>
                 <View style={styles.infoBlock}>
                     <Text style={styles.label}>Sisa</Text>
-                    <Text style={styles.value}>{data.quantity_scanned - data.details.reduce((acc, item) => acc + (item.quantity_scanned || 0), 0)}</Text>
+                    {/* <Text style={styles.value}>{data.quantity_scanned - data.details.reduce((acc, item) => acc + (item.quantity_scanned || 0), 0)}</Text> */}
+                    <Text style={styles.value}>{data.quantity_plan - data.quantity_scanned
+                        }</Text>
+                        
                 </View>
             </View>
 
@@ -150,48 +157,54 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                     </View>
                                 </View>
                             </View>
-                            {index === details.length - 1 && sisaQuantity > 0 && (
-                            <View style={styles.reasonSection}>
-                                <View style={styles.reasonHeader}>
-                                    <Icon name="alert-circle-outline" size={16} color="#E67E22" />
-                                    <Text style={styles.reasonTitle}>Discrepancy Found ({sisaQuantity} items)</Text>
-                                </View>
+                            {data.inspection_status?.toUpperCase() !== "APPROVED" && (
+                                <View>
 
-                                <View style={styles.detailRow}>
-                                    <View style={{ flex: 1.5, marginRight: 8 }}>
-                                        <Text style={styles.detailLabel}>REASON</Text>
-                                        <View style={styles.pickerWrapper}>
-                                            <Picker
-                                                selectedValue={selectedReason}
-                                                onValueChange={(val) => setSelectedReason(val)}
-                                                style={styles.picker}
-                                                dropdownIconColor={Colors.secondaryColor}
-                                            >
-                                                <Picker.Item label="Select Reason" value="" color="#999" style={{ fontSize: 13 }} />
-                                                {dataReason.map((item: any) => (
-                                                    <Picker.Item key={item.id} label={item.name} value={item.id} style={{ fontSize: 13 }} />
-                                                ))}
-                                            </Picker>
-                                        </View>
-                                    </View>
+                                    {index === details.length - 1 && data.quantity_scanned < data.quantity_plan && (
+                                        <View style={styles.reasonSection}>
 
-                                    <View style={{ }}>
-                                        <Text style={styles.detailLabel}>QTY ADJ.</Text>
-                                        <View style={[styles.inputWrapper, { borderColor: '#E67E22' }]}>
-                                            <TextInput
-                                                style={[styles.input, { color: '#E67E22' }]}
-                                                value={String(additionalQty)}
-                                                keyboardType="numeric"
-                                                onChangeText={(val) => {
-                                                    const num = Number(val.replace(/[^0-9]/g, ''));
-                                                    if (num <= sisaQuantity) setAdditionalQty(num);
-                                                }}
-                                            />
+                                            <View style={styles.reasonHeader}>
+                                                <Icon name="alert-circle-outline" size={16} color="#E67E22" />
+                                                <Text style={styles.reasonTitle}>Discrepancy Found ({data.quantity_plan - data.quantity_scanned} items)</Text>
+                                            </View>
+
+                                            <View style={styles.detailRow}>
+                                                <View style={{ flex: 1.5, marginRight: 8 }}>
+                                                    <Text style={styles.detailLabel}>REASON</Text>
+                                                    <View style={styles.pickerWrapper}>
+                                                        <Picker
+                                                            selectedValue={selectedReason}
+                                                            onValueChange={(val) => setSelectedReason(val)}
+                                                            style={styles.picker}
+                                                            dropdownIconColor={Colors.secondaryColor}
+                                                        >
+                                                            <Picker.Item label="Select Reason" value="" color="#999" style={{ fontSize: 13 }} />
+                                                            {dataReason.map((item: any) => (
+                                                                <Picker.Item key={item.id} label={item.locator_name} value={item.id} style={{ fontSize: 13 }} />
+                                                            ))}
+                                                        </Picker>
+                                                    </View>
+                                                </View>
+
+                                                <View style={{}}>
+                                                    <Text style={styles.detailLabel}>QTY ADJ.</Text>
+                                                    <View style={[styles.inputWrapper, { borderColor: '#E67E22' }]}>
+                                                        <TextInput
+                                                            style={[styles.input, { color: '#E67E22' }]}
+                                                            value={String(additionalQty)}
+                                                            keyboardType="numeric"
+                                                            onChangeText={(val) => {
+                                                                const num = Number(val.replace(/[^0-9]/g, ''));
+                                                                if (num <= (data.quantity_plan - data.quantity_scanned)) setAdditionalQty(num);
+                                                            }}
+                                                        />
+                                                    </View>
+                                                </View>
+                                            </View>
                                         </View>
-                                    </View>
+                                    )}
                                 </View>
-                            </View>
-                            )} 
+                            )}
                         </View>
                     )}
                     scrollEnabled={false}
@@ -215,21 +228,27 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                     return acc;
                                 }, {})
                             )) {
+                                const quantityAdjustment = data.quantity_plan - data.quantity_scanned > 0 && selectedReason ? additionalQty : 0;
+
                                 const payload = {
                                     inbound_do_id: do_id,
                                     items: details.map((d) => ({
                                         id: d.item_id_inbound,
                                         quantity_inspection: d.quantity_scanned,
+                                        quantity_difference: quantityAdjustment,
+                                        ...(quantityAdjustment !== 0 && { sub_inventory_difference: selectedReason }),
                                     })),
                                 };
+                                console.log("Payload for updateGoodReceiveDetail:", payload);
                                 const response = await InboundServices.updateGoodReceiveDetail(payload);
+                                console.log("Response from updateGoodReceiveDetail:", response);
                             }
 
 
 
-                            // Step 2: Ubah teks tanpa menutup loading
-                            setLoadingMessage("Updating Status After Good Receive...");
-                            await InboundServices.updateStatusAfterGoodReceive(inbound_id);
+                            // // Step 2: Ubah teks tanpa menutup loading
+                            // setLoadingMessage("Updating Status After Good Receive...");
+                            // await InboundServices.updateStatusAfterGoodReceive(inbound_id);
 
 
 

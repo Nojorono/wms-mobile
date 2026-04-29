@@ -235,8 +235,10 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                     items: details.map((d) => ({
                                         id: d.item_id_inbound,
                                         quantity_inspection: d.quantity_scanned,
-                                        quantity_difference: quantityAdjustment,
-                                        ...(quantityAdjustment !== 0 && { sub_inventory_difference: selectedReason }),
+                                        ...(quantityAdjustment !== 0 && { 
+                                            quantity_difference: quantityAdjustment,
+                                            sub_inventory_difference: selectedReason  
+                                        }),
                                     })),
                                 };
                                 console.log("Payload for updateGoodReceiveDetail:", payload);

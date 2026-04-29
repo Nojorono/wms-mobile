@@ -374,6 +374,7 @@ const InspectionDetail = () => {
                                 value={palletCode}
                                 onChangeText={setPalletCode}
                                 placeholder="Pallet Code"
+                                editable={false}
                             />
                         </View>
 
@@ -392,7 +393,7 @@ const InspectionDetail = () => {
                         {/* Uom */}
                         <View style={styles.fieldRow}>
                             <Text style={styles.fieldLabel}>Uom</Text>
-                            <View style={{ backgroundColor: "#fff", height: 50, borderRadius: 8, marginLeft: 8, width: 200 }}>
+                            <View style={{ backgroundColor: "#fff", height: 50, borderRadius: 8, marginLeft: 8, width: 160 }}>
                                 <Picker
                                     selectedValue={editUom ?? ""}
                                     onValueChange={(itemValue) => setEditUom(itemValue)}

@@ -14,6 +14,7 @@ import { useDialogStore } from "../../../../store/useGlobalDialog";
 import { useFocusEffect } from "@react-navigation/native";
 import OutboundService from "../../../../service/outboundService";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
+import { useAuthStore } from "../../../../store/useAuthStore";
 
 type ApprovalGateMemoPallet = {
     palletCode: string;
@@ -145,6 +146,8 @@ export default function ApprovalGateScreen() {
     const listRef = useRef<FlatList>(null);
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [collapsedDO, setCollapsedDO] = useState<Record<string, boolean>>({});
+     const user = useAuthStore((state) => state.user);
+     const userOrg = user?.userDetail.organizationId;
 
     const [summaryModalVisible, setSummaryModalVisible] = useState(false);
     const [summaryData, setSummaryData] = useState<{ id: any, items: any[] }>({ id: null, items: [] });
@@ -190,10 +193,9 @@ export default function ApprovalGateScreen() {
             setRefreshing(true);
             showLoadingDialog("Loading List Approval Gate");
 
-            const response =
-                await OutboundService.getAssignedGateByStatus("DONE");
-
-            const data = response.data;
+            const response = await OutboundService.getAssignedGateByStatus("DONE");
+            const filteredByOrg = response.data.filter((gate: any) => gate.outbound_do?.organization_id === userOrg);
+            const data = filteredByOrg;
             if (!data) return;
 
             const mapped = mapApprovalGateToUI(data);

@@ -241,9 +241,8 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                         }),
                                     })),
                                 };
-                                console.log("Payload for updateGoodReceiveDetail:", payload);
                                 const response = await InboundServices.updateGoodReceiveDetail(payload);
-                                console.log("Response from updateGoodReceiveDetail:", response);
+                               
                             }
 
 

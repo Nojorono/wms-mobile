@@ -24,6 +24,7 @@ import ConstantService from "../../../../service/constantService";
 interface Payload {
     expedition: string;
     vendor_id?: string | null; // Tambahkan vendor_id
+    vendor_po_number?: string;
     license_plate: string;
     driver_name: string;
     driver_phone: string;
@@ -66,6 +67,7 @@ export default function AssignGateVehicle() {
             driver_name: "",
             driver_phone: "",
             container_number: "",
+            vendor_po_number: "",
         }
     });
 
@@ -91,6 +93,7 @@ export default function AssignGateVehicle() {
                 driver_name: response?.data?.driver_name ?? "",
                 driver_phone: response?.data?.driver_phone ?? "",
                 container_number: response?.data?.container_number ?? "",
+                vendor_po_number: response?.data?.vendor_po_number ?? "",
             };
 
             setData(newData);
@@ -259,7 +262,7 @@ export default function AssignGateVehicle() {
                 <View style={styles.card}>
                     {/* Render Expedition secara khusus */}
                     {renderExpeditionInput()}
-                    
+                    {renderInput("Vendor PO Number", "vendor_po_number", "Contoh: PO123456")}
                     {renderInput("License Plate", "license_plate", "Contoh: B1234ABC")}
                     {renderInput("Driver Name", "driver_name", "Contoh: John Doe")}
                     {renderInput("Driver Phone", "driver_phone", "Contoh: 081234567890")}
@@ -277,6 +280,9 @@ export default function AssignGateVehicle() {
             ) : (
                 <>
                     <View style={styles.card}>
+                        <Text style={styles.itemTitle}>Vendor PO Number</Text>
+                        <Text style={styles.itemValue}>{data.vendor_po_number || "-"}</Text>
+
                         <Text style={styles.itemTitle}>Expedition</Text>
                         <Text style={styles.itemValue}>{data.expedition}</Text>
 

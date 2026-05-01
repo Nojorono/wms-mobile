@@ -100,7 +100,7 @@ export default function AssignGateVehicle() {
             reset(newData);
         } catch (error) {
             console.log("Fetch data failed:", error);
-            showDialog("error", "Gagal mengambil data kendaraan dan assigned gate.");
+            showDialog("error", "failed to load data");
         } finally {
             hideLoadingDialog();
         }
@@ -176,7 +176,7 @@ export default function AssignGateVehicle() {
                 render={({ field: { value } }) => (
                     <View>
                         <TextInput
-                            placeholder="Cari atau isi manual..."
+                            placeholder="Find or fill manually"
                             style={[
                                 styles.input,
                                 errors.expedition ? { borderColor: "red" } : {}
@@ -273,7 +273,7 @@ export default function AssignGateVehicle() {
                         onPress={handleSubmit(onSubmit)}
                     >
                         <Text style={styles.saveButtonText}>
-                            {data ? "Simpan Perubahan" : "Simpan Data"}
+                            {data ? "Save Changes" : "Save Data"}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -319,7 +319,7 @@ export default function AssignGateVehicle() {
                             const latestUser = sortedUsers[0];
 
                             const handleDelete = () => {
-                                confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
+                                confirm.show("decline", "Are you sure you want to delete this assigned gate?", async () => {
                                     try {
                                         showLoadingDialog("Deleting...");
                                         await OutboundService.deleteAssignedGate(ag.id);
@@ -365,7 +365,7 @@ export default function AssignGateVehicle() {
                             );
                         })
                     ) : (
-                        <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign gate</Text>
+                        <Text style={{ color: "#999", marginBottom: 12 }}>No assigned gate yet</Text>
                     )}
 
                     {dataAssigned.length < 1 && (
@@ -384,7 +384,7 @@ export default function AssignGateVehicle() {
                             {dataAssignedLoading && dataAssignedLoading.length > 0 ? (
                                 dataAssignedLoading.map((ag: any, index: number) => {
                                     const handleDeleteHelperLoading = () => {
-                                        confirm.show("decline", "Yakin ingin menghapus assigned gate ini ?", async () => {
+                                        confirm.show("decline", "Are you sure you want to delete this assigned gate?", async () => {
                                             try {
                                                 showLoadingDialog("Deleting...");
                                                 await OutboundService.deleteAssignedLoadingHelper(ag.assigned_gate_id, ag.id);
@@ -427,7 +427,7 @@ export default function AssignGateVehicle() {
                                     );
                                 })
                             ) : (
-                                <Text style={{ color: "#999", marginBottom: 12 }}>Belum ada assign helper untuk loading</Text>
+                                <Text style={{ color: "#999", marginBottom: 12 }}>No assigned helper for loading</Text>
                             )}
 
                             <TouchableOpacity

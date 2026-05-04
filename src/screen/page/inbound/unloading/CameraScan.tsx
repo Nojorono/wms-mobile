@@ -113,7 +113,7 @@ const CameraScreen = () => {
         setUom(resUom.data || []);
         setStagingAreas(res?.data || []);
       } catch (err) {
-        console.error("Gagal fetch staging area:", err);
+        showDialog("error", "Error fetching staging areas!");
       }
     };
     fetchStaging();
@@ -196,7 +196,7 @@ const CameraScreen = () => {
         setManualInput("");
         showDialog(
           "success",
-          "Data existing pallet (OPEN) berhasil dimuat & diperbarui dari server."
+          "Data existing pallet (OPEN) successfully refreshed! You can edit and post this pallet."
         );
         return;
       }
@@ -204,6 +204,7 @@ const CameraScreen = () => {
       // 🆕 Jika belum ada di existing, fetch dari API seperti biasa
       const res = await InboundServices.getPalletInfo(value);
       const palletData = res?.data;
+      
 
       if (!palletData.success) {
         showDialog("error", "Pallet not found or invalid!");
@@ -211,14 +212,14 @@ const CameraScreen = () => {
       }
       if (palletData?.items.length > 0) {
         if (palletData?.items[0]?.item_id !== item.id) {
-          showDialog("error", "Pallet tidak sesuai dengan item inbound!");
+          showDialog("error", "Pallet is not valid for this item!");
           return;
         }
       }
 
       if (!palletData.success) {
         if (palletData.pallet_status?.current_quantity === 0) {
-          showDialog("success", "Pallet bisa digunakan!");
+          showDialog("success", "Pallet is valid and ready to be used!");
         } else {
           showDialog("error", palletData.message || "Something went wrong!");
           return;
@@ -226,8 +227,7 @@ const CameraScreen = () => {
       }
 
       if (palletData.data && palletData.data.success === false) {
-        showDialog("error", "Pallet invalid!");
-        console.error('Pallet invalid:', palletData.data.message);
+        showDialog("error", "Pallet invalid!" +palletData.data.message);
         return;
       }
 
@@ -505,7 +505,7 @@ const CameraScreen = () => {
                   style={{ alignItems: "center", color: "#111" }}
                   dropdownIconColor="#111"
                 >
-                  <Picker.Item label="Uom" value="" style={{ fontSize: 13, color: "#111" }} />
+                  <Picker.Item label="Uom" value="" style={{ fontSize: 14, color: "#111" }} />
                   {uom.map((item: any) => (
                     <Picker.Item
                       key={item.code}
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
-    fontSize: 13,
+    fontSize: 14,
     color: "#111",
   },
 });

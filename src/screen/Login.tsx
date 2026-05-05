@@ -129,7 +129,7 @@ export default function LoginScreen() {
                 render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
                         style={[styles.input, errors.username && styles.errorInput]}
-                        placeholder="NIK"
+                        placeholder="Username"
                         onBlur={onBlur}
                         onChangeText={text => {
                             onChange(text);

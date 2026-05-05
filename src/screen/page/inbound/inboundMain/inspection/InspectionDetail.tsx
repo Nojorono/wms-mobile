@@ -452,7 +452,6 @@ const InspectionDetail = () => {
                                     style={[styles.saveBtn, { backgroundColor: "#f97316", flex: 1 }]}
                                     onPress={async () => {
                                         await handleStatusApprove();
-                                        // setEditingItem(null);
                                     }}
                                 >
                                     <Text style={styles.saveText}>Approve</Text>

@@ -35,6 +35,8 @@ const CreateUpdateScreen = () => {
   const [itemMaster, setItemMaster] = useState<any>(null);
   const [selectedValue, setSelectedValue] = useState('');
   const [loading, setLoading] = useState(false);
+ 
+
 
   // State Merge Pallet
   const [mergePallets, setMergePallets] = useState<any[]>([]);
@@ -50,6 +52,7 @@ const CreateUpdateScreen = () => {
 
   const { user } = useAuthStore();
   const userId = user?.id || 'uuid-user-123';
+  const userOrg = user?.userDetail.organizationId;
   const navigation = useNavigation<NavigationProp>();
 
   const [openPicker, setOpenPicker] = useState(false);
@@ -195,31 +198,6 @@ const CreateUpdateScreen = () => {
     }
   };
 
-  const handleNameChange = (text: string) => {
-    setAssignedUserName(text);
-
-    if (text.trim().length === 0) {
-      // Jika kosong, tampilkan semua user (limit 20 agar tidak berat)
-      setSearchResults(allUsers.slice(0, 20));
-      setShowDropdown(true);
-    } else {
-      // Filter berdasarkan nama atau nomor telepon
-      const filtered = allUsers.filter(u =>
-        u.name?.toLowerCase().includes(text.toLowerCase()) ||
-        (u.phone && u.phone.includes(text))
-      );
-      setSearchResults(filtered);
-      setShowDropdown(true);
-    }
-  };
-
-  // Fungsi tambahan agar saat input di-klik langsung muncul dropdown
-  const handleFocusInput = () => {
-    if (assignedUserName.trim().length === 0) {
-      setSearchResults(allUsers.slice(0, 20));
-    }
-    setShowDropdown(true);
-  };
 
   // const handleAddPalletToMerge = (pallet: any) => {
   //   // 1. Validasi: Apakah sudah ada di list?
@@ -265,19 +243,6 @@ const CreateUpdateScreen = () => {
     fetchInitialData();
   }, []);
 
-  // const handleNameChange = (text: string) => {
-  //   setAssignedUserName(text);
-  //   if (text.trim().length > 0) {
-  //     const filtered = allUsers.filter(u =>
-  //       u.name?.toLowerCase().includes(text.toLowerCase()) ||
-  //       (u.phone && u.phone.includes(text))
-  //     );
-  //     setSearchResults(filtered);
-  //     setShowDropdown(true);
-  //   } else {
-  //     setShowDropdown(false);
-  //   }
-  // };
 
   const handleSelectUser = (item: any) => {
     setAssignedUserName(item.name);
@@ -359,6 +324,19 @@ const CreateUpdateScreen = () => {
     setLoading(true);
     try {
       const mockPalletRes = await ScannerService.getPalletByCode(currentScannedCode);
+      
+      if (mockPalletRes.data && mockPalletRes.data[0] && mockPalletRes.data[0].organization_id !== userOrg) {
+        Alert.alert('Error', 'This pallet does not belong to your organization.');
+        setLoading(false);
+        return;
+      }
+
+      if (mockPalletRes.data && mockPalletRes.data[0].memo_id != null) {
+        Alert.alert('Error', 'This pallet is already assigned to a memo.');
+        setLoading(false);
+        return;
+      }
+      
       const activeItems = (mockPalletRes.data || []).filter((item: any) => item.current_quantity > 0);
 
       if (activeItems.length > 0) {
@@ -467,6 +445,7 @@ const CreateUpdateScreen = () => {
       let payload: any;
       if (updateType === 'MERGE_PALLET') {
         payload = {
+          organization_id: userOrg,
           updateType: "MERGE_PALLET",
           status: "PENDING_HELPER_ACTION",
           initiatedByUserId: userId,
@@ -488,6 +467,7 @@ const CreateUpdateScreen = () => {
         await MovementService.postUpdateInventoryMerge(payload);
       } else if (updateType === 'SPLIT_PALLET') {
         payload = {
+          organization_id: palletData.organization_id,
           updateType: "SPLIT_PALLET",
           status: "PENDING_HELPER_ACTION",
           initiatedByUserId: userId,
@@ -523,6 +503,7 @@ const CreateUpdateScreen = () => {
         console.log("Formatted Date for Payload:", formattedDate);
 
         payload = {
+          organization_id: palletData.organization_id,
           updateType: "UPDATE_PROD_CODE_UOM",
           status: "COMPLETED",
           initiatedByUserId: userId,
@@ -548,7 +529,7 @@ const CreateUpdateScreen = () => {
             uom: isUomUpdate ? selectedValue : palletData.uom,
             productionDate: isProdCodeUpdate ? formattedDate : palletData.production_date,
             status: "PENDING",
-            weekNumber: weekNumber
+            weekNumber: isUomUpdate ? Number(palletData.week_number) : weekNumber
           }
         };
         if (isUomUpdate) {
@@ -560,7 +541,7 @@ const CreateUpdateScreen = () => {
         console.log("Payload for Update Inventory:", payload);
 
         try {
-          // console.log("Payload for Update Inventory:", payload);
+          console.log("Payload for Update Inventory:", payload);
           await MovementService.postUpdateInventory(payload);
         } catch (invError) {
           if (isUomUpdate) {

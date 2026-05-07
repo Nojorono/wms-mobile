@@ -61,6 +61,7 @@ const GoodReceiveScreen = () => {
         ...dataInspection.filter((item: any) => item.inspection_status === "PENDING"),
         ...dataInspection.filter((item: any) => item.inspection_status !== "PENDING"),
       ];
+
       setMergedData(sortedData);
     } catch (error) {
       hideLoadingDialog()
@@ -125,13 +126,13 @@ const GoodReceiveScreen = () => {
             position: "absolute",
             alignSelf: "center",
             bottom: 32,
-            backgroundColor: statusRecent === "INTEGRATED" ? "#ccc" : "#421dfaff",
+            backgroundColor:  mergedData.every((item: any) => item.integration_status === "SUCCESS") ? "#ccc" : "#421dfaff",
             borderRadius: 28,
             paddingVertical: 14,
             paddingHorizontal: 28,
             elevation: 4,
           }}
-          disabled={statusRecent === "INTEGRATED"}
+          disabled={ mergedData.every((item: any) => item.integration_status === "SUCCESS")}
           onPress={async () => {
             // TODO: handle meta button press
             Alert.alert(
@@ -148,8 +149,8 @@ const GoodReceiveScreen = () => {
                   onPress: async () => {
                     try {
                       showLoadingDialog("Integrating to META...");
-                      await InboundServices.postIntegrationToOracle(payload.payload.id);
-                      Alert.alert("Success", "Integrated to META successfully.", [
+                      const res = await InboundServices.postIntegrationToOracle(payload.payload.id);
+                      Alert.alert("Success", res.data.message, [
                         {
                           text: "OK",
                           onPress: () => {
@@ -157,9 +158,8 @@ const GoodReceiveScreen = () => {
                           },
                         },
                       ]);
-                    } catch (error) {
-                      console.error('Integration error:', error);
-                      Alert.alert('Error', 'Failed to integrate to META.');
+                    } catch (error:any) {
+                      Alert.alert('Error', error?.data?.message);
                     } finally {
                       hideLoadingDialog();
                     }

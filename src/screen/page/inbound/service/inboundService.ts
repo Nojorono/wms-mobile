@@ -378,10 +378,22 @@ export function mergeGoodReceive(inboundData: any) {
           quantity_inspected: 0.0,
           details: [],
           quantities: {}, // 🔹 gabungan plan, scan, inspected
+          integration_status: doEntry.integration_status ?? null,
+          integration_statuses: [],
         });
       }
 
       const existing = resultMap.get(key);
+
+if (!existing.integration_statuses) {
+  existing.integration_statuses = [];
+}
+
+existing.integration_statuses.push({
+  inbound_do_id: doEntry.id,
+  do_number: doEntry.inbound_do_number,
+  integration_status: doEntry.integration_status ?? null,
+});
       const qtyPlan = toFloat(item.quantity);
       const qtyInspected = toFloat(item.quantity_inspection);
 
@@ -407,6 +419,7 @@ export function mergeGoodReceive(inboundData: any) {
         quantity_plan: qtyPlan,
         quantity_scanned: 0.0,
         uom: item.uom,
+        integration_status: doEntry.integration_status ?? null,
       });
     });
   });

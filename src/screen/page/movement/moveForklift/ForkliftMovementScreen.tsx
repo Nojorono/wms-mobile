@@ -37,7 +37,6 @@ function ForkliftMovementScreen() {
             setRefreshing(true);
             showLoadingDialog('Loading List ForkliftMovement Planning');
             const response = await MovementService.getMoveLocationForklift(userId);
-            console.log("ForkliftMovement response data:", response.data);
             setForkliftMovementList(response.data || []);
         } catch (error) {
             hideLoadingDialog();

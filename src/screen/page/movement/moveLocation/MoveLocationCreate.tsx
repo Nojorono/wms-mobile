@@ -15,6 +15,7 @@ import { Picker } from '@react-native-picker/picker';
 import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import ConstantService from '../../../../service/constantService';
 import MovementService from '../../../../service/movementService';
+import { useAuthStore } from '../../../../store/useAuthStore';
 
 type SubWarehouse = { id: string; name: string; code: string; warehouse_id: string };
 type Bin = { id: string; name: string; code: string };
@@ -32,6 +33,9 @@ const SUB_INVENTORIES = [
 
 const MoveLocationCreate: React.FC = () => {
   const navigation = useNavigation();
+   const { user } = useAuthStore();
+  const userOrg = user?.userDetail.organizationId;
+   
 
   // Data Master
   const [subWarehouses, setSubWarehouses] = useState<SubWarehouse[]>([]);
@@ -111,6 +115,7 @@ const MoveLocationCreate: React.FC = () => {
 
   const handleConfirmMovement = () => {
     const payload = {
+      organization_id: userOrg,
       movement_type: subInventoryTujuan,
       source_warehouse_id: selectedSub?.warehouse_id,
       source_warehouse_sub_id: selectedSub?.id,

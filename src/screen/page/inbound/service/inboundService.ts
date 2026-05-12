@@ -359,6 +359,8 @@ export function mergeGoodReceive(inboundData: any) {
 
   // simpan id utama inbound
   const inbound_id = inboundData.id;
+  const status_do = inboundData.status;
+  const inbound_type = inboundData.inbound_type;
 
   // step 1: isi PLAN & INSPECTED
   inboundData.inbound_dos.forEach((doEntry: any) => {
@@ -367,6 +369,8 @@ export function mergeGoodReceive(inboundData: any) {
       if (!resultMap.has(key)) {
         resultMap.set(key, {
           inbound_id, // 🔹 id utama inbound
+          status_do, // 🔹 status DO utama
+          inbound_type, // 🔹 tipe PO
           item_id: item.item_id,
           sku: item.item?.sku ?? "",
           do_id: doEntry.id,
@@ -391,6 +395,8 @@ if (!existing.integration_statuses) {
 
 existing.integration_statuses.push({
   inbound_do_id: doEntry.id,
+  status_do: status_do,
+  inbound_type: inbound_type,
   do_number: doEntry.inbound_do_number,
   integration_status: doEntry.integration_status ?? null,
 });

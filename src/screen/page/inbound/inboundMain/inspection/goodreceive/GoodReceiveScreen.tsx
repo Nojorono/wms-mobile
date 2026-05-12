@@ -63,6 +63,7 @@ const GoodReceiveScreen = () => {
       ];
 
       setMergedData(sortedData);
+      console.log("Merged and sorted data:", sortedData);
     } catch (error) {
       hideLoadingDialog()
       console.error('Error fetching inspection data:', error);
@@ -126,13 +127,19 @@ const GoodReceiveScreen = () => {
             position: "absolute",
             alignSelf: "center",
             bottom: 32,
-            backgroundColor:  mergedData.every((item: any) => item.integration_status === "SUCCESS") ? "#ccc" : "#421dfaff",
+            backgroundColor:  mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
+  mergedData.some((item: any) => item.status_do === "PROCESSING")
+    ? "#ccc"
+    : "#421dfaff",
             borderRadius: 28,
             paddingVertical: 14,
             paddingHorizontal: 28,
             elevation: 4,
           }}
-          disabled={ mergedData.every((item: any) => item.integration_status === "SUCCESS")}
+         disabled={
+  mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
+  mergedData.some((item: any) => item.status_do === "PROCESSING")
+}
           onPress={async () => {
             // TODO: handle meta button press
             Alert.alert(
@@ -150,11 +157,14 @@ const GoodReceiveScreen = () => {
                     try {
                       showLoadingDialog("Integrating to META...");
                       const res = await InboundServices.postIntegrationToOracle(payload.payload.id);
-                      Alert.alert("Success", res.data.message, [
+                      console.log("Integration response:", res);
+                      Alert.alert("Success", res.data.status, [
                         {
                           text: "OK",
                           onPress: () => {
-                            navigation.pop(2);
+                            // navigation.pop(2);
+                            fetchInspectionById() // Refresh data setelah integrasi
+                            return
                           },
                         },
                       ]);

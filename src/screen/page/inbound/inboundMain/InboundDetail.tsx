@@ -377,12 +377,12 @@ export default function InboundDetail() {
     const file = result.assets?.[0];
     if (!file) return;
 
-    showLoadingDialog("Uploading photo...");
-
-    const s3 = await InboundServices.postdPhotoToS3(file, `${type}`);
-    const data = s3.data;
-
-    setPhotos((prev) => ({
+    const uploadTask = async (attempt = 1) => {
+    try {
+      showLoadingDialog(`Uploading ${type}... (Attempt ${attempt})`);
+      const s3 = await InboundServices.postdPhotoToS3(file, type);
+      const data = s3.data;
+      setPhotos((prev) => ({
       ...prev,
       [type]: {
         url: data.url,
@@ -391,9 +391,42 @@ export default function InboundDetail() {
         size: data.size,
       },
     }));
+    } catch (error) {
+      if (attempt < 2) { // Auto-retry once
+        console.log("Retrying upload...");
+        return uploadTask(attempt + 1);
+      }
+      throw error;
+    }
+  };
 
+  try {
+    await uploadTask();
     setDirty(true);
     showDialog("success", `Photo ${type} uploaded`);
+  } catch (error) {
+    showDialog("error", "Upload failed after retry");
+  } finally {
+    hideLoadingDialog();
+  }
+
+    // showLoadingDialog("Uploading photo...");
+
+    // const s3 = await InboundServices.postdPhotoToS3(file, `${type}`);
+    // const data = s3.data;
+
+    // setPhotos((prev) => ({
+    //   ...prev,
+    //   [type]: {
+    //     url: data.url,
+    //     bucket: data.bucket,
+    //     key: data.key,
+    //     size: data.size,
+    //   },
+    // }));
+
+    // setDirty(true);
+    // showDialog("success", `Photo ${type} uploaded`);
   } catch (error) {
     console.error(error);
     showDialog("error", "Upload failed");

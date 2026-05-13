@@ -143,7 +143,11 @@ const CreateUpdateScreen = () => {
   useEffect(() => {
     if (updateType === 'MERGE_PALLET') {
       ConstantService.getSubWarehouse()
-        .then(res => setSubWarehouses(res.data))
+        .then(res =>{
+          console.log("Sub Warehouses:", res.data);
+          const filtered = res.data.filter((s: any) => s.is_staging === null);
+           setSubWarehouses(filtered)
+          })
         .catch(err => console.log("Err SubWH", err));
     }
   }, [updateType]);

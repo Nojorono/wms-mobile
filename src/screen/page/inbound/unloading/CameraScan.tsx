@@ -367,13 +367,13 @@ const CameraScreen = () => {
       InboundServices.updateInspectionData(scan.id, editData)
         .then(() => navigation.goBack())
         .catch((err) =>
-          showDialog("error", err?.data?.error || "Error while updating pallet!")
+          showDialog("error", err?.data?.message || "Error while updating pallet!")
         );
     } else {
       InboundServices.postUnloading(data)
         .then(() => navigation.goBack())
         .catch((err) =>
-          showDialog("error", err?.data?.error || "Error while Posting Unloading!")
+          showDialog("error", err?.data?.message || "Error while Posting Unloading!")
         );
     }
   }

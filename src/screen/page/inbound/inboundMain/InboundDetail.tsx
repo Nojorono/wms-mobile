@@ -774,7 +774,11 @@ export default function InboundDetail() {
                     <TouchableOpacity style={styles.declineBtn} onPress={handleDecline}>
                         <Text style={styles.declineText}>Decline</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.approveBtn} onPress={handleAccept}>
+                    <TouchableOpacity 
+                        style={[styles.approveBtn, !allUploaded && styles.approveBtnDisabled]} 
+                        onPress={handleAccept}
+                        disabled={!allUploaded}
+                    >
                         <Text style={styles.approveText}>Approve</Text>
                     </TouchableOpacity>
                 </View>
@@ -850,4 +854,7 @@ const styles = StyleSheet.create({
     },
     declineText: { textAlign: "center", fontSize: 18, color: "white" },
     approveText: { textAlign: "center", fontSize: 18, color: "white" },
+    approveBtnDisabled: {
+        backgroundColor: "#b2b2b2",
+    },
 });

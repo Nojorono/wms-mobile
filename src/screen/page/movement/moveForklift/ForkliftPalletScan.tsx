@@ -23,8 +23,19 @@ const ForkliftPallet = () => {
     const payload = route.params as any
   const showDialog = useDialogStore((state) => state.showDialog);
     const navigation = useNavigation<NavigationProp>();
-    const totalPallets = payload.item.pallets.length;
-    const scannedPallets = payload.item.pallets.filter((p: any) => p.is_completed).length;
+    const pallets = payload?.item?.pallets ?? [];
+    const sourceBinLabel =
+        payload?.item?.sourceBin?.name ??
+        payload?.item?.sourceBin?.code ??
+        payload?.item?.sourceWarehouseSub?.name ??
+        'Unknown';
+    const destinationBinLabel =
+        payload?.item?.destinationBin?.name ??
+        payload?.item?.destinationBin?.code ??
+        payload?.item?.destinationWarehouseSub?.name ??
+        'Unknown';
+    const totalPallets = pallets.length;
+    const scannedPallets = pallets.filter((p: any) => p.is_completed).length;
 
     // Summary Card Component
     const SummaryCard = () => (
@@ -32,7 +43,7 @@ const ForkliftPallet = () => {
             <Text style={styles.summaryLabel}>Move Location ID</Text>
             <View style={styles.idRow}>
                 <Icon name="package-variant-closed" size={20} color="#1A1A1A" />
-                <Text style={styles.idText}>{payload.item.movement_number}</Text>
+                <Text style={styles.idText}>{payload?.item?.movement_number ?? '-'}</Text>
             </View>
 
             <View style={styles.progressContainer}>
@@ -65,11 +76,11 @@ const ForkliftPallet = () => {
 
             {/* Center: Details */}
             <View style={styles.detailsContainer}>
-                <Text style={styles.palletCode}>{item.pallet.pallet_code}</Text>
+                <Text style={styles.palletCode}>{item.pallet?.pallet_code ?? '-'}</Text>
 
                 <Text style={styles.labelSource}>Source</Text>
                 <Text style={styles.productName}>
-                Bin: {payload.item.sourceBin.code}
+                Bin: {sourceBinLabel}
                 </Text>
             </View>
 
@@ -77,7 +88,7 @@ const ForkliftPallet = () => {
             <View style={styles.destinationContainer}>
                 <View style={styles.qtyRow}>
                 <Text style={styles.qtyText}>
-                    {item.pallet.currentQuantity} {item.pallet.uom}
+                    {item.pallet?.currentQuantity ?? 0} {item.pallet?.uom ?? ''}
                 </Text>
                 <Icon name="arrow-right" size={20} color="#FF6B00" style={{ marginLeft: 4 }} />
                 </View>
@@ -104,14 +115,14 @@ const ForkliftPallet = () => {
 
                 {/* Destination Section Header */}
                 <Text style={styles.sectionHeader}>
-                    Destination: {payload.item.destinationBin.name}
+                    Destination: {destinationBinLabel}
                 </Text>
 
                 {/* List of Pallets */}
                 <FlatList
-                    data={payload.item.pallets}
+                    data={pallets}
                     renderItem={renderPalletItem}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item, index) => item.id ?? item.pallet?.id ?? String(index)}
                     scrollEnabled={false} // Handle scrolling via parent ScrollView
                 />
 

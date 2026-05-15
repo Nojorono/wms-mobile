@@ -86,7 +86,7 @@ function ForkliftMovementScreen() {
                             <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
                         </View>
                     ) : (
-                        ForkliftMovementList.map((item: any, index: number) => {
+                        ForkliftMovementList.map((item: any) => {
                             let statusColor;
                             if (item.status === 'PENDING') {
                                 statusColor = '#228B22';
@@ -97,23 +97,18 @@ function ForkliftMovementScreen() {
                             }
 
                             return (
-                                <>
-                                    <MovementCard
-                                        key={index}
-                                        Title={item.movement_number}
-                                        source={`Source: ${item.sourceBin?.name ?? "Unknown"}`}
-                                        destination={`Destination: ${item.destinationBin?.name ?? "Unknown"}`}
-                                        date={item.createdAt}
-                                        status={item.status}
-                                        statusColor={statusColor}
-                                        onClick={() =>
-                                            // console.log('Clicked ForkliftMovement:', item)
-                                            navigation.navigate('ForkliftPallet', { item })
-                                        }
-                                    />
-
-                                </>
-
+                                <MovementCard
+                                    key={item.id ?? item.movement_number}
+                                    Title={item.movement_number}
+                                    source={`Source: ${item.sourceBin?.name ?? item.sourceWarehouseSub?.name ?? 'Unknown'}`}
+                                    destination={`Destination: ${item.destinationBin?.name ?? item.destinationWarehouseSub?.name ?? 'Unknown'}`}
+                                    date={item.createdAt}
+                                    status={item.status}
+                                    statusColor={statusColor}
+                                    onClick={() =>
+                                        navigation.navigate('ForkliftPallet', { item })
+                                    }
+                                />
                             );
                         })
                     )}

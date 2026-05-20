@@ -1,12 +1,13 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors.ts';
-import { Image, View } from 'react-native';
+import { Image, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import UnloadingScreen from '../../page/inbound/unloading/UnloadingScreen.tsx';
 import UnloadingDetailScreen from '../../page/inbound/unloading/UnloadingDetail.tsx';
 import UnloadingScan from '../../page/inbound/unloading/UnloadingScan.tsx';
 import UnloadingScanScreen from '../../page/inbound/unloading/UnloadingScan.tsx';
 import CameraScreen from '../../page/inbound/unloading/CameraScan.tsx';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -25,41 +26,95 @@ const UnloadingStackNavigator = () => (
     <UnloadingStack.Screen
       name="UnloadingMain"
       component={UnloadingScreen}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Unloading',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <UnloadingStack.Screen
       name="UnloadingDetail"
       component={UnloadingDetailScreen}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Unloading Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <UnloadingStack.Screen
       name="UnloadingScan"
      component={UnloadingScanScreen}
-      options={{
+     options={({ navigation }) => ({
         headerTitle: 'Unloading Scan',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <UnloadingStack.Screen
       name="CameraScreen"

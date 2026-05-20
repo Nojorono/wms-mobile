@@ -1,6 +1,6 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors.ts';
-import { Image, View } from 'react-native';
+import { Image, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import InboundScreen from '../../page/inbound/inboundMain/InboundScreen.tsx';
 
@@ -11,6 +11,7 @@ import InboundDetail from '../../page/inbound/inboundMain/InboundDetail.tsx';
 import CheckerScreen from '../../page/inbound/inboundMain/checker/CheckerScreen.tsx';
 import UpdateSaldoNavigator from './UpdateSaldoNavigator.tsx';
 import ForkLiftNavigator from './ForkLiftNavigator.tsx';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -27,7 +28,7 @@ export type InboundParamList = {
     screen: "InspectionMain";
     params: { item: any };
   };
-  UpdateSaldoNavigator:{
+  UpdateSaldoNavigator: {
     screen: "UpdateSaldoMain";
     params: { item: any };
   }
@@ -66,40 +67,97 @@ const InboundStackNavigator = () => (
     <InboundStack.Screen
       name="InboundMain"
       component={InboundScreen}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Inbound',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
-    
+
     {/* //NEW WMS */}
     <InboundStack.Screen
       name="InboundDetail"
       component={InboundDetail}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Inbound Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <InboundStack.Screen
       name="CheckerScreen"
       component={CheckerScreen}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Helper List',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <InboundStack.Screen
       name="UnloadingNavigator"

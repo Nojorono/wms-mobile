@@ -29,6 +29,7 @@ export type InboundItem = {
     classification_id: string | null;
     uom: string;
     item: ItemDetail;
+    scanned?: boolean;
 };
 
 export type InboundDo = {
@@ -48,7 +49,7 @@ export type InboundDo = {
 
 export type MergedItem = Omit<
   InboundItem,
-   "createdAt" | "updatedAt" | "inbound_do_id"
+   "createdAt" | "updatedAt" | "inbound_do_id" 
 > & {
   quantity: number;
 };

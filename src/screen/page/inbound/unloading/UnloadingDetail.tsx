@@ -8,7 +8,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import InboundServices from "../../../../service/inboundServices";
-import {  MergedItem, mergeUnloadingData } from "../service/inboundService";
+import { MergedItem, mergeUnloadingData } from "../service/inboundService";
 
 type NavigationProp = StackNavigationProp<UnloadingParamList, 'UnloadingMain'>;
 
@@ -18,10 +18,11 @@ function mapMergedToItem(merged: MergedItem): any {
     quantities: merged.quantities,
     uom: merged.uom,
     id: merged.item_id,
-    name: merged.item_id, 
+    name: merged.item_id,
     quantityPlan: merged.quantity,
-    quantityScan: 0, 
-    item: merged.item
+    quantityScan: 0,
+    item: merged.item,
+    scanned: merged.scanned || false,
   };
 }
 
@@ -56,8 +57,28 @@ const UnloadingScreen = () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInboundDetail(payload.item.id);
+
       const inbound_dos = response.data.inbound_dos;
-      setMergedData(mergeUnloadingData(inbound_dos));
+      const scanData = response.data.transaction_scan_inbounds || [];
+
+      const merged = mergeUnloadingData(inbound_dos);
+
+      // inject scanned flag
+      const mergedWithScan = merged.map((item) => ({
+        ...item,
+        scanned: scanData.some(
+          (scan: any) => scan.item_id === item.item_id
+        ),
+      }));
+
+      // sorting
+      const sorted = mergedWithScan.sort((a, b) => {
+        if (a.scanned && !b.scanned) return 1;
+        if (!a.scanned && b.scanned) return -1;
+        return 0;
+      });
+
+      setMergedData(sorted);
     } catch (error) {
       hideLoadingDialog()
       Alert.alert(
@@ -71,16 +92,14 @@ const UnloadingScreen = () => {
   }
 
 
-  useEffect(() => {
-    const initialize = async () => {
-      try {
-        await fetchInboundById()
-      } catch (error) {
-        console.error('Initialization error:', error);
-      }
-    };
-    initialize();
-  }, [])
+ useEffect(() => {
+    fetchInboundById();
+
+    // Trigger fetchData on mount and when coming back to this screen
+    const unsubscribe = navigation.addListener("focus", fetchInboundById);
+
+    return unsubscribe;
+  }, [navigation]);
 
 
   return (
@@ -110,7 +129,7 @@ const UnloadingScreen = () => {
             items={mergedData.map(mapMergedToItem)}
             onCheck={handleCheck}
           />
-      
+
         </ScrollView>
       </View>
     </View>

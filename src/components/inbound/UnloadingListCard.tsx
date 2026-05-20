@@ -13,6 +13,7 @@ interface Item {
   status?: string;
   item: ItemDetail;
   uom: string;
+  scanned: boolean;
 }
 
 interface Props {
@@ -41,11 +42,9 @@ const UnloadingCardList: React.FC<Props> = ({ items, onCheck }) => {
 
           {/* Quantity Info */}
           <Text style={styles.quantityText}>
-           Quantity Plan: {Object.entries(item.quantities).map(([uom, qty]) => `${qty} ${uom}`).join(", ")} {item.quantityPlan}
+          {item.scanned ? "✅" : "⏳"} Quantity Plan: {Object.entries(item.quantities).map(([uom, qty]) => `${qty} ${uom}`).join(", ")} {item.quantityPlan}
           </Text>
-          {/* <Text style={styles.quantityText}>
-            Scan: {item.quantityScan}
-          </Text> */}
+          
 
           {/* Status Badge */}
           {item.status && (

@@ -1,11 +1,12 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors';
-import { Image, View } from 'react-native';
+import { Image, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import AssignGateDoScreen from '../../page/outbound/assignGate/AssignGateDo.tsx';
 import AssignGateActivity from '../../page/outbound/assignGate/AssignGateActivity.tsx';
 import AssignGateVehicle from '../../page/outbound/assignGate/AssignGateVehicle.tsx';
 import AssignGateLoading from '../../page/outbound/assignGate/AssignGateLoading.tsx';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -58,38 +59,95 @@ const AssignGateStackNavigator = () => (
     <AssignGateStack.Screen
       name="AssignGateVehicle"
       component={AssignGateVehicle}
-      options={{
-        headerShown: true,
+      options={({ navigation }) => ({
         headerTitle: 'Assign Gate - Vehicle',
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <AssignGateStack.Screen
       name="AssignGateActivity"
       component={AssignGateActivity}
-      options={{
-        headerShown: true,
+      options={({ navigation }) => ({
         headerTitle: 'Assign Gate - Activity',
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <AssignGateStack.Screen
       name="AssignGateLoading"
       component={AssignGateLoading}
-      options={{
-        headerShown: true,
+      options={({ navigation }) => ({
         headerTitle: 'Assign Gate - Loading',
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
 
 

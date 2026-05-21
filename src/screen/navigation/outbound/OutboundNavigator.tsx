@@ -1,6 +1,6 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors';
-import { Image, View } from 'react-native';
+import { Image, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import OutboundIndex from '../../page/Outbound.tsx';
 import PickingNavigator from './PickingNavigator.tsx';
@@ -8,6 +8,7 @@ import InspectionNavigator from './InspectionNavigator.tsx';
 import AssignGateNavigator from './AssignGateNavigator.tsx';
 import ForkliftGateNavigator from './ForkliftGateNavigator.tsx';
 import ApprovalGateScreen from '../../page/outbound/approvalGate/ApprovalGateActivity.tsx';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -107,17 +108,33 @@ const OutboundStackNavigator = () => (
     <OutboundStack.Screen
       name="OutboundGateApproval"
       component={ApprovalGateScreen}
-      options={{
-        headerShown: true,
+      options={({ navigation }) => ({
         headerTitle: 'Gate Approval',
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
   </OutboundStack.Navigator>
 );

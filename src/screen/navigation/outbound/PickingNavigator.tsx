@@ -9,6 +9,8 @@ import PickingDetailActivity from '../../page/outbound/picking/PickingDetailActi
 import PickingSkuScreen from '../../page/outbound/picking/PickingSkuScreen.tsx';
 import PickingSkuByPallet from '../../page/outbound/picking/PickingSkuByPallet.tsx';
 import PickingSkuTab from '../../page/outbound/picking/PickingSkuTab.tsx';
+import { TouchableOpacity } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -31,77 +33,157 @@ const PickingStackNavigator = () => (
     <PickingStack.Screen
       name="PickingDoMain"
       component={PickingScreen}
-      options={{
-        headerShown: true,
+      options={({ navigation }) => ({
         headerTitle: 'Picking',
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <PickingStack.Screen
       name="PickingMemo"
       component={PickingDetailScreen}
-      options={{
+      options={({ navigation }) => ({
+        headerTitle: 'Picking Memo',
         headerShown: true,
-        headerTitle: 'Picking - Memo',
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <PickingStack.Screen
       name="PickingSku"
       component={PickingSkuTab}
-      options={{
-        headerShown: true,
+      options={({ navigation }) => ({
         headerTitle: 'Picking - SKU',
-        headerTintColor: "#fff",
+        headerShown: true,
+        headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 0,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <PickingStack.Screen
       name="PickingActivity"
       component={PickingActivity}
-      options={{
+      options={({ navigation }) => ({
+        headerTitle: 'Picking - Activity',
         headerShown: true,
-          headerTitle: 'Picking - Activity',
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <PickingStack.Screen
       name="PickingDetailActivity"
       component={PickingDetailActivity}
-      options={{
+      options={({ navigation }) => ({
+        headerTitle: 'Picking - Detail Activity',
         headerShown: true,
-          headerTitle: 'Picking - Detail Activity',
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
 
 

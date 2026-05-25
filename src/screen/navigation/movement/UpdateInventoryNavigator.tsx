@@ -4,6 +4,8 @@ import React from 'react';
 import UpdateInventoryScreen from '../../page/movement/updateInventory/UpdateInventoryScreen.tsx';
 import UpdateInventoryCreate from '../../page/movement/updateInventory/UpdateInventoryCreate.tsx';
 import UpdateInventoryInspection from '../../page/movement/updateInventory/UpdateInventoryInspection.tsx';
+import { TouchableOpacity } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -20,47 +22,95 @@ const UpdateInventoryStackNavigator = () => (
     <UpdateInventoryStack.Screen
       name="UpdateInventoryMain"
       component={UpdateInventoryScreen}
-      options={{
+     options={({ navigation }) => ({
         headerTitle: 'Update Inventory',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
      <UpdateInventoryStack.Screen
       name="UpdateInventoryCreate"
       component={UpdateInventoryCreate}
-      options={{
-        headerTitle: 'Create Update Inventory',
+      options={({ navigation }) => ({
+        headerTitle: 'Update Inventory Create',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <UpdateInventoryStack.Screen
       name="UpdateInventoryInspection"
       component={UpdateInventoryInspection}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Update Inventory Inspection',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
 
   </UpdateInventoryStack.Navigator>

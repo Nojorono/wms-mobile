@@ -1,12 +1,13 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors';
-import { Image, View } from 'react-native';
+import { Image, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import MovementIndex from '../../page/Movement.tsx';
 import MoveLocationNavigator from './MoveLocationNavigator.tsx';
 import ForkliftMovementStackNavigator from './ForkliftMovementNavigator.tsx';
 import UpdateInventoryStackNavigator from './UpdateInventoryNavigator.tsx';
 import HelperMovementStackNavigator from './HelperMovementNavigator.tsx';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 
@@ -52,7 +53,7 @@ const MovementStackNavigator = () => (
      <MovementStack.Screen
       name="MoveLocationNavigator"
       component={MoveLocationNavigator}
-      options={{
+       options={{
         headerTitle: 'Move Location',
         headerShown: false,
         headerTintColor: '#fff',
@@ -64,38 +65,95 @@ const MovementStackNavigator = () => (
       <MovementStack.Screen
       name="ForkliftMovementNavigator"
       component={ForkliftMovementStackNavigator}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Forklift Movement',
-        headerShown: false,
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <MovementStack.Screen
       name="UpdateInventoryNavigator"
       component={UpdateInventoryStackNavigator}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Update Inventory',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
     <MovementStack.Screen
       name="HelperMovementNavigator"
       component={HelperMovementStackNavigator}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Update Helper',
-        headerShown: false,
+        headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
   </MovementStack.Navigator>
 );

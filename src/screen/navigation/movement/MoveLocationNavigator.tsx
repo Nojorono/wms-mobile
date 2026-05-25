@@ -1,10 +1,11 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import Colors from '../../../constants/Colors.ts';
-import { Image, View } from 'react-native';
+import { Image, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import MoveLocationScreen from '../../page/movement/moveLocation/MoveLocationScreen.tsx';
 import MoveLocationCreate from '../../page/movement/moveLocation/MoveLocationCreate.tsx';
 import MoveLocationDetail from '../../page/movement/moveLocation/MoveLocationDetail.tsx';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 export type MoveLocationParamList = {
@@ -20,47 +21,95 @@ const MoveLocationStackNavigator = () => (
     <MoveLocationStack.Screen
       name="MoveLocationMain"
       component={MoveLocationScreen}
-      options={{
-        headerTitle: 'Move Location',
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
-        },
-      }}
-    />
-    <MoveLocationStack.Screen
-      name="MoveLocationCreate"
-      component={MoveLocationCreate}
-      options={{
-        headerTitle: 'Create Move Location',
-        headerShown: true,
-        headerTintColor: '#fff',
-        headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
-        },
-      }}
-    />
-     <MoveLocationStack.Screen
-      name="MoveLocationDetail"
-      component={MoveLocationDetail}
-      options={{
+      options={({ navigation }) => ({
         headerTitle: 'Move Location Detail',
         headerShown: true,
         headerTintColor: '#fff',
         headerStyle: {
-          backgroundColor: Colors.secondaryColor, // Full header background
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-          borderBottomWidth: 0, // Remove any border
+          backgroundColor: Colors.secondaryColor,
         },
-      }}
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
+    />
+    <MoveLocationStack.Screen
+      name="MoveLocationCreate"
+      component={MoveLocationCreate}
+      options={({ navigation }) => ({
+        headerTitle: 'Create Move Location',
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
+    />
+     <MoveLocationStack.Screen
+      name="MoveLocationDetail"
+      component={MoveLocationDetail}
+     options={({ navigation }) => ({
+        headerTitle: 'Move Location Detail',
+        headerShown: true,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+         headerRight: () => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.getParent()?.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            }
+            style={{
+              marginRight: 16,
+            }}
+          >
+            <Ionicons
+              name="home"
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        ),
+      })}
     />
 
   </MoveLocationStack.Navigator>

@@ -15,6 +15,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import OutboundService from "../../../../service/outboundService";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 import { useAuthStore } from "../../../../store/useAuthStore";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import Colors from "../../../../constants/Colors";
 
 type ApprovalGateMemoPallet = {
     palletCode: string;
@@ -193,11 +195,17 @@ export default function ApprovalGateScreen() {
             setRefreshing(true);
             showLoadingDialog("Loading List Approval Gate");
 
-            const response = await OutboundService.getAssignedGateByStatus("DONE");
-            const filteredByOrg = response.data.filter((gate: any) => gate.outbound_do?.organization_id === userOrg);
-            const data = filteredByOrg;
-            if (!data) return;
+            const responseApproved = await OutboundService.getAssignedGateByStatus("APPROVED");
+            const responsePending = await OutboundService.getAssignedGateByStatus("PENDING");
 
+            const approvedByOrg = responseApproved.data.filter((gate: any) =>
+                gate.outbound_do?.organization_id === userOrg && gate.outbound_do?.status === "APPROVED_LOAD"
+            );
+            const pendingByOrg = responsePending.data.filter((gate: any) =>
+                gate.outbound_do?.organization_id === userOrg
+            );
+
+            const data = [...approvedByOrg, ...pendingByOrg];
             const mapped = mapApprovalGateToUI(data);
             console.log("Mapped Approval Gate Data:", mapped);
             setApprovalGate(mapped);
@@ -219,7 +227,7 @@ export default function ApprovalGateScreen() {
 
 
 
-    const GateItem = ({
+  const GateItem = ({
         gateItem,
         collapsedDO,
         toggleDO,
@@ -233,19 +241,46 @@ export default function ApprovalGateScreen() {
             <View>
                 {/* DO HEADER */}
                 <View style={styles.doHeader}>
-                    {/* AREA KIRI → TOGGLE */}
+                    {/* AREA KIRI → INFO TEXT */}
                     <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={() => toggleDO(doNumber)}
-                        style={{ flex: 1 }}
+                        style={{ flex: 1, paddingRight: 8 }}
                     >
                         <Text style={styles.label}>GATE LOADING</Text>
                         <Text style={styles.value}>{gate}</Text>
                         <Text style={styles.do}>{doNumber}</Text>
                     </TouchableOpacity>
 
-                    {/* AREA KANAN → APPROVE */}
+                    {/* AREA TENGAH → SYNC ICON */}
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={async () => {
+                            try {
+                                showLoadingDialog("Syncing...");
+                                await fetchGate();
+                            } catch (error) {
+                                console.error("Sync error:", error);
+                                showDialog("error", "Sync failed!");
+                            } finally {
+                                hideLoadingDialog();
+                            }
+                        }}
+                        style={{ padding: 10, marginRight: 4 }}
+                    >
+                        <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
+                    </TouchableOpacity>
 
+                    {/* AREA KANAN → ARROW ICON FOR COLLAPSE */}
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => toggleDO(doNumber)}
+                        style={{ padding: 10 }}
+                    >
+                        <Text style={{ fontSize: 16, color: "#6B7280" }}>
+                            {collapsed ? "▼" : "▲"}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
 
                 {!collapsed &&
@@ -262,7 +297,6 @@ export default function ApprovalGateScreen() {
                                         PALLET {pallet.palletCode}
                                     </Text>
 
-                                    {/* 👇 FlatList TANPA scroll */}
                                     <FlatList
                                         data={pallet.skus}
                                         numColumns={1}
@@ -275,6 +309,8 @@ export default function ApprovalGateScreen() {
                             ))}
                         </View>
                     ))}
+                
+                {/* Modal diletakkan di luar loop agar tidak menumpuk, ini tetap sama seperti kodemu */}
                 <Modal
                     visible={summaryModalVisible}
                     transparent={true}
@@ -313,7 +349,6 @@ export default function ApprovalGateScreen() {
                                     style={[styles.modalBtn, { backgroundColor: '#2563EB' }]}
                                     onPress={async () => {
                                         setSummaryModalVisible(false);
-                                        // Jalankan Logic Approve Asli
                                         confirm.show(
                                             "accept",
                                             "Confirm approve this gate after review?",
@@ -394,7 +429,7 @@ export default function ApprovalGateScreen() {
                         getDOStatus={getDOStatus}
                     />
                     {!collapsedDO[item.doNumber] && (
-                        <View style={{ flexDirection: "row", gap: 8, marginHorizontal: -12, marginBottom: 12 }}>
+                        <View style={{ flexDirection: "row", gap: 8, marginHorizontal: -12, paddingHorizontal: 12, marginBottom: 12 }}>
                             <TouchableOpacity
                                 style={{
                                     flex: 1,
@@ -415,7 +450,6 @@ export default function ApprovalGateScreen() {
                                             try {
                                                 showLoadingDialog("Rejecting Gate...");
                                                 const res = await OutboundService.updateStatusAssignedGate(item.id, "PENDING");
-                                                console.log("Reject response:", res);
                                                 showDialog("success", "Gate rejected successfully!");
                                                 await fetchGate();
                                             } catch (error) {
@@ -475,7 +509,6 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 12,
     },
 
     label: {
@@ -508,8 +541,8 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: "#FFF",
         padding: 12,
-        borderRadius: 8,
-        marginBottom: 12,
+        justifyContent: "center",
+        alignItems: "center",
     },
 
     chipRow: {

@@ -42,7 +42,7 @@ function NewInspectionMemo() {
     try {
       setRefreshing(true);
       showLoadingDialog("Loading...");
-      const data = { limit: 100 };
+      const data = { limit: 100 ,transaction_picking_status:"PENDING"};
       const response = await OutboundService.getOutboundDoList(data);
       const list = response?.data || [];
       const matched = list.find((i: any) => i.id === itemBefore.item.id);

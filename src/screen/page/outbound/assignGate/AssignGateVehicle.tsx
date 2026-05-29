@@ -7,7 +7,6 @@ import {
     TextInput,
     ScrollView,
     RefreshControl,
-    FlatList,
     Keyboard,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
@@ -20,13 +19,14 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { useConfirmationStore } from "../../../../store/useConfirmationStore";
 import ConstantService from "../../../../service/constantService";
+import { Dropdown } from "react-native-element-dropdown";
 
 interface Payload {
     expedition: string;
     vendor_id?: string | null;
     delivery_category?: string;
     type_calculation?: string;
-    qty_utilitas?: string; // Menggunakan string untuk mempermudah form input text
+    qty_utilitas?: string;
     truck_utilitas?: string;
     vendor_po_number?: string;
     license_plate: string;
@@ -37,22 +37,22 @@ interface Payload {
 
 type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>;
 
-const DELIVERY_CATEGORIES = ["Ekspedisi External", "Expedisi Internal", "Expedisi Vendor"];
+// Map string array ke format object {label, value} untuk Dropdown
+const DELIVERY_CATEGORIES = [
+    { label: "Ekspedisi External", value: "Ekspedisi External" },
+    { label: "Expedisi Internal", value: "Expedisi Internal" },
+    { label: "Expedisi Vendor", value: "Expedisi Vendor" }
+];
 
 export default function AssignGateVehicle() {
     const [data, setData] = useState<Payload | null>(null);
     const [dataAssigned, setDataAssigned] = useState<any>(null);
     const [dataAssignedLoading, setDataAssignedLoading] = useState<any>(null);
 
-    // Vendor / Expedition Search State
+    // Dropdown States
     const [dataVendor, setDataVendor] = useState<any[]>([]);
-    const [filteredVendor, setFilteredVendor] = useState<any[]>([]);
-    const [showVendorList, setShowVendorList] = useState(false);
-
-    // Dropdown States & Dummy Data
-    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-    const [truckOptions, setTruckOptions] = useState<string[]>([]);
-    const [poOptions, setPoOptions] = useState<string[]>([]);
+    const [truckOptions, setTruckOptions] = useState<any[]>([]);
+    const [poOptions, setPoOptions] = useState<any[]>([]); 
 
     const [isEdit, setIsEdit] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -98,9 +98,9 @@ export default function AssignGateVehicle() {
             setValue("vendor_po_number", "");
             setValue("type_calculation", "");
         } else if (deliveryCategory === "Ekspedisi External") {
-            setValue("expedition", "");
+            // setValue("expedition", ""); // Opsional: Reset jika kategori kembali ke Eksternal
         }
-    }, [deliveryCategory, setValue, watch]);
+    }, [deliveryCategory, setValue]);
 
     async function fetchData() {
         try {
@@ -108,11 +108,14 @@ export default function AssignGateVehicle() {
             const response = await OutboundService.getOutboundDetailById(params.item.id);
             const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
             const resVendor = await ConstantService.getSuppliers();
-
-            // Dummy Hit API Truck Utilitas
-            setTimeout(() => {
-                setTruckOptions(["Truck Engkel", "Truck Fuso", "Truck Tronton (Dummy)"]);
-            }, 500);
+            // const truckUtilitas = await ConstantService.getTruckUtilitas();
+            
+            // Format truck options menjadi { label, value } jika datanya string
+            // const formattedTrucks = truckUtilitas.data.map((item: any) => ({
+            //     label: item.ITEM_DESCRIPTION, 
+            //     value: item.ITEM_DESCRIPTION 
+            // }));
+            // setTruckOptions(formattedTrucks);
 
             if (assignedGate.data.length > 0) {
                 const assignedLoading = await OutboundService.getAssignedLoadingByDoId(assignedGate.data[0].id);
@@ -174,131 +177,78 @@ export default function AssignGateVehicle() {
         }
     };
 
-    // --- Logic Search Expedition ---
-    const handleSearchExpedition = (text: string) => {
-        setValue("expedition", text);
-        setValue("vendor_id", null);
-
-        if (text && dataVendor.length > 0) {
-            const filtered = dataVendor.filter((item) =>
-                item.VENDOR_NAME?.toLowerCase().includes(text.toLowerCase())
-            );
-            setFilteredVendor(filtered);
-            setShowVendorList(true);
-        } else {
-            setShowVendorList(false);
-        }
-    };
-
-    const handleSelectVendor = (item: any) => {
+    // --- Logic Select Expedition ---
+    const handleSelectVendor = async (item: any) => {
         setValue("expedition", item.VENDOR_NAME);
         setValue("vendor_id", item.VENDOR_ID.toString());
-        setShowVendorList(false);
+        setValue("vendor_po_number", ""); // Reset PO jika vendor berubah
         Keyboard.dismiss();
+        
+        try {
+            // Hit API ConstantService untuk mengambil data PO Lines. 
+            const response: any = await ConstantService.getPoLines(item.VENDOR_ID.toString());
+            
+            
+            // Format data agar mudah dibaca oleh react-native-element-dropdown
+            const formattedPo = response.data.map((po: any) => ({
+                ...po,
+                displayLabel: `${po.ITEM_DESCRIPTION}`,
+                stringValue: po.PO_LINE_ID.toString()
+            }));
 
-        // Dummy hit API untuk mendapatkan vendor PO berdasarkan vendor_id
-        showLoadingDialog("Mencari Vendor PO...");
-        setTimeout(() => {
-            setPoOptions(["PO-DUMMY-001", "PO-DUMMY-002", "PO-DUMMY-003"]);
-            hideLoadingDialog();
-        }, 800);
+            setPoOptions(formattedPo);
+        } catch (error) {
+            console.log("Error Fetching PO:", error);
+        }
     };
 
     // --- Render Components ---
 
-    // Custom Dropdown Component
-    const renderSimpleDropdown = (label: string, name: keyof Payload, options: string[], placeholder: string) => {
-        const isOpen = openDropdown === name;
-        return (
-            <View style={{ marginBottom: 16, zIndex: isOpen ? 100 : 1 }}>
-                <Text style={styles.label}>{label}</Text>
-                <Controller
-                    control={control}
-                    name={name}
-                    rules={{ required: `${label} wajib diisi` }}
-                    render={({ field: { value } }) => (
-                        <View>
-                            <TouchableOpacity
-                                style={[styles.input, { justifyContent: 'center' }, errors[name] ? { borderColor: "red" } : {}]}
-                                onPress={() => setOpenDropdown(isOpen ? null : name)}
-                            >
-                                <Text style={{ color: value ? "#333" : "#999" }}>
-                                    {value ? value : placeholder}
-                                </Text>
-                            </TouchableOpacity>
-
-                            {isOpen && (
-                                <View style={styles.dropdownContainer}>
-                                    <ScrollView style={styles.dropdownScroll} nestedScrollEnabled={true}>
-                                        {options.map((opt, index) => (
-                                            <TouchableOpacity
-                                                key={index}
-                                                style={styles.dropdownItem}
-                                                onPress={() => {
-                                                    setValue(name, opt as any);
-                                                    setOpenDropdown(null);
-                                                }}
-                                            >
-                                                <Text style={styles.dropdownText}>{opt}</Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
-                                </View>
-                            )}
-                        </View>
-                    )}
-                />
-                {errors[name] && <Text style={styles.error}>{errors[name]?.message}</Text>}
-            </View>
-        );
-    };
-
-    const renderExpeditionInput = () => (
-        <View style={{ marginBottom: 16, zIndex: 10 }}>
-            <Text style={styles.label}>Expedition</Text>
+    // Komponen Pembungkus Dropdown (Lebih Rapi & Universal)
+    interface FormDropdownProps {
+        name: keyof Payload;
+        label: string;
+        data: any[];
+        labelField: string;
+        valueField: string;
+        placeholder: string;
+        search?: boolean;
+        searchPlaceholder?: string;
+        onChangeCustom?: (item: any) => void;
+    }
+    const FormDropdown = ({ 
+        name, label, data, labelField, valueField, placeholder, search = false, searchPlaceholder, onChangeCustom 
+    }: FormDropdownProps) => (
+        <View style={{ marginBottom: 16 }}>
+            <Text style={styles.label}>{label}</Text>
             <Controller
                 control={control}
-                name="expedition"
-                rules={{ required: "Expedition wajib diisi" }}
-                render={({ field: { value } }) => (
-                    <View>
-                        <TextInput
-                            placeholder="Find or fill manually"
-                            style={[
-                                styles.input,
-                                errors.expedition ? { borderColor: "red" } : {}
-                            ]}
-                            value={value}
-                            onChangeText={handleSearchExpedition}
-                            onFocus={() => {
-                                setOpenDropdown(null); // Tutup dropdown lain
-                                if (value && dataVendor.length > 0) handleSearchExpedition(value);
-                            }}
-                        />
-                        {showVendorList && filteredVendor.length > 0 && (
-                            <View style={styles.dropdownContainer}>
-                                <ScrollView style={styles.dropdownScroll} nestedScrollEnabled={true}>
-                                    {filteredVendor.map((item, index) => (
-                                        <TouchableOpacity
-                                            key={index}
-                                            style={styles.dropdownItem}
-                                            onPress={() => handleSelectVendor(item)}
-                                        >
-                                            <Text style={styles.dropdownText}>{item.VENDOR_NAME}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                            </View>
-                        )}
-                    </View>
+                name={name}
+                rules={{ required: `${label} wajib diisi` }}
+                render={({ field: { value, onChange } }) => (
+                    <Dropdown
+                        style={[styles.dropdownSelect, errors[name] && { borderColor: 'red' }]}
+                        containerStyle={styles.dropdownPopup}
+                        data={data}
+                        search={search}
+                        labelField={labelField}
+                        valueField={valueField}
+                        placeholder={placeholder}
+                        searchPlaceholder={searchPlaceholder || "Search..."}
+                        value={value}
+                        onChange={(item) => {
+                            onChange(item[valueField]);
+                            if (onChangeCustom) onChangeCustom(item);
+                        }}
+                    />
                 )}
             />
-            {errors.expedition && <Text style={styles.error}>{errors.expedition?.message}</Text>}
+            {errors[name] && <Text style={styles.error}>{errors[name]?.message}</Text>}
         </View>
     );
 
     const renderInput = (label: string, name: keyof Payload, placeholder: string) => (
-        <View style={{ marginBottom: 16, zIndex: 1 }}>
+        <View style={{ marginBottom: 16 }}>
             <Text style={styles.label}>{label}</Text>
             <Controller
                 control={control}
@@ -322,7 +272,6 @@ export default function AssignGateVehicle() {
                         ]}
                         value={value as string}
                         onChangeText={onChange}
-                        onFocus={() => setOpenDropdown(null)} // Tutup semua dropdown jika mengetik
                         keyboardType={(name === "driver_phone" || name === "qty_utilitas") ? "numeric" : "default"}
                     />
                 )}
@@ -344,20 +293,53 @@ export default function AssignGateVehicle() {
 
             {!data || isEdit ? (
                 <View style={styles.card}>
-                    {/* Input Tambahan Sesuai Flow */}
-                    {renderSimpleDropdown("Delivery Category", "delivery_category", DELIVERY_CATEGORIES, "Pilih Kategori Pengiriman")}
+                    
+                    <FormDropdown 
+                        name="delivery_category"
+                        label="Delivery Category"
+                        data={DELIVERY_CATEGORIES}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Pilih Kategori Pengiriman"
+                    />
 
                     {isExternal && (
                         <>
-                            {renderExpeditionInput()}
-                            {renderSimpleDropdown("Vendor PO Number", "vendor_po_number", poOptions, "Pilih Vendor PO Number")}
+                            <FormDropdown 
+                                name="expedition"
+                                label="Expedition"
+                                data={dataVendor}
+                                search={true}
+                                labelField="VENDOR_NAME"
+                                valueField="VENDOR_NAME" 
+                                placeholder="Pilih Ekspedisi"
+                                searchPlaceholder="Cari Ekspedisi..."
+                                onChangeCustom={handleSelectVendor}
+                            />
+
+                            <FormDropdown 
+                                name="vendor_po_number"
+                                label="Vendor PO Number"
+                                data={poOptions}
+                                search={true}
+                                labelField="displayLabel"
+                                valueField="stringValue"
+                                placeholder="Pilih Vendor PO Number"
+                                searchPlaceholder="Cari PO..."
+                            />
                         </>
                     )}
 
-                    {renderSimpleDropdown("Truck Utilitas", "truck_utilitas", truckOptions, "Pilih Jenis Truk")}
-                    {renderInput("Qty Utilitas", "qty_utilitas", "Contoh: 100")}
+                    <FormDropdown 
+                        name="truck_utilitas"
+                        label="Truck Utilitas"
+                        data={truckOptions}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Pilih Jenis Truk"
+                    />
 
-                    {/* Input Standar */}
+                    {renderInput("Qty Utilitas", "qty_utilitas", "Contoh: 100")}
                     {renderInput("License Plate", "license_plate", "Contoh: B1234ABC")}
                     {renderInput("Driver Name", "driver_name", "Contoh: John Doe")}
                     {renderInput("Driver Phone", "driver_phone", "Contoh: 081234567890")}
@@ -374,6 +356,7 @@ export default function AssignGateVehicle() {
                 </View>
             ) : (
                 <>
+                    {/* Mode Detail View */}
                     <View style={styles.card}>
                         <Text style={styles.itemTitle}>Delivery Category</Text>
                         <Text style={styles.itemValue}>{data.delivery_category || "-"}</Text>
@@ -417,6 +400,7 @@ export default function AssignGateVehicle() {
                         </TouchableOpacity>
                     </View>
 
+                    {/* Section Assign Gate */}
                     <Text style={styles.header}>List Assign Gate</Text>
                     {dataAssigned && dataAssigned.length > 0 ? (
                         dataAssigned.map((ag: any, index: number) => {
@@ -453,13 +437,13 @@ export default function AssignGateVehicle() {
                                     <Text style={styles.indexNumber}>{index + 1}</Text>
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.compactText}>
-                                            <Text style={styles.bold}>Gate:</Text> {ag.gate.code ?? "-"}
+                                            <Text style={styles.bold}>Gate:</Text> {ag.gate?.code ?? "-"}
                                         </Text>
                                         <Text style={styles.compactText}>
                                             <Text style={styles.bold}>Full Name:</Text> {latestUser?.user_name ?? "-"}
                                         </Text>
                                         <Text style={styles.compactText}>
-                                            <Text style={styles.bold}>Username :</Text> {latestUser?.user.username ?? "-"}
+                                            <Text style={styles.bold}>Username :</Text> {latestUser?.user?.username ?? "-"}
                                         </Text>
                                     </View>
                                     <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
@@ -475,7 +459,7 @@ export default function AssignGateVehicle() {
                         <Text style={{ color: "#999", marginBottom: 12 }}>No assigned gate yet</Text>
                     )}
 
-                    {dataAssigned.length < 1 && (
+                    {dataAssigned?.length < 1 && (
                         <TouchableOpacity
                             style={styles.assignButton}
                             onPress={() => navigation.navigate('AssignGateActivity', { item: params.item })}
@@ -484,6 +468,7 @@ export default function AssignGateVehicle() {
                         </TouchableOpacity>
                     )}
 
+                    {/* Section Assign Helper */}
                     {dataAssigned && dataAssigned.length > 0 && (
                         <>
                             <Text style={styles.header}>List Assign Helper Loading</Text>
@@ -551,10 +536,11 @@ export default function AssignGateVehicle() {
 }
 
 const styles = StyleSheet.create({
-    seal: {
-        flex: 1,
+    contentseal: {
         padding: 18,
+        paddingBottom: 40,
         backgroundColor: "#F8F9FA",
+        flexGrow: 1,
     },
     header: {
         fontSize: 20,
@@ -585,6 +571,18 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingHorizontal: 12,
         backgroundColor: "#FAFAFA",
+    },
+    // Tambahan Style Khusus Dropdown
+    dropdownSelect: {
+        height: 45,
+        borderWidth: 1,
+        borderColor: "#DDD",
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        backgroundColor: "#FAFAFA",
+    },
+    dropdownPopup: {
+        borderRadius: 12,
     },
     error: {
         color: "red",
@@ -659,43 +657,5 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         marginRight: 6,
         color: "#000",
-    },
-    contentseal: {
-        padding: 18,
-        paddingBottom: 40,
-        backgroundColor: "#F8F9FA",
-        flexGrow: 1,
-    },
-    dropdownContainer: {
-        position: 'absolute',
-        top: 50,
-        left: 0,
-        right: 0,
-        backgroundColor: 'white',
-        borderWidth: 1,
-        borderColor: '#DDD',
-        borderRadius: 8,
-        elevation: 5,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        zIndex: 1000,
-        maxHeight: 200,
-    },
-    dropdownScroll: {
-        width: '100%',
-    },
-    dropdownItem: {
-        padding: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEE',
-    },
-    dropdownText: {
-        fontSize: 14,
-        color: '#333',
-    },
+    }
 });

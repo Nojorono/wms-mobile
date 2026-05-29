@@ -204,12 +204,12 @@ const CameraScreen = () => {
       // 🆕 Jika belum ada di existing, fetch dari API seperti biasa
       const res = await InboundServices.getPalletInfo(value);
       const palletData = res?.data;
-      
 
-      if (!palletData.success) {
+      if (!res) {
         showDialog("error", "Pallet not found or invalid!");
         return;
       }
+
       if (palletData?.items.length > 0) {
         if (palletData?.items[0]?.item_id !== item.id) {
           showDialog("error", "Pallet is not valid for this item!");
@@ -218,16 +218,23 @@ const CameraScreen = () => {
       }
 
       if (!palletData.success) {
-        if (palletData.pallet_status?.current_quantity === 0) {
-          showDialog("success", "Pallet is valid and ready to be used!");
-        } else {
-          showDialog("error", palletData.message || "Something went wrong!");
+        if (palletData.can_use) {
+          if (palletData.pallet_status?.current_quantity === 0) {
+            showDialog("success", "Pallet is valid and ready to be used!");
+          } else {
+            showDialog("error", palletData.data.message || "Something went wrong!");
+            return;
+          }
+        }else{
+          showDialog("error", palletData.message || "Pallet not valid!");
           return;
         }
+
+
       }
 
       if (palletData.data && palletData.data.success === false) {
-        showDialog("error", "Pallet invalid!" +palletData.data.message);
+        showDialog("error", "Pallet invalid!" + palletData.data.message);
         return;
       }
 

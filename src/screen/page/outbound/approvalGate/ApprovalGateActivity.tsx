@@ -26,12 +26,14 @@ type ApprovalGateMemoPallet = {
 type ApprovalGateMemo = {
     memoNo: string;
     route: string;
+    statusIntegrated: string;
     pallets: ApprovalGateMemoPallet[];
 };
 
 type ApprovalGateItem = {
     gate: string;
     doNumber: string;
+    doId: string;
     memos: ApprovalGateMemo[];
 };
 
@@ -41,6 +43,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
     return arr.map((gateItem) => {
         const loads = gateItem.assigned_gate_loads ?? [];
         const outboundMemos = gateItem.outbound_do?.outbound_memos ?? [];
+        const doId = gateItem.outbound_do_id ?? gateItem.outbound_do?.id ?? "UNKNOWN_DO_ID";
 
         // lookup memoId -> memo info
         const memoInfoMap: Record<string, any> = {};
@@ -48,6 +51,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
             memoInfoMap[m.id] = {
                 memoNo: m.outbound_memo_number,
                 route: `${m.origin} → ${m.destination}`,
+                statusIntegrated : m.status,
             };
         });
 
@@ -62,6 +66,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
                 memoMap[memoId] = {
                     memoNo: memoInfoMap[memoId]?.memoNo ?? "-",
                     route: memoInfoMap[memoId]?.route ?? "-",
+                    statusIntegrated: memoInfoMap[memoId]?.statusIntegrated ?? "-",
                     pallets: {},
                 };
             }
@@ -83,9 +88,11 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
             id: gateItem.id, // ✅ INI YANG KAMU MAU
             gate: gateItem.gate?.name ?? "-",
             doNumber: gateItem.outbound_do?.outbound_do_number ?? "-",
+            doId: doId,
             memos: Object.values(memoMap).map((memo: any) => ({
                 memoNo: memo.memoNo,
                 route: memo.route,
+                statusIntegrated: memo.statusIntegrated,
                 pallets: Object.entries(memo.pallets).map(
                     ([palletCode, skus]) => ({
                         palletCode,
@@ -201,13 +208,13 @@ export default function ApprovalGateScreen() {
             const approvedByOrg = responseApproved.data.filter((gate: any) =>
                 gate.outbound_do?.organization_id === userOrg && gate.outbound_do?.status === "APPROVED_LOAD"
             );
+
             const pendingByOrg = responsePending.data.filter((gate: any) =>
                 gate.outbound_do?.organization_id === userOrg
             );
 
             const data = [...approvedByOrg, ...pendingByOrg];
             const mapped = mapApprovalGateToUI(data);
-            console.log("Mapped Approval Gate Data:", mapped);
             setApprovalGate(mapped);
 
             // 👇 scroll ke atas setelah data refresh
@@ -253,14 +260,16 @@ export default function ApprovalGateScreen() {
                     </TouchableOpacity>
 
                     {/* AREA TENGAH → SYNC ICON */}
-                    <TouchableOpacity
+                    {gateItem.memos[0].statusIntegrated === "INTEGRATED" && (
+                         <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={async () => {
                             try {
+                                
                                 showLoadingDialog("Syncing...");
+                                // await OutboundService.integrateOutboundDo(gateItem.doId);
                                 await fetchGate();
                             } catch (error) {
-                                console.error("Sync error:", error);
                                 showDialog("error", "Sync failed!");
                             } finally {
                                 hideLoadingDialog();
@@ -270,6 +279,8 @@ export default function ApprovalGateScreen() {
                     >
                         <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
                     </TouchableOpacity>
+                    )}  
+                   
 
                     {/* AREA KANAN → ARROW ICON FOR COLLAPSE */}
                     <TouchableOpacity
@@ -442,7 +453,6 @@ export default function ApprovalGateScreen() {
                                     shadowRadius: 4,
                                 }}
                                 onPress={async () => {
-                                    console.log("Reject clicked:", item.id);
                                     confirm.show(
                                         "decline",
                                         "Are you sure want to reject this gate?",

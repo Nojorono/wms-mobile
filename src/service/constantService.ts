@@ -81,6 +81,24 @@ class ConstantService {
       throw error.response;
     }
   }
+
+    static async getTruckUtilitas(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/master-supplier/truck-util', { params: { limit: 50, } });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+    static async getPoLines(vendorNumber: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/master-supplier/po-lines`,{ params: { vendor_id: vendorNumber , limit:100} });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
 }
 
 export default ConstantService;

@@ -26,7 +26,7 @@ interface Payload {
     vendor_id?: string | null;
     delivery_category?: string;
     type_calculation?: string;
-    qty_utilitas?: string;
+    qty_utilitas?: number;
     truck_utilitas?: string;
     vendor_po_number?: string;
     license_plate: string;
@@ -52,7 +52,7 @@ export default function AssignGateVehicle() {
     // Dropdown States
     const [dataVendor, setDataVendor] = useState<any[]>([]);
     const [truckOptions, setTruckOptions] = useState<any[]>([]);
-    const [poOptions, setPoOptions] = useState<any[]>([]); 
+    const [poOptions, setPoOptions] = useState<any[]>([]);
 
     const [isEdit, setIsEdit] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -77,7 +77,7 @@ export default function AssignGateVehicle() {
             expedition: "",
             vendor_id: null,
             truck_utilitas: "",
-            qty_utilitas: "",
+            qty_utilitas: 0,
             type_calculation: "",
             license_plate: "",
             driver_name: "",
@@ -108,14 +108,14 @@ export default function AssignGateVehicle() {
             const response = await OutboundService.getOutboundDetailById(params.item.id);
             const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
             const resVendor = await ConstantService.getSuppliers();
-            // const truckUtilitas = await ConstantService.getTruckUtilitas();
-            
+            const truckUtilitas = await ConstantService.getTruckUtilitas();
+
             // Format truck options menjadi { label, value } jika datanya string
-            // const formattedTrucks = truckUtilitas.data.map((item: any) => ({
-            //     label: item.ITEM_DESCRIPTION, 
-            //     value: item.ITEM_DESCRIPTION 
-            // }));
-            // setTruckOptions(formattedTrucks);
+            const formattedTrucks = truckUtilitas.data.data.map((item: any) => ({
+                label: item.ITEM_DESCRIPTION,
+                value: item.ITEM_DESCRIPTION
+            }));
+            setTruckOptions(formattedTrucks);
 
             if (assignedGate.data.length > 0) {
                 const assignedLoading = await OutboundService.getAssignedLoadingByDoId(assignedGate.data[0].id);
@@ -165,7 +165,12 @@ export default function AssignGateVehicle() {
     const onSubmit = async (values: Payload) => {
         try {
             showLoadingDialog("Updating vehicle information...");
-            const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, values);
+            const payload = {
+                ...values,
+                qty_utilitas: Number(values.qty_utilitas),
+            };
+            console.log("Submitting payload:", payload);
+            const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, payload);
             showDialog("success", "Vehicle information updated successfully!");
             await fetchData();
             setIsEdit(false);
@@ -175,6 +180,7 @@ export default function AssignGateVehicle() {
         } finally {
             hideLoadingDialog();
         }
+
     };
 
     // --- Logic Select Expedition ---
@@ -183,18 +189,22 @@ export default function AssignGateVehicle() {
         setValue("vendor_id", item.VENDOR_ID.toString());
         setValue("vendor_po_number", ""); // Reset PO jika vendor berubah
         Keyboard.dismiss();
-        
+
         try {
             // Hit API ConstantService untuk mengambil data PO Lines. 
             const response: any = await ConstantService.getPoLines(item.VENDOR_ID.toString());
-            
-            
+
             // Format data agar mudah dibaca oleh react-native-element-dropdown
-            const formattedPo = response.data.map((po: any) => ({
-                ...po,
-                displayLabel: `${po.ITEM_DESCRIPTION}`,
-                stringValue: po.PO_LINE_ID.toString()
-            }));
+            const formattedPo = response.data.length === 0
+                ? [{
+                    displayLabel: "PO tidak ditemukan",
+                    stringValue: "po_data_not_found"
+                }]
+                : response.data.map((po: any) => ({
+                    ...po,
+                    displayLabel: `${po.ITEM_DESCRIPTION}`,
+                    stringValue: po.PO_LINE_ID.toString()
+                }));
 
             setPoOptions(formattedPo);
         } catch (error) {
@@ -216,8 +226,8 @@ export default function AssignGateVehicle() {
         searchPlaceholder?: string;
         onChangeCustom?: (item: any) => void;
     }
-    const FormDropdown = ({ 
-        name, label, data, labelField, valueField, placeholder, search = false, searchPlaceholder, onChangeCustom 
+    const FormDropdown = ({
+        name, label, data, labelField, valueField, placeholder, search = false, searchPlaceholder, onChangeCustom
     }: FormDropdownProps) => (
         <View style={{ marginBottom: 16 }}>
             <Text style={styles.label}>{label}</Text>
@@ -260,7 +270,8 @@ export default function AssignGateVehicle() {
                         pattern: { value: /^\d+$/, message: "Only numbers are allowed" }
                     }),
                     ...(name === "qty_utilitas" && {
-                        pattern: { value: /^\d+$/, message: "Harus berupa angka" }
+                        pattern: { value: /^\d+$/, message: "Only numbers are allowed" },
+                        max: { value: 100, message: "Maximum value is 100" }
                     })
                 }}
                 render={({ field: { onChange, value } }) => (
@@ -293,57 +304,57 @@ export default function AssignGateVehicle() {
 
             {!data || isEdit ? (
                 <View style={styles.card}>
-                    
-                    <FormDropdown 
+
+                    <FormDropdown
                         name="delivery_category"
                         label="Delivery Category"
                         data={DELIVERY_CATEGORIES}
                         labelField="label"
                         valueField="value"
-                        placeholder="Pilih Kategori Pengiriman"
+                        placeholder="Select Delivery Category"
                     />
 
                     {isExternal && (
                         <>
-                            <FormDropdown 
+                            <FormDropdown
                                 name="expedition"
                                 label="Expedition"
                                 data={dataVendor}
                                 search={true}
                                 labelField="VENDOR_NAME"
-                                valueField="VENDOR_NAME" 
-                                placeholder="Pilih Ekspedisi"
-                                searchPlaceholder="Cari Ekspedisi..."
+                                valueField="VENDOR_NAME"
+                                placeholder="Select Ekspedisi"
+                                searchPlaceholder="Search Ekspedisi..."
                                 onChangeCustom={handleSelectVendor}
                             />
 
-                            <FormDropdown 
+                            <FormDropdown
                                 name="vendor_po_number"
                                 label="Vendor PO Number"
                                 data={poOptions}
                                 search={true}
                                 labelField="displayLabel"
                                 valueField="stringValue"
-                                placeholder="Pilih Vendor PO Number"
-                                searchPlaceholder="Cari PO..."
+                                placeholder="Select Vendor PO Number"
+                                searchPlaceholder="Search PO..."
                             />
                         </>
                     )}
 
-                    <FormDropdown 
+                    <FormDropdown
                         name="truck_utilitas"
                         label="Truck Utilitas"
                         data={truckOptions}
                         labelField="label"
                         valueField="value"
-                        placeholder="Pilih Jenis Truk"
+                        placeholder="Select Truck Utilitas"
                     />
 
-                    {renderInput("Qty Utilitas", "qty_utilitas", "Contoh: 100")}
-                    {renderInput("License Plate", "license_plate", "Contoh: B1234ABC")}
-                    {renderInput("Driver Name", "driver_name", "Contoh: John Doe")}
-                    {renderInput("Driver Phone", "driver_phone", "Contoh: 081234567890")}
-                    {renderInput("Container Number", "container_number", "Contoh: C099372")}
+                    {renderInput("Qty Utilitas", "qty_utilitas", "Maximal: 100")}
+                    {renderInput("License Plate", "license_plate", "Example: B1234ABC")}
+                    {renderInput("Driver Name", "driver_name", "Example: John Doe")}
+                    {renderInput("Driver Phone", "driver_phone", "Example: 081234567890")}
+                    {renderInput("Container Number", "container_number", "Example: C099372")}
 
                     <TouchableOpacity
                         style={styles.saveButton}

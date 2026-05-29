@@ -51,7 +51,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
             memoInfoMap[m.id] = {
                 memoNo: m.outbound_memo_number,
                 route: `${m.origin} → ${m.destination}`,
-                statusIntegrated : m.status,
+                statusIntegrated: m.status,
             };
         });
 
@@ -155,8 +155,8 @@ export default function ApprovalGateScreen() {
     const listRef = useRef<FlatList>(null);
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [collapsedDO, setCollapsedDO] = useState<Record<string, boolean>>({});
-     const user = useAuthStore((state) => state.user);
-     const userOrg = user?.userDetail.organizationId;
+    const user = useAuthStore((state) => state.user);
+    const userOrg = user?.userDetail.organizationId;
 
     const [summaryModalVisible, setSummaryModalVisible] = useState(false);
     const [summaryData, setSummaryData] = useState<{ id: any, items: any[] }>({ id: null, items: [] });
@@ -205,9 +205,21 @@ export default function ApprovalGateScreen() {
             const responseApproved = await OutboundService.getAssignedGateByStatus("APPROVED");
             const responsePending = await OutboundService.getAssignedGateByStatus("PENDING");
 
-            const approvedByOrg = responseApproved.data.filter((gate: any) =>
-                gate.outbound_do?.organization_id === userOrg && gate.outbound_do?.status === "APPROVED_LOAD"
-            );
+            const approvedByOrg = responseApproved.data.filter((gate: any) => {
+                const outboundDo = gate.outbound_do;
+
+                const hasIntegratedMemo = outboundDo?.outbound_memos?.some(
+                    (memo: any) => memo.status === "INTEGRATED"
+                );
+
+                return (
+                    outboundDo?.organization_id === userOrg &&
+                    outboundDo?.status === "APPROVED_LOAD" &&
+                    !hasIntegratedMemo
+                );
+            });
+
+            console.log("Approved Gates:", approvedByOrg);// Debug log untuk melihat data yang diterima
 
             const pendingByOrg = responsePending.data.filter((gate: any) =>
                 gate.outbound_do?.organization_id === userOrg
@@ -234,7 +246,7 @@ export default function ApprovalGateScreen() {
 
 
 
-  const GateItem = ({
+    const GateItem = ({
         gateItem,
         collapsedDO,
         toggleDO,
@@ -260,27 +272,27 @@ export default function ApprovalGateScreen() {
                     </TouchableOpacity>
 
                     {/* AREA TENGAH → SYNC ICON */}
-                    {gateItem.memos[0].statusIntegrated === "INTEGRATED" && (
-                         <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={async () => {
-                            try {
-                                
-                                showLoadingDialog("Syncing...");
-                                // await OutboundService.integrateOutboundDo(gateItem.doId);
-                                await fetchGate();
-                            } catch (error) {
-                                showDialog("error", "Sync failed!");
-                            } finally {
-                                hideLoadingDialog();
-                            }
-                        }}
-                        style={{ padding: 10, marginRight: 4 }}
-                    >
-                        <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
-                    </TouchableOpacity>
-                    )}  
-                   
+                    {gateItem.memos[0].statusIntegrated !== "INTEGRATED" && (
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={async () => {
+                                try {
+
+                                    showLoadingDialog("Syncing...");
+                                    // await OutboundService.integrateOutboundDo(gateItem.doId);
+                                    await fetchGate();
+                                } catch (error) {
+                                    showDialog("error", "Sync failed!");
+                                } finally {
+                                    hideLoadingDialog();
+                                }
+                            }}
+                            style={{ padding: 10, marginRight: 4 }}
+                        >
+                            <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
+                        </TouchableOpacity>
+                    )}
+
 
                     {/* AREA KANAN → ARROW ICON FOR COLLAPSE */}
                     <TouchableOpacity
@@ -320,7 +332,7 @@ export default function ApprovalGateScreen() {
                             ))}
                         </View>
                     ))}
-                
+
                 {/* Modal diletakkan di luar loop agar tidak menumpuk, ini tetap sama seperti kodemu */}
                 <Modal
                     visible={summaryModalVisible}

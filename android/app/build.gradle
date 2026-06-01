@@ -79,9 +79,9 @@ android {
 
     apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
-    namespace "com.boilerplatereactnative"
+    namespace "com.wmsnna"
     defaultConfig {
-        applicationId "com.boilerplatereactnative"
+        applicationId "com.wmsnna"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

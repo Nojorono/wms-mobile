@@ -43,7 +43,7 @@ export default function LoginScreen() {
     } = useForm<FormData>();
 
     const [passwordVisible, setPasswordVisible] = useState(false);
-    const [username, setUsername] = useState('superadmin');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const [deviceId, setDeviceId] = useState('');

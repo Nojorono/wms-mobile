@@ -203,7 +203,7 @@ export default function ApprovalGateScreen() {
             showLoadingDialog("Loading List Approval Gate");
 
             const responseApproved = await OutboundService.getAssignedGateByStatus("APPROVED");
-            const responsePending = await OutboundService.getAssignedGateByStatus("PENDING");
+            const responsePending = await OutboundService.getAssignedGateByStatus("DONE");
 
             const approvedByOrg = responseApproved.data.filter((gate: any) => {
                 const outboundDo = gate.outbound_do;
@@ -272,26 +272,26 @@ export default function ApprovalGateScreen() {
                     </TouchableOpacity>
 
                     {/* AREA TENGAH → SYNC ICON */}
-                    {gateItem.memos[0].statusIntegrated !== "INTEGRATED" && (
-                        <TouchableOpacity
-                            activeOpacity={0.7}
-                            onPress={async () => {
-                                try {
-
-                                    showLoadingDialog("Syncing...");
-                                    // await OutboundService.integrateOutboundDo(gateItem.doId);
-                                    await fetchGate();
-                                } catch (error) {
-                                    showDialog("error", "Sync failed!");
-                                } finally {
-                                    hideLoadingDialog();
-                                }
-                            }}
-                            style={{ padding: 10, marginRight: 4 }}
-                        >
-                            <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
-                        </TouchableOpacity>
-                    )}
+                  {gateItem.memos?.length > 0 && gateItem.memos[0].statusIntegrated !== "INTEGRATED" && (
+    <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={async () => {
+            try {
+                showLoadingDialog("Syncing...");
+                const response = await OutboundService.integrateOutboundDo(gateItem.doId);
+                showDialog("success", response.message || "Sync successful!");
+                await fetchGate();
+            } catch (error) {
+                showDialog("error", "Sync failed!");
+            } finally {
+                hideLoadingDialog();
+            }
+        }}
+        style={{ padding: 10, marginRight: 4 }}
+    >
+        <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
+    </TouchableOpacity>
+)}
 
 
                     {/* AREA KANAN → ARROW ICON FOR COLLAPSE */}

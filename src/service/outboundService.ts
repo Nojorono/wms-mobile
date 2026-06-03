@@ -71,10 +71,19 @@ class OutboundService {
   //INSPECTION SERVICES
   static async getOutboundDoList(data: any): Promise<any> {
     try {
-      const response = await axiosInstance.get(`/outbound-do/`, { params: data });
+      const response = await axiosInstance.get(`/outbound-do/`, { params: data ,timeout: 20000});
       return response.data;
     } catch (error: any) {
-      throw error.response;
+      throw error.response || error;
+    }
+  }
+
+    static async getOutboundDoListById(idDo: string, data: any): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/outbound-do/${idDo}`, { params: data ,timeout: 20000});
+      return response.data;
+    } catch (error: any) {
+      throw error.response || error;
     }
   }
 

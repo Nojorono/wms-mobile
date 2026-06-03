@@ -40,13 +40,19 @@ function NewInspectionMemo() {
   // LOGIK - TETAP SAMA
   const fetchInspection = async () => {
     try {
-      setRefreshing(true);
-      showLoadingDialog("Loading...");
-      const data = { limit: 100 ,transaction_picking_status:"PENDING"};
-      const response = await OutboundService.getOutboundDoList(data);
-      const list = response?.data || [];
-      const matched = list.find((i: any) => i.id === itemBefore.item.id);
-      const memos = matched?.outbound_memos || [];
+    
+    setRefreshing(true);
+    showLoadingDialog("Loading...");
+    
+    const data = { transaction_picking_status: "PENDING" };
+  
+    
+    const response = await OutboundService.getOutboundDoListById(itemBefore.item.id, data);
+  
+    
+    const list = response?.data || [];
+    console.log("Fetched DO List:", response);
+      const memos = list?.outbound_memos || [];
 
       const processed = memos.map((memo: any) => {
         const memoItems = memo?.outbound_memo_items || [];
@@ -71,7 +77,8 @@ function NewInspectionMemo() {
         return { memo, items: mergedItems };
       });
       setMemoList(processed);
-    } catch (e) {
+    } catch (e:any) {
+      console.error("Error fetching inspection data:", e.data?.message || e.message || e);
       showDialog("error", "Error while fetching data!");
     } finally {
       hideLoadingDialog();

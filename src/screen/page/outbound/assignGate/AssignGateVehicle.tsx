@@ -39,9 +39,14 @@ type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>
 
 // Map string array ke format object {label, value} untuk Dropdown
 const DELIVERY_CATEGORIES = [
-    { label: "Ekspedisi External", value: "Ekspedisi External" },
-    { label: "Expedisi Internal", value: "Expedisi Internal" },
-    { label: "Expedisi Vendor", value: "Expedisi Vendor" }
+    { label: "Ekspedisi Eksternal", value: "Ekspedisi Eksternal" },
+    { label: "Ekspedisi Internal", value: "Ekspedisi Internal" },
+    { label: "Ekspedisi Vendor", value: "Ekspedisi Vendor" }
+];
+
+const TYPE_CALCULATION_OPTIONS = [
+    { label: "Multidrop", value: "MULTIDROP" },
+    { label: "Singledrop", value: "SINGLEDROP" }
 ];
 
 export default function AssignGateVehicle() {
@@ -88,19 +93,22 @@ export default function AssignGateVehicle() {
     });
 
     const deliveryCategory = watch("delivery_category");
-    const isExternal = deliveryCategory === "Ekspedisi External";
+    const isEksternal = deliveryCategory === "Ekspedisi Eksternal";
+    const isInternal = deliveryCategory === "Ekspedisi Internal" ;
+    const isVendor = deliveryCategory === "Ekspedisi Vendor";
 
     // --- Efek Logika Delivery Category ---
-    useEffect(() => {
-        if (deliveryCategory === "Expedisi Internal" || deliveryCategory === "Expedisi Vendor") {
+useEffect(() => {
+        if (isInternal) {
             setValue("expedition", "-1");
             setValue("vendor_id", "-1");
             setValue("vendor_po_number", "");
+        } else if (isEksternal) {
+            // Tambahkan ini: Reset field internal jika pindah ke Eksternal
             setValue("type_calculation", "");
-        } else if (deliveryCategory === "Ekspedisi External") {
-            // setValue("expedition", ""); // Opsional: Reset jika kategori kembali ke Eksternal
+            setValue("qty_utilitas", 0);
         }
-    }, [deliveryCategory, setValue]);
+    }, [deliveryCategory, setValue, isInternal, isEksternal]);
 
     async function fetchData() {
         try {
@@ -130,6 +138,7 @@ export default function AssignGateVehicle() {
                 vendor_id: response?.data?.vendor_id ?? null,
                 truck_utilitas: response?.data?.truck_utilitas ?? "",
                 qty_utilitas: response?.data?.qty_utilitas?.toString() ?? "",
+                type_calculation: response?.data?.type_calculation ?? "",
                 license_plate: response?.data?.license_plate ?? "",
                 driver_name: response?.data?.driver_name ?? "",
                 driver_phone: response?.data?.driver_phone ?? "",
@@ -165,10 +174,23 @@ export default function AssignGateVehicle() {
     const onSubmit = async (values: Payload) => {
         try {
             showLoadingDialog("Updating vehicle information...");
-            const payload = {
-                ...values,
-                qty_utilitas: Number(values.qty_utilitas),
-            };
+           // Tambahkan logika filtering payload ini
+            let payload: any = { ...values };
+
+            if (isEksternal) {
+                delete payload.qty_utilitas;
+                delete payload.type_calculation;
+            }else if (isVendor) {
+              delete payload.expedition;
+              delete payload.vendor_po_number;
+              delete payload.vendor_id;   
+            payload.qty_utilitas = Number(values.qty_utilitas);
+            }
+            else {
+                payload.qty_utilitas = Number(values.qty_utilitas);
+            }
+
+            console.log("Form Values:", params.item.id);
             console.log("Submitting payload:", payload);
             const response = await OutboundService.updateOutboundDoVehicleInfo(params.item.id, payload);
             showDialog("success", "Vehicle information updated successfully!");
@@ -197,7 +219,7 @@ export default function AssignGateVehicle() {
             // Format data agar mudah dibaca oleh react-native-element-dropdown
             const formattedPo = response.data.length === 0
                 ? [{
-                    displayLabel: "PO tidak ditemukan",
+                    displayLabel: "PO tidak ada",
                     stringValue: "po_data_not_found"
                 }]
                 : response.data.map((po: any) => ({
@@ -314,7 +336,7 @@ export default function AssignGateVehicle() {
                         placeholder="Select Delivery Category"
                     />
 
-                    {isExternal && (
+                    {isEksternal && (
                         <>
                             <FormDropdown
                                 name="expedition"
@@ -349,8 +371,20 @@ export default function AssignGateVehicle() {
                         valueField="value"
                         placeholder="Select Truck Utilitas"
                     />
-
-                    {renderInput("Qty Utilitas", "qty_utilitas", "Maximal: 100")}
+                   {isInternal||isVendor && (
+                        <>
+                            <FormDropdown
+                                name="type_calculation"
+                                label="Type Calculation"
+                                data={TYPE_CALCULATION_OPTIONS}
+                                labelField="label"
+                                valueField="value"
+                                placeholder="Select Type Calculation"
+                            />
+                            {renderInput("Qty Utilitas", "qty_utilitas", "Maximal: 100")}
+                        </>
+                    )}
+                   
                     {renderInput("License Plate", "license_plate", "Example: B1234ABC")}
                     {renderInput("Driver Name", "driver_name", "Example: John Doe")}
                     {renderInput("Driver Phone", "driver_phone", "Example: 081234567890")}
@@ -375,10 +409,20 @@ export default function AssignGateVehicle() {
                         <Text style={styles.itemTitle}>Truck Utilitas</Text>
                         <Text style={styles.itemValue}>{data.truck_utilitas || "-"}</Text>
 
+                        {isInternal && (
+                            <>
+                                <Text style={styles.itemTitle}>Type Calculation</Text>
+                                <Text style={styles.itemValue}>{data.type_calculation || "-"}</Text>
+                                
+                                <Text style={styles.itemTitle}>Qty Utilitas</Text>
+                                <Text style={styles.itemValue}>{data.qty_utilitas || "-"}</Text>
+                            </>
+                        )}
+
                         <Text style={styles.itemTitle}>Qty Utilitas</Text>
                         <Text style={styles.itemValue}>{data.qty_utilitas || "-"}</Text>
 
-                        {data.delivery_category === "Ekspedisi External" && (
+                        {data.delivery_category === "Ekspedisi Eksternal" && (
                             <>
                                 <Text style={styles.itemTitle}>Vendor PO Number</Text>
                                 <Text style={styles.itemValue}>{data.vendor_po_number || "-"}</Text>

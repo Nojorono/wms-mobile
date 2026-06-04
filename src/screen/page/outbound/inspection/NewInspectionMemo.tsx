@@ -40,18 +40,17 @@ function NewInspectionMemo() {
   // LOGIK - TETAP SAMA
   const fetchInspection = async () => {
     try {
-    
-    setRefreshing(true);
-    showLoadingDialog("Loading...");
-    
-    const data = { transaction_picking_status: "PENDING" };
-  
-    
-    const response = await OutboundService.getOutboundDoListById(itemBefore.item.id, data);
-  
-    
-    const list = response?.data || [];
-    console.log("Fetched DO List:", response);
+
+      setRefreshing(true);
+      showLoadingDialog("Loading...");
+
+      const data = { transaction_picking_status: "PENDING" };
+      console.log("Fetching with data:", itemBefore.item.id);
+
+      const response = await OutboundService.getOutboundDoListById(itemBefore.item.id);
+
+      const list = response?.data || [];
+
       const memos = list?.outbound_memos || [];
 
       const processed = memos.map((memo: any) => {
@@ -76,8 +75,9 @@ function NewInspectionMemo() {
         });
         return { memo, items: mergedItems };
       });
+      console.log("Processed Memo List:", processed);
       setMemoList(processed);
-    } catch (e:any) {
+    } catch (e: any) {
       console.error("Error fetching inspection data:", e.data?.message || e.message || e);
       showDialog("error", "Error while fetching data!");
     } finally {
@@ -98,6 +98,7 @@ function NewInspectionMemo() {
     }).filter(Boolean);
   }, [memoList, selectedPalletUse]);
 
+
   const palletUseOptions = useMemo(() => {
     const set = new Set<string>();
     memoList.forEach((group: any) => group.items.forEach((item: any) => {
@@ -107,20 +108,29 @@ function NewInspectionMemo() {
     }));
     return Array.from(set);
   }, [memoList]);
+  console.log("memoList:", memoList);
 
   // Tombol Visibility Logic
-  const showApproveBtn = memoList.length > 0 && memoList.some((m: any) => 
+  const isAllInspectionApproved = memoList.length > 0 && memoList.every((m: any) =>
+    m.items.length > 0 && m.items.every((item: any) =>
+      item.scan_detail.length > 0 && item.scan_detail.every((s: any) => s.status === "INSPECTION_APPROVED")
+    )
+  );
+
+  // 2. Tambahkan kondisi `!isAllInspectionApproved &&` di awal showApproveBtn
+  const showApproveBtn = !isAllInspectionApproved && memoList.length > 0 && memoList.some((m: any) =>
     m.items.some((item: any) => item.scan_detail.some((s: any) => s.status === "INSPECTION" || s.status === "INSPECTION_APPROVED"))
   );
 
-  const showCompleteBtn = memoList.length > 0 && memoList.every((m: any) => 
-    m.items.every((item: any) => item.scan_detail.length > 0 && item.scan_detail.every((s: any) => s.status === "INSPECTION_APPROVED"))
+  // 3. Tambahkan kondisi `!isAllInspectionApproved &&` di awal showCompleteBtn
+  const showCompleteBtn = !isAllInspectionApproved && memoList.length > 0 && memoList.every((m: any) =>
+    m.items.length > 0 && m.items.every((item: any) => item.scan_detail.length > 0 && item.scan_detail.every((s: any) => s.status === "INSPECTION_APPROVED")) // Sesuaikan status ini jika flow sebelumnya berbeda
   );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
+
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Inspection Memo</Text>
@@ -167,7 +177,7 @@ function NewInspectionMemo() {
             ))
           )}
         </View>
-        
+
         {/* Spacing for FAB */}
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -179,13 +189,15 @@ function NewInspectionMemo() {
             style={[styles.fab, { backgroundColor: "#F26E1F" }]}
             onPress={() => Alert.alert("Approve All", "Are you sure you want to approve all tasks?", [
               { text: "Cancel", style: "cancel" },
-              { text: "OK", onPress: async () => {
-                try {
-                  await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "IN_PROGRESS");
-                  showDialog("success", "All tasks approved successfully!");
-                  navigation.goBack();
-                } catch (error) { showDialog("error", "Failed to approve!"); }
-              }},
+              {
+                text: "OK", onPress: async () => {
+                  try {
+                    await OutboundService.updateStatusWhenCompleteInspection(itemBefore.item.id, "IN_PROGRESS");
+                    showDialog("success", "All tasks approved successfully!");
+                    navigation.goBack();
+                  } catch (error) { showDialog("error", "Failed to approve!"); }
+                }
+              },
             ])}
           >
             <Text style={styles.fabText}>Approve Tasks</Text>
@@ -197,17 +209,19 @@ function NewInspectionMemo() {
             style={[styles.fab, { backgroundColor: "#2196F3" }]}
             onPress={() => Alert.alert("Complete All", "Finalize all inspection data?", [
               { text: "Cancel", style: "cancel" },
-              { text: "OK", onPress: async () => {
-                try {
-                  for (const memoGroup of memoList) {
-                    for (const item of memoGroup.items) {
-                      await OutboundService.updateTransactionPickingStatus(item.transaction_picking?.id, { status: "COMPLETED" });
+              {
+                text: "OK", onPress: async () => {
+                  try {
+                    for (const memoGroup of memoList) {
+                      for (const item of memoGroup.items) {
+                        await OutboundService.updateTransactionPickingStatus(item.transaction_picking?.id, { status: "COMPLETED" });
+                      }
                     }
-                  }
-                  showDialog("success", "All completed!");
-                  navigation.goBack();
-                } catch (error) { showDialog("error", "Failed to complete!"); }
-              }},
+                    showDialog("success", "All completed!");
+                    navigation.goBack();
+                  } catch (error) { showDialog("error", "Failed to complete!"); }
+                }
+              },
             ])}
           >
             <Text style={styles.fabText}>Complete All</Text>

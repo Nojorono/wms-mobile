@@ -78,7 +78,7 @@ class OutboundService {
     }
   }
 
-    static async getOutboundDoListById(idDo: string, data: any): Promise<any> {
+    static async getOutboundDoListById(idDo: string, data?: any): Promise<any> {
     try {
       const response = await axiosInstance.get(`/outbound-do/${idDo}`, { params: data ,timeout: 20000});
       return response.data;

@@ -33,6 +33,7 @@ interface Payload {
     driver_name: string;
     driver_phone: string;
     container_number?: string;
+    memo_qtys?: Record<string, string>;
 }
 
 type NavigationProp = StackNavigationProp<AssignGateParamList, 'AssignGateMain'>;
@@ -68,6 +69,7 @@ export default function AssignGateVehicle() {
     const confirm = useConfirmationStore();
     const params = (route.params || {}) as any;
     const navigation = useNavigation<NavigationProp>();
+    const [outboundMemos, setOutboundMemos] = useState<any[]>([]);
 
     const {
         control,
@@ -91,14 +93,15 @@ export default function AssignGateVehicle() {
             vendor_po_number: "",
         }
     });
-
+    //catetan:
+    // external : tambahin field 2 biji qty_truck_utilitas , MEMO A :,  MEMO B: 
     const deliveryCategory = watch("delivery_category");
     const isEksternal = deliveryCategory === "Ekspedisi Eksternal";
-    const isInternal = deliveryCategory === "Ekspedisi Internal" ;
+    const isInternal = deliveryCategory === "Ekspedisi Internal";
     const isVendor = deliveryCategory === "Ekspedisi Vendor";
 
     // --- Efek Logika Delivery Category ---
-useEffect(() => {
+    useEffect(() => {
         if (isInternal) {
             setValue("expedition", "-1");
             setValue("vendor_id", "-1");
@@ -117,6 +120,14 @@ useEffect(() => {
             const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
             const resVendor = await ConstantService.getSuppliers();
             const truckUtilitas = await ConstantService.getTruckUtilitas();
+            const memos = response?.data?.outbound_memos || [];
+            setOutboundMemos(memos);
+
+            // Set default values untuk memo_qtys (jika data edit)
+            let initialMemoQtys: Record<string, string> = {};
+            memos.forEach((memo: any) => {
+                initialMemoQtys[memo.id] = memo.delivery_attribute14?.toString() || "";
+            });
 
             // Format truck options menjadi { label, value } jika datanya string
             const formattedTrucks = truckUtilitas.data.data.map((item: any) => ({
@@ -144,6 +155,7 @@ useEffect(() => {
                 driver_phone: response?.data?.driver_phone ?? "",
                 container_number: response?.data?.container_number ?? "",
                 vendor_po_number: response?.data?.vendor_po_number ?? "",
+                memo_qtys: initialMemoQtys,
             };
 
             setData(newData);
@@ -174,17 +186,25 @@ useEffect(() => {
     const onSubmit = async (values: Payload) => {
         try {
             showLoadingDialog("Updating vehicle information...");
-           // Tambahkan logika filtering payload ini
+            if (isEksternal && values.memo_qtys) {
+                // Eksekusi semua request update memo secara bersamaan
+                const memoUpdatePromises = Object.keys(values.memo_qtys).map((memoId) => {
+                    const qtyFloat = parseFloat(values.memo_qtys![memoId]);
+                    const payloadMemo = { delivery_attribute14: String(qtyFloat) };
+                    return OutboundService.updateMemobyId(memoId, payloadMemo);
+                });
+                await Promise.all(memoUpdatePromises);
+            }
             let payload: any = { ...values };
-
+            delete payload.memo_qtys;
             if (isEksternal) {
                 delete payload.qty_utilitas;
                 delete payload.type_calculation;
-            }else if (isVendor) {
-              delete payload.expedition;
-              delete payload.vendor_po_number;
-              delete payload.vendor_id;   
-            payload.qty_utilitas = Number(values.qty_utilitas);
+            } else if (isVendor) {
+                delete payload.expedition;
+                delete payload.vendor_po_number;
+                delete payload.vendor_id;
+                payload.qty_utilitas = Number(values.qty_utilitas);
             }
             else {
                 payload.qty_utilitas = Number(values.qty_utilitas);
@@ -275,7 +295,9 @@ useEffect(() => {
                     />
                 )}
             />
-            {errors[name] && <Text style={styles.error}>{errors[name]?.message}</Text>}
+            {typeof errors[name]?.message === "string" && (
+                <Text style={styles.error}>{errors[name]?.message}</Text>
+            )}
         </View>
     );
 
@@ -309,7 +331,9 @@ useEffect(() => {
                     />
                 )}
             />
-            {errors[name] && <Text style={styles.error}>{errors[name]?.message}</Text>}
+            {typeof errors[name]?.message === "string" && (
+                <Text style={styles.error}>{errors[name]?.message}</Text>
+            )}
         </View>
     );
 
@@ -360,7 +384,39 @@ useEffect(() => {
                                 placeholder="Select Vendor PO Number"
                                 searchPlaceholder="Search PO..."
                             />
+                            {outboundMemos.map((memo) => (
+                                <View key={memo.id} style={{ marginBottom: 16 }}>
+                                    <Text style={styles.label}>Qty Utilitas ({memo.outbound_memo_number})</Text>
+                                    <Controller
+                                        control={control}
+                                        name={`memo_qtys.${memo.id}` as any} // Di-cast ke any karena dinamis
+                                        rules={{
+                                            required: "Qty wajib diisi",
+                                            pattern: {
+                                                value: /^[0-9]*\.?[0-9]+$/, // Regex untuk validasi float/decimal
+                                                message: "Hanya angka dan titik desimal (float) yang diizinkan"
+                                            }
+                                        }}
+                                        render={({ field: { onChange, value } }) => (
+                                            <TextInput
+                                                placeholder="Contoh: 1.5"
+                                                style={[styles.input, errors?.memo_qtys?.[memo.id] ? { borderColor: "red" } : {}]}
+                                                value={value as string}
+                                                onChangeText={(text) => {
+                                                    const formattedText = text.replace(/,/g, ".");
+                                                    onChange(formattedText);
+                                                }}
+                                                keyboardType="decimal-pad" // Gunakan decimal-pad agar memunculkan tombol koma/titik di iOS & Android
+                                            />
+                                        )}
+                                    />
+                                    {errors?.memo_qtys?.[memo.id] && (
+                                        <Text style={styles.error}>{((errors.memo_qtys as any)[memo.id])?.message}</Text>
+                                    )}
+                                </View>
+                            ))}
                         </>
+
                     )}
 
                     <FormDropdown
@@ -371,7 +427,7 @@ useEffect(() => {
                         valueField="value"
                         placeholder="Select Truck Utilitas"
                     />
-                   {isInternal||isVendor && (
+                    {(isInternal || isVendor) && (
                         <>
                             <FormDropdown
                                 name="type_calculation"
@@ -384,7 +440,7 @@ useEffect(() => {
                             {renderInput("Qty Utilitas", "qty_utilitas", "Maximal: 100")}
                         </>
                     )}
-                   
+
                     {renderInput("License Plate", "license_plate", "Example: B1234ABC")}
                     {renderInput("Driver Name", "driver_name", "Example: John Doe")}
                     {renderInput("Driver Phone", "driver_phone", "Example: 081234567890")}
@@ -413,14 +469,12 @@ useEffect(() => {
                             <>
                                 <Text style={styles.itemTitle}>Type Calculation</Text>
                                 <Text style={styles.itemValue}>{data.type_calculation || "-"}</Text>
-                                
+
                                 <Text style={styles.itemTitle}>Qty Utilitas</Text>
                                 <Text style={styles.itemValue}>{data.qty_utilitas || "-"}</Text>
                             </>
                         )}
 
-                        <Text style={styles.itemTitle}>Qty Utilitas</Text>
-                        <Text style={styles.itemValue}>{data.qty_utilitas || "-"}</Text>
 
                         {data.delivery_category === "Ekspedisi Eksternal" && (
                             <>

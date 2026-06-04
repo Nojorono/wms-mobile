@@ -150,6 +150,16 @@ class OutboundService {
     }
   }
 
+  static async updateMemobyId(memoId: string, payload: any): Promise<any> {
+    try {
+      const response = await axiosInstance.patch(`/outbound-memo/${memoId}`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+
   static async updateOutboundDoVehicleInfo(outboundDoId: string, payload: any): Promise<any> {
     try {
       const response = await axiosInstance.patch(`/outbound-do/${outboundDoId}`, payload);

@@ -139,23 +139,24 @@ const InboundStackNavigator = () => (
           backgroundColor: Colors.secondaryColor,
         },
         headerRight: () => (
-          <TouchableOpacity
-            onPress={() =>
-              navigation.getParent()?.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-              })
-            }
-            style={{
-              marginRight: 16,
-            }}
-          >
-            <Ionicons
-              name="home"
-              size={20}
-              color="#fff"
-            />
-          </TouchableOpacity>
+          <></>
+          // <TouchableOpacity
+          //   onPress={() =>
+          //     navigation.getParent()?.reset({
+          //       index: 0,
+          //       routes: [{ name: 'Home' }],
+          //     })
+          //   }
+          //   style={{
+          //     marginRight: 16,
+          //   }}
+          // >
+          //   <Ionicons
+          //     name="home"
+          //     size={20}
+          //     color="#fff"
+          //   />
+          // </TouchableOpacity>
         ),
       })}
     />

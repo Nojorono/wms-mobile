@@ -30,6 +30,7 @@ interface Item {
     quantities: { [uom: string]: { plan: number; scan: number; inspected: number } };
     sku: string;
     do_id: string;
+    inbound_type: string;
     description: string;
     uom: string;
     quantity_plan: number;
@@ -50,7 +51,8 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
     const [selectedReason, setSelectedReason] = useState("");
     const [additionalQty, setAdditionalQty] = useState(0);
     const [dataReason, setDataReason] = useState<any>([]);
-    console.log("Inbound ID:", inbound_id);
+    const inboundType = data.inbound_type;
+    console.log("inbound type di card", inboundType);
 
     const handleScannedChange = (value: string, idx: number) => {
         const newDetails = [...details];
@@ -70,10 +72,17 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
     useEffect(() => {
         const fetchData = async () => {
             try {
+               
                 const res = await ConstantService.getWarehouse();
-                const filteredData = res.data.filter((item: any) => item.name === "TRACKING");
-                console.log("Filtered Data Reason:", filteredData);
+                if(inboundType === "PO") {
+                const filteredData = res.data.filter((item: any) => item.name === "SELISIH");
                 setDataReason(filteredData);
+                console.log("data reason after filter", filteredData);
+                }else{
+                const filteredData = res.data.filter((item: any) => item.name === "TRACKING");
+                setDataReason(filteredData);
+                }
+               
                 // setDataReason(res.data);
             } catch (error) {
                 console.error("Failed to fetch good receive details:", error);
@@ -131,7 +140,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                     <Text style={styles.detailValue}>{item.do_number}</Text>
                                 </View>
                                 <View style={styles.infoBlock}>
-                                    <Text style={styles.detailLabel}>PO</Text>
+                                    <Text style={styles.detailLabel}>{inboundType}</Text>
                                     <Text style={styles.detailValue}>{item.po_number}</Text>
                                 </View>
                             </View>
@@ -180,7 +189,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                                         >
                                                             <Picker.Item label="Select Reason" value="" color="#999" style={{ fontSize: 13 }} />
                                                             {dataReason.map((item: any) => (
-                                                                <Picker.Item key={item.id} label={item.locator_name} value={item.id} style={{ fontSize: 13 }} />
+                                                                <Picker.Item key={item.id} label={item.locator_name === "" ? item.name : item.locator_name} value={item.id} style={{ fontSize: 13 }} />
                                                             ))}
                                                         </Picker>
                                                     </View>

@@ -44,6 +44,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
         const loads = gateItem.assigned_gate_loads ?? [];
         const outboundMemos = gateItem.outbound_do?.outbound_memos ?? [];
         const doId = gateItem.outbound_do_id ?? gateItem.outbound_do?.id ?? "UNKNOWN_DO_ID";
+        const deliveryCategory = gateItem.outbound_do?.delivery_category ?? "UNKNOWN_CATEGORY";
 
         // lookup memoId -> memo info
         const memoInfoMap: Record<string, any> = {};
@@ -89,6 +90,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
             gate: gateItem.gate?.name ?? "-",
             doNumber: gateItem.outbound_do?.outbound_do_number ?? "-",
             doId: doId,
+            deliveryCategory: deliveryCategory,
             memos: Object.values(memoMap).map((memo: any) => ({
                 memoNo: memo.memoNo,
                 route: memo.route,
@@ -215,7 +217,9 @@ export default function ApprovalGateScreen() {
                 return (
                     outboundDo?.organization_id === userOrg &&
                     outboundDo?.status === "APPROVED_LOAD" &&
-                    !hasIntegratedMemo
+                    !hasIntegratedMemo &&
+                    outboundDo?.delivery_category !== "Ekspedisi Vendor"
+                    
                 );
             });
 
@@ -255,6 +259,7 @@ export default function ApprovalGateScreen() {
         const { gate, doNumber, memos = [] } = gateItem;
         const collapsed = collapsedDO[doNumber];
         const status = getDOStatus(memos);
+        console.log('gateItem', gateItem); // Debug log untuk melihat data gateItem yang diterima
 
         return (
             <View>
@@ -266,32 +271,34 @@ export default function ApprovalGateScreen() {
                         onPress={() => toggleDO(doNumber)}
                         style={{ flex: 1, paddingRight: 8 }}
                     >
-                        <Text style={styles.label}>GATE LOADING</Text>
-                        <Text style={styles.value}>{gate}</Text>
+                        <Text style={styles.label}>GATE LOADING | ({gateItem.deliveryCategory})</Text>
+                        <Text style={styles.value}>{gate} </Text>
                         <Text style={styles.do}>{doNumber}</Text>
                     </TouchableOpacity>
 
                     {/* AREA TENGAH → SYNC ICON */}
-                  {gateItem.memos?.length > 0 && gateItem.memos[0].statusIntegrated !== "INTEGRATED" && (
-    <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={async () => {
-            try {
-                showLoadingDialog("Syncing...");
-                const response = await OutboundService.integrateOutboundDo(gateItem.doId);
-                showDialog("success", response.message || "Sync successful!");
-                await fetchGate();
-            } catch (error) {
-                showDialog("error", "Sync failed!");
-            } finally {
-                hideLoadingDialog();
-            }
-        }}
-        style={{ padding: 10, marginRight: 4 }}
-    >
-        <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
-    </TouchableOpacity>
-)}
+                    {gateItem.deliveryCategory !== "Ekspedisi Vendor" &&
+                        gateItem.memos?.length > 0 &&
+                        gateItem.memos.some((memo: any) => memo.statusIntegrated !== "INTEGRATED") && (
+                            <TouchableOpacity
+                                activeOpacity={0.7}
+                                onPress={async () => {
+                                    try {
+                                        showLoadingDialog("Syncing...");
+                                        const response = await OutboundService.integrateOutboundDo(gateItem.doId);
+                                        showDialog("success", response.message || "Sync successful!");
+                                        await fetchGate();
+                                    } catch (error) {
+                                        showDialog("error", "Sync failed!");
+                                    } finally {
+                                        hideLoadingDialog();
+                                    }
+                                }}
+                                style={{ padding: 10, marginRight: 4 }}
+                            >
+                                <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
+                            </TouchableOpacity>
+                        )}
 
 
                     {/* AREA KANAN → ARROW ICON FOR COLLAPSE */}

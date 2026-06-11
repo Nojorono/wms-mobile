@@ -386,7 +386,7 @@ export default function AssignGateVehicle() {
                             />
                             {outboundMemos.map((memo) => (
                                 <View key={memo.id} style={{ marginBottom: 16 }}>
-                                    <Text style={styles.label}>Qty Utilitas ({memo.outbound_memo_number})</Text>
+                                    <Text style={styles.label}>Qty PO Line ({memo.outbound_memo_number})</Text>
                                     <Controller
                                         control={control}
                                         name={`memo_qtys.${memo.id}` as any} // Di-cast ke any karena dinamis

@@ -223,8 +223,6 @@ export default function ApprovalGateScreen() {
                 );
             });
 
-            console.log("Approved Gates:", approvedByOrg);// Debug log untuk melihat data yang diterima
-
             const pendingByOrg = responsePending.data.filter((gate: any) =>
                 gate.outbound_do?.organization_id === userOrg
             );
@@ -282,17 +280,23 @@ export default function ApprovalGateScreen() {
                         gateItem.memos.some((memo: any) => memo.statusIntegrated !== "INTEGRATED") && (
                             <TouchableOpacity
                                 activeOpacity={0.7}
-                                onPress={async () => {
-                                    try {
-                                        showLoadingDialog("Syncing...");
-                                        const response = await OutboundService.integrateOutboundDo(gateItem.doId);
-                                        showDialog("success", response.message || "Sync successful!");
-                                        await fetchGate();
-                                    } catch (error) {
-                                        showDialog("error", "Sync failed!");
-                                    } finally {
-                                        hideLoadingDialog();
-                                    }
+                                onPress={() => {
+                                    confirm.show(
+                                        "accept",
+                                        "Are you sure want to integrate this?",
+                                        async () => {
+                                            try {
+                                                showLoadingDialog("Syncing...");
+                                                const response = await OutboundService.integrateOutboundDo(gateItem.doId);
+                                                showDialog("success", response.message || "Sync successful!");
+                                                await fetchGate();
+                                            } catch (error) {
+                                                showDialog("error", "Sync failed!");
+                                            } finally {
+                                                hideLoadingDialog();
+                                            }
+                                        }
+                                    );
                                 }}
                                 style={{ padding: 10, marginRight: 4 }}
                             >

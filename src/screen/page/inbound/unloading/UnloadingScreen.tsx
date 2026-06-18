@@ -38,6 +38,7 @@ function UnloadingScreen() {
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
+  const userId = user?.id || '';
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -47,7 +48,14 @@ function UnloadingScreen() {
       setRefreshing(true);
       showLoadingDialog('Loading List Inbound Planning');
       const response = await InboundServices.getInboundList(selectedFilter || 'UNLOADING');
-      setInboundList(response?.data || []);
+
+      const filteredResponse = (response?.data || []).filter((item: any) =>
+        Array.isArray(item.assigned_helpers) &&
+        item.assigned_helpers.some(
+          (helper: any) => helper.helper_user_id === userId,
+        ),
+      );
+      setInboundList(filteredResponse);
     } catch (error) {
       hideLoadingDialog();
       showDialog('error', 'Error while Fetching Data Inbound!');
@@ -114,7 +122,7 @@ function UnloadingScreen() {
           </View>
 
           {/* 🔍 Search + Filter Row */}
-          <View style={{ marginVertical: 10 }}>
+          {/* <View style={{ marginVertical: 10 }}>
             <TextInput
               style={localStyles.searchInput}
               placeholder="Search inbound number / plate"
@@ -154,7 +162,7 @@ function UnloadingScreen() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
+          </View> */}
 
           {/* 📦 List Card */}
           {filteredList.length === 0 ? (

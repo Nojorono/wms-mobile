@@ -75,7 +75,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                
                 const res = await ConstantService.getWarehouse();
                 if(inboundType === "PO") {
-                const filteredData = res.data.filter((item: any) => item.name === "SELISIH");
+                const filteredData = res.data.filter((item: any) => item.name === "GOOD-RK-1");
                 setDataReason(filteredData);
                 console.log("data reason after filter", filteredData);
                 }else{
@@ -179,11 +179,13 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
 
                                             <View style={styles.detailRow}>
                                                 <View style={{ flex: 1.5, marginRight: 8 }}>
-                                                    <Text style={styles.detailLabel}>REASON</Text>
+                                                    <Text style={styles.detailLabel}>WAREHOUSE</Text>
                                                     <View style={styles.pickerWrapper}>
                                                         <Picker
                                                             selectedValue={selectedReason}
-                                                            onValueChange={(val) => setSelectedReason(val)}
+                                                            onValueChange={(val) => {setSelectedReason(val)
+                                                                console.log("selected reason", val);
+                                                            }}
                                                             style={styles.picker}
                                                             dropdownIconColor={Colors.secondaryColor}
                                                         >

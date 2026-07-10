@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { ForkLiftParamList } from "../../../navigation/inbound/ForkLiftNavigator";
+import inboundServices from "../../../../service/inboundServices";
+import { useDialogStore } from "../../../../store/useGlobalDialog";
 
 type NavigationProp = StackNavigationProp<
   ForkLiftParamList,
@@ -21,7 +23,7 @@ const ForkLiftDetailScreen = () => {
   const route = useRoute();
   const { item } = route.params as any; // ambil payload.item dari navigasi
   const pallet = item.inventoryTracking.pallet;
-
+  const showDialog = useDialogStore((state) => state.showDialog);
   const navigation = useNavigation<NavigationProp>();
   const staging = item.inventoryTracking.warehouseSub;
   const destination = item.destinationBin;
@@ -61,9 +63,19 @@ const ForkLiftDetailScreen = () => {
       <View style={styles.buttonWrapper}>
         <TouchableOpacity
           style={[styles.scanButton, { backgroundColor: "#FF6B00" }]}
-          onPress={() => navigation.navigate("CameraScreen", {
-            item: item,
-          })}
+          onPress={async () => {
+            const response = await inboundServices.getCurrentBin(destination.id);
+            if (Number(response.data) + 1 > destination.capacity_pallet) {
+              showDialog('error', 'Destination Bin is full! Please choose another bin.');
+            } else {
+              navigation.navigate("CameraScreen", {
+                item: item,
+              })
+            }
+
+
+          }
+          }
         >
           <Icon name="barcode" size={20} color="#fff" />
           <Text style={styles.scanText}>Scan Bin</Text>

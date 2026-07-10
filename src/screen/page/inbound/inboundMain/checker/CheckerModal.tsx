@@ -74,7 +74,7 @@ export default function HelperModal({
       );
 
       setUserList(filteredUsers);
-    } catch (error:any) {
+    } catch (error: any) {
       showDialog('error', `Error submitting adjustment: ${error.data.message || ''}.`);
     } finally {
       hideLoadingDialog();
@@ -86,27 +86,33 @@ export default function HelperModal({
   }, []);
 
   // === PICKER (DEVICE ID) CHANGE ===
-const handlePickerChange = (selectedId: string) => {
-  if (!selectedId) {
+  const handlePickerChange = (selectedId: string) => {
+    if (!selectedId) {
+      setFormData({
+        deviceId: "",
+        name: "",
+        contact: "",
+      });
+      return;
+    }
+
+    const foundUser = userList.find((u) => u.id === selectedId);
+
     setFormData({
-      deviceId: "",
-      name: "",
-      contact: "",
+      deviceId: selectedId,
+      name: `${foundUser?.userDetail?.firstName || ""} ${foundUser?.userDetail?.lastName || ""}`.trim(),
+      contact: foundUser?.userDetail?.phone || "",
     });
-    return;
-  }
-
-  const foundUser = userList.find((u) => u.id === selectedId);
-
-  setFormData({
-    deviceId: selectedId,
-    name: `${foundUser?.userDetail?.firstName || ""} ${foundUser?.userDetail?.lastName || ""}`.trim(),
-    contact: foundUser?.userDetail?.phone || "",
-  });
-};
+  };
 
   // === SAVE DATA ===
   const handleSave = async () => {
+    // prevent submit if required data is empty
+    if (!formData.deviceId || !formData.name || !formData.contact) {
+      showDialog('error', 'Please complete all fields before saving.');
+      return;
+    }
+
     try {
       showLoadingDialog("Saving...");
 
@@ -122,8 +128,8 @@ const handlePickerChange = (selectedId: string) => {
       } else {
         await InboundServices.postHelper(payload);
       }
-    } catch (error:any) {
-      showDialog('error', `Error: ${error.data.message || ''}.`);
+    } catch (error: any) {
+      showDialog('error', `Error: ${error?.data?.message || ''}.`);
     } finally {
       hideLoadingDialog();
       onClose();
@@ -142,16 +148,16 @@ const handlePickerChange = (selectedId: string) => {
 
           <Text style={styles.label}>Username</Text>
           <Dropdown
-  style={styles.dropdownSelect}
-  data={userList}
-  search
-  labelField="username"
-  valueField="id"
-  placeholder="Select Device"
-  searchPlaceholder="Search device..."
-  value={formData.deviceId}
-  onChange={(item) => handlePickerChange(item.id)}
-/>
+            style={styles.dropdownSelect}
+            data={userList}
+            search
+            labelField="username"
+            valueField="id"
+            placeholder="Select Device"
+            searchPlaceholder="Search device..."
+            value={formData.deviceId}
+            onChange={(item) => handlePickerChange(item.id)}
+          />
 
           {/* MERGED NAME INPUT (NOW WITH AUTOCOMPLETE) */}
           <Text style={styles.label}>Name</Text>
@@ -162,7 +168,7 @@ const handlePickerChange = (selectedId: string) => {
               placeholder="Name"
               value={formData.name}
               editable={false}
-              
+
             />
           </View>
 
@@ -266,11 +272,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF6B00",
   },
   dropdownSelect: {
-  borderWidth: 1,
-  borderColor: "#ccc",
-  borderRadius: 10,
-  paddingHorizontal: 12,
-  height: 50,
-  backgroundColor: "#fafafa",
-},
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 50,
+    backgroundColor: "#fafafa",
+  },
 });

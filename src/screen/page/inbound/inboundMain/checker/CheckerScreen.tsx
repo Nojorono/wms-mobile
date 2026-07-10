@@ -33,6 +33,7 @@ export default function HelperListScreen() {
   const [dataHelper, setDataHelper] = useState<any[]>([]);
   
       const confirm = useConfirmationStore();
+      console.log("confirm", payload.item.id);
 
   const fetchInbound = async () => {
     try {

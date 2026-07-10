@@ -34,7 +34,7 @@ class InboundServices {
 
   static async getHelperList(inboundId: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('assigned-helper', { params: { inbound_id: inboundId } });
+      const response = await axiosInstance.get(`assigned-helper?inbound_id=${inboundId}`);
       return response.data;
     } catch (error: any) {
       throw error.response;
@@ -240,6 +240,15 @@ class InboundServices {
   static async postForkLiftComplete(id: string): Promise<any> {
     try {
       const response = await axiosInstance.post(`/put-away/task-completed/${id}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
+  static async getCurrentBin(binId: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/master-warehouse-bin/count-pallet/`, { params: { bin_id: binId } });
       return response.data;
     } catch (error: any) {
       throw error.response;

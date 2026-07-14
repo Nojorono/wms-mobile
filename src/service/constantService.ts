@@ -43,12 +43,8 @@ class ConstantService {
 
   static async getInventoryTracking(subId: string, binId?: string): Promise<any> {
     try {
-      const response = await axiosInstance.get('/inventory-tracking/warehouse', {
-        params: {
-          warehouse_sub_id: subId,
-          warehouse_bin_id: binId,
-        },
-      });
+      const url = `/inventory-tracking/warehouse?warehouse_sub_id=${subId}&${binId ? `&warehouse_bin_id=${binId}` : ''}`;
+      const response = await axiosInstance.get(url);
       return response.data;
     } catch (error: any) {
       throw error.response;

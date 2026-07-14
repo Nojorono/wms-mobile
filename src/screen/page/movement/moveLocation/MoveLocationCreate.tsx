@@ -63,6 +63,7 @@ const MoveLocationCreate: React.FC = () => {
 
   // Helper fetch pallet (Bin bersifat opsional)
   const fetchPallets = (subId: string, binId?: string) => {
+    console.log('Fetching pallets for Sub:', subId, 'Bin:', binId || 'None');
     ConstantService.getInventoryTracking(subId, binId || '')
       .then(res => {
         const transformed = res.data.map((row: any) => ({

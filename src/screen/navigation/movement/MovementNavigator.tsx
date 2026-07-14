@@ -67,7 +67,7 @@ const MovementStackNavigator = () => (
       component={ForkliftMovementStackNavigator}
       options={({ navigation }) => ({
         headerTitle: 'Forklift Movement',
-        headerShown: true,
+        headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,

@@ -78,6 +78,7 @@ export default function PickingDetailActivity() {
     setScanTarget(type);
     setIsScannerOpen(true);
   };
+  console.log('firstMatch', itemBefore);
 
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'ean-13', 'code-128', 'code-39'],
@@ -180,60 +181,79 @@ export default function PickingDetailActivity() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, activity]);
 
-  const handleCheckPalletSumber = async () => {
-    if (!palletSumber.trim()) {
-      showDialog('error', 'Masukkan pallet sumber terlebih dahulu');
+ const handleCheckPalletSumber = async () => {
+  if (!palletSumber.trim()) {
+    showDialog('error', 'Masukkan pallet sumber terlebih dahulu');
+    return;
+  }
+
+  try {
+    const res = await ScannerService.getPalletByCode(palletSumber);
+    if (!res.success) {
+      showDialog('error', 'Pallet tidak ditemukan atau tidak valid');
+      return;
+    }
+    
+    // Gabungkan pengecekan item_id, uom, dan week_number
+    const found = res.data.find(
+      (item: any) =>
+        item.item_id === itemBefore.item_id &&
+        item.uom === itemBefore.uom &&
+        item.week_number === itemBefore.week_number
+    );
+
+    if (!found) {
+      // Cek apakah item_id ada, jika tidak, error item tidak ditemukan
+      const hasItemId = res.data.some((item: any) => item.item_id === itemBefore.item_id);
+      
+      if (!hasItemId) {
+        showDialog('error', 'Pallet tidak memiliki item yang akan dipicking');
+      } else {
+        // Jika item_id ada, tapi uom/week_number tidak cocok
+        const firstMatch = res.data.find((item: any) => item.item_id === itemBefore.item_id);
+        
+        // --- LOGIKA BARU UNTUK FIRSTMATCH ---
+        if (!itemBefore?.sourceBin) {
+          // Jika sourceBin null, gunakan pengecekan sub-warehouse
+          if (firstMatch?.warehouse_sub_code !== itemBefore?.sourceWarehouseSub?.name) {
+            showDialog('error', `Invalid, pallet berada di ${firstMatch?.warehouse_sub_code}, seharusnya di ${itemBefore?.sourceWarehouseSub?.name}`);
+          } else {
+            showDialog('error', `Invalid, pallet memiliki Uom ${firstMatch?.uom} dan week ${firstMatch?.week_number}`);
+          }
+        } else {
+          // Jika sourceBin ada, gunakan pengecekan bin
+          if (firstMatch?.warehouse_bin_code !== itemBefore?.sourceBin?.code) {
+            console.log('firstMatch', itemBefore.sourceBin);
+            showDialog('error', `Invalid, pallet berada di ${firstMatch?.warehouse_bin_code}, seharusnya di ${itemBefore?.sourceBin?.code}`);
+          } else {
+            showDialog('error', `Invalid, pallet memiliki Uom ${firstMatch?.uom} dan week ${firstMatch?.week_number}`);
+          }
+        }
+      }
       return;
     }
 
-    try {
-      const res = await ScannerService.getPalletByCode(palletSumber);
-      if (!res.success) {
-        showDialog('error', 'Pallet tidak ditemukan atau tidak valid');
+    // --- LOGIKA BARU UNTUK EXACT MATCH (FOUND) ---
+    // Jika found, tetap cek lokasinya (apakah pakai bin atau sub-warehouse)
+    if (!itemBefore?.sourceBin) {
+      if (found.warehouse_sub_code !== itemBefore?.sourceWarehouseSub?.name) {
+        showDialog('error', `Invalid, pallet berada di ${found.warehouse_sub_code}, seharusnya di ${itemBefore?.sourceWarehouseSub?.name}`);
         return;
       }
-      // find matching item_id
-      // Gabungkan pengecekan item_id, uom, dan week_number
-      const found = res.data.find(
-        (item: any) =>
-          item.item_id === itemBefore.item_id &&
-          item.uom === itemBefore.uom &&
-          item.week_number === itemBefore.week_number
-      );
-      if (!found) {
-        // Cek apakah item_id ada, jika tidak, error item tidak ditemukan
-        const hasItemId = res.data.some((item: any) => item.item_id === itemBefore.item_id);
-        if (!hasItemId) {
-          showDialog('error', 'Pallet tidak memiliki item yang akan dipicking');
-        } else {
-          // Jika item_id ada, tapi uom/week_number tidak cocok
-          const firstMatch = res.data.find((item: any) => item.item_id === itemBefore.item_id);
-          // Tambahkan pengecekan warehouse_bin_code juga
-          if (
-            firstMatch?.warehouse_bin_code !== itemBefore?.sourceBin?.code
-          ) {
-            showDialog('error', `Invalid, pallet berada di ${firstMatch?.warehouse_bin_code}, seharusnya di ${itemBefore?.sourceBin?.code}`
-            );
-          } else {
-            showDialog('error', `Invalid, pallet memiliki Uom ${firstMatch?.uom} dan week ${firstMatch?.week_number}`
-            );
-          }
-        }
-        return;
-      }
-      // Jika found, tetap cek bin-nya
+    } else {
       if (found.warehouse_bin_code !== itemBefore?.sourceBin?.code) {
-        showDialog('error', `Invalid, pallet berada di ${found.warehouse_bin_code}, seharusnya di ${itemBefore?.sourceBin?.code}`
-        );
+        showDialog('error', `Invalid, pallet berada di ${found.warehouse_bin_code}, seharusnya di ${itemBefore?.sourceBin?.code}`);
         return;
       }
-      setFoundItem(found);
-      setDoneSumber(true);
-      showDialog('success', `Pallet valid ${found.item_name}\nQty ${found.current_quantity} ${found.uom}`);
-    } catch (err) {
-      showDialog('error', 'Gagal memeriksa pallet');
     }
-  };
+
+    setFoundItem(found);
+    setDoneSumber(true);
+    showDialog('success', `Pallet valid ${found.item_name}\nQty ${found.current_quantity} ${found.uom}`);
+  } catch (err) {
+    showDialog('error', 'Gagal memeriksa pallet');
+  }
+};
 
   const handleCheckPalletPicking = async () => {
     if (!palletPicking.trim()) {
@@ -392,7 +412,6 @@ export default function PickingDetailActivity() {
       uom: itemBefore.uom,
       week_number: itemBefore.week_number,
       status: 'OPEN',
-      inspection_by: "",
       user_id: userId,
       user_name: userName,
     };
@@ -407,7 +426,7 @@ export default function PickingDetailActivity() {
 
     try {
       showLoadingDialog(mode === 'edit' ? 'Updating Activity' : 'Submitting Activity');
-      console.log('Submit payload', payload);
+     
       if (mode === 'edit') {
         // Add id for update endpoint
         const idActivity = activity.id;
@@ -435,6 +454,11 @@ export default function PickingDetailActivity() {
       showDialog('error', 'Qty picking tidak boleh lebih besar dari qty permintaan');
       return;
     }
+    if (foundItem?.current_quantity != null && qty > Number(foundItem.current_quantity)) {
+      showDialog('error', `Qty picking tidak boleh lebih besar dari qty pallet sumber (${foundItem.current_quantity})`);
+      return;
+    }
+
     setQtyPicking(v);
   };
 
@@ -686,6 +710,17 @@ export default function PickingDetailActivity() {
                       showDialog('error', `Qty picking total (${qty + totalPicked}) tidak boleh lebih besar dari qty permintaan (${itemBefore.quantity})`);
                       return;
                     }
+
+                    // --- TAMBAHAN VALIDASI PALLET SUMBER DI SINI ---
+                    if (
+                      foundItem?.current_quantity != null &&
+                      qty > Number(foundItem.current_quantity)
+                    ) {
+                      showDialog('error', `Qty picking tidak boleh lebih besar dari qty pallet sumber (${foundItem.current_quantity})`);
+                      return;
+                    }
+                    // -----------------------------------------------
+
                     onChangeQtyPicking(v);
                   }}
                   keyboardType="numeric"

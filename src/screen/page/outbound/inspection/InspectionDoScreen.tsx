@@ -20,12 +20,12 @@ import OutboundCard from '../../../../components/outbound/OutboundCard.tsx';
 import { outboundData } from '../../../../dummy/outboundData.js';
 import { InspectionParamList } from '../../../navigation/outbound/InspectionNavigator.tsx';
 import OutboundService from '../../../../service/outboundService.ts';
+import { formatDate } from '../../../../util/helper.ts';
 
 type NavigationProp = StackNavigationProp<InspectionParamList, 'InspectionDoMain'>;
 const FILTER_OPTIONS = [
   'PENDING',
   'IN_PROGRESS',
-  'COMPLETED',
   'APPROVED',
   'CANCELLED'
 ];
@@ -178,7 +178,7 @@ function InspectionDoScreen() {
                   key={item.id}
                   title={item.outbound_do_number}
                   subTitle={item.origin}
-                  origin={item.delivery_date}
+                  origin={formatDate(item.delivery_date)}
                   status={item.status}
                   statusColor={statusColor}
                   // onClick={() => navigation.navigate('InspectionMemo', { item })}

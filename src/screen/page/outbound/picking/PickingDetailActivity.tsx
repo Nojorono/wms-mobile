@@ -208,11 +208,11 @@ export default function PickingDetailActivity() {
         } else {
           // Jika item_id ada, tapi uom/week_number tidak cocok
           const firstMatch = res.data.find((item: any) => item.item_id === itemBefore.item_id);
-          // Tambahkan pengecekan warehouse_bin_name juga
+          // Tambahkan pengecekan warehouse_bin_code juga
           if (
-            firstMatch?.warehouse_bin_name !== itemBefore?.sourceBin?.name
+            firstMatch?.warehouse_bin_code !== itemBefore?.sourceBin?.code
           ) {
-            showDialog('error', `Invalid, pallet berada di ${firstMatch?.warehouse_bin_name}, seharusnya di ${itemBefore?.sourceBin?.name}`
+            showDialog('error', `Invalid, pallet berada di ${firstMatch?.warehouse_bin_code}, seharusnya di ${itemBefore?.sourceBin?.code}`
             );
           } else {
             showDialog('error', `Invalid, pallet memiliki Uom ${firstMatch?.uom} dan week ${firstMatch?.week_number}`
@@ -222,8 +222,8 @@ export default function PickingDetailActivity() {
         return;
       }
       // Jika found, tetap cek bin-nya
-      if (found.warehouse_bin_name !== itemBefore?.sourceBin?.name) {
-        showDialog('error', `Invalid, pallet berada di ${found.warehouse_bin_name}, seharusnya di ${itemBefore?.sourceBin?.name}`
+      if (found.warehouse_bin_code !== itemBefore?.sourceBin?.code) {
+        showDialog('error', `Invalid, pallet berada di ${found.warehouse_bin_code}, seharusnya di ${itemBefore?.sourceBin?.code}`
         );
         return;
       }
@@ -256,6 +256,16 @@ export default function PickingDetailActivity() {
         showDialog('error', 'Pallet tidak ditemukan atau tidak valid');
         return;
       }
+      const hasInInventory = res.data.some((item: any) => item.inventory_status === "IN_INVENTORY");
+
+      if (hasInInventory) {
+        // Jika berstatus IN_INVENTORY, PalletSumber HARUS sama dengan PalletPicking
+        if (palletSumber !== palletPicking) {
+          showDialog('error', 'Pallet dengan status IN_INVENTORY hanya bisa digunakan jika sama dengan Pallet Sumber');
+          return;
+        }
+      }
+
       const found = res.data.find(
         (item: any) => {
           const uomMatch = item.uom === itemBefore.uom;
@@ -382,7 +392,7 @@ export default function PickingDetailActivity() {
       uom: itemBefore.uom,
       week_number: itemBefore.week_number,
       status: 'OPEN',
-      inspection_by: "" ,
+      inspection_by: "",
       user_id: userId,
       user_name: userName,
     };
@@ -397,7 +407,7 @@ export default function PickingDetailActivity() {
 
     try {
       showLoadingDialog(mode === 'edit' ? 'Updating Activity' : 'Submitting Activity');
- console.log('Submit payload', payload);
+      console.log('Submit payload', payload);
       if (mode === 'edit') {
         // Add id for update endpoint
         const idActivity = activity.id;
@@ -514,7 +524,7 @@ export default function PickingDetailActivity() {
                   paddingHorizontal: 12,
                 }}
               >
-                From {itemBefore?.sourceWarehouseSub?.name} Bin {itemBefore?.sourceBin?.name} to {itemBefore?.destinationWarehouseSub?.name} -{' '}
+                From {itemBefore?.sourceWarehouseSub?.name} Bin {itemBefore?.sourceBin?.code} to {itemBefore?.destinationWarehouseSub?.name} -{' '}
                 {itemBefore?.destinationBin?.name}
 
               </Text>
@@ -524,7 +534,7 @@ export default function PickingDetailActivity() {
             {foundItem && (
               <View style={{ marginBottom: 4 }}>
                 <Text style={{ color: '#888', fontSize: 14 }}>
-                  {foundItem.item_name} | Qty: {foundItem.current_quantity} {foundItem.uom} | Week: {foundItem.week_number} | Bin: {foundItem.warehouse_bin_name}
+                  {foundItem.item_name} | Qty: {foundItem.current_quantity} {foundItem.uom} | Week: {foundItem.week_number} | Bin: {foundItem.warehouse_bin_code}
                 </Text>
               </View>
             )}
@@ -948,5 +958,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
   },
-  
+
 });

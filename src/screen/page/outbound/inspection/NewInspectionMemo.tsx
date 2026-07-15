@@ -34,6 +34,7 @@ function NewInspectionMemo() {
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((s) => s.showDialog);
+  const [statusDO, setStatusDO] = useState<string | null>(null);
 
   const [selectedPalletUse, setSelectedPalletUse] = useState<string | null>(null);
 
@@ -50,6 +51,7 @@ function NewInspectionMemo() {
       const response = await OutboundService.getOutboundDoListById(itemBefore.item.id);
 
       const list = response?.data || [];
+      setStatusDO(list?.status || null);
 
       const memos = list?.outbound_memos || [];
 
@@ -108,24 +110,36 @@ function NewInspectionMemo() {
     }));
     return Array.from(set);
   }, [memoList]);
-  console.log("memoList:", memoList);
 
-  // Tombol Visibility Logic
+
+ // 1. Cek apakah SEMUA item scan_detail sudah berstatus INSPECTION_APPROVED
   const isAllInspectionApproved = memoList.length > 0 && memoList.every((m: any) =>
     m.items.length > 0 && m.items.every((item: any) =>
       item.scan_detail.length > 0 && item.scan_detail.every((s: any) => s.status === "INSPECTION_APPROVED")
     )
   );
 
-  // 2. Tambahkan kondisi `!isAllInspectionApproved &&` di awal showApproveBtn
-  const showApproveBtn = !isAllInspectionApproved && memoList.length > 0 && memoList.some((m: any) =>
-    m.items.some((item: any) => item.scan_detail.some((s: any) => s.status === "INSPECTION" || s.status === "INSPECTION_APPROVED"))
+  // 2. Cek apakah SEMUA item transaction_picking sudah berstatus COMPLETED
+  const isAllPickingsCompleted = memoList.length > 0 && memoList.every((m: any) =>
+    m.items.length > 0 && m.items.every((item: any) => 
+      item.transaction_picking?.status === "COMPLETED"
+    )
   );
 
-  // 3. Tambahkan kondisi `!isAllInspectionApproved &&` di awal showCompleteBtn
-  const showCompleteBtn = !isAllInspectionApproved && memoList.length > 0 && memoList.every((m: any) =>
-    m.items.length > 0 && m.items.every((item: any) => item.scan_detail.length > 0 && item.scan_detail.every((s: any) => s.status === "INSPECTION_APPROVED")) // Sesuaikan status ini jika flow sebelumnya berbeda
+  // 3. Tombol Approve muncul jika: 
+  // Belum semua approved, belum semua completed, status DO bukan IN_PROGRESS, dan ada data yang valid
+  const showApproveBtn = 
+    statusDO !== "IN_PROGRESS" && 
+    !isAllPickingsCompleted && 
+    !isAllInspectionApproved && 
+    memoList.length > 0 && 
+    memoList.some((m: any) =>
+      m.items.some((item: any) => item.scan_detail.some((s: any) => s.status === "INSPECTION" || s.status === "INSPECTION_APPROVED"))
   );
+
+  // 4. Tombol Complete muncul JIKA:
+  // SEMUA sudah INSPECTION_APPROVED, tetapi BELUM SEMUA berstatus COMPLETED
+  const showCompleteBtn = isAllInspectionApproved && !isAllPickingsCompleted;
 
   return (
     <SafeAreaView style={styles.safeArea}>

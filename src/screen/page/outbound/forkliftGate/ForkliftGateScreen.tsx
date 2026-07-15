@@ -60,6 +60,7 @@ function ForkliftGateScreen() {
     const fetchData = async () => {
         try {
             const res = await OutboundService.getAssignedGateByUserId(userId);
+            console.log('Fetched gate tasks:', userId, res.data);
             setData(res.data);
         } catch (err:any) {
             showDialog('error', `Fetch error: ${err.data.message || ''}.`);
@@ -104,9 +105,14 @@ function ForkliftGateScreen() {
                 return (
                     <View key={item.id} style={styles.card}>
                         {/* GATE TUJUAN */}
-                        <View style={[styles.gateBanner, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
-                            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <View style={[styles.gateBanner, { flexDirection: "column" }]}>
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                                 <Text style={styles.gateTitle}>{item.outbound_do.outbound_do_number} </Text>
+                                <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
+                                    <Ionicons name="chevron-right" size={24} color="#FFF" />
+                                </TouchableOpacity>
+                            </View>
+                            <View style={{ flexDirection: "row", alignItems: "center" }}>
                                 <Text
                                     style={{
                                         color: "#FFF",
@@ -117,16 +123,11 @@ function ForkliftGateScreen() {
                                         paddingVertical: 4,
                                         overflow: "hidden",
                                         fontSize: 13,
-                                        marginLeft: 8,
                                     }}
                                 >
-                                    {item.status}
+                                    GATE STATUS: {item.status}
                                 </Text>
                             </View>
-                            <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
-                                <Ionicons name="chevron-right" size={24} color="#FFF" />
-                            </TouchableOpacity>
-
                         </View>
 
                         {/* PALLET HIGHLIGHT */}

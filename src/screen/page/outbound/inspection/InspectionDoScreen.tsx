@@ -27,7 +27,6 @@ const FILTER_OPTIONS = [
   'PENDING',
   'IN_PROGRESS',
   'APPROVED',
-  'CANCELLED'
 ];
 
 function InspectionDoScreen() {

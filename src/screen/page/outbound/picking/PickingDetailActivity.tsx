@@ -61,6 +61,7 @@ export default function PickingDetailActivity() {
   const [donePicking, setDonePicking] = useState(false);
   const [doneSwitch, setDoneSwitch] = useState(false);
   const [switchInfo, setSwitchInfo] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // SCANNER STATES
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scanTarget, setScanTarget] =
@@ -276,10 +277,10 @@ export default function PickingDetailActivity() {
         showDialog('error', 'Pallet tidak ditemukan atau tidak valid');
         return;
       }
-      const hasInInventory = res.data.some((item: any) => item.inventory_status === "IN_INVENTORY");
+      const hasInInventory = res.data.some((item: any) => item.inventory_status === "IN_INVENTORY" && item.current_quantity !== 0);
 
       if (hasInInventory) {
-        // Jika berstatus IN_INVENTORY, PalletSumber HARUS sama dengan PalletPicking
+        // Jika berstatus IN_INVENTORY dengan qty bukan 0, PalletSumber HARUS sama dengan PalletPicking
         if (palletSumber !== palletPicking) {
           showDialog('error', 'Pallet dengan status IN_INVENTORY hanya bisa digunakan jika sama dengan Pallet Sumber');
           return;

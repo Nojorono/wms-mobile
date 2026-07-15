@@ -49,6 +49,7 @@ export default function PickingActivity() {
 
         setUserIdNewest(latestUserId);
       }
+      console.log('Filtered Picking List:', filtered);
       setPickingList(filtered);
     } catch (error) {
       hideLoadingDialog();
@@ -168,40 +169,42 @@ export default function PickingActivity() {
                   }}>
                   Picking - {index + 1}
                   </Text>
-                  <TouchableOpacity
-                  onPress={() => {
-                    // Confirm before delete
-                    Alert.alert(
-                      'Delete Activity',
-                      'Are you sure you want to delete this activity?',
-                      [
-                      {
-                        text: 'Cancel',
-                        style: 'cancel',
-                      },
-                      {
-                        text: 'Delete',
-                        style: 'destructive',
-                        onPress: async () => {
-                        try {
-                          showLoadingDialog('Deleting...');
-                          await OutboundService.deteleTransactionPickingById(activity.id);
-                          fetchPicking();
-                        } catch (error) {
-                          showDialog('error', 'Failed to delete activity');
-                        } finally {
-                          hideLoadingDialog();
-                        }
-                        },
-                      },
-                      ],
-                      { cancelable: true }
-                    );
-                  }}
-                  style={{ marginLeft: 10, padding: 4 }}
-                  >
-                  <Ionicons name="trash" size={18} color="red" />
-                  </TouchableOpacity>
+                  {activity.status === 'OPEN' && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        // Confirm before delete
+                        Alert.alert(
+                          'Delete Activity',
+                          'Are you sure you want to delete this activity?',
+                          [
+                            {
+                              text: 'Cancel',
+                              style: 'cancel',
+                            },
+                            {
+                              text: 'Delete',
+                              style: 'destructive',
+                              onPress: async () => {
+                                try {
+                                  showLoadingDialog('Deleting...');
+                                  await OutboundService.deteleTransactionPickingById(activity.id);
+                                  fetchPicking();
+                                } catch (error) {
+                                  showDialog('error', 'Failed to delete activity');
+                                } finally {
+                                  hideLoadingDialog();
+                                }
+                              },
+                            },
+                          ],
+                          { cancelable: true }
+                        );
+                      }}
+                      style={{ marginLeft: 10, padding: 4 }}
+                    >
+                      <Ionicons name="trash" size={18} color="red" />
+                    </TouchableOpacity>
+                  )}
                 </View>
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Quantity Picked</Text>

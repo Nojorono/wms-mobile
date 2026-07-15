@@ -45,6 +45,7 @@ export default function InspectionUpdateActivity() {
     }
   }
   const itemBefore = itemBeforeParam as any;
+  console.log (itemBefore, 'itemBefore in edit activity');
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -73,7 +74,7 @@ export default function InspectionUpdateActivity() {
 
   const openScanner = async (type: 'sumber' | 'picking' | 'switching') => {
     // disable scanner in edit mode
-    if (mode === 'edit') return;
+    // if (mode === 'edit') return;
     if (!hasPermission) {
       await requestPermission();
     }
@@ -239,6 +240,11 @@ const isDataChanged = (() => {
         Alert.alert('Pallet tidak ditemukan atau tidak valid');
         return;
       }
+      // ensure pallet belongs to the same memo as the item to pick
+      if (itemBefore && res.data[0].memo_id !== itemBefore.outbound_memo_item.outbound_memo_id) {
+        Alert.alert('Pallet berasal dari memo berbeda');
+        return;
+      }
       setPickingPallet(res.data[0]);
       setDonePicking(true);
       Alert.alert('Pallet valid', `Week: ${res.data[0].week_number} | Uom: ${res.data[0].uom}`);
@@ -349,6 +355,10 @@ const isDataChanged = (() => {
       Alert.alert('Qty picking tidak boleh lebih besar dari qty permintaan');
       return;
     }
+    if (itemBefore?.quantity_plan != null && qty > Number(itemBefore.quantity_plan)) {
+    Alert.alert('Qty picking tidak boleh lebih besar dari qty suggestion (permintaan)');
+    return;
+  }
     setQtyPicking(v);
   };
 
@@ -467,6 +477,7 @@ const isDataChanged = (() => {
           <TextInput
             placeholder="Pallet Sumber"
             value={palletSumber}
+            editable={false} // 
             onChangeText={(v) => {
               setPalletSumber(v);
               setFoundItem(null);
@@ -479,12 +490,13 @@ const isDataChanged = (() => {
 
           <TouchableOpacity
             style={styles.scanBtn}
+            disabled={true}
             onPress={() => openScanner('sumber')}
           >
             <Ionicons
               name="barcode"
               size={22}
-              color={Colors.secondaryColor}
+              color={'#ccc'}
             />
           </TouchableOpacity>
 

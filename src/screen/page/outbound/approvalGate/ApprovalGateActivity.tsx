@@ -45,6 +45,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
         const outboundMemos = gateItem.outbound_do?.outbound_memos ?? [];
         const doId = gateItem.outbound_do_id ?? gateItem.outbound_do?.id ?? "UNKNOWN_DO_ID";
         const deliveryCategory = gateItem.outbound_do?.delivery_category ?? "UNKNOWN_CATEGORY";
+        const statusOutboundDo = gateItem.outbound_do?.status ?? "UNKNOWN_STATUS";
 
         // lookup memoId -> memo info
         const memoInfoMap: Record<string, any> = {};
@@ -89,6 +90,8 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
             id: gateItem.id, // ✅ INI YANG KAMU MAU
             gate: gateItem.gate?.name ?? "-",
             doNumber: gateItem.outbound_do?.outbound_do_number ?? "-",
+            status: gateItem.status ?? "-",
+            statusOutboundDo: statusOutboundDo,
             doId: doId,
             deliveryCategory: deliveryCategory,
             memos: Object.values(memoMap).map((memo: any) => ({
@@ -164,7 +167,7 @@ export default function ApprovalGateScreen() {
     const [summaryData, setSummaryData] = useState<{ id: any, items: any[] }>({ id: null, items: [] });
 
     const confirm = useConfirmationStore();
-
+    const [isProcessing, setIsProcessing] = useState(false);
     const toggleDO = (doNumber: string) => {
         setCollapsedDO((prev) => ({
             ...prev,
@@ -219,7 +222,7 @@ export default function ApprovalGateScreen() {
                     outboundDo?.status === "APPROVED_LOAD" &&
                     !hasIntegratedMemo &&
                     outboundDo?.delivery_category !== "Ekspedisi Vendor"
-                    
+
                 );
             });
 
@@ -230,6 +233,7 @@ export default function ApprovalGateScreen() {
             const data = [...approvedByOrg, ...pendingByOrg];
             const mapped = mapApprovalGateToUI(data);
             setApprovalGate(mapped);
+            console.log("Mapped Approval Gate Data:", mapped); // Debug log untuk melihat data yang diterima
 
             // 👇 scroll ke atas setelah data refresh
             requestAnimationFrame(() => {
@@ -257,7 +261,7 @@ export default function ApprovalGateScreen() {
         const { gate, doNumber, memos = [] } = gateItem;
         const collapsed = collapsedDO[doNumber];
         const status = getDOStatus(memos);
-        console.log('gateItem', gateItem); // Debug log untuk melihat data gateItem yang diterima
+
 
         return (
             <View>
@@ -275,7 +279,7 @@ export default function ApprovalGateScreen() {
                     </TouchableOpacity>
 
                     {/* AREA TENGAH → SYNC ICON */}
-                    {gateItem.deliveryCategory !== "Ekspedisi Vendor" &&
+                    {/* {gateItem.deliveryCategory !== "Ekspedisi Vendor" &&
                         gateItem.memos?.length > 0 &&
                         gateItem.memos.some((memo: any) => memo.statusIntegrated !== "INTEGRATED") && (
                             <TouchableOpacity
@@ -302,7 +306,7 @@ export default function ApprovalGateScreen() {
                             >
                                 <Ionicons name="sync" size={20} color={Colors.secondaryColor} />
                             </TouchableOpacity>
-                        )}
+                        )} */}
 
 
                     {/* AREA KANAN → ARROW ICON FOR COLLAPSE */}
@@ -380,28 +384,34 @@ export default function ApprovalGateScreen() {
                                     <Text style={styles.modalBtnText}>CANCEL</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[styles.modalBtn, { backgroundColor: '#2563EB' }]}
+                                    style={[styles.modalBtn, { backgroundColor: isProcessing ? '#9CA3AF' : '#2563EB' }]}
+                                    disabled={isProcessing}
                                     onPress={async () => {
                                         setSummaryModalVisible(false);
+                                        if (isProcessing) return; // Guard clause
                                         confirm.show(
                                             "accept",
                                             "Confirm approve this gate after review?",
                                             async () => {
+                                                if (isProcessing) return; // Guard tambahan untuk dialog
+                                                setIsProcessing(true); // Kunci tombol
                                                 try {
                                                     showLoadingDialog("Approving Gate...");
                                                     await OutboundService.updateAssignedGateApprove(summaryData.id);
                                                     showDialog("success", "Gate approved successfully!");
                                                     await fetchGate();
-                                                } catch (e) {
-                                                    showDialog("error", "Failed to approve gate!");
+                                                } catch (e: any) {
+                                                    setIsProcessing(false); // Buka kunci tombol
+                                                    showDialog("error", e.data.message || "Failed to approve gate!");
                                                 } finally {
+                                                    setIsProcessing(false); // Buka kunci tombol
                                                     hideLoadingDialog();
                                                 }
                                             }
                                         );
                                     }}
                                 >
-                                    <Text style={styles.modalBtnText}>CONFIRM APPROVE</Text>
+                                    <Text style={styles.modalBtnText}>{isProcessing ? "PROCESSING..." : "CONFIRM APPROVE"}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -464,57 +474,116 @@ export default function ApprovalGateScreen() {
                     />
                     {!collapsedDO[item.doNumber] && (
                         <View style={{ flexDirection: "row", gap: 8, marginHorizontal: -12, paddingHorizontal: 12, marginBottom: 12 }}>
-                            <TouchableOpacity
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: "#DC2626",
-                                    borderRadius: 8,
-                                    paddingVertical: 10,
-                                    alignItems: "center",
-                                    shadowColor: "#000",
-                                    shadowOpacity: 0.08,
-                                    shadowRadius: 4,
-                                }}
-                                onPress={async () => {
-                                    confirm.show(
-                                        "decline",
-                                        "Are you sure want to reject this gate?",
-                                        async () => {
-                                            try {
-                                                showLoadingDialog("Rejecting Gate...");
-                                                const res = await OutboundService.updateStatusAssignedGate(item.id, "PENDING");
-                                                showDialog("success", "Gate rejected successfully!");
-                                                await fetchGate();
-                                            } catch (error) {
-                                                console.error("Reject error:", error);
-                                                showDialog("error", "Failed to reject gate!");
-                                            } finally {
-                                                hideLoadingDialog();
-                                            }
-                                        }
-                                    );
-                                }}
-                            >
-                                <Text style={{
-                                    color: "#FFF",
-                                    fontWeight: "700",
-                                    fontSize: 16,
-                                    letterSpacing: 0.5,
-                                }}>
-                                    REJECT
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.approveButton} // Gunakan style yang rapi
-                                onPress={() => {
-                                    const items = getSummaryItems(item);
-                                    setSummaryData({ id: item.id, items });
-                                    setSummaryModalVisible(true);
-                                }}
-                            >
-                                <Text style={styles.buttonText}>REVIEW</Text>
-                            </TouchableOpacity>
 
+                            {(item.statusOutboundDo === "APPROVED_LOAD") ? (
+                                /* JIKA STATUS APPROVED ATAU APPROVED_LOAD -> CEK LOGIC INTEGRATE
+                                  Tombol hanya muncul jika bukan vendor, ada memo, dan ada memo yang belum terintegrasi 
+                                */
+                                (item.deliveryCategory !== "Ekspedisi Vendor" &&
+                                    item.memos?.length > 0 &&
+                                    item.memos.some((memo: any) => memo.statusIntegrated !== "INTEGRATED")) ? (
+                                    <TouchableOpacity
+                                        style={{
+                                            flex: 1,
+                                            backgroundColor: isProcessing ? "#9CA3AF" : (Colors.secondaryColor || "#10B981"),
+                                            borderRadius: 8,
+                                            paddingVertical: 10,
+                                            alignItems: "center",
+                                            shadowColor: "#000",
+                                            shadowOpacity: 0.08,
+                                            shadowRadius: 4,
+                                        }}
+                                        disabled={isProcessing}
+                                        onPress={() => {
+                                            if (isProcessing) return; // Guard pertama
+                                            confirm.show(
+                                                "accept",
+                                                "Are you sure want to integrate this approved gate?",
+                                                async () => {
+                                                    if (isProcessing) return; // Guard kedua
+                                                    setIsProcessing(true); // Kunci tombol
+                                                    try {
+                                                        showLoadingDialog("Syncing / Integrating...");
+                                                        const response = await OutboundService.integrateOutboundDo(item.doId);
+                                                        showDialog("success", response.message || "Integration successful!");
+                                                        await fetchGate();
+                                                    } catch (error) {
+                                                        showDialog("error", "Integration failed!");
+                                                        setIsProcessing(false); // Buka kunci
+                                                    } finally {
+                                                        hideLoadingDialog();
+                                                        setIsProcessing(false); // Buka kunci
+                                                    }
+                                                }
+                                            );
+                                        }}
+                                    >
+                                        <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 16, letterSpacing: 0.5 }}>
+                                            {isProcessing ? "WAIT..." : "INTEGRATE"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ) : null /* Jika syarat logic di atas tidak terpenuhi, jangan render apa-apa */
+
+                            ) : (
+                                /* JIKA STATUS BUKAN APPROVED -> TAMPILKAN TOMBOL REJECT DAN REVIEW */
+                                <>
+                                    {/* TOMBOL REJECT */}
+                                    <TouchableOpacity
+                                        style={{
+                                            flex: 1,
+                                           backgroundColor: isProcessing ? "#9CA3AF" : "#DC2626",
+                                            borderRadius: 8,
+                                            paddingVertical: 10,
+                                            alignItems: "center",
+                                            shadowColor: "#000",
+                                            shadowOpacity: 0.08,
+                                            shadowRadius: 4,
+                                        }}
+                                        disabled={isProcessing}
+                                        onPress={async () => {
+                                            if (isProcessing) return;
+                                            confirm.show(
+                                                "decline",
+                                                "Are you sure want to reject this gate?",
+                                                async () => {
+                                                    if (isProcessing) return;
+                setIsProcessing(true);
+                                                    try {
+                                                        showLoadingDialog("Rejecting Gate...");
+                                                        const res = await OutboundService.updateStatusAssignedGate(item.id, "PENDING");
+                                                        showDialog("success", "Gate rejected successfully!");
+                                                        await fetchGate();
+                                                    } catch (error) {
+                                                        setIsProcessing(false);
+                                                        showDialog("error", "Failed to reject gate!");
+                                                    } finally {
+                                                        hideLoadingDialog();
+                                                        setIsProcessing(false);
+                                                    }
+                                                }
+                                            );
+                                        }}
+                                    >
+                                        <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 16, letterSpacing: 0.5 }}>
+                                           {isProcessing ? "WAIT..." : "REJECT"}
+                                        </Text>
+                                    </TouchableOpacity>
+
+                                    {/* TOMBOL REVIEW */}
+                                    <TouchableOpacity
+                                        style={[styles.approveButton,{ backgroundColor: isProcessing ? "#9CA3AF" : "#2563EB" }]}
+                                        disabled={isProcessing}
+                                        onPress={() => {
+                                            if (isProcessing) return;
+                                            const items = getSummaryItems(item);
+                                            setSummaryData({ id: item.id, items });
+                                            setSummaryModalVisible(true);
+                                        }}
+                                    >
+                                        <Text style={styles.buttonText}>REVIEW</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
 
                         </View>
                     )}

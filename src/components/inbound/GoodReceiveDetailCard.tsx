@@ -50,6 +50,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
     const sisaQuantity = data.quantity_scanned - data.details.reduce((acc, item) => acc + (item.quantity_scanned || 0), 0)
     const [selectedReason, setSelectedReason] = useState("");
     const [additionalQty, setAdditionalQty] = useState(0);
+    const [isApproving, setIsApproving] = useState(false);
     const [dataReason, setDataReason] = useState<any>([]);
     const inboundType = data.inbound_type;
     console.log("inbound type di card", inboundType);
@@ -72,17 +73,17 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
     useEffect(() => {
         const fetchData = async () => {
             try {
-               
+
                 const res = await ConstantService.getWarehouse();
-                if(inboundType === "PO") {
-                const filteredData = res.data.filter((item: any) => item.name === "GOOD-RK-1");
-                setDataReason(filteredData);
-                console.log("data reason after filter", filteredData);
-                }else{
-                const filteredData = res.data.filter((item: any) => item.name === "TRACKING");
-                setDataReason(filteredData);
+                if (inboundType === "PO") {
+                    const filteredData = res.data.filter((item: any) => item.name === "GOOD-RK-1");
+                    setDataReason(filteredData);
+                    console.log("data reason after filter", filteredData);
+                } else {
+                    const filteredData = res.data.filter((item: any) => item.name === "TRACKING");
+                    setDataReason(filteredData);
                 }
-               
+
                 // setDataReason(res.data);
             } catch (error) {
                 console.error("Failed to fetch good receive details:", error);
@@ -121,8 +122,8 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                     <Text style={styles.label}>Sisa</Text>
                     {/* <Text style={styles.value}>{data.quantity_scanned - data.details.reduce((acc, item) => acc + (item.quantity_scanned || 0), 0)}</Text> */}
                     <Text style={styles.value}>{data.quantity_plan - data.quantity_scanned
-                        }</Text>
-                        
+                    }</Text>
+
                 </View>
             </View>
 
@@ -183,7 +184,8 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                                     <View style={styles.pickerWrapper}>
                                                         <Picker
                                                             selectedValue={selectedReason}
-                                                            onValueChange={(val) => {setSelectedReason(val)
+                                                            onValueChange={(val) => {
+                                                                setSelectedReason(val)
                                                                 console.log("selected reason", val);
                                                             }}
                                                             style={styles.picker}
@@ -226,8 +228,13 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
 
             {data.inspection_status?.toUpperCase() !== "APPROVED" && (
                 <TouchableOpacity
-                    style={[styles.approveButton, { backgroundColor: Colors.secondaryColor }]}
+                    style={[
+                        styles.approveButton,
+                        { backgroundColor: isApproving ? '#A0A0A0' : Colors.secondaryColor } // Ubah warna saat disable
+                    ]}
                     onPress={async () => {
+                        if (isApproving) return; // Guard clause agar tidak bisa dieksekusi 2 kali
+                        setIsApproving(true); // Set state menjadi true saat mulai proses
                         try {
                             // Step 1: Update Good Receive Detail
                             showLoadingDialog("Updating Good Receive...");
@@ -246,14 +253,14 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                     items: details.map((d) => ({
                                         id: d.item_id_inbound,
                                         quantity_inspection: d.quantity_scanned,
-                                        ...(quantityAdjustment !== 0 && { 
+                                        ...(quantityAdjustment !== 0 && {
                                             quantity_difference: quantityAdjustment,
-                                            sub_inventory_difference: selectedReason  
+                                            sub_inventory_difference: selectedReason
                                         }),
                                     })),
                                 };
                                 const response = await InboundServices.updateGoodReceiveDetail(payload);
-                               
+
                             }
 
 
@@ -277,13 +284,14 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                         } catch (error) {
                             hideLoadingDialog();
                             Alert.alert("Error", "Gagal memperbarui data");
+                            setIsApproving(false); // Kembalikan ke false HANYA jika error, agar user bisa coba lagi
                             console.error(error);
                         }
                     }}
                     activeOpacity={0.85}
                 >
                     <Icon name="check-circle-outline" size={22} color="#fff" style={{ marginRight: 8 }} />
-                    <Text style={styles.approveText}>Approve</Text>
+                    <Text style={styles.approveText}>{isApproving ? "Processing..." : "Approve"}</Text>
                 </TouchableOpacity>
             )}
         </View>

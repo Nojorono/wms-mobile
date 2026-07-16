@@ -32,6 +32,7 @@ const GoodReceiveScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const [mergedData, setMergedData] = useState<any>([]);
   const route = useRoute();
+  const [isIntegrating, setIsIntegrating] = useState(false);
   const payload = route.params as InboundDetailRouteParams;
   const [statusRecent, setStatusRecent] = useState<string>("");
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
@@ -112,7 +113,7 @@ const GoodReceiveScreen = () => {
 
       {/* Scrollable Dynamic Card List */}
       <View style={{ flex: 1, width: "100%" }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{width: "100%", paddingHorizontal: 16 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ width: "100%", paddingHorizontal: 16 }}>
           <GoodReceivedCardList
             items={mergedData}
             onCheck={handleCheck}
@@ -127,19 +128,19 @@ const GoodReceiveScreen = () => {
             position: "absolute",
             alignSelf: "center",
             bottom: 32,
-            backgroundColor:  mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
-  mergedData.some((item: any) => item.status_do === "PROCESSING")
-    ? "#ccc"
-    : "#421dfaff",
+            backgroundColor: mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
+              mergedData.some((item: any) => item.status_do === "PROCESSING")
+              ? "#ccc"
+              : "#421dfaff",
             borderRadius: 28,
             paddingVertical: 14,
             paddingHorizontal: 28,
             elevation: 4,
           }}
-         disabled={
-  mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
-  mergedData.some((item: any) => item.status_do === "PROCESSING")
-}
+          disabled={
+            mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
+            mergedData.some((item: any) => item.status_do === "PROCESSING")
+          }
           onPress={async () => {
             // TODO: handle meta button press
             Alert.alert(
@@ -148,12 +149,15 @@ const GoodReceiveScreen = () => {
               [
                 {
                   text: "Cancel",
-                  onPress: () => {},
+                  onPress: () => { },
                   style: "cancel",
                 },
                 {
                   text: "OK",
                   onPress: async () => {
+                  if (isIntegrating) return; // Guard kedua saat klik OK di alert
+                      
+                    setIsIntegrating(true);
                     try {
                       showLoadingDialog("Integrating to META...");
                       const res = await InboundServices.postIntegrationToOracle(payload.payload.id);
@@ -168,8 +172,9 @@ const GoodReceiveScreen = () => {
                           },
                         },
                       ]);
-                    } catch (error:any) {
+                    } catch (error: any) {
                       Alert.alert('Error', error?.data?.message);
+                      setIsIntegrating(false); // Buka kunci jika terjadi error
                     } finally {
                       hideLoadingDialog();
                     }
@@ -179,7 +184,7 @@ const GoodReceiveScreen = () => {
             );
           }}
         >
-          <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>INTEGRATE TO META</Text>
+          <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>{isIntegrating ? "INTEGRATING..." : "INTEGRATE TO META"}</Text>
         </TouchableOpacity>
       )}
     </View>

@@ -232,6 +232,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                         styles.approveButton,
                         { backgroundColor: isApproving ? '#A0A0A0' : Colors.secondaryColor } // Ubah warna saat disable
                     ]}
+                    disabled={isApproving} // Disable jika sedang memproses atau jika ada sisa quantity tapi reason belum dipilih
                     onPress={async () => {
                         if (isApproving) return; // Guard clause agar tidak bisa dieksekusi 2 kali
                         setIsApproving(true); // Set state menjadi true saat mulai proses

@@ -90,7 +90,11 @@ const GoodReceiveScreen = () => {
     initialize();
   }, [])
 
-
+const isAllApproved = mergedData.length > 0 && mergedData.every((item: any) => item.inspection_status === "APPROVED");
+  const isButtonDisabled = 
+    mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
+    mergedData.some((item: any) => item.status_do === "PROCESSING") || 
+    isIntegrating;
   return (
     <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
       {/* Info Section */}
@@ -122,27 +126,23 @@ const GoodReceiveScreen = () => {
       </View>
 
       {/* Floating Button "meta" */}
-      {mergedData.every((item: any) => item.inspection_status === "APPROVED") && (
+    {/* Floating Button "meta" */}
+      {isAllApproved && (
         <TouchableOpacity
           style={{
             position: "absolute",
             alignSelf: "center",
             bottom: 32,
-            backgroundColor: mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
-              mergedData.some((item: any) => item.status_do === "PROCESSING")
-              ? "#ccc"
-              : "#421dfaff",
+            backgroundColor: isButtonDisabled ? "#ccc" : "#421dfaff",
             borderRadius: 28,
             paddingVertical: 14,
             paddingHorizontal: 28,
             elevation: 4,
           }}
-          disabled={
-            mergedData.every((item: any) => item.integration_status === "SUCCESS") ||
-            mergedData.some((item: any) => item.status_do === "PROCESSING")
-          }
+          disabled={isButtonDisabled}
           onPress={async () => {
-            // TODO: handle meta button press
+            if (isIntegrating) return;
+
             Alert.alert(
               "Confirmation",
               "Are you sure you want to integrate to META?",
@@ -155,26 +155,27 @@ const GoodReceiveScreen = () => {
                 {
                   text: "OK",
                   onPress: async () => {
-                  if (isIntegrating) return; // Guard kedua saat klik OK di alert
-                      
+                    if (isIntegrating) return;
+                    
                     setIsIntegrating(true);
+                    
                     try {
                       showLoadingDialog("Integrating to META...");
                       const res = await InboundServices.postIntegrationToOracle(payload.payload.id);
                       console.log("Integration response:", res);
+                      
                       Alert.alert("Success", res.data.status, [
                         {
                           text: "OK",
                           onPress: () => {
-                            // navigation.pop(2);
-                            fetchInspectionById() // Refresh data setelah integrasi
-                            return
+                            fetchInspectionById();
+                            setIsIntegrating(false);
                           },
                         },
                       ]);
                     } catch (error: any) {
-                      Alert.alert('Error', error?.data?.message);
-                      setIsIntegrating(false); // Buka kunci jika terjadi error
+                      Alert.alert('Error', error?.data?.message || 'Something went wrong');
+                      setIsIntegrating(false);
                     } finally {
                       hideLoadingDialog();
                     }
@@ -184,7 +185,9 @@ const GoodReceiveScreen = () => {
             );
           }}
         >
-          <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>{isIntegrating ? "INTEGRATING..." : "INTEGRATE TO META"}</Text>
+          <Text style={{ color: "#FFF", fontWeight: "bold", fontSize: 16 }}>
+            {isIntegrating ? "INTEGRATING..." : "INTEGRATE TO META"}
+          </Text>
         </TouchableOpacity>
       )}
     </View>

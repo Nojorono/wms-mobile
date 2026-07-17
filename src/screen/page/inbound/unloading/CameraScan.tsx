@@ -81,6 +81,7 @@ const CameraScreen = () => {
   const [showInput, setShowInput] = useState(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAddClicked, setIsAddClicked] = useState(false);
 
   const codeScanner = useCodeScanner({
     codeTypes: ["qr", "code-128", "ean-13"],
@@ -440,10 +441,21 @@ const CameraScreen = () => {
             <TouchableOpacity
               style={[
                 styles.addBtn,
-                { backgroundColor: manualInput ? "#f97316" : "#6b7280" },
+                {
+                  backgroundColor:
+                    manualInput && !isAddClicked ? "#f97316" : "#6b7280",
+                },
               ]}
-              onPress={() => handleAddPallet(manualInput)}
-              disabled={!manualInput}
+              onPress={async () => {
+                if (isAddClicked) return;
+                setIsAddClicked(true);
+                try {
+                  await handleAddPallet(manualInput);
+                } finally {
+                  setIsAddClicked(false);
+                }
+              }}
+              disabled={!manualInput || isAddClicked}
             >
               <Text style={styles.btnText}>Add</Text>
             </TouchableOpacity>

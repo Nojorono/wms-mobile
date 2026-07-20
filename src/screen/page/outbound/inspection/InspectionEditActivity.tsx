@@ -45,7 +45,7 @@ export default function InspectionUpdateActivity() {
     }
   }
   const itemBefore = itemBeforeParam as any;
-  console.log (itemBefore, 'itemBefore in edit activity');
+  console.log(itemBefore, 'itemBefore in edit activity');
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -59,7 +59,10 @@ export default function InspectionUpdateActivity() {
   const [foundItem, setFoundItem] = useState<any>(null);
   const [pickingPallet, setPickingPallet] = useState<any>(null);
   const [assignPicking, setAssignPicking] = useState<any>();
-
+  // STATE UNTUK MENYIMPAN DATA ORIGINAL
+  const [originalFoundItem, setOriginalFoundItem] = useState<any>(null);
+  const [originalPickingPallet, setOriginalPickingPallet] = useState<any>(null);
+  const [originalSwitchInfo, setOriginalSwitchInfo] = useState<any>(null);
   const [doneSumber, setDoneSumber] = useState(false);
   const [donePicking, setDonePicking] = useState(false);
   const [doneSwitch, setDoneSwitch] = useState(false);
@@ -88,9 +91,14 @@ export default function InspectionUpdateActivity() {
       if (codes.length === 0) return;
       const value = codes[0].value ?? '';
 
-      if (scanTarget === 'sumber') setPalletSumber(value);
-      if (scanTarget === 'picking') setPalletPicking(value);
-      if (scanTarget === 'switching') setSwitchPallet(value);
+      // if (scanTarget === 'sumber') setPalletSumber(value);
+      // if (scanTarget === 'picking') setPalletPicking(value);
+      // if (scanTarget === 'switching') setSwitchPallet(value);
+
+      // UBAH BAGIAN INI
+      if (scanTarget === 'sumber') handlePalletSumberChange(value);
+      if (scanTarget === 'picking') handlePalletPickingChange(value);
+      if (scanTarget === 'switching') handlePalletSwitchChange(value);
 
       setIsScannerOpen(false);
       setScanTarget(null);
@@ -98,16 +106,16 @@ export default function InspectionUpdateActivity() {
   });
 
   // Letakkan ini di atas bagian return (di dalam komponen)
-const isDataChanged = (() => {
-  if (mode !== 'edit' || !activity) return false;
+  const isDataChanged = (() => {
+    if (mode !== 'edit' || !activity) return false;
 
-  const isQtyChanged = String(qtyPicking) !== String(activity.quantity_picked);
-  const isPalletSumberChanged = palletSumber !== (activity.palletSource?.pallet_code || '');
-  const isPalletPickingChanged = palletPicking !== (activity.palletUse?.pallet_code || '');
-  
-  // Jika salah satu berubah, return true
-  return isQtyChanged || isPalletSumberChanged || isPalletPickingChanged;
-})();
+    const isQtyChanged = String(qtyPicking) !== String(activity.quantity_picked);
+    const isPalletSumberChanged = palletSumber !== (activity.palletSource?.pallet_code || '');
+    const isPalletPickingChanged = palletPicking !== (activity.palletUse?.pallet_code || '');
+
+    // Jika salah satu berubah, return true
+    return isQtyChanged || isPalletSumberChanged || isPalletPickingChanged;
+  })();
 
   const handleApproveAction = async (type: "APPROVE" | "FINAL") => {
     if (!activity) return;
@@ -166,32 +174,68 @@ const isDataChanged = (() => {
       setQtyPicking(activity.quantity_picked != null ? String(activity.quantity_picked) : '');
 
       // foundItem placeholder (so UI shows info)
-      setFoundItem({
+      // setFoundItem({
+      //   id: activity.palletSource.id,
+      //   item_name: activity.item_name || itemBefore?.item?.item_name,
+      //   current_quantity: activity.palletSource.currentQuantity,
+      //   uom: activity.palletSource.uom || itemBefore?.item?.uom,
+      //   week_number: activity.palletSource.currentWeekNumber || itemBefore?.item?.week_number,
+      // });
+
+      // setPickingPallet({
+      //   id: activity.palletUse?.id || activity.pallet_use_id,
+      //   pallet_code: activity.palletUse?.pallet_code || activity.pallet_use_code,
+      //   week_number: activity.palletUse?.currentWeekNumber || activity.week_number || itemBefore?.item?.week_number,
+      //   uom: activity.palletUse?.uom || activity.uom || itemBefore?.item?.uom,
+      //   current_quantity: activity.palletUse?.currentQuantity,
+      // });
+
+      // if (activity.pallet_switch_id) {
+      //   setIsSwitching(true);
+      //   setSwitchPallet(activity.palletSwitch?.pallet_code || activity.pallet_switch_code || '');
+      //   setSwitchQty(activity.quantity_switch != null ? String(activity.quantity_switch) : '');
+      //   setSwitchInfo({
+      //     id: activity.palletSwitch.id,
+      //     current_quantity: activity.quantity_switch,
+      //     uom: activity.palletSwitch?.uom,
+      //     week_number: activity.palletSwitch?.week_number,
+      //   });
+      //   setDoneSwitch(true);
+      // }
+
+      const initFound = {
         id: activity.palletSource.id,
         item_name: activity.item_name || itemBefore?.item?.item_name,
         current_quantity: activity.palletSource.currentQuantity,
         uom: activity.palletSource.uom || itemBefore?.item?.uom,
         week_number: activity.palletSource.currentWeekNumber || itemBefore?.item?.week_number,
-      });
+      };
+      setFoundItem(initFound);
+      setOriginalFoundItem(initFound); // <-- TAMBAHKAN INI
 
-      setPickingPallet({
+      const initPicking = {
         id: activity.palletUse?.id || activity.pallet_use_id,
         pallet_code: activity.palletUse?.pallet_code || activity.pallet_use_code,
         week_number: activity.palletUse?.currentWeekNumber || activity.week_number || itemBefore?.item?.week_number,
         uom: activity.palletUse?.uom || activity.uom || itemBefore?.item?.uom,
         current_quantity: activity.palletUse?.currentQuantity,
-      });
+      };
+      setPickingPallet(initPicking);
+      setOriginalPickingPallet(initPicking); // <-- TAMBAHKAN INI
 
       if (activity.pallet_switch_id) {
         setIsSwitching(true);
         setSwitchPallet(activity.palletSwitch?.pallet_code || activity.pallet_switch_code || '');
         setSwitchQty(activity.quantity_switch != null ? String(activity.quantity_switch) : '');
-        setSwitchInfo({
+
+        const initSwitch = {
           id: activity.palletSwitch.id,
           current_quantity: activity.quantity_switch,
           uom: activity.palletSwitch?.uom,
           week_number: activity.palletSwitch?.week_number,
-        });
+        };
+        setSwitchInfo(initSwitch);
+        setOriginalSwitchInfo(initSwitch); // <-- TAMBAHKAN INI
         setDoneSwitch(true);
       }
 
@@ -201,6 +245,51 @@ const isDataChanged = (() => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, activity]);
+
+  // --- HANDLER UBAH INPUT ---
+  const handlePalletSumberChange = (v: string) => {
+    setPalletSumber(v);
+    const originalCode = activity?.palletSource?.pallet_code || '';
+    if (mode === 'edit' && v === originalCode && originalFoundItem) {
+      setFoundItem(originalFoundItem);
+      setDoneSumber(true);
+    } else {
+      setFoundItem(null);
+      setDoneSumber(false);
+    }
+  };
+
+  const handlePalletPickingChange = (v: string) => {
+    setPalletPicking(v);
+    const originalCode = activity?.palletUse?.pallet_code || activity?.pallet_use_code || '';
+    if (mode === 'edit' && v === originalCode && originalPickingPallet) {
+      setPickingPallet(originalPickingPallet);
+      setDonePicking(true);
+    } else {
+      setPickingPallet(null);
+      setDonePicking(false);
+    }
+  };
+
+  const handlePalletSwitchChange = (v: string) => {
+    setSwitchPallet(v);
+    const originalCode = activity?.palletSwitch?.pallet_code || activity?.pallet_switch_code || '';
+    if (mode === 'edit' && v === originalCode && originalSwitchInfo) {
+      setSwitchInfo(originalSwitchInfo);
+      setDoneSwitch(true);
+    } else {
+      setSwitchInfo(null);
+      setDoneSwitch(false);
+    }
+  };
+
+  // --- FUNGSI HIGHLIGHT VISUAL ---
+  const getHighlightStyle = (currentValue: string, originalValue: string) => {
+    if (mode !== 'edit' || !activity) return {};
+    return currentValue !== originalValue
+      ? { borderColor: '#F26E1F', borderWidth: 1.5, backgroundColor: '#FFF4E0' }
+      : {};
+  };
 
   const handleCheckPalletSumber = async () => {
     if (!palletSumber.trim()) {
@@ -241,8 +330,29 @@ const isDataChanged = (() => {
         return;
       }
       // ensure pallet belongs to the same memo as the item to pick
-      if (itemBefore && res.data[0].memo_id !== itemBefore.outbound_memo_item.outbound_memo_id) {
+      if (
+        itemBefore &&
+        res.data[0].memo_id !== null && // <-- Tambahkan pengecekan ini
+        res.data[0].memo_id !== itemBefore.outbound_memo_item.outbound_memo_id
+      ) {
         Alert.alert('Pallet berasal dari memo berbeda');
+        return;
+      }
+      if (
+        (res.data[0].status_inventory !== "READY" && res.data[0].status_inventory !== "PENDING") &&
+        res.data[0].current_quantity !== 0
+      ) {
+        showDialog('error', 'Item dalam pallet tidak dalam status ready');
+        return;
+      }
+
+      if (res.data[0].current_quantity === res.data[0].capacity) {
+        showDialog('error', 'Pallet picking sudah penuh, tidak bisa digunakan untuk picking');
+        return;
+      }
+
+      if (Number(res.data[0].quantity) - Number(res.data[0].current_quantity) < Number(qtyPicking)) {
+        showDialog('error', `Pallet picking tidak memiliki cukup kapasitas untuk qty picking ${qtyPicking}`);
         return;
       }
       setPickingPallet(res.data[0]);
@@ -356,9 +466,24 @@ const isDataChanged = (() => {
       return;
     }
     if (itemBefore?.quantity_plan != null && qty > Number(itemBefore.quantity_plan)) {
-    Alert.alert('Qty picking tidak boleh lebih besar dari qty suggestion (permintaan)');
-    return;
-  }
+      Alert.alert('Qty picking tidak boleh lebih besar dari qty suggestion (permintaan)');
+      return;
+    }
+
+    // --- TAMBAHAN VALIDASI PALLET SUMBER DI SINI ---
+    if (
+      foundItem?.current_quantity != null &&
+      qty > Number(foundItem.current_quantity)
+    ) {
+      showDialog('error', `Qty picking tidak boleh lebih besar dari qty pallet sumber (${foundItem.current_quantity})`);
+      return;
+    }
+    // -----------------------------------------------
+
+    if (Number(pickingPallet?.capacity) - Number(pickingPallet?.current_quantity) < qty) {
+      showDialog('error', 'Qty picking tidak boleh lebih besar dari kapasitas pallet picking');
+      return;
+    }
     setQtyPicking(v);
   };
 
@@ -533,12 +658,18 @@ const isDataChanged = (() => {
           <TextInput
             placeholder="Pallet Picking"
             value={palletPicking}
-            onChangeText={(v) => {
-              setPalletPicking(v);
-              setPickingPallet(null);
-              setDonePicking(false);
-            }}
-            style={[styles.input, { flex: 1, marginVertical: 0 }]}
+            // onChangeText={(v) => {
+            //   setPalletPicking(v);
+            //   setPickingPallet(null);
+            //   setDonePicking(false);
+            // }}
+            onChangeText={handlePalletPickingChange} // <-- UBAH KE SINI
+            style={[
+              styles.input,
+              { flex: 1, marginVertical: 0 },
+              // <-- TAMBAHKAN HIGHLIGHT DI SINI
+              getHighlightStyle(palletPicking, activity?.palletUse?.pallet_code || activity?.pallet_use_code || '')
+            ]}
           />
 
           <TouchableOpacity
@@ -579,7 +710,13 @@ const isDataChanged = (() => {
             value={qtyPicking}
             onChangeText={onChangeQtyPicking}
             keyboardType="numeric"
-            style={[styles.input, { flex: 1, marginVertical: 0 }]}
+            // style={[styles.input, { flex: 1, marginVertical: 0 }]}
+            style={[
+              styles.input,
+              { flex: 1, marginVertical: 0 },
+              // <-- TAMBAHKAN HIGHLIGHT DI SINI
+              getHighlightStyle(String(qtyPicking), String(activity?.quantity_picked || ''))
+            ]}
           />
 
           <Text style={{ marginLeft: 8, fontWeight: 'bold', color: '#333' }}>
@@ -638,12 +775,19 @@ const isDataChanged = (() => {
               <TextInput
                 placeholder="Pallet Switching"
                 value={switchPallet}
-                onChangeText={(v) => {
-                  setSwitchPallet(v);
-                  setSwitchInfo(null);
-                  setDoneSwitch(false);
-                }}
-                style={[styles.input, { flex: 1, marginVertical: 0 }]}
+                // onChangeText={(v) => {
+                //   setSwitchPallet(v);
+                //   setSwitchInfo(null);
+                //   setDoneSwitch(false);
+                // }}
+                // style={[styles.input, { flex: 1, marginVertical: 0 }]}
+                onChangeText={handlePalletSwitchChange} // <-- UBAH KE SINI
+                style={[
+                  styles.input,
+                  { flex: 1, marginVertical: 0 },
+                  // <-- TAMBAHKAN HIGHLIGHT DI SINI
+                  getHighlightStyle(switchPallet, activity?.palletSwitch?.pallet_code || activity?.pallet_switch_code || '')
+                ]}
               />
 
               <TouchableOpacity
@@ -703,9 +847,9 @@ const isDataChanged = (() => {
       </View>
 
       {/* APPROVE BUTTONS */}
-{!isDataChanged && (
-      <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-        
+      {!isDataChanged && (
+        <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+
           {activity.status === "PENDING" && (
             <TouchableOpacity
               style={[styles.approveButton, { flex: 1, backgroundColor: "green" }]}
@@ -741,18 +885,18 @@ const isDataChanged = (() => {
             </>
           )}
 
-      </View>
-)}
+        </View>
+      )}
 
       {/* SUBMIT */}
       <TouchableOpacity
         style={[
           styles.submitButton,
           {
-        backgroundColor:
-          isSubmitValid && activity.status !== "INSPECTION_APPROVED"
-            ? '#F26E1F'
-            : '#bfbfbf'
+            backgroundColor:
+              isSubmitValid && activity.status !== "INSPECTION_APPROVED"
+                ? '#F26E1F'
+                : '#bfbfbf'
           }
         ]}
         disabled={!isSubmitValid || activity.status === "INSPECTION_APPROVED"}

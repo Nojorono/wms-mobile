@@ -194,6 +194,11 @@ export default function PickingDetailActivity() {
         return;
       }
 
+      if(res.data[0].status_inventory !== "READY") {
+        showDialog('error', 'Item dalam pallet tidak dalam status ready');
+        return;
+      }
+
       // Gabungkan pengecekan item_id, uom, dan week_number
       const found = res.data.find(
         (item: any) =>
@@ -285,6 +290,11 @@ export default function PickingDetailActivity() {
         }
       }
 
+      if(res.data[0].status_inventory !== "READY") {
+        showDialog('error', 'Item dalam pallet tidak dalam status ready');
+        return;
+      }
+
       if (res.data[0].current_quantity === res.data[0].capacity) {
         showDialog('error', 'Pallet picking sudah penuh, tidak bisa digunakan untuk picking');
         return;
@@ -346,6 +356,7 @@ export default function PickingDetailActivity() {
         showDialog('error', 'Pallet tidak ditemukan atau tidak valid');
         return;
       }
+
       const found = res.data.find(
         (item: any) =>
           item.uom === itemBefore.uom

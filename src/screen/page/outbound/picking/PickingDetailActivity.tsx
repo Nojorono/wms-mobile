@@ -285,6 +285,16 @@ export default function PickingDetailActivity() {
         }
       }
 
+      if (res.data[0].current_quantity === res.data[0].capacity) {
+        showDialog('error', 'Pallet picking sudah penuh, tidak bisa digunakan untuk picking');
+        return;
+      }
+
+      if (Number(res.data[0].quantity) - Number(res.data[0].current_quantity) < Number(qtyPicking)) {
+        showDialog('error', `Pallet picking tidak memiliki cukup kapasitas untuk qty picking ${qtyPicking}`);
+        return;
+      }
+
       const found = res.data.find(
         (item: any) => {
           const uomMatch = item.uom === itemBefore.uom;
@@ -453,6 +463,12 @@ export default function PickingDetailActivity() {
       showDialog('error', 'Qty picking tidak boleh lebih besar dari qty permintaan');
       return;
     }
+
+    if (pickingPallet?.capacity - pickingPallet?.current_quantity < qty) {
+      showDialog('error', 'Qty picking tidak boleh lebih besar dari kapasitas pallet picking');
+      return;
+    }
+
     if (foundItem?.current_quantity != null && qty > Number(foundItem.current_quantity)) {
       showDialog('error', `Qty picking tidak boleh lebih besar dari qty pallet sumber (${foundItem.current_quantity})`);
       return;
@@ -719,6 +735,11 @@ export default function PickingDetailActivity() {
                       return;
                     }
                     // -----------------------------------------------
+
+                    if (Number(pickingPallet?.capacity) - Number(pickingPallet?.current_quantity) < qty) {
+                      showDialog('error', 'Qty picking tidak boleh lebih besar dari kapasitas pallet picking');
+                      return;
+                    }
 
                     onChangeQtyPicking(v);
                   }}

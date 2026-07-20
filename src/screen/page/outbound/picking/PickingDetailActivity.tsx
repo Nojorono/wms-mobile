@@ -290,7 +290,7 @@ export default function PickingDetailActivity() {
         }
       }
 
-      if(res.data[0].status_inventory !== "READY") {
+      if (res.data[0].status_inventory !== "READY" && res.data[0].current_quantity !== 0) {
         showDialog('error', 'Item dalam pallet tidak dalam status ready');
         return;
       }

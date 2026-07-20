@@ -129,7 +129,7 @@ const MovementStackNavigator = () => (
       component={HelperMovementStackNavigator}
       options={({ navigation }) => ({
         headerTitle: 'Update Helper',
-        headerShown: true,
+        headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {
           backgroundColor: Colors.secondaryColor,

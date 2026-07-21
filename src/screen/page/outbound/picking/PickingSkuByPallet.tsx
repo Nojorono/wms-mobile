@@ -228,6 +228,7 @@ const PickingSkuByPallet = () => {
     };
 
     const transformedData = transformPickingData(PickingList);
+    console.log("🚀 ~ file: PickingSkuByPallet.tsx:246 ~ PickingSkuByPallet ~ transformedData:", transformedData)
 
     return (
         <View style={{ flex: 1 }}>
@@ -279,7 +280,7 @@ const PickingSkuByPallet = () => {
                                     </Text>
                                 </View>
                             ))}
-                          {!item.items.some((itm: any) => itm.status === "PENDING") && (
+                          {!item.items.some((itm: any) => itm.status !== "OPEN") && (
                                 <View style={{ marginTop: 12 }}>
                                     <Text
                                         style={{

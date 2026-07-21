@@ -10,7 +10,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { UnloadingParamList } from "../../../navigation/inbound/UnloadingNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useAuthStore } from "../../../../store/useAuthStore";
-import {  compareScanWithReference, ItemDetail } from "../service/inboundService";
+import { compareScanWithReference, ItemDetail } from "../service/inboundService";
 import InboundServices from "../../../../service/inboundServices";
 import { useLoadingDialogStore } from "../../../../store/useLoadingStore";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -30,6 +30,7 @@ type ItemType = {
 
 type PayloadType = {
   inbound_number: string;
+  inbound_dos: any[];
 };
 
 type RouteParams = {
@@ -65,6 +66,9 @@ const UnloadingScanScreen = () => {
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
   const confirm = useConfirmationStore();
+  const isIntegrationFailed = payload?.inbound_dos?.every(dos =>
+     dos?.integration_status === "READY"
+    );
 
 
   const fetchData = async () => {
@@ -117,8 +121,8 @@ const UnloadingScanScreen = () => {
     const totalQtyScan = pallets.reduce((sum, p) => sum + p.qty, 0);
 
     // Cek apakah total qty melebihi plan
-    const compare = compareScanWithReference(item.quantities,totalScanned)
-    if (!compare){
+    const compare = compareScanWithReference(item.quantities, totalScanned)
+    if (!compare) {
       showDialog("error", `Total scanned melibihi qty plan!`);
       return;
     }
@@ -162,6 +166,8 @@ const UnloadingScanScreen = () => {
     }, false);
   };
 
+
+
   return (
     <View style={styles.container}>
       {/* Header Info */}
@@ -200,7 +206,7 @@ const UnloadingScanScreen = () => {
             {/* Right Content */}
             <View style={[styles.cardContent, { flexDirection: "column", flex: 1 }]}>
               {/* Delete Icon in top right */}
-              {item.status !== "PENDING" && item.status !== "COMPLETED" && (
+              {(item.status !== "PENDING" && item.status !== "COMPLETED") || isIntegrationFailed && (
                 <TouchableOpacity
                   style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 4 }}
                   onPress={() => {
@@ -240,38 +246,38 @@ const UnloadingScanScreen = () => {
       />
 
       {/* Footer */}
-     <View style={[styles.footer, { justifyContent: "space-between", flexDirection: "row" }]}>
-  {/* Kondisi Jika Pallet Ada */}
-  {pallets.length > 0 ? (
-    <TouchableOpacity
-      style={[
-        styles.scanBtn,
-        { flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e" }
-      ]}
-      onPress={async () => {
-        updateStatusAll()
-      }}
-    >
-      <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
-      <Text style={styles.btnText}>Send to WH STAFF</Text>
-    </TouchableOpacity>
-  ) : (
-    <View /> 
-  )}
+      <View style={[styles.footer, { justifyContent: "space-between", flexDirection: "row" }]}>
+        {/* Kondisi Jika Pallet Ada */}
+        {pallets.length > 0 ? (
+          <TouchableOpacity
+            style={[
+              styles.scanBtn,
+              { flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e" }
+            ]}
+            onPress={async () => {
+              updateStatusAll()
+            }}
+          >
+            <Ionicons name="send" size={22} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.btnText}>Send to WH STAFF</Text>
+          </TouchableOpacity>
+        ) : (
+          <View />
+        )}
 
-  {/* Tombol Scan yang akan selalu di kanan jika View di atas ada */}
-  <TouchableOpacity
-    style={[styles.scanBtn, { flexDirection: "row", alignItems: "center" }]}
-    onPress={() =>
-      navigation.navigate("CameraScreen", {
-        item: item,
-        dataExist: pallets,
-      })
-    }
-  >
-    <Ionicons name="qr-code-outline" size={28} color="#fff" />
-  </TouchableOpacity>
-</View>
+        {/* Tombol Scan yang akan selalu di kanan jika View di atas ada */}
+        <TouchableOpacity
+          style={[styles.scanBtn, { flexDirection: "row", alignItems: "center" }]}
+          onPress={() =>
+            navigation.navigate("CameraScreen", {
+              item: item,
+              dataExist: pallets,
+            })
+          }
+        >
+          <Ionicons name="qr-code-outline" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

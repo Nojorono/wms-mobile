@@ -340,8 +340,8 @@ export default function PickingDetailActivity() {
           : ''
         } | Uom: ${res.data && res.data.length > 0 ? res.data[0].uom ?? '' : ''}`
       );
-    } catch (err) {
-      showDialog('error', 'Gagal memeriksa pallet');
+    } catch (err:any) {
+      showDialog('error', err.data.message || 'Gagal memeriksa pallet');
     }
   };
 

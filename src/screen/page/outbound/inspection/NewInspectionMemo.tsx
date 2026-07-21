@@ -112,35 +112,49 @@ function NewInspectionMemo() {
   }, [memoList]);
 
 
- // 1. Cek apakah SEMUA item scan_detail sudah berstatus INSPECTION_APPROVED
+ // 1. Cek apakah ada MINIMAL 1 item yang berstatus INSPECTION / INSPECTION_APPROVED
+  const hasAnyInspection = memoList.length > 0 && memoList.some((m: any) =>
+    m.items.some((item: any) => 
+      item.scan_detail.some((s: any) => s.status === "INSPECTION" || s.status === "INSPECTION_APPROVED")
+    )
+  );
+
+  // 2. Cek apakah SEMUA item scan_detail sudah berstatus INSPECTION_APPROVED
   const isAllInspectionApproved = memoList.length > 0 && memoList.every((m: any) =>
     m.items.length > 0 && m.items.every((item: any) =>
       item.scan_detail.length > 0 && item.scan_detail.every((s: any) => s.status === "INSPECTION_APPROVED")
     )
   );
 
-  // 2. Cek apakah SEMUA item transaction_picking sudah berstatus COMPLETED
+  // 3. Cek apakah SEMUA item transaction_picking sudah berstatus COMPLETED
   const isAllPickingsCompleted = memoList.length > 0 && memoList.every((m: any) =>
     m.items.length > 0 && m.items.every((item: any) => 
       item.transaction_picking?.status === "COMPLETED"
     )
   );
 
-  // 3. Tombol Approve muncul jika: 
-  // Belum semua approved, belum semua completed, status DO bukan IN_PROGRESS, dan ada data yang valid
+  // ==========================
+  // LOGIKA KEMUNCULAN TOMBOL
+  // ==========================
+
+  // Tombol Approve muncul JIKA:
+  // 1. Status DO belum IN_PROGRESS (Artinya tahap approve belum dilewati)
+  // 2. Belum semua picking completed
+  // 3. Ada minimal 1 data hasil scan (agar tidak muncul kalau data masih kosong)
+  // *Catatan: Meskipun semua data sudah INSPECTION_APPROVED, tombol ini akan tetap muncul untuk mengubah status DO.
   const showApproveBtn = 
     statusDO !== "IN_PROGRESS" && 
     !isAllPickingsCompleted && 
-    !isAllInspectionApproved && 
-    memoList.length > 0 && 
-    memoList.some((m: any) =>
-      m.items.some((item: any) => item.scan_detail.some((s: any) => s.status === "INSPECTION" || s.status === "INSPECTION_APPROVED"))
-  );
+    hasAnyInspection;
 
-  // 4. Tombol Complete muncul JIKA:
-  // SEMUA sudah INSPECTION_APPROVED, tetapi BELUM SEMUA berstatus COMPLETED
-  const showCompleteBtn = isAllInspectionApproved && !isAllPickingsCompleted;
-
+  // Tombol Complete muncul JIKA:
+  // 1. Status DO SUDAH IN_PROGRESS (Artinya tombol Approve sudah pernah ditekan)
+  // 2. SEMUA data scan_detail sudah INSPECTION_APPROVED
+  // 3. BELUM SEMUA transaction_picking berstatus COMPLETED
+  const showCompleteBtn = 
+    statusDO === "IN_PROGRESS" && 
+    isAllInspectionApproved && 
+    !isAllPickingsCompleted;
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />

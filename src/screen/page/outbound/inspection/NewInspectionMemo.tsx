@@ -57,7 +57,10 @@ function NewInspectionMemo() {
 
       const processed = memos.map((memo: any) => {
         const memoItems = memo?.outbound_memo_items || [];
-        const pickings = memo?.transaction_pickings || [];
+        // Tambahkan filter di sini untuk membuang status CANCELLED
+        const pickings = (memo?.transaction_pickings || []).filter(
+          (picking: any) => picking.status !== "CANCELLED"
+        );
         const mergedItems = pickings.map((picking: any) => {
           const memoItem = memoItems.find((itm: any) => itm.item_id === picking.item_id && itm.uom === picking.uom);
           const scans = picking.transactionScanPicking || [];
@@ -112,9 +115,9 @@ function NewInspectionMemo() {
   }, [memoList]);
 
 
- // 1. Cek apakah ada MINIMAL 1 item yang berstatus INSPECTION / INSPECTION_APPROVED
+  // 1. Cek apakah ada MINIMAL 1 item yang berstatus INSPECTION / INSPECTION_APPROVED
   const hasAnyInspection = memoList.length > 0 && memoList.some((m: any) =>
-    m.items.some((item: any) => 
+    m.items.some((item: any) =>
       item.scan_detail.some((s: any) => s.status === "INSPECTION" || s.status === "INSPECTION_APPROVED")
     )
   );
@@ -128,7 +131,7 @@ function NewInspectionMemo() {
 
   // 3. Cek apakah SEMUA item transaction_picking sudah berstatus COMPLETED
   const isAllPickingsCompleted = memoList.length > 0 && memoList.every((m: any) =>
-    m.items.length > 0 && m.items.every((item: any) => 
+    m.items.length > 0 && m.items.every((item: any) =>
       item.transaction_picking?.status === "COMPLETED"
     )
   );
@@ -142,18 +145,18 @@ function NewInspectionMemo() {
   // 2. Belum semua picking completed
   // 3. Ada minimal 1 data hasil scan (agar tidak muncul kalau data masih kosong)
   // *Catatan: Meskipun semua data sudah INSPECTION_APPROVED, tombol ini akan tetap muncul untuk mengubah status DO.
-  const showApproveBtn = 
-    statusDO !== "IN_PROGRESS" && 
-    !isAllPickingsCompleted && 
+  const showApproveBtn =
+    statusDO !== "IN_PROGRESS" &&
+    !isAllPickingsCompleted &&
     hasAnyInspection;
 
   // Tombol Complete muncul JIKA:
   // 1. Status DO SUDAH IN_PROGRESS (Artinya tombol Approve sudah pernah ditekan)
   // 2. SEMUA data scan_detail sudah INSPECTION_APPROVED
   // 3. BELUM SEMUA transaction_picking berstatus COMPLETED
-  const showCompleteBtn = 
-    statusDO === "IN_PROGRESS" && 
-    isAllInspectionApproved && 
+  const showCompleteBtn =
+    statusDO === "IN_PROGRESS" &&
+    isAllInspectionApproved &&
     !isAllPickingsCompleted;
   return (
     <SafeAreaView style={styles.safeArea}>

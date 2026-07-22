@@ -31,6 +31,7 @@ type ItemType = {
 type PayloadType = {
   inbound_number: string;
   inbound_dos: any[];
+  status: string;
 };
 
 type RouteParams = {
@@ -66,6 +67,7 @@ const UnloadingScanScreen = () => {
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
   const confirm = useConfirmationStore();
+  console.log("Payload from route params:", payload);
   const isIntegrationFailed = payload?.inbound_dos?.every(dos =>
      dos?.integration_status === "READY"
     );
@@ -74,7 +76,6 @@ const UnloadingScanScreen = () => {
   const fetchData = async () => {
     try {
       showLoadingDialog("Loading Pallets");
-
       const res = await InboundServices.getUnloadingScanList(
         item.inbound_id,
         item.item.id
@@ -206,7 +207,7 @@ const UnloadingScanScreen = () => {
             {/* Right Content */}
             <View style={[styles.cardContent, { flexDirection: "column", flex: 1 }]}>
               {/* Delete Icon in top right */}
-              {(item.status !== "PENDING" && item.status !== "COMPLETED") || isIntegrationFailed && (
+              {(item.status !== "PENDING" && item.status !== "COMPLETED") || isIntegrationFailed || payload.status === "UNLOADING" && (
                 <TouchableOpacity
                   style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 4 }}
                   onPress={() => {

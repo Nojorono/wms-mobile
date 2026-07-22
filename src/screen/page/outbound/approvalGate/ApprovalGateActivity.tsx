@@ -221,7 +221,8 @@ export default function ApprovalGateScreen() {
                     outboundDo?.organization_id === userOrg &&
                     outboundDo?.status === "APPROVED_LOAD" &&
                     !hasIntegratedMemo &&
-                    outboundDo?.delivery_category !== "Ekspedisi Vendor"
+                    outboundDo.outbound_type === "AMO"
+                    // outboundDo?.delivery_category !== "Ekspedisi Vendor"
 
                 );
             });
@@ -479,7 +480,7 @@ export default function ApprovalGateScreen() {
                                 /* JIKA STATUS APPROVED ATAU APPROVED_LOAD -> CEK LOGIC INTEGRATE
                                   Tombol hanya muncul jika bukan vendor, ada memo, dan ada memo yang belum terintegrasi 
                                 */
-                                (item.deliveryCategory !== "Ekspedisi Vendor" &&
+                                (
                                     item.memos?.length > 0 &&
                                     item.memos.some((memo: any) => memo.statusIntegrated !== "INTEGRATED")) ? (
                                     <TouchableOpacity
@@ -531,7 +532,7 @@ export default function ApprovalGateScreen() {
                                     <TouchableOpacity
                                         style={{
                                             flex: 1,
-                                           backgroundColor: isProcessing ? "#9CA3AF" : "#DC2626",
+                                            backgroundColor: isProcessing ? "#9CA3AF" : "#DC2626",
                                             borderRadius: 8,
                                             paddingVertical: 10,
                                             alignItems: "center",
@@ -547,7 +548,7 @@ export default function ApprovalGateScreen() {
                                                 "Are you sure want to reject this gate?",
                                                 async () => {
                                                     if (isProcessing) return;
-                setIsProcessing(true);
+                                                    setIsProcessing(true);
                                                     try {
                                                         showLoadingDialog("Rejecting Gate...");
                                                         const res = await OutboundService.updateStatusAssignedGate(item.id, "PENDING");
@@ -565,13 +566,13 @@ export default function ApprovalGateScreen() {
                                         }}
                                     >
                                         <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 16, letterSpacing: 0.5 }}>
-                                           {isProcessing ? "WAIT..." : "REJECT"}
+                                            {isProcessing ? "WAIT..." : "REJECT"}
                                         </Text>
                                     </TouchableOpacity>
 
                                     {/* TOMBOL REVIEW */}
                                     <TouchableOpacity
-                                        style={[styles.approveButton,{ backgroundColor: isProcessing ? "#9CA3AF" : "#2563EB" }]}
+                                        style={[styles.approveButton, { backgroundColor: isProcessing ? "#9CA3AF" : "#2563EB" }]}
                                         disabled={isProcessing}
                                         onPress={() => {
                                             if (isProcessing) return;

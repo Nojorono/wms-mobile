@@ -280,7 +280,8 @@ const PickingSkuByPallet = () => {
                                     </Text>
                                 </View>
                             ))}
-                          {!item.items.some((itm: any) => itm.status !== "OPEN") && (
+                          {/* {!item.items.some((itm: any) => itm.status !== "OPEN") && ( */}
+                          {item.items.some((itm: any) => itm.status === "OPEN") && (
                                 <View style={{ marginTop: 12 }}>
                                     <Text
                                         style={{

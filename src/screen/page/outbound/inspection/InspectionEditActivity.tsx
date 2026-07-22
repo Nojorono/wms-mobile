@@ -45,7 +45,7 @@ export default function InspectionUpdateActivity() {
     }
   }
   const itemBefore = itemBeforeParam as any;
-  console.log(itemBefore, 'itemBefore in edit activity');
+  console.log(itemBefore.transaction_picking.quantity, 'itemBefore in edit activity');
 
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -465,7 +465,7 @@ export default function InspectionUpdateActivity() {
       Alert.alert('Qty picking tidak boleh lebih besar dari qty permintaan');
       return;
     }
-    if (itemBefore?.quantity_plan != null && qty > Number(itemBefore.quantity_plan)) {
+    if (itemBefore?.transaction_picking.quantity != null && qty > Number(itemBefore.transaction_picking.quantity)) {
       Alert.alert('Qty picking tidak boleh lebih besar dari qty suggestion (permintaan)');
       return;
     }
@@ -544,7 +544,7 @@ export default function InspectionUpdateActivity() {
             }}
           >
 
-            {itemBefore?.quantity_plan} {itemBefore?.uom} - Week-
+            {itemBefore.transaction_picking.quantity} {itemBefore?.uom} - Week-
             {itemBefore?.transaction_picking.week_number}
           </Text>
           <Text
@@ -658,6 +658,7 @@ export default function InspectionUpdateActivity() {
           <TextInput
             placeholder="Pallet Picking"
             value={palletPicking}
+            editable={false} // disable editing in edit mode
             // onChangeText={(v) => {
             //   setPalletPicking(v);
             //   setPickingPallet(null);
@@ -674,12 +675,13 @@ export default function InspectionUpdateActivity() {
 
           <TouchableOpacity
             style={styles.scanBtn}
+            disabled={true} // disable scanning in edit mode
             onPress={() => openScanner('picking')}
           >
             <Ionicons
               name="barcode"
               size={22}
-              color={Colors.secondaryColor}
+              color={"#ccc"}
             />
           </TouchableOpacity>
 
@@ -798,7 +800,8 @@ export default function InspectionUpdateActivity() {
                 <Ionicons
                   name="barcode"
                   size={22}
-                  color={Colors.secondaryColor}
+                  // color={Colors.secondaryColor}
+                  color={'#ccc'}
                 />
               </TouchableOpacity>
               {/* CHECK Button SWITCHING*/}

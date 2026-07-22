@@ -280,6 +280,7 @@ export default function PickingDetailActivity() {
         showDialog('error', 'Pallet tidak ditemukan atau tidak valid');
         return;
       }
+      
       const hasInInventory = res.data.some((item: any) => item.inventory_status === "IN_INVENTORY" && item.current_quantity !== 0);
 
       if (hasInInventory) {
@@ -290,7 +291,7 @@ export default function PickingDetailActivity() {
         }
       }
 
-      if (res.data[0].status_inventory !== "READY" && res.data[0].current_quantity !== 0) {
+      if (res.data[0].status_inventory !== "READY" && res.data[0].current_quantity !== 0 && res.data[0].memo_id === null) {
         showDialog('error', 'Item dalam pallet tidak dalam status ready');
         return;
       }

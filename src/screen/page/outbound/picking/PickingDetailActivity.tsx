@@ -296,7 +296,8 @@ export default function PickingDetailActivity() {
         return;
       }
 
-      if (res.data[0].current_quantity === res.data[0].capacity) {
+      // Jika pallet picking penuh, masih boleh digunakan jika sama dengan pallet sumber
+      if (res.data[0].current_quantity === res.data[0].capacity && palletSumber !== palletPicking) {
         showDialog('error', 'Pallet picking sudah penuh, tidak bisa digunakan untuk picking');
         return;
       }
@@ -455,6 +456,7 @@ export default function PickingDetailActivity() {
         await OutboundService.updateTransactionPickingDetail(idActivity, payload);
         showDialog('success', 'Berhasil memperbarui activity picking');
       } else {
+        console.log('Submitting payload:', payload);
         await OutboundService.postTransactionPicking(payload);
         showDialog('success', 'Berhasil membuat activity picking');
       }
@@ -476,7 +478,8 @@ export default function PickingDetailActivity() {
       return;
     }
 
-    if (pickingPallet?.capacity - pickingPallet?.current_quantity < qty) {
+    // if source pallet is same as picking pallet, skip capacity validation
+    if (palletSumber !== palletPicking && pickingPallet?.capacity - pickingPallet?.current_quantity < qty) {
       showDialog('error', 'Qty picking tidak boleh lebih besar dari kapasitas pallet picking');
       return;
     }
@@ -748,7 +751,7 @@ export default function PickingDetailActivity() {
                     }
                     // -----------------------------------------------
 
-                    if (Number(pickingPallet?.capacity) - Number(pickingPallet?.current_quantity) < qty) {
+                    if (palletSumber !== palletPicking && Number(pickingPallet?.capacity) - Number(pickingPallet?.current_quantity) < qty) {
                       showDialog('error', 'Qty picking tidak boleh lebih besar dari kapasitas pallet picking');
                       return;
                     }

@@ -194,7 +194,8 @@ export default function PickingDetailActivity() {
         return;
       }
 
-      if(res.data[0].status_inventory !== "READY") {
+      const hasReadyItem = res.data.some((item: any) => item.status_inventory === "READY");
+      if (!hasReadyItem) {
         showDialog('error', 'Item dalam pallet tidak dalam status ready');
         return;
       }

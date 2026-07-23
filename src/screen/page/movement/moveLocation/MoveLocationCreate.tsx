@@ -52,6 +52,7 @@ const MoveLocationCreate: React.FC = () => {
   const [searchSub, setSearchSub] = useState('');
   const [filteredSubs, setFilteredSubs] = useState<SubWarehouse[]>([]);
   const [modalPalletVisible, setModalPalletVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -115,6 +116,8 @@ const MoveLocationCreate: React.FC = () => {
   };
 
   const handleConfirmMovement = () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const payload = {
       organization_id: userOrg,
       movement_type: subInventoryTujuan,
@@ -133,7 +136,10 @@ const MoveLocationCreate: React.FC = () => {
         Alert.alert("Success", "Movement berhasil dibuat");
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'MoveLocationMain' }] }));
       })
-      .catch(err => Alert.alert("Error", err.message));
+      .catch(err => {
+        Alert.alert("Error", err.message);
+        setIsSubmitting(false);
+      });
   };
 
   return (
@@ -227,11 +233,11 @@ const MoveLocationCreate: React.FC = () => {
 
       <View style={styles.footer}>
         <TouchableOpacity
-          disabled={!selectedSub || !subInventoryTujuan || selectedPallets.length === 0}
-          style={[styles.mainButton, (!selectedSub || !subInventoryTujuan || selectedPallets.length === 0) && styles.mainButtonDisabled]}
+          disabled={!selectedSub || !subInventoryTujuan || selectedPallets.length === 0 || isSubmitting}
+          style={[styles.mainButton, (!selectedSub || !subInventoryTujuan || selectedPallets.length === 0 || isSubmitting) && styles.mainButtonDisabled]}
           onPress={handleConfirmMovement}
         >
-          <Text style={styles.mainButtonText}>Konfirmasi Pemindahan</Text>
+          <Text style={styles.mainButtonText}>{isSubmitting ? 'Memproses...' : 'Konfirmasi Pemindahan'}</Text>
         </TouchableOpacity>
       </View>
 

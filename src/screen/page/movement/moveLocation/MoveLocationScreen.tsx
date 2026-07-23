@@ -34,7 +34,7 @@ const STATUS_OPTIONS = [
 function MoveLocationScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [MoveLocationList, setMoveLocationList] = useState<any[]>([]);
-    const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
 
   const styles = GlobalStyles();
   const { user } = useAuthStore();
@@ -46,7 +46,7 @@ function MoveLocationScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List MoveLocation Planning');
-      const response = await MovementService.getInventoryMovement({status: statusFilter, limit:100});
+      const response = await MovementService.getInventoryMovement({ status: statusFilter, limit: 100 });
       console.log("MoveLocation response data:", response.data);
       setMoveLocationList(response.data || []);
     } catch (error) {
@@ -58,10 +58,10 @@ function MoveLocationScreen() {
     }
   };
 
-    // Trigger fetch saat status berubah
-    useEffect(() => {
-      fetchMoveLocation();
-    }, [selectedStatus]);
+  // Trigger fetch saat status berubah
+  useEffect(() => {
+    fetchMoveLocation();
+  }, [selectedStatus]);
 
   useFocusEffect(
     useCallback(() => {
@@ -122,7 +122,7 @@ function MoveLocationScreen() {
             </ScrollView>
           </View>
 
-          {/* 📦 List Card */}
+
           {MoveLocationList.length === 0 ? (
             <View style={{ alignItems: 'center', marginTop: 40 }}>
               <Text style={{ color: '#888', fontSize: 16 }}>There is no data</Text>
@@ -134,15 +134,15 @@ function MoveLocationScreen() {
                 statusColor = '#228B22';
               } else if (item.status === 'PENDING') {
                 statusColor = '#FFB347';
-              }else if (item.status === 'CANCELLED') {
+              } else if (item.status === 'CANCELLED') {
                 statusColor = '#f54222';
-              } 
+              }
               else {
                 statusColor = '#696969';
               }
 
               return (
-                <React.Fragment key={item.movement_number ?? index}>
+                <React.Fragment key={`${item.movement_number ?? 'MOV'}-${index}`}>
                   <MovementCard
                     Title={item.movement_number}
                     source={`Source: ${item.sourceBin?.name ?? item.sourceWarehouseSub?.name ?? "Unknown"}`}
@@ -151,13 +151,6 @@ function MoveLocationScreen() {
                     status={item.status}
                     statusColor={statusColor}
                     onClick={() => {
-                      // if (!item.destinationBin) {
-                      //   Alert.alert(
-                      //     'Info',
-                      //     'Item belum di-assign destination.'
-                      //   );
-                      //   return;
-                      // }
                       navigation.navigate('MoveLocationDetail', { item });
                     }}
                   />

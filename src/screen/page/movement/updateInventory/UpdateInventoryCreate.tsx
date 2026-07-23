@@ -742,7 +742,7 @@ const CreateUpdateScreen = () => {
                 <Picker selectedValue={selectedValue} onValueChange={handleSelectItemSplit}>
                   <Picker.Item label="-- Pilih Item --" value="" />
                   {palletItems.map((item, index) => (
-                    <Picker.Item key={index} label={`${item.item_name} (${item.current_quantity} ${item.uom})`} value={item.id} />
+                    <Picker.Item key={index} label={`${item.item_name} (${item.current_quantity} ${item.uom} week ${item.week_number})`} value={item.id} />
                   ))}
                 </Picker>
               </View>

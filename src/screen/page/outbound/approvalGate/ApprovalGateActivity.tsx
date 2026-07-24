@@ -80,7 +80,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
             memoMap[memoId].pallets[palletCode].push({
                 sku: load.item?.sku ?? "-",
                 uom: load.uom,
-                week: load.pallet?.currentWeekNumber,
+                week: load.week_number,
                 qtyPicking: load.quantity_picked,
                 qtyLoad: load.quantity_loaded,
             });
@@ -213,7 +213,7 @@ export default function ApprovalGateScreen() {
             const approvedByOrg = responseApproved.data.filter((gate: any) => {
                 const outboundDo = gate.outbound_do;
 
-                const hasIntegratedMemo = outboundDo?.outbound_memos?.some(
+                const hasIntegratedMemo = outboundDo?.outbound_memos?.every(
                     (memo: any) => memo.status === "INTEGRATED"
                 );
 
@@ -234,7 +234,7 @@ export default function ApprovalGateScreen() {
             const data = [...approvedByOrg, ...pendingByOrg];
             const mapped = mapApprovalGateToUI(data);
             setApprovalGate(mapped);
-            console.log("Mapped Approval Gate Data:", mapped); // Debug log untuk melihat data yang diterima
+            console.log("Mapped Approval Gate Data:", data); // Debug log untuk melihat data yang diterima
 
             // 👇 scroll ke atas setelah data refresh
             requestAnimationFrame(() => {
@@ -398,6 +398,7 @@ export default function ApprovalGateScreen() {
                                                 setIsProcessing(true); // Kunci tombol
                                                 try {
                                                     showLoadingDialog("Approving Gate...");
+                                                    console.log("Approving Gate with ID:", summaryData.id); // Debug log
                                                     await OutboundService.updateAssignedGateApprove(summaryData.id);
                                                     showDialog("success", "Gate approved successfully!");
                                                     await fetchGate();
@@ -486,7 +487,7 @@ export default function ApprovalGateScreen() {
                                     <TouchableOpacity
                                         style={{
                                             flex: 1,
-                                            backgroundColor: isProcessing ? "#9CA3AF" : (Colors.secondaryColor || "#10B981"),
+                                            backgroundColor: isProcessing || item.memos.some((memo: any) => memo.statusIntegrated === "PENDING") ? "#9CA3AF" : (Colors.secondaryColor || "#10B981"),
                                             borderRadius: 8,
                                             paddingVertical: 10,
                                             alignItems: "center",
@@ -494,7 +495,7 @@ export default function ApprovalGateScreen() {
                                             shadowOpacity: 0.08,
                                             shadowRadius: 4,
                                         }}
-                                        disabled={isProcessing}
+                                        disabled={isProcessing || item.memos.some((memo: any) => memo.statusIntegrated === "PENDING")}
                                         onPress={() => {
                                             if (isProcessing) return; // Guard pertama
                                             confirm.show(

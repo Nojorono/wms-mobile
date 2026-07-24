@@ -56,6 +56,7 @@ export default function PickingDetailActivity() {
   const [foundItem, setFoundItem] = useState<any>(null);
   const [pickingPallet, setPickingPallet] = useState<any>(null);
   const [assignPicking, setAssignPicking] = useState<any>();
+  console.log('itemBefore:', itemBefore);
 
   const [doneSumber, setDoneSumber] = useState(false);
   const [donePicking, setDonePicking] = useState(false);
@@ -266,14 +267,15 @@ export default function PickingDetailActivity() {
       return;
     }
 
-    // --- TAMBAHKAN LOGIKA VALIDASI DI SINI ---
-    if (itemBefore?.sourceWarehouseSub?.name === "PRELOAD") {
-      if (palletSumber === palletPicking) {
-        showDialog('error', 'Untuk item PRELOAD, Pallet Sumber tidak boleh sama dengan Pallet Picking');
-        return;
-      }
-    }
-    // -----------------------------------------
+    // // --- TAMBAHKAN LOGIKA VALIDASI DI SINI ---
+    // if (itemBefore?.sourceWarehouseSub?.name === "PRELOAD") {
+    //   if (palletSumber === palletPicking) {
+        
+    //     showDialog('error', 'Untuk item PRELOAD, Pallet Sumber tidak boleh sama dengan Pallet Picking');
+    //     return;
+    //   }
+    // }
+    // // -----------------------------------------
 
     try {
       const res = await ScannerService.getPalletByCode(palletPicking);
@@ -289,6 +291,54 @@ export default function PickingDetailActivity() {
         if (palletSumber !== palletPicking) {
           showDialog('error', 'Pallet dengan status IN_INVENTORY hanya bisa digunakan jika sama dengan Pallet Sumber');
           return;
+        }
+      }
+
+      if (itemBefore?.sourceWarehouseSub?.name === "PRELOAD") {
+      if (palletSumber === palletPicking) {
+        
+        // Cek apakah array memiliki isi sebelum divalidasi
+        if (res.data && res.data.length > 0) {
+          // Validasi: Apakah semua item di dalam pallet punya item_id dan week_number yang seragam?
+          const isUniform = res.data.every(
+            (item:any) => 
+              item.item_id === res.data[0].item_id && 
+              item.week_number === res.data[0].week_number
+          );
+
+          // Jika ada item atau week yang berbeda (!isUniform), maka error
+          if (!isUniform) {
+            showDialog(
+              'error', 
+              'Untuk item PRELOAD, Pallet Sumber tidak boleh sama dengan Pallet Picking jika Item atau Week di dalamnya berbeda'
+            );
+            return;
+          }
+          // Jika isUniform === true, blok error ini dilewati sehingga pallet bisa dipakai
+        } else {
+          // Fallback jika array kosong/tidak terbaca (opsional)
+          showDialog('error', 'Data item di dalam pallet tidak ditemukan.');
+          return;
+        }
+        
+      }
+    }
+    // -----------------------------------------
+
+// 1. Pisahkan variabelnya agar lebih mudah dibaca
+      const isPicked = res.data[0].inventory_status === "PICKED";
+      const isSameBin = res.data[0].warehouse_bin_code === itemBefore?.destinationBin?.code;
+
+      console.log('isPicked:', isPicked);
+      console.log('isSameBin:', isSameBin);
+      console.log('Bin Pallet:', res.data[0].warehouse_bin_code, '| Bin Item:', itemBefore?.destinationBin?.code);
+
+      // 2. Buat blok validasi KHUSUS untuk status PICKED
+      if (isPicked) {
+        // Jika dia PICKED tapi bin-nya BERBEDA, langsung tolak! (Tidak peduli punya memo_id atau tidak)
+        if (!isSameBin) {
+          showDialog('error', 'Pallet berstatus PICKED hanya bisa digunakan jika Destination Bin sama');
+          return; 
         }
       }
 

@@ -35,7 +35,7 @@ const CreateUpdateScreen = () => {
   const [itemMaster, setItemMaster] = useState<any>(null);
   const [selectedValue, setSelectedValue] = useState('');
   const [loading, setLoading] = useState(false);
- 
+
 
 
   // State Merge Pallet
@@ -75,10 +75,10 @@ const CreateUpdateScreen = () => {
   const [tempSelectedPalletCode, setTempSelectedPalletCode] = useState('');
 
   const dropdownDevices = devices.map((d: any) => ({
-  label: d.username || d.name || "-",
-  value: d.id,
-  userDetail: d.userDetail
-}));
+    label: d.username || d.name || "-",
+    value: d.id,
+    userDetail: d.userDetail
+  }));
 
   const handleAddPalletToMerge = (pallet: any) => {
     // Ambil detail pallet untuk melihat isinya (karena data dari inventory tracking mungkin hanya summary)
@@ -114,14 +114,16 @@ const CreateUpdateScreen = () => {
     if (mergePallets.length > 0) {
       const first = mergePallets[0];
       const isMatch =
-        // item.item_id === first.item_id &&
-        item.uom === first.uom
-      // && String(item.week_number) === String(first.week_number);
+        item.item_id === first.item_id &&
+        item.uom === first.uom && 
+        String(item.week_number) === String(first.week_number) &&
+        item.bin_id === first.bin_id; // <-- TAMBAHKAN VALIDASI BIN DI SINI
 
       if (!isMatch) {
         Alert.alert(
           "Validasi Gagal",
-          `Item harus sama dengan item pertama! \n\nTarget: ${first.item_name} (W${first.week_number})`
+          `Item harus sama dengan item pertama! \n\nTarget: ${first.item_name} (W${first.week_number}) di Bin yang sama`
+          
         );
         return;
       }
@@ -143,11 +145,11 @@ const CreateUpdateScreen = () => {
   useEffect(() => {
     if (updateType === 'MERGE_PALLET') {
       ConstantService.getSubWarehouse()
-        .then(res =>{
+        .then(res => {
           console.log("Sub Warehouses:", res.data);
           const filtered = res.data.filter((s: any) => s.is_staging === null);
-           setSubWarehouses(filtered)
-          })
+          setSubWarehouses(filtered)
+        })
         .catch(err => console.log("Err SubWH", err));
     }
   }, [updateType]);
@@ -328,7 +330,7 @@ const CreateUpdateScreen = () => {
     setLoading(true);
     try {
       const mockPalletRes = await ScannerService.getPalletByCode(currentScannedCode);
-      
+
       if (mockPalletRes.data && mockPalletRes.data[0] && mockPalletRes.data[0].organization_id !== userOrg) {
         Alert.alert('Error', 'This pallet does not belong to your organization.');
         setLoading(false);
@@ -340,7 +342,7 @@ const CreateUpdateScreen = () => {
         setLoading(false);
         return;
       }
-      
+
       const activeItems = (mockPalletRes.data || []).filter((item: any) => item.current_quantity > 0);
 
       if (activeItems.length > 0) {
@@ -541,8 +543,6 @@ const CreateUpdateScreen = () => {
         } else {
           payload.productionCode = selectedValue;
         }
-
-        console.log("Payload for Update Inventory:", payload);
 
         try {
           console.log("Payload for Update Inventory:", payload);
@@ -769,28 +769,27 @@ const CreateUpdateScreen = () => {
                 <Text style={styles.label}>Username (Scanner Helper)</Text>
                 <View style={styles.pickerContainer}>
                   <Dropdown
-  style={styles.dropdown1}
-  data={dropdownDevices}
-  search
-  labelField="label"
-  dropdownPosition="top"
-  valueField="value"
-  placeholder="-- Pilih Device --"
-  searchPlaceholder="Search device..."
-  value={selectedDeviceId}
-  disable={showDropdown}
-  onChange={(item: any) => {
-    console.log("Selected Device ID:", item.value);
+                    style={styles.dropdown1}
+                    data={dropdownDevices}
+                    search
+                    labelField="label"
+                    dropdownPosition="top"
+                    valueField="value"
+                    placeholder="-- Pilih Device --"
+                    searchPlaceholder="Search device..."
+                    value={selectedDeviceId}
+                    disable={showDropdown}
+                    onChange={(item: any) => {
+                      console.log("Selected Device ID:", item.value);
 
-    setSelectedDeviceId(item.value);
+                      setSelectedDeviceId(item.value);
 
-    const name = `${item?.userDetail?.firstName || ""} ${
-      item?.userDetail?.lastName || "Data not found"
-    }`.trim();
+                      const name = `${item?.userDetail?.firstName || ""} ${item?.userDetail?.lastName || "Data not found"
+                        }`.trim();
 
-    setAssignedUserName(name);
-  }}
-/>
+                      setAssignedUserName(name);
+                    }}
+                  />
                 </View>
 
                 <Text style={styles.label}>Helper Name</Text>
@@ -1015,13 +1014,13 @@ const styles = StyleSheet.create({
   smallLabel: { fontSize: 9, color: '#999' },
   arrow: { fontSize: 20, color: '#CCC' },
   dropdown1: {
-  borderWidth: 1,
-  borderColor: "#ccc",
-  borderRadius: 8,
-  paddingHorizontal: 12,
-  height: 50,
-  backgroundColor: "#fafafa",
-},
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 50,
+    backgroundColor: "#fafafa",
+  },
 });
 
 export default CreateUpdateScreen;

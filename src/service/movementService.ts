@@ -138,6 +138,15 @@ class MovementService {
             throw error.response;
         }
     }
+
+    static async rejectInspection(idUpdate: string): Promise<any> {
+        try {
+            const response = await axiosInstance.delete(`/pallet-update/${idUpdate}`);
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
 }
 
 export default MovementService;

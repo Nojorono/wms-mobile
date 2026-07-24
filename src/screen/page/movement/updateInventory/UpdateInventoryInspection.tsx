@@ -7,6 +7,7 @@ import {
     SafeAreaView,
     StatusBar,
     ScrollView,
+    Alert,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import MovementService from '../../../../service/movementService';
@@ -120,12 +121,7 @@ const UpdateInventoryInspection = () => {
 
             {/* Floating Action Buttons */}
             <View style={styles.floatingActionContainer}>
-                {/* <TouchableOpacity 
-          style={[styles.actionButton, styles.rejectButton]}
-          onPress={() => console.log('Rejected:', itemData.id)}
-        >
-          <Text style={styles.buttonText}>REJECT</Text>
-        </TouchableOpacity> */}
+                
 
                {
     /* Pastikan bukan status final (COMPLETED/APPROVED) */
@@ -133,6 +129,39 @@ const UpdateInventoryInspection = () => {
     itemData.status !== 'APPROVED' && 
     /* Izinkan jika statusnya bukan PENDING_HELPER_ACTION ATAU jika ada data scan */
     (itemData.status === 'PENDING_HELPER_ACTION' && itemData.scans && itemData.scans.length > 0) && (
+        <>
+        
+        
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.rejectButton]}
+          onPress={() => {
+            try {
+                 Alert.alert("confirm", "Are you sure want to reject this inspection?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Reject",
+                onPress: async () => {
+                    showLoadingDialog("Rejecting...");
+                    MovementService.rejectInspection(itemData.id)
+                    .then(() => {
+                        showDialog('success', 'Inventory inspection rejected successfully!');
+                        navigation.goBack();
+                    })
+                    .catch((error) => {
+                        hideLoadingDialog();
+                        showDialog('error', error?.data?.message || 'Error while rejecting inventory update!');
+                    });
+                }
+            }
+           ]);  
+            } catch (error) {
+                hideLoadingDialog();
+                showDialog('error', 'Error while rejecting inventory update!');
+            }
+          }}
+        >
+          <Text style={styles.buttonText}>REJECT</Text>
+        </TouchableOpacity>
         <TouchableOpacity
             style={[styles.actionButton, styles.approveButton]}
             onPress={async () => {
@@ -154,13 +183,13 @@ const UpdateInventoryInspection = () => {
                     navigation.goBack();
                 } catch (error:any) {
                     hideLoadingDialog();
-                    console.error('Error approving inventory update:', error);
                     showDialog('error', error?.data?.message || 'Error while approving inventory update!');
                 }
             }}
         >
             <Text style={styles.buttonText}>APPROVE</Text>
         </TouchableOpacity>
+    </>
     )
 }
             </View>

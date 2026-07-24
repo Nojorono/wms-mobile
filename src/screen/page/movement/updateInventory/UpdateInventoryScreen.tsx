@@ -99,7 +99,7 @@ function UpdateInventoryScreen() {
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List Move Location
+              List Update Inventory  
             </Text>
           </View>
 

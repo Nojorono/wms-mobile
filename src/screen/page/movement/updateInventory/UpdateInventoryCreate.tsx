@@ -692,7 +692,7 @@ const CreateUpdateScreen = () => {
                           onPress={() => onConfirmSelectItem(item)}
                         >
                           <Text style={{ fontWeight: '600' }}>{item.item_name}</Text>
-                          <Text style={{ fontSize: 12 }}>Qty: {item.current_quantity} {item.uom} | Week: {item.week_number}</Text>
+                          <Text style={{ fontSize: 12 }}>Qty: {item.current_quantity} {item.uom} | Week: {item.week_number} | Capacity: {item.capacity ?? 0}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -722,7 +722,7 @@ const CreateUpdateScreen = () => {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.palletCodeLabel}>{item.pallet_code || 'N/A'}</Text>
                     <Text style={styles.itemInfoText}>{item.item_name}</Text>
-                    <Text style={styles.qtyInfoText}>{item.current_quantity} {item.uom} | Week {item.week_number ?? 0}</Text>
+                    <Text style={styles.qtyInfoText}>{item.current_quantity} {item.uom} | Week {item.week_number ?? 0} | Capacity {item.capacity ?? 0}</Text>
                   </View>
                   <TouchableOpacity
                     style={styles.deleteBtn}
@@ -742,7 +742,7 @@ const CreateUpdateScreen = () => {
                 <Picker selectedValue={selectedValue} onValueChange={handleSelectItemSplit}>
                   <Picker.Item label="-- Pilih Item --" value="" />
                   {palletItems.map((item, index) => (
-                    <Picker.Item key={index} label={`${item.item_name} (${item.current_quantity} ${item.uom} week ${item.week_number})`} value={item.id} />
+                    <Picker.Item key={index} label={`${item.item_name} (${item.current_quantity} ${item.uom} week ${item.week_number} | Capacity ${item.capacity ?? 0})`} value={item.id} />
                   ))}
                 </Picker>
               </View>

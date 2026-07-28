@@ -11,89 +11,6 @@ import { Camera, useCameraDevices, useCodeScanner } from 'react-native-vision-ca
 import Ionicons from 'react-native-vector-icons/FontAwesome5';
 import { set } from 'react-hook-form';
 
-const dummyData = {
-    "id": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
-    "updateNumber": "MPU-2026-0003",
-    "updateType": "MERGE_PALLET",
-    "uom": null,
-    "productionCode": null,
-    "status": "PENDING_HELPER_ACTION",
-    "initiatedByUserId": "683c079d-45cc-4e8d-a0e7-9f9e7db4eb0f",
-    "inspectionStatus": "PENDING",
-    "inspectionByUserId": "683c079d-45cc-4e8d-a0e7-9f9e7db4eb0f",
-    "notes": "Merge pallet request via mobile",
-    "completedDate": "2026-03-03T03:59:26.823Z",
-    "items": [
-        {
-            "id": "023b4910-c77d-459e-b07f-733ee204910b",
-            "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
-            "sequence": 1,
-            "palletId": "f906dbfc-5523-4cb0-8623-95e6ce46bcb7",
-            "pallet": {
-                "id": "f906dbfc-5523-4cb0-8623-95e6ce46bcb7",
-                "pallet_code": "SPLIT-01",
-                "uom": "DUS",
-                "currentQuantity": 43
-            },
-            "itemId": "90df9437-5790-43bd-a84f-f970d50c350b",
-            "quantity": 43,
-            "uom": "DUS",
-            "productionDate": "2026-02-26T04:20:43.000Z",
-            "createdAt": "2026-03-03T03:59:28.079Z",
-            "updatedAt": "2026-03-03T03:59:28.079Z"
-        },
-        {
-            "id": "248d146f-daef-46fd-acf7-115a2efbf49e",
-            "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
-            "sequence": 2,
-            "palletId": "9469996c-f947-48c7-b967-b7f6604cdb4f",
-            "pallet": {
-                "id": "9469996c-f947-48c7-b967-b7f6604cdb4f",
-                "pallet_code": "PAL-002",
-                "uom": "DUS",
-                "currentQuantity": 28
-            },
-            "itemId": "90df9437-5790-43bd-a84f-f970d50c350b",
-            "quantity": 27,
-            "uom": "DUS",
-            "productionDate": "2026-02-26T00:00:00.000Z",
-            "createdAt": "2026-03-03T03:59:28.079Z",
-            "updatedAt": "2026-03-03T03:59:28.079Z"
-        },
-        {
-            "id": "248d146f-daef-46fd-acf7-115a2333rxxxx",
-            "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
-            "sequence": 3,
-            "palletId": "9469996c-f947-48c7-b967-b7f6604xxxxxx",
-            "pallet": {
-                "id": "9469996c-f947-48c7-b967-b7f6604cxxxx",
-                "pallet_code": "PAL-002",
-                "uom": "DUS",
-                "currentQuantity": 28
-            },
-            "itemId": "90df9437-5790-43bd-a84f-f970d50cxxx",
-            "quantity": 1,
-            "uom": "DUS",
-            "productionDate": "2026-02-26T00:00:00.000Z",
-            "createdAt": "2026-03-03T03:59:28.079Z",
-            "updatedAt": "2026-03-03T03:59:28.079Z"
-        }
-    ],
-    "scans": [],
-    "assigned": [
-        {
-            "id": "69ee20ed-6fa6-4da4-9ff0-7de763b8a01d",
-            "palletUpdateId": "1f3dfd5e-57d2-4e1e-9cdb-0d4fbf094a8d",
-            "userId": "aab1117f-57ff-4da8-9a0d-a651064b9625",
-            "assignedAt": "2026-03-03T03:59:26.823Z",
-            "createdAt": "2026-03-03T03:59:28.079Z",
-            "updatedAt": "2026-03-03T03:59:28.079Z"
-        }
-    ],
-    "createdAt": "2026-03-03T03:59:28.079Z",
-    "updatedAt": "2026-03-03T03:59:28.079Z"
-}
-
 
 type NavigationProp = StackNavigationProp<HelperMovementParamList, 'HelperMovementMain'>;
 
@@ -211,6 +128,7 @@ export const UpdateHelperDetail = () => {
     const checkTargetPallet = async () => {
         if (!targetPalletNo) return Alert.alert("Peringatan", "Masukkan nomor pallet tujuan");
         if (!isSourceValid) return Alert.alert("Peringatan", "Validasi pallet sumber dulu");
+        
         if (isMergeType) {
             const palletExists = itemData.items.some((item: any) => item.pallet.pallet_code === targetPalletNo);
             if (!palletExists) {
@@ -223,13 +141,35 @@ export const UpdateHelperDetail = () => {
         setIsLoadingTarget(true);
         try {
             const res = await ScannerService.getPalletByCode(targetPalletNo);
-            const targetData = res.data?.find((pallet: any) => {
-                // Pallet baru (belum ada item) atau pallet dengan item yang sesuai
-                const isNewPallet = !pallet.item_id || pallet.current_quantity === 0;
-                const isMatchingItem = itemData.items.some((item: any) => item.itemId === pallet.item_id);
-                const isMatchingWeek = itemData.items.some((item: any) => item.weekNumber === pallet.week_number);
-                
-                return isNewPallet || (isMatchingItem && isMatchingWeek);
+            console.log("Target Pallet Response:", res.data);
+            
+            const palletArray = res.data || [];
+            
+            // 1. Pastikan apakah pallet BENAR-BENAR KOSONG secara total
+            const isPalletTrulyEmpty = palletArray.every((p: any) => !p.item_id || p.current_quantity === 0);
+
+            const targetData = palletArray.find((pallet: any) => {
+                // Jika pallet benar-benar kosong, langsung dianggap valid sebagai wadah baru
+                if (isPalletTrulyEmpty) return true;
+
+                // Abaikan baris history/data di index awal yang qty-nya 0 (seperti case AROI12 Dus vs Bal)
+                if (pallet.current_quantity === 0) return false;
+
+                if (isMergeType) {
+                    // --- Logika MERGE_PALLET ---
+                    // Boleh cocok dengan item mana saja yang ada di list instruksi
+                    const isMatchingItem = itemData.items.some((item: any) => item.itemId === pallet.item_id);
+                    const isMatchingWeek = itemData.items.some((item: any) => item.weekNumber === pallet.week_number);
+                    
+                    return isMatchingItem && isMatchingWeek;
+                } else {
+                    // --- Logika SPLIT_PALLET ---
+                    // HARUS cocok SECARA SPESIFIK dengan item sumber yang barusan di-scan
+                    const isMatchingItem = sourceItemDetail?.itemId === pallet.item_id;
+                    const isMatchingWeek = sourceItemDetail?.week_number === pallet.week_number;
+                    
+                    return isMatchingItem && isMatchingWeek;
+                }
             });
 
             if (targetData) {
@@ -259,7 +199,7 @@ export const UpdateHelperDetail = () => {
                     Alert.alert("Success", "Pallet tujuan valid.");
                 }
             } else {
-                Alert.alert("Error", "Pallet tujuan tidak ditemukan.");
+                Alert.alert("Error", "Pallet tujuan tidak cocok dengan item yang dipindahkan.");
             }
         } catch (error) {
             Alert.alert("Error", "Gagal mengecek pallet tujuan.");
@@ -267,7 +207,6 @@ export const UpdateHelperDetail = () => {
             setIsLoadingTarget(false);
         }
     };
-
     const executeSubmit = async () => {
         try {
             // 1. Kelompokkan items berdasarkan itemId

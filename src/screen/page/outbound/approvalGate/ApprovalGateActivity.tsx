@@ -484,6 +484,7 @@ export default function ApprovalGateScreen() {
                                 (
                                     item.memos?.length > 0 &&
                                     item.memos.some((memo: any) => memo.statusIntegrated !== "INTEGRATED")) ? (
+                                        console.log("Rendering status:", item.memos), // Debug log
                                     <TouchableOpacity
                                         style={{
                                             flex: 1,
@@ -573,8 +574,8 @@ export default function ApprovalGateScreen() {
 
                                     {/* TOMBOL REVIEW */}
                                     <TouchableOpacity
-                                        style={[styles.approveButton, { backgroundColor: isProcessing ? "#9CA3AF" : "#2563EB" }]}
-                                        disabled={isProcessing}
+                                        style={[styles.approveButton, { backgroundColor: isProcessing || item.memos.some((memo: any) => memo.statusIntegrated === "PENDING") ? "#9CA3AF" : "#2563EB" }]}
+                                        disabled={isProcessing || item.memos.some((memo: any) => memo.statusIntegrated === "PENDING")}
                                         onPress={() => {
                                             if (isProcessing) return;
                                             const items = getSummaryItems(item);

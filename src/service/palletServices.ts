@@ -48,6 +48,17 @@ class ScannerService {
     }
   }
 
+  static async getPalletIsBooking(itemId: string, uomData: string): Promise<any> {
+    try {
+      const response = await axiosInstance.get(`/picking-suggestion/item/${itemId}`, {
+        params: { uom: uomData }
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response;
+    }
+  }
+
 }
 
 export default ScannerService;

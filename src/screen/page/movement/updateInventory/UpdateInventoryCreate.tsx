@@ -115,7 +115,7 @@ const CreateUpdateScreen = () => {
       const first = mergePallets[0];
       const isMatch =
         item.item_id === first.item_id &&
-        item.uom === first.uom && 
+        item.uom === first.uom &&
         String(item.week_number) === String(first.week_number) &&
         item.bin_id === first.bin_id; // <-- TAMBAHKAN VALIDASI BIN DI SINI
 
@@ -123,7 +123,7 @@ const CreateUpdateScreen = () => {
         Alert.alert(
           "Validasi Gagal",
           `Item harus sama dengan item pertama! \n\nTarget: ${first.item_name} (W${first.week_number}) di Bin yang sama`
-          
+
         );
         return;
       }
@@ -337,6 +337,19 @@ const CreateUpdateScreen = () => {
         return;
       }
 
+      // 1. Filter item: Abaikan item yang current_quantity-nya 0
+      const activeItemsz = mockPalletRes.data.filter((item: any) => item.current_quantity > 0);
+
+      // 2. Buat logic pengecekan
+      let canBeUsed = false;
+
+      if (activeItemsz.length > 1) {
+        // Jika setelah difilter jumlah item lebih dari 1, maka TIDAK BISA DIGUNAKAN
+        canBeUsed = false;
+        Alert.alert('Error', 'Terdapat multiple item yang aktif dalam satu pallet/lokasi.');
+        return;
+      } 
+
       if (mockPalletRes.data && mockPalletRes.data[0].memo_id != null) {
         Alert.alert('Error', 'This pallet is already assigned to a memo.');
         setLoading(false);
@@ -367,7 +380,43 @@ const CreateUpdateScreen = () => {
           const isInValidateList = validateItems?.data?.some((validateItem: any) =>
             validateItem.items?.some((item: any) => item.palletId === palletId)
           );
+          const palletIsBooked = await ScannerService.getPalletIsBooking(activeItems[0].item_id, activeItems[0].uom);
+          console.log("Pallet Booking Check:", palletIsBooked.data);
 
+          if (palletIsBooked.data) {
+            // Pastikan suggested_locations ada dan merupakan array
+            const suggestedLocations = palletIsBooked.data.suggested_locations || [];
+
+            const isLocationMatch = suggestedLocations.some((location: any) => {
+              return (
+                location.warehouse_bin_id === mockPalletRes.data[0].warehouse_bin_id &&
+                location.warehouse_sub_id === mockPalletRes.data[0].warehouse_sub_id
+              );
+            });
+
+            const isReserved = suggestedLocations.some((location: any) => {
+              return (
+                location.reserved_quantity === 0
+              );
+            });
+
+            if (!isReserved) {
+              Alert.alert(
+                'Error',
+                'Pallet sudah reserved.'
+              );
+              return;
+            }
+
+            // Jika dari semua suggested_locations tidak ada satupun yang cocok
+            if (!isLocationMatch) {
+              Alert.alert(
+                'Error',
+                'Lokasi pallet tidak sesuai atau Pallet sudah reserved.'
+              );
+              return;
+            }
+          } // <-- WAJIB DITUTUP DI SINI UNTUK BLOK if (palletIsBooked.data)
           if (isInValidateList) {
             Alert.alert('Error', 'Pallet sudah digunakan untuk task ke helper. Tidak dapat diproses.');
             setLoading(false);

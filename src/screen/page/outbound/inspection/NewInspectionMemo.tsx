@@ -147,6 +147,7 @@ function NewInspectionMemo() {
   // *Catatan: Meskipun semua data sudah INSPECTION_APPROVED, tombol ini akan tetap muncul untuk mengubah status DO.
   const showApproveBtn =
     statusDO !== "IN_PROGRESS" &&
+    statusDO !== "APPROVED" && // <-- Tambahkan kondisi ini
     !isAllPickingsCompleted &&
     hasAnyInspection;
 
@@ -154,9 +155,9 @@ function NewInspectionMemo() {
   // 1. Status DO SUDAH IN_PROGRESS (Artinya tombol Approve sudah pernah ditekan)
   // 2. SEMUA data scan_detail sudah INSPECTION_APPROVED
   // 3. BELUM SEMUA transaction_picking berstatus COMPLETED
-  const showCompleteBtn =
-    statusDO === "IN_PROGRESS" &&
-    isAllInspectionApproved &&
+const showCompleteBtn = 
+    statusDO === "IN_PROGRESS" || statusDO === "APPROVED" && 
+    isAllInspectionApproved && 
     !isAllPickingsCompleted;
   return (
     <SafeAreaView style={styles.safeArea}>

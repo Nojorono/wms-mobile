@@ -33,6 +33,7 @@ interface Item {
     inbound_type: string;
     description: string;
     uom: string;
+    status_do : string;
     quantity_plan: number;
     quantity_scanned: number;
     details: Detail[];
@@ -53,7 +54,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
     const [isApproving, setIsApproving] = useState(false);
     const [dataReason, setDataReason] = useState<any>([]);
     const inboundType = data.inbound_type;
-    console.log("inbound type di card", inboundType);
+    console.log("inbound type di card", data.status_do);
 
     const handleScannedChange = (value: string, idx: number) => {
         const newDetails = [...details];
@@ -167,7 +168,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
                                     </View>
                                 </View>
                             </View>
-                            {data.inspection_status?.toUpperCase() !== "APPROVED" && (
+                            {data.inspection_status?.toUpperCase() !== "APPROVED"  && (
                                 <View>
 
                                     {index === details.length - 1 && data.quantity_scanned < data.quantity_plan && (
@@ -225,8 +226,7 @@ const GoodReceiveDetailCard: React.FC<{ data: Item; onApprove?: () => void, inbo
             </View>
 
 
-
-            {data.inspection_status?.toUpperCase() !== "APPROVED" && (
+            {data.inspection_status?.toUpperCase() !== "APPROVED" && data.status_do === "UNLOADING" && (
                 <TouchableOpacity
                     style={[
                         styles.approveButton,

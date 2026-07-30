@@ -319,16 +319,39 @@ export default function AssignGateVehicle() {
                     })
                 }}
                 render={({ field: { onChange, value } }) => (
-                    <TextInput
-                        placeholder={placeholder}
-                        style={[
-                            styles.input,
-                            errors[name] ? { borderColor: "red" } : {}
-                        ]}
-                        value={value as string}
-                        onChangeText={onChange}
-                        keyboardType={(name === "driver_phone" || name === "qty_utilitas") ? "numeric" : "default"}
-                    />
+                    // <TextInput
+                    //     placeholder={placeholder}
+                    //     style={[
+                    //         styles.input,
+                    //         errors[name] ? { borderColor: "red" } : {}
+                    //     ]}
+                    //     value={value as string}
+                    //     onChangeText={onChange}
+                    //     keyboardType={(name === "driver_phone" || name === "qty_utilitas") ? "numeric" : "default"}
+                    // />
+                    <View
+          style={[
+            styles.inputContainer,
+            errors[name] ? { borderColor: "red" } : {}
+          ]}
+        >
+          <TextInput
+            placeholder={placeholder}
+            style={styles.inputFlex}
+            value={value as string}
+            onChangeText={onChange}
+            keyboardType={
+              name === "driver_phone" || name === "qty_utilitas"
+                ? "numeric"
+                : "default"
+            }
+          />
+          {/* Tampilkan % hanya jika nama field-nya qty_utilitas */}
+          {name === "qty_utilitas" && (
+            <Text style={styles.suffixText}>%</Text>
+          )}
+        </View>
+                    
                 )}
             />
             {typeof errors[name]?.message === "string" && (
@@ -471,7 +494,10 @@ export default function AssignGateVehicle() {
                                 <Text style={styles.itemValue}>{data.type_calculation || "-"}</Text>
 
                                 <Text style={styles.itemTitle}>Qty Utilitas</Text>
-                                <Text style={styles.itemValue}>{data.qty_utilitas || "-"}</Text>
+                                {/* <Text style={styles.itemValue}>{data.qty_utilitas || "-"}</Text> */}
+                                <Text style={styles.itemValue}>
+                                    {data.qty_utilitas ? `${data.qty_utilitas}%` : "-"}
+                                </Text>
                             </>
                         )}
 
@@ -766,5 +792,26 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         marginRight: 6,
         color: "#000",
-    }
+    },
+    inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#CCC', // sesuaikan border awal kamu
+    borderRadius: 8,     // sesuaikan border radius kamu
+    paddingHorizontal: 12,
+    backgroundColor: '#FFF',
+  },
+  inputFlex: {
+    flex: 1,
+    paddingVertical: 10, // sesuaikan tinggi/padding input kamu
+    fontSize: 14,
+    color: '#000',
+  },
+  suffixText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginLeft: 6,
+  },
 });

@@ -204,7 +204,9 @@ export function transformInspectionResponse(inbound: any): any {
   >();
 
   // 🔹 Hitung quantity_plan per item_id + uom
-  inbound.inbound_dos.forEach((doItem: any) => {
+ inbound.inbound_dos
+    .filter((d: any) => d.integration_status !== 'CANCELLED')
+    .forEach((doItem: any) => {
     doItem.inbound_items.forEach((item: any) => {
       const key = item.item_id;
       if (!planMap.has(key)) {
@@ -364,7 +366,9 @@ export function mergeGoodReceive(inboundData: any) {
   const inbound_type = inboundData.inbound_type;
 
   // step 1: isi PLAN & INSPECTED
-  inboundData.inbound_dos.forEach((doEntry: any) => {
+ inboundData.inbound_dos
+    .filter((d: any) => d.integration_status !== 'CANCELLED')
+    .forEach((doEntry: any) => {
     doEntry.inbound_items.forEach((item: any) => {
       const key = item.item_id;
       if (!resultMap.has(key)) {

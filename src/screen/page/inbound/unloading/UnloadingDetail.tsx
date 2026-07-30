@@ -57,8 +57,7 @@ const UnloadingScreen = () => {
     try {
       showLoadingDialog("Loading List Inbound Planning")
       const response = await InboundServices.getInboundDetail(payload.item.id);
-
-      const inbound_dos = response.data.inbound_dos;
+      const inbound_dos = response.data.inbound_dos.filter((d: any) => d.integration_status !== 'CANCELLED');
       const scanData = response.data.transaction_scan_inbounds || [];
 
       const merged = mergeUnloadingData(inbound_dos);

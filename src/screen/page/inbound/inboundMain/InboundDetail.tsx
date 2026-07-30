@@ -257,8 +257,10 @@ export default function InboundDetail() {
             showLoadingDialog("Loading List Inbound Planning")
             const response = await InboundServices.getInboundDetail(payload.item.id);
             setStatus(response.data.status); // Update status dari response
-            const inbound_dos = response.data.inbound_dos;
-            setMergedData(mergeInboundDos(inbound_dos));
+            const inbound_dos = response.data.inbound_dos || [];
+            // filter out items with integration_status === 'CANCELLED'
+            const filteredInboundDos = inbound_dos.filter((d: any) => d.integration_status !== 'CANCELLED');
+            setMergedData(mergeInboundDos(filteredInboundDos));
             setPhotos({
                 segel: response.data.photo_seal
                     ? {

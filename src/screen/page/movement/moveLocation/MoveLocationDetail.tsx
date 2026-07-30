@@ -31,9 +31,16 @@ const MoveLocationDetail = () => {
     const showDialog = useDialogStore((state) => state.showDialog);
     const [refreshing, setRefreshing] = useState(false);
 
-    const hasIncompletePallet =
-    Array.isArray(item.pallets) &&
-    item.pallets.some((p: any) => p.is_completed === true);
+    // Mengecek apakah sudah ada MINIMAL 1 pallet yang statusnya is_completed === true
+    // const hasConfirmedPallet =
+    //     Array.isArray(item.pallets) &&
+    //     item.pallets.some((p: any) => p.is_completed === true);
+    const hasConfirmedPallet =
+        Array.isArray(item.pallets) &&
+        item.pallets.some((p: any) =>
+            p.inventoryTracking?.warehouse_bin_id === item.destination_bin_id &&
+            p.inventoryTracking?.warehouse_sub_id === item.destination_warehouse_sub_id
+        );
 
 
     const isAllPalletConfirmed =
@@ -62,12 +69,12 @@ const MoveLocationDetail = () => {
                         try {
                             showLoadingDialog('Completing movement...');
                             const response = await MovementService.updateInventoryMovementStatus(item.id, { status: 'COMPLETED' });
-                            console.log('Movement marked as COMPLETED:', response);
                             Alert.alert('Success', 'Movement completed successfully');
                         } catch (error) {
                             console.log('Error completing movement:', error);
                             Alert.alert('Error', 'Failed to complete movement');
                         } finally {
+                            await fetchMoveLocation()
                             hideLoadingDialog();
                         }
                     }
@@ -195,6 +202,7 @@ const MoveLocationDetail = () => {
         const isFullConfirmed =
             palletItem.inventoryTracking?.warehouse_bin_id === item.destination_bin_id &&
             palletItem.inventoryTracking?.warehouse_sub_id === item.destination_warehouse_sub_id;
+        console.log(palletItem)
 
 
 
@@ -213,27 +221,58 @@ const MoveLocationDetail = () => {
                     </View>
                     <View style={styles.destinationContainer}>
                         <View style={styles.qtyRow}>
-                            <TouchableOpacity
+                            {/* <TouchableOpacity
                                 style={[
                                     styles.confirmBtnSmall,
-                                    (isFullConfirmed || !item.destination_bin_id || palletItem.is_completed === false) && { backgroundColor: '#E9ECEF' }
+                                    (isFullConfirmed || !item.destination_bin_id || palletItem.is_completed === true) && { backgroundColor: '#E9ECEF' }
                                 ]}
                                 onPress={() => {
-                                    if (!isFullConfirmed && item.destination_bin_id && palletItem.is_completed !== false) {
+                                    if (!isFullConfirmed && item.destination_bin_id && palletItem.is_completed !== true) {
                                         handleConfirmPallet(palletItem);
                                     }
                                 }}
-                                disabled={isFullConfirmed || !item.destination_bin_id || palletItem.is_completed === false}
+                                disabled={isFullConfirmed || !item.destination_bin_id || palletItem.is_completed === true}
                             >
+
                                 <Icon
                                     name={isFullConfirmed ? "check-circle" : "checkbox-blank-circle-outline"}
                                     size={18}
-                                    color={isFullConfirmed ? "#16a34a" : "#FFF"}
+                                    color={isFullConfirmed ? "#16a34a" : "#fff"}
                                 />
                                 <Text
                                     style={[
                                         styles.confirmBtnText,
                                         (isFullConfirmed || palletItem.is_completed === false) && { color: '#ADB5BD' }
+                                    ]}
+                                >
+                                    CONFIRM
+                                </Text>
+                            </TouchableOpacity> */}
+                            <TouchableOpacity
+                                style={[
+                                    styles.confirmBtnSmall,
+                                    // Hapus pengecekan is_completed di sini
+                                    (isFullConfirmed || !item.destination_bin_id) && { backgroundColor: '#E9ECEF' }
+                                ]}
+                                onPress={() => {
+                                    // Hapus pengecekan is_completed di sini
+                                    if (!isFullConfirmed && item.destination_bin_id) {
+                                        handleConfirmPallet(palletItem);
+                                    }
+                                }}
+                                // Hapus pengecekan is_completed di sini
+                                disabled={isFullConfirmed || !item.destination_bin_id}
+                            >
+                                <Icon
+                                    name={isFullConfirmed ? "check-circle" : "checkbox-blank-circle-outline"}
+                                    size={18}
+                                    color={isFullConfirmed ? "#16a34a" : "#fff"}
+                                />
+                                <Text
+                                    style={[
+                                        styles.confirmBtnText,
+                                        // Hapus pengecekan is_completed di sini
+                                        isFullConfirmed && { color: '#ADB5BD' }
                                     ]}
                                 >
                                     CONFIRM
@@ -271,11 +310,13 @@ const MoveLocationDetail = () => {
             </ScrollView>
             <View style={styles.footer}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    {!hasIncompletePallet && (
+
+                    {/* Button Cancel HANYA muncul jika BELUM ADA SATU PUN pallet yang di-confirm */}
+                    {!hasConfirmedPallet && (
                         <TouchableOpacity
                             style={[
                                 styles.nextBtn,
-                                { backgroundColor: '#FF3B30', flex: 1, marginLeft: 10 }
+                                { backgroundColor: '#FF3B30', flex: 1, marginRight: isAllPalletConfirmed ? 0 : 10 }
                             ]}
                             onPress={() => {
                                 Alert.alert(
@@ -296,7 +337,6 @@ const MoveLocationDetail = () => {
                                                             routes: [{ name: 'MoveLocationMain' }],
                                                         })
                                                     );
-
                                                 } catch (error) {
                                                     Alert.alert('Error', 'Failed to cancel movement');
                                                 } finally {
@@ -314,20 +354,23 @@ const MoveLocationDetail = () => {
                             </Text>
                         </TouchableOpacity>
                     )}
-                    {isAllPalletConfirmed && <TouchableOpacity
-                        style={[
-                            styles.nextBtn,
-                            item.status === 'COMPLETED' && { backgroundColor: '#ADB5BD' },
-                            { flex: 1, marginLeft: 10 }
-                        ]}
-                        onPress={handleCompleteMovement}
-                        disabled={item.status === 'COMPLETED'}
-                    >
-                        <Text style={styles.btnTextLarge}>
-                            {item.status === 'COMPLETED' ? 'Completed' : 'Complete'}
-                        </Text>
-                    </TouchableOpacity>
-                    }
+
+                    {/* Button Complete HANYA muncul jika SEMUA pallet sudah di-confirm */}
+                    {isAllPalletConfirmed && (
+                        <TouchableOpacity
+                            style={[
+                                styles.nextBtn,
+                                item.status === 'COMPLETED' && { backgroundColor: '#ADB5BD' },
+                                { flex: 1 }
+                            ]}
+                            onPress={handleCompleteMovement}
+                            disabled={item.status === 'COMPLETED'}
+                        >
+                            <Text style={styles.btnTextLarge}>
+                                {item.status === 'COMPLETED' ? 'Completed' : 'Complete'}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
         </SafeAreaView>

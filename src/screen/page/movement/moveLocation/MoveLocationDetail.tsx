@@ -202,7 +202,6 @@ const MoveLocationDetail = () => {
         const isFullConfirmed =
             palletItem.inventoryTracking?.warehouse_bin_id === item.destination_bin_id &&
             palletItem.inventoryTracking?.warehouse_sub_id === item.destination_warehouse_sub_id;
-        console.log(palletItem)
 
 
 
@@ -251,28 +250,29 @@ const MoveLocationDetail = () => {
                             <TouchableOpacity
                                 style={[
                                     styles.confirmBtnSmall,
-                                    // Hapus pengecekan is_completed di sini
-                                    (isFullConfirmed || !item.destination_bin_id) && { backgroundColor: '#E9ECEF' }
+                                    // Tombol menjadi abu-abu jika is_completed false, sudah full confirmed, atau tidak ada destination
+                                    (!palletItem.is_completed || isFullConfirmed || !item.destination_bin_id) && { backgroundColor: '#E9ECEF' }
                                 ]}
                                 onPress={() => {
-                                    // Hapus pengecekan is_completed di sini
-                                    if (!isFullConfirmed && item.destination_bin_id) {
+                                    // Hanya jalankan fungsi jika is_completed true dan kondisi lainnya terpenuhi
+                                    if (palletItem.is_completed && !isFullConfirmed && item.destination_bin_id) {
                                         handleConfirmPallet(palletItem);
                                     }
                                 }}
-                                // Hapus pengecekan is_completed di sini
-                                disabled={isFullConfirmed || !item.destination_bin_id}
+                                // Disable tombol jika is_completed false
+                                disabled={!palletItem.is_completed || isFullConfirmed || !item.destination_bin_id}
                             >
                                 <Icon
                                     name={isFullConfirmed ? "check-circle" : "checkbox-blank-circle-outline"}
                                     size={18}
-                                    color={isFullConfirmed ? "#16a34a" : "#fff"}
+                                    // Opsional: Sesuaikan warna icon jika disable
+                                    color={isFullConfirmed ? "#16a34a" : (!palletItem.is_completed ? "#ADB5BD" : "#fff")}
                                 />
                                 <Text
                                     style={[
                                         styles.confirmBtnText,
-                                        // Hapus pengecekan is_completed di sini
-                                        isFullConfirmed && { color: '#ADB5BD' }
+                                        // Ubah warna teks menjadi pudar jika tombol dalam keadaan disable
+                                        (!palletItem.is_completed || isFullConfirmed) && { color: '#ADB5BD' }
                                     ]}
                                 >
                                     CONFIRM

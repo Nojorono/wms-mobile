@@ -96,12 +96,12 @@ const ForkliftDestination = () => {
     const handleNext = async () => {
         try {
             // Ambil data pallet pertama (asumsi hanya satu pallet per movement)
-            const palletItem = item.pallets[0];
+            
 
             const payloadSubmit = {
                 inventory_movement_id: item.id,
-                pallet_id: palletItem.pallet_id,
-                inventory_tracking_id: palletItem.inventory_tracking_id,
+                pallet_id: pallets.pallet_id,
+                inventory_tracking_id: pallets.inventory_tracking_id,
                 destination_warehouse_id: item.destination_warehouse_id,
                 destination_warehouse_sub_id: item.destination_warehouse_sub_id,
                 destination_bin_id: item.destination_bin_id,

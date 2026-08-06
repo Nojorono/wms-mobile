@@ -28,7 +28,7 @@ const STATUS_OPTIONS = [
   // { label: 'Inspection', value: 'PENDING_INSPECTION' },
   { label: 'Approved', value: 'APPROVED' },
   // { label: 'Rejected', value: 'REJECTED' },
-  // { label: 'Completed', value: 'COMPLETED' },
+  { label: 'Completed', value: 'COMPLETED' },
   // { label: 'Cancelled', value: 'CANCELLED' },
 ];
 

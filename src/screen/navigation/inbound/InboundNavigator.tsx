@@ -12,6 +12,7 @@ import CheckerScreen from '../../page/inbound/inboundMain/checker/CheckerScreen.
 import UpdateSaldoNavigator from './UpdateSaldoNavigator.tsx';
 import ForkLiftNavigator from './ForkLiftNavigator.tsx';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import ReturNavigator from './ReturNavigator.tsx';
 
 
 
@@ -32,6 +33,7 @@ export type InboundParamList = {
     screen: "UpdateSaldoMain";
     params: { item: any };
   }
+  ReturNavigator: undefined;
 };
 
 const InboundStack = createStackNavigator<InboundParamList>();
@@ -201,6 +203,18 @@ const InboundStackNavigator = () => (
       component={ForkLiftNavigator}
       options={{
         headerTitle: 'Forklift',
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="ReturNavigator"
+      component={ReturNavigator}
+      options={{
+        headerTitle: 'Retur',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {

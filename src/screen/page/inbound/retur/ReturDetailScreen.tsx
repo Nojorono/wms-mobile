@@ -9,18 +9,16 @@ import {
     ScrollView,
 } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome5'; 
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp, NavigationProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { ReturParamList } from "../../../navigation/inbound/ReturNavigator";
 
 // Dummy Type untuk Navigation
-type ReturParamList = { ReturMain: undefined; ReturDetail: { item: any } };
-type NavigationPropRetur = StackNavigationProp<ReturParamList, 'ReturMain'>;
 type ReturDetailRouteProp = RouteProp<ReturParamList, 'ReturDetail'>;
 
 export default function ReturDetail() {
-    const navigationRetur = useNavigation<NavigationPropRetur>();
     const route = useRoute<ReturDetailRouteProp>();
-    
+    const navigation = useNavigation<StackNavigationProp<ReturParamList, 'ReturDetail'>>();
     // 1. Menangkap payload item dari halaman sebelumnya
     const item = route.params?.item || {};
     const [status, setStatus] = useState<string>(item.status || 'CREATED');
@@ -39,35 +37,43 @@ export default function ReturDetail() {
 
     const stepLevel = getStepLevel(status);
 
+    // Fungsi handle ketika icon/step di-klik (Silahkan disesuaikan dengan kebutuhan Anda)
+    const handleStepPress = (stepName: string) => {
+        console.log(`${stepName} clicked!`);
+        // Anda bisa tambahkan navigasi atau modal di sini
+    };
+
     const renderStepper = () => (
         <View style={styles.stepperContainer}>
             {/* Step 1: Helper List (Mewakili CREATED ke atas) */}
-            <View style={styles.stepItem}>
-                <View style={[styles.stepCircle, stepLevel >= 0 && styles.stepCircleActive]} />
+            <TouchableOpacity 
+                style={styles.stepItem} 
+                onPress={() => navigation.navigate('ReturHelperList', { item })}
+                activeOpacity={0.7}
+            >
+                <View style={[styles.stepCircle, stepLevel >= 0 && styles.stepCircleActive]}>
+                    <Icon name="users" size={12} color="#FFFFFF" />
+                </View>
                 <Text style={styles.stepText}>Helper List</Text>
-            </View>
+            </TouchableOpacity>
             
             {/* Garis Penghubung 1 */}
             <View style={[
                 stepLevel >= 1 ? styles.stepLineDotted : styles.stepLineDottedGrey
             ]} />
-            
-            {/* Step 2: Picking (Mewakili UNLOADING ke atas) */}
-            <View style={styles.stepItem}>
-                <View style={[styles.stepCircle, stepLevel >= 1 && styles.stepCircleActive]} />
-                <Text style={styles.stepText}>Picking</Text>
-            </View>
-            
-            {/* Garis Penghubung 2 */}
-            <View style={[
-                stepLevel >= 2 ? styles.stepLineDotted : styles.stepLineDottedGrey
-            ]} />
+          
             
             {/* Step 3: Inspection (Mewakili INSPECTION ke atas) */}
-            <View style={styles.stepItem}>
-                <View style={[styles.stepCircle, stepLevel >= 2 && styles.stepCircleActive]} />
+            <TouchableOpacity 
+                style={styles.stepItem} 
+                onPress={() => navigation.navigate('ReturInspectionList', { item })}
+                activeOpacity={0.7}
+            >
+                <View style={[styles.stepCircle, stepLevel >= 0 && styles.stepCircleActive]}>
+                    <Icon name="clipboard-check" size={12} color="#FFFFFF" />
+                </View>
                 <Text style={styles.stepText}>Inspection</Text>
-            </View>
+            </TouchableOpacity>
         </View>
     );
 
@@ -247,17 +253,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     stepCircle: {
-        width: 16,
-        height: 16,
-        borderRadius: 8,
+        width: 26,      // Ditingkatkan agar ikon masuk
+        height: 26,
+        borderRadius: 13,
         backgroundColor: '#C4C4C4',
         marginBottom: 4,
+        alignItems: 'center',       // Membuat ikon berada di tengah secara horizontal
+        justifyContent: 'center',   // Membuat ikon berada di tengah secara vertikal
     },
     stepCircleActive: {
         backgroundColor: '#F47524',
-        width: 18,
-        height: 18,
-        borderRadius: 9,
+        width: 30,      // Sedikit membesar ketika aktif
+        height: 30,
+        borderRadius: 15,
     },
     stepLineDotted: {
         flex: 1,

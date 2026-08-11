@@ -78,10 +78,17 @@ function InboundIndex() {
             )}
 
             {roleName === ROLES.HELPER && (
+              <>
               <MenuCard
                 title={"Unloading"}
                 onPress={() => navigationInbound.navigate("UnloadingNavigator")}
               />
+              <MenuCard
+                title={"Sortir"}
+                onPress={() => navigationInbound.navigate("SortirNavigator")}
+              />
+              </>
+              
             )}
 
             {/* 🔸 Optional: fallback jika role tidak dikenali */}

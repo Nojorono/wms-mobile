@@ -13,6 +13,7 @@ import UpdateSaldoNavigator from './UpdateSaldoNavigator.tsx';
 import ForkLiftNavigator from './ForkLiftNavigator.tsx';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ReturNavigator from './ReturNavigator.tsx';
+import SortirNavigator from './SortirNavigator.tsx';
 
 
 
@@ -34,6 +35,7 @@ export type InboundParamList = {
     params: { item: any };
   }
   ReturNavigator: undefined;
+  SortirNavigator: undefined;
 };
 
 const InboundStack = createStackNavigator<InboundParamList>();
@@ -215,6 +217,18 @@ const InboundStackNavigator = () => (
       component={ReturNavigator}
       options={{
         headerTitle: 'Retur',
+        headerShown: false,
+        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.secondaryColor,
+        },
+      }}
+    />
+    <InboundStack.Screen
+      name="SortirNavigator"
+      component={SortirNavigator}
+      options={{
+        headerTitle: 'Sortir',
         headerShown: false,
         headerTintColor: '#fff',
         headerStyle: {

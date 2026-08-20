@@ -81,7 +81,10 @@ const CameraScreen = () => {
   const [showInput, setShowInput] = useState(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isAddClicked, setIsAddClicked] = useState(false);
+  const isProcessingRef = useRef(false); // ✅ Untuk logic menahan multiple hit
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const codeScanner = useCodeScanner({
     codeTypes: ["qr", "code-128", "ean-13"],
@@ -267,9 +270,12 @@ const CameraScreen = () => {
   };
 
 
-  const handleSubmitEditing = () => {
-    if (manualInput.trim()) handleAddPallet(manualInput);
-  };
+const handleSubmitEditing = () => {
+  // ✅ Tambahkan pengecekan isProcessingRef
+  if (manualInput.trim() && !isProcessingRef.current) {
+    handleAddPallet(manualInput);
+  }
+};
 
   const deletePallet = () => setScan(null);
 
@@ -295,65 +301,73 @@ const CameraScreen = () => {
     }
   };
 
-  const handleNext = () => {
-    if (!scan) return;
+const handleNext = async () => {
+  if (!scan) return;
 
-    // 🚫 Validasi status
-    if (scan.status !== "OPEN") {
-      showDialog(
-        "error",
-        `Tidak dapat melakukan ${isEditMode ? "edit" : "post"} karena status pallet adalah "${scan.status}".`
-      );
-      return;
+  // 🛡️ 1. LOCK: Cegah klik ganda jika sedang proses submit
+  if (isSubmittingRef.current) return;
+
+  // 🚫 Validasi status
+  if (scan.status !== "OPEN") {
+    showDialog(
+      "error",
+      `Tidak dapat melakukan ${isEditMode ? "edit" : "post"} karena status pallet adalah "${scan.status}".`
+    );
+    return;
+  }
+
+  const data = {
+    production_date: scan.production_date ?? "",
+    week_number: scan.week ? Number(scan.week) : 0,
+    inbound_id: scan.inbound_id,
+    item_id: scan.item_id,
+    quantity: Number(scan.qty) || 0,
+    uom: scan.uom,
+    user_id: scan.user_id,
+    user_name: scan.user_name,
+    pallet_code: scan.palletNo,
+    status: scan.status,
+    m_warehouse_sub_id: scan.staging_area_id || "",
+  };
+
+  // ✅ Validasi sebelum kirim
+  const requiredFields = [
+    data.production_date,
+    data.week_number,
+    data.quantity,
+    data.m_warehouse_sub_id,
+    data.pallet_code,
+  ];
+
+  const fieldNames = [
+    "production_date",
+    "week_number",
+    "quantity",
+    "staging_area",
+    "pallet_code",
+  ];
+  const missingFields: string[] = [];
+
+  requiredFields.forEach((val, index) => {
+    if (val === "" || val === 0 || val === null) {
+      missingFields.push(fieldNames[index]);
     }
+  });
 
-    const data = {
-      production_date: scan.production_date ?? "",
-      week_number: scan.week ? Number(scan.week) : 0,
-      inbound_id: scan.inbound_id,
-      item_id: scan.item_id,
-      quantity: Number(scan.qty) || 0,
-      uom: scan.uom,
-      user_id: scan.user_id,
-      user_name: scan.user_name,
-      pallet_code: scan.palletNo,
-      status: scan.status,
-      m_warehouse_sub_id: scan.staging_area_id || "",
-    };
+  if (missingFields.length > 0) {
+    showDialog(
+      "error",
+      `Please complete these fields: ${missingFields.join(", ")}`
+    );
+    return;
+  }
 
+  // 🛡️ 2. AKTIFKAN LOCK (Mulai proses submit)
+  isSubmittingRef.current = true;
+  setIsSubmitting(true);
+  showLoadingDialog("Saving data..."); // Tampilkan loading dialog global (opsional)
 
-    // ✅ Validasi sebelum kirim
-    const requiredFields = [
-      data.production_date,
-      data.week_number,
-      data.quantity,
-      data.m_warehouse_sub_id,
-      data.pallet_code,
-    ];
-
-    const fieldNames = [
-      "production_date",
-      "week_number",
-      "quantity",
-      "staging_area",
-      "pallet_code",
-    ];
-    const missingFields: string[] = [];
-
-    requiredFields.forEach((val, index) => {
-      if (val === "" || val === 0 || val === null) {
-        missingFields.push(fieldNames[index]);
-      }
-    });
-
-    if (missingFields.length > 0) {
-      showDialog(
-        "error",
-        `Please complete these fields: ${missingFields.join(", ")}`
-      );
-      return;
-    }
-
+  try {
     if (isEditMode) {
       const editData = {
         production_date: scan.production_date ?? "",
@@ -362,7 +376,6 @@ const CameraScreen = () => {
         m_warehouse_sub_id: scan.staging_area_id || "",
       };
 
-      // 🔁 Validasi juga untuk edit mode
       const hasEditMissing = Object.values(editData).some(
         (val) => val === "" || val === 0 || val === null
       );
@@ -372,20 +385,22 @@ const CameraScreen = () => {
         return;
       }
 
-      InboundServices.updateInspectionData(scan.id, editData)
-        .then(() => navigation.goBack())
-        .catch((err) =>
-          showDialog("error", err?.data?.message || "Error while updating pallet!")
-        );
+      await InboundServices.updateInspectionData(scan.id, editData);
     } else {
-      InboundServices.postUnloading(data)
-        .then(() => navigation.goBack())
-        .catch((err) =>
-          showDialog("error", err?.data?.message || "Error while Posting Unloading!")
-        );
+      await InboundServices.postUnloading(data);
     }
+    
+    // Jika sukses, kembali ke screen sebelumnya
+    navigation.goBack();
+  } catch (err:any) {
+    showDialog("error", err?.data?.message || "Error while processing pallet!");
+  } finally {
+    // 🛡️ 3. LEPASKAN LOCK 
+    isSubmittingRef.current = false;
+    setIsSubmitting(false);
+    hideLoadingDialog();
   }
-
+};
   // 🌗 Toggle antara kamera dan scanner hardware
   if (isCameraActive) {
     if (!device) return <Text>Loading camera...</Text>;
@@ -443,19 +458,11 @@ const CameraScreen = () => {
                 styles.addBtn,
                 {
                   backgroundColor:
-                    manualInput && !isAddClicked ? "#f97316" : "#6b7280",
+                    manualInput ? "#f97316" : "#6b7280",
                 },
               ]}
-              onPress={async () => {
-                if (isAddClicked) return;
-                setIsAddClicked(true);
-                try {
-                  await handleAddPallet(manualInput);
-                } finally {
-                  setIsAddClicked(false);
-                }
-              }}
-              disabled={!manualInput || isAddClicked}
+              onPress={() => handleAddPallet(manualInput)}
+              disabled={!manualInput || isProcessing} 
             >
               <Text style={styles.btnText}>Add</Text>
             </TouchableOpacity>
@@ -571,30 +578,31 @@ const CameraScreen = () => {
         ) : (
           <Text style={{ color: "#9ca3af" }}>Belum ada hasil scan</Text>
         )}
-
-        <TouchableOpacity
-          style={[
-            styles.nextBtn,
-            {
-              backgroundColor:
-                scan?.status !== "OPEN"
-                  ? "#9ca3af"
-                  : isEditMode
-                    ? "#f59e0b"
-                    : "#16a34a",
-            },
-          ]}
-          onPress={handleNext}
-          disabled={scan?.status !== "OPEN"}
-        >
-          <Text style={styles.btnText}>
-            {scan?.status !== "OPEN"
-              ? "Locked"
-              : isEditMode
-                ? "Edit"
-                : "Next"}
-          </Text>
-        </TouchableOpacity>
+<TouchableOpacity
+  style={[
+    styles.nextBtn,
+    {
+      backgroundColor:
+        scan?.status !== "OPEN" || isSubmitting // 👈 Tambahkan cek isSubmitting
+          ? "#9ca3af" // Warna abu-abu saat terkunci/loading
+          : isEditMode
+            ? "#f59e0b"
+            : "#16a34a",
+    },
+  ]}
+  onPress={handleNext}
+  disabled={scan?.status !== "OPEN" || isSubmitting} // 👈 Disable saat loading
+>
+  <Text style={styles.btnText}>
+    {isSubmitting
+      ? "Processing..." // 👈 Teks berubah saat diklik
+      : scan?.status !== "OPEN"
+        ? "Locked"
+        : isEditMode
+          ? "Edit"
+          : "Next"}
+  </Text>
+</TouchableOpacity>
       </View>
 
       <DatePicker

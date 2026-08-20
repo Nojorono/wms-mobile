@@ -222,8 +222,8 @@ export default function PickingDetailActivity() {
           // --- LOGIKA BARU UNTUK FIRSTMATCH ---
           if (!itemBefore?.sourceBin) {
             // Jika sourceBin null, gunakan pengecekan sub-warehouse
-            if (firstMatch?.warehouse_sub_code !== itemBefore?.sourceWarehouseSub?.name) {
-              showDialog('error', `Invalid, pallet berada di ${firstMatch?.warehouse_sub_code}, seharusnya di ${itemBefore?.sourceWarehouseSub?.name}`);
+            if (firstMatch?.warehouse_sub_code !== itemBefore?.sourceWarehouseSub?.code) {
+              showDialog('error', `Invalid, pallet berada di ${firstMatch?.warehouse_sub_code}, seharusnya di ${itemBefore?.sourceWarehouseSub?.code}`);
             } else {
               showDialog('error', `Invalid, pallet memiliki Uom ${firstMatch?.uom} dan week ${firstMatch?.week_number}`);
             }
@@ -242,8 +242,8 @@ export default function PickingDetailActivity() {
       // --- LOGIKA BARU UNTUK EXACT MATCH (FOUND) ---
       // Jika found, tetap cek lokasinya (apakah pakai bin atau sub-warehouse)
       if (!itemBefore?.sourceBin) {
-        if (found.warehouse_sub_code !== itemBefore?.sourceWarehouseSub?.name) {
-          showDialog('error', `Invalid, pallet berada di ${found.warehouse_sub_code}, seharusnya di ${itemBefore?.sourceWarehouseSub?.name}`);
+        if (found.warehouse_sub_code !== itemBefore?.sourceWarehouseSub?.code) {
+          showDialog('error', `Invalid, pallet berada di ${found.warehouse_sub_code}, seharusnya di ${itemBefore?.sourceWarehouseSub?.code}`);
           return;
         }
       } else {

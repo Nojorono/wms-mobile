@@ -69,11 +69,11 @@ function InboundIndex() {
                   title={"Inbound"}
                   onPress={() => navigationInbound.navigate("InboundMain")}
                 />
-                <MenuCard
+                {/* <MenuCard
                   title={"Inbound Retur"}
                   onPress={() => navigationInbound.navigate("ReturNavigator")}
 
-                />
+                /> */}
               </>
             )}
 
@@ -83,10 +83,10 @@ function InboundIndex() {
                 title={"Unloading"}
                 onPress={() => navigationInbound.navigate("UnloadingNavigator")}
               />
-              <MenuCard
+              {/* <MenuCard
                 title={"Sortir"}
                 onPress={() => navigationInbound.navigate("SortirNavigator")}
-              />
+              /> */}
               </>
               
             )}

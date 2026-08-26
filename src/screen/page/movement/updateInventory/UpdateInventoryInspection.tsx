@@ -142,7 +142,7 @@ const UpdateInventoryInspection = () => {
                 text: "Reject",
                 onPress: async () => {
                     showLoadingDialog("Rejecting...");
-                    MovementService.rejectInspection(itemData.id)
+                    MovementService.rejectInspectionPallet(itemData.id)
                     .then(() => {
                         showDialog('success', 'Inventory inspection rejected successfully!');
                         navigation.goBack();

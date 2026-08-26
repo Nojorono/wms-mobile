@@ -147,6 +147,15 @@ class MovementService {
             throw error.response;
         }
     }
+
+     static async rejectInspectionPallet(idUpdate: string): Promise<any> {
+        try {
+            const response = await axiosInstance.patch(`/pallet-update/${idUpdate}`, { status: 'REJECTED' });
+            return response.data;
+        } catch (error: any) {
+            throw error.response;
+        }
+    }
 }
 
 export default MovementService;

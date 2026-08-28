@@ -27,7 +27,7 @@ const STATUS_OPTIONS = [
   { label: 'Helper Action', value: 'PENDING_HELPER_ACTION' },
   // { label: 'Inspection', value: 'PENDING_INSPECTION' },
   { label: 'Approved', value: 'APPROVED' },
-  // { label: 'Rejected', value: 'REJECTED' },
+  { label: 'Rejected', value: 'REJECTED' },
   { label: 'Completed', value: 'COMPLETED' },
   // { label: 'Cancelled', value: 'CANCELLED' },
 ];

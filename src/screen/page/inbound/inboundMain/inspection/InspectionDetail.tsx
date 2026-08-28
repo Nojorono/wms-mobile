@@ -396,6 +396,7 @@ const InspectionDetail = () => {
                             <View style={{ backgroundColor: "#fff", height: 50, borderRadius: 8, marginLeft: 8, width: 160 }}>
                                 <Picker
                                     selectedValue={editUom ?? ""}
+                                    enabled={false} // ✅ disable picker
                                     onValueChange={(itemValue) => setEditUom(itemValue)}
                                     style={{ alignItems: "center", color: "#111" }}
                                     itemStyle={{ fontSize: 16, color: "#111" }} // ✅ semua item sama besar

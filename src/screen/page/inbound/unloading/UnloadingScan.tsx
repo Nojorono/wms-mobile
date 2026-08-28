@@ -132,7 +132,7 @@ const UnloadingScanScreen = () => {
 
     // Kalau tidak ada pallet dengan status OPEN
     if (createdPallets.length === 0) {
-      showDialog("success", "Semua data sudah dikirim ke SPV!");
+      showDialog("success", "Semua data sudah dikirim ke WH Staff!");
       return;
     }
 

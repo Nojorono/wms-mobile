@@ -343,7 +343,7 @@ const InspectionDetail = () => {
                             </View>
                         </View>
 
-                        {item.status !== "COMPLETED" && (
+                        {item.status === "PENDING" && (
                             <TouchableOpacity onPress={() => handleEdit(item)}>
                                 <Ionicons name="create-outline" size={22} color="#555" />
                             </TouchableOpacity>

@@ -27,6 +27,7 @@ function PickingSkuScreen() {
     const [PickingList, setPickingList] = useState<any[]>([]);
     const [searchText, setSearchText] = useState('');
     const [selectedFilter, setSelectedFilter] = useState<string | null>();
+
     
 
     const styles = GlobalStyles();
@@ -71,7 +72,7 @@ function PickingSkuScreen() {
             return  matchFilter;
         });
     }, [PickingList, searchText, selectedFilter]);
-
+console.log('🚀 ~ file: PickingSkuScreen.tsx:90 ~ PickingSkuScreen ~ filteredList:', filteredList)
 
     return (
         <View style={{ flex: 1, backgroundColor: Colors.secondaryColor }}>
@@ -130,7 +131,7 @@ function PickingSkuScreen() {
                                 <OutboundCard
                                     key={item.id}
                                     title={`${item.item.sku} - ${item.item.description}`}
-                                    subTitle={`${item.sourceWarehouseSub?.code || '-'} → ${item.destinationWarehouseSub?.code || '-'}`}
+                                    subTitle={`${item.sourceWarehouseSub?.code || '-'} → ${item.destinationWarehouseSub?.code|| '-'} ${item.destinationBin?.code}`}
                                     origin={`PLAN : ${item.quantity} ${item.uom}`}
                                     status={item.status}
                                     statusColor={statusColor}

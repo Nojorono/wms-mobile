@@ -199,6 +199,7 @@ const PickingSkuByPallet = () => {
                     palletMap[palletCode] = {
                         pallet_code: palletCode,
                         pallet_use_id: pallet.id,
+                        destination_warehouse_sub_code: item.destinationWarehouseSub?.code || "-",
                         destination_bin_code: item.destinationBin?.code || "-", // ✅ TAMBAHAN
                         destination_bin_id: item.destinationBin?.id || null,   // (opsional)
                         ids: [],
@@ -256,7 +257,7 @@ const PickingSkuByPallet = () => {
                                         {item.pallet_code}
                                     </Text>
                                     <Text style={styles.subText}>
-                                        | {item.destination_bin_code}
+                                        | {item.destination_warehouse_sub_code}-{item.destination_bin_code}
                                     </Text>
                                 </View>
 

@@ -62,6 +62,7 @@ export default function AssignGateVehicle() {
 
     const [isEdit, setIsEdit] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [outboundType, setOutboundType] = useState<string | null>(null);
 
     const route = useRoute();
     const showDialog = useDialogStore((state) => state.showDialog);
@@ -99,6 +100,9 @@ export default function AssignGateVehicle() {
     const isEksternal = deliveryCategory === "Ekspedisi Eksternal";
     const isInternal = deliveryCategory === "Ekspedisi Internal";
     const isVendor = deliveryCategory === "Ekspedisi Vendor";
+    const deliveryCategoryOptions = outboundType !== null && outboundType !== "AMO"
+        ? DELIVERY_CATEGORIES.filter((category) => category.value === "Ekspedisi Eksternal")
+        : DELIVERY_CATEGORIES;
 
     // --- Efek Logika Delivery Category ---
     useEffect(() => {
@@ -117,6 +121,8 @@ export default function AssignGateVehicle() {
         try {
             showLoadingDialog("Loading...");
             const response = await OutboundService.getOutboundDetailById(params.item.id);
+            console.log("Fetched Outbound Detail:", response?.data);
+            setOutboundType(response?.data?.outbound_type ?? null);
             const assignedGate = await OutboundService.getAssignedGateByDoId(params.item.id);
             const resVendor = await ConstantService.getSuppliers();
             const truckUtilitas = await ConstantService.getTruckUtilitas();
@@ -377,7 +383,7 @@ export default function AssignGateVehicle() {
                     <FormDropdown
                         name="delivery_category"
                         label="Delivery Category"
-                        data={DELIVERY_CATEGORIES}
+                        data={deliveryCategoryOptions}
                         labelField="label"
                         valueField="value"
                         placeholder="Select Delivery Category"

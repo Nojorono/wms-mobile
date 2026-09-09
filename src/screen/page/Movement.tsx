@@ -87,6 +87,10 @@ function MovementIndex() {
                                     title={"Update Inventory Helper"}
                                 onPress={() => navigation.navigate("HelperMovementNavigator")}
                                 />
+                                <MenuCard
+                                    title={"Update Inventory"}
+                                onPress={() => navigation.navigate("UpdateInventoryNavigator")}
+                                />
                                 {/* <MenuCard
                   title={"LOADING"}
                 // onPress={() => navigationMovement.navigate("UnloadingNavigator")}

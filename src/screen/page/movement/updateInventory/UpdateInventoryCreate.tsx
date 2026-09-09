@@ -52,8 +52,15 @@ const CreateUpdateScreen = () => {
 
   const { user } = useAuthStore();
   const userId = user?.id || 'uuid-user-123';
+  const userRole = user?.role?.name || '';
   const userOrg = user?.userDetail.organizationId;
   const navigation = useNavigation<NavigationProp>();
+
+  useEffect(() => {
+    if (userRole === 'HELPER' && updateType !== 'SPLIT_PALLET' && updateType !== 'MERGE_PALLET') {
+      setUpdateType('SPLIT_PALLET');
+    }
+  }, [userRole, updateType]);
 
   const [openPicker, setOpenPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -635,8 +642,12 @@ const CreateUpdateScreen = () => {
                 setPalletData(null);
                 setMergePallets([]);
               }}>
-              <Picker.Item label="Update Production Code" value="UPDATE_PROD_CODE" />
-              <Picker.Item label="Update UOM" value="UPDATE_UOM" />
+              {userRole !== 'HELPER' && (
+                <>
+                  <Picker.Item label="Update Production Code" value="UPDATE_PROD_CODE" />
+                  <Picker.Item label="Update UOM" value="UPDATE_UOM" />
+                </>
+              )}
               <Picker.Item label="Split Pallet" value="SPLIT_PALLET" />
               <Picker.Item label="Merge Pallet" value="MERGE_PALLET" />
             </Picker>

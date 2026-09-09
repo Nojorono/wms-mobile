@@ -100,9 +100,9 @@ export default function AssignGateVehicle() {
     const isEksternal = deliveryCategory === "Ekspedisi Eksternal";
     const isInternal = deliveryCategory === "Ekspedisi Internal";
     const isVendor = deliveryCategory === "Ekspedisi Vendor";
-    const deliveryCategoryOptions = outboundType !== null && outboundType !== "AMO"
-        ? DELIVERY_CATEGORIES.filter((category) => category.value === "Ekspedisi Eksternal")
-        : DELIVERY_CATEGORIES;
+    // const deliveryCategoryOptions = outboundType !== null && outboundType !== "AMO"
+    //     ? DELIVERY_CATEGORIES.filter((category) => category.value === "Ekspedisi Eksternal")
+    //     : DELIVERY_CATEGORIES;
 
     // --- Efek Logika Delivery Category ---
     useEffect(() => {
@@ -383,7 +383,7 @@ export default function AssignGateVehicle() {
                     <FormDropdown
                         name="delivery_category"
                         label="Delivery Category"
-                        data={deliveryCategoryOptions}
+                        data={DELIVERY_CATEGORIES}
                         labelField="label"
                         valueField="value"
                         placeholder="Select Delivery Category"

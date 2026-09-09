@@ -43,6 +43,7 @@ function AssignGateDoScreen() {
         status: "APPROVED",
       }
       const response = await OutboundService.getOutboundDoList(data);
+      console.log('Response AssignGate List:', response.data);
       setAssignGateList(response.data || []);
     } catch (error) {
       hideLoadingDialog();
@@ -133,7 +134,21 @@ function AssignGateDoScreen() {
                   origin={item.origin}
                   status={item.status}
                   statusColor={statusColor}
-                  onClick={() => navigation.navigate('AssignGateVehicle', { item })}
+                  onClick={() => {
+                    const incompletePicking = (item.outbound_memos ?? [])
+                      .flatMap((memo: any) => memo.transaction_pickings ?? [])
+                      .find((picking: any) => picking?.status !== 'COMPLETED');
+
+                    if (incompletePicking) {
+                      showDialog(
+                        'error',
+                        'Ada data yang belum COMPLETED.',
+                      );
+                      return;
+                    }
+
+                    navigation.navigate('AssignGateVehicle', { item });
+                  }}
                 />
               );
             })

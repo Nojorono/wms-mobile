@@ -193,7 +193,7 @@ const MoveLocationDetail = () => {
             </View>
             <View style={styles.destInfo}>
                 <Text style={styles.destLabel}>Target Bin:</Text>
-                <Text style={styles.destValue}>{item.destinationBin?.code || "N/A"}</Text>
+                <Text style={styles.destValue}>{item.destinationWarehouseSub?.name ?? ""} {item.destinationBin?.code || "N/A"}</Text>
             </View>
         </View>
     );

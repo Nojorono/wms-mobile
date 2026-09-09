@@ -145,8 +145,8 @@ function MoveLocationScreen() {
                 <React.Fragment key={`${item.movement_number ?? 'MOV'}-${index}`}>
                   <MovementCard
                     Title={item.movement_number}
-                    source={`Source: ${item.sourceBin?.name ?? item.sourceWarehouseSub?.name ?? "Unknown"}`}
-                    destination={`Destination: ${item.destinationBin?.name ?? "Unknown"}`}
+                    source={`Source:${item.sourceWarehouseSub?.name ?? ""} ${item.sourceBin?.name ?? item.sourceWarehouseSub?.name ?? "Unknown"}`}
+                    destination={`Destination:${item.destinationWarehouseSub?.name ?? "" } ${item.destinationBin?.name ?? "Unknown"}`}
                     date={item.createdAt}
                     status={item.status}
                     statusColor={statusColor}

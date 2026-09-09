@@ -30,6 +30,8 @@ const ForkliftPallet = () => {
     const showDialog = useDialogStore((state) => state.showDialog);
     const navigation = useNavigation<NavigationProp>();
     const pallets = payload?.item?.pallets ?? [];
+    const sourceSub = payload?.item?.sourceWarehouseSub?.name ?? '-';
+    const destinationSub = payload?.item?.destinationWarehouseSub?.name ?? '-';
     const sourceBinLabel =
         payload?.item?.sourceBin?.name ??
         payload?.item?.sourceBin?.code ??
@@ -186,7 +188,7 @@ if (showCamera) {
 
                     <Text style={styles.labelSource}>Source</Text>
                     <Text style={styles.productName}>
-                        Bin: {sourceBinLabel}
+                        Bin: {sourceSub} {sourceBinLabel}
                     </Text>
                 </View>
 
@@ -232,7 +234,7 @@ if (showCamera) {
 
                 {/* Destination Section Header */}
                 <Text style={styles.sectionHeader}>
-                    Destination: {destinationBinLabel}
+                    Destination: {destinationSub} {destinationBinLabel}
                 </Text>
 
                 {/* List of Pallets */}

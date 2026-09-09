@@ -27,6 +27,7 @@ const ForkLiftDetailScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const staging = item.inventoryTracking.warehouseSub;
   const destination = item.destinationBin;
+   const destinationZone = item?.destinationBin?.warehouseSub?.name ?? '-';
 
 
   return (
@@ -53,7 +54,7 @@ const ForkLiftDetailScreen = () => {
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Destination Bin</Text>
-          <Text style={styles.infoValue}>{destination.code}</Text>
+          <Text style={styles.infoValue}>{destinationZone}  {destination.code}</Text>
         </View>
 
       </View>

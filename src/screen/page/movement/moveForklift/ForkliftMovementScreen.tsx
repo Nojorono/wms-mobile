@@ -37,6 +37,7 @@ function ForkliftMovementScreen() {
             setRefreshing(true);
             showLoadingDialog('Loading List ForkliftMovement Planning');
             const response = await MovementService.getMoveLocationForklift(userId);
+            console.log('Response ForkliftMovement List:', response.data);
             setForkliftMovementList(response.data || []);
         } catch (error) {
             hideLoadingDialog();
@@ -100,8 +101,8 @@ function ForkliftMovementScreen() {
                                 <MovementCard
                                     key={item.id ?? item.movement_number}
                                     Title={item.movement_number}
-                                    source={`Source: ${item.sourceBin?.name ?? item.sourceWarehouseSub?.name ?? 'Unknown'}`}
-                                    destination={`Destination: ${item.destinationBin?.name ?? item.destinationWarehouseSub?.name ?? 'Unknown'}`}
+                                    source={`Source:${item.sourceWarehouseSub?.name} ${item.sourceBin?.name ?? item.sourceWarehouseSub?.name ?? 'Unknown'}`}
+                                    destination={`Destination:${item.destinationWarehouseSub?.name} ${item.destinationBin?.name ?? item.destinationWarehouseSub?.name ?? 'Unknown'}`}
                                     date={item.createdAt}
                                     status={item.status}
                                     statusColor={statusColor}

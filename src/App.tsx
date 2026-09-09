@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { enableScreens } from 'react-native-screens';
@@ -6,27 +6,28 @@ import GlobalDialog from './components/GlobalDialog';
 import LoadingDialog from './components/LoadingDialog';
 import AppNavigator from './AppNavigator';
 import "react-native-get-random-values";
-import { StatusBar, StyleSheet, View } from 'react-native';
-import Colors from './constants/Colors.ts';  // Your color constants file
+import { StyleSheet } from 'react-native';
+import Colors from './constants/Colors.ts';  
 import GlobalConfirmation from './components/GlobalConfirmation.tsx';
-import socket from './util/socket.ts';
 import NotificationConnector from './util/notificationConnector.tsx';
 
-// Enable screens for better performance with navigation
 enableScreens();
 
 const Main = () => {
-
-
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeAreaBackground}>
         <NavigationContainer theme={DefaultTheme}>
+          
+          {/* 1. Render layar utama (Navigator) dan logic background terlebih dahulu */}
+          <AppNavigator />
+          <NotificationConnector />
+
+          {/* 2. Komponen absolut / overlay diletakkan paling bawah agar menutupi layar navigasi */}
           <GlobalConfirmation />
           <GlobalDialog />
           <LoadingDialog />
-          <NotificationConnector />
-          <AppNavigator />
+
         </NavigationContainer>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -39,8 +40,8 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safeAreaBackground: {
-    flex: 1,  // Ensures it takes up the entire screen space
-    backgroundColor: Colors.secondaryColor,  // Set the background color to your custom color
-    paddingTop: 0, // Ensures that no extra padding is added on top, letting the status bar stay visible
+    flex: 1,
+    backgroundColor: Colors.secondaryColor,
+    paddingTop: 0, 
   },
 });

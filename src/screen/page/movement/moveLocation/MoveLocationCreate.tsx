@@ -16,6 +16,7 @@ import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/
 import ConstantService from '../../../../service/constantService';
 import MovementService from '../../../../service/movementService';
 import { useAuthStore } from '../../../../store/useAuthStore';
+import ScannerService from '../../../../service/palletServices';
 
 type SubWarehouse = { id: string; name: string; code: string; warehouse_id: string };
 type Bin = { id: string; name: string; code: string };
@@ -33,9 +34,9 @@ const SUB_INVENTORIES = [
 
 const MoveLocationCreate: React.FC = () => {
   const navigation = useNavigation();
-   const { user } = useAuthStore();
+  const { user } = useAuthStore();
   const userOrg = user?.userDetail.organizationId;
-   
+
 
   // Data Master
   const [subWarehouses, setSubWarehouses] = useState<SubWarehouse[]>([]);
@@ -84,7 +85,7 @@ const MoveLocationCreate: React.FC = () => {
     setFilteredSubs([]);
     setSelectedBin(null);
     setSelectedPallets([]);
-    
+
     // Langsung ambil bin untuk ditampilkan sebagai list
     ConstantService.getBinsBySubWareHouseId(sub.id)
       .then(res => setBins(res.data))
@@ -96,22 +97,33 @@ const MoveLocationCreate: React.FC = () => {
 
   const onSelectBin = (bin: Bin) => {
     if (selectedBin?.id === bin.id) {
-        // Unselect jika diklik lagi (opsional)
-        setSelectedBin(null);
-        fetchPallets(selectedSub!.id);
+      // Unselect jika diklik lagi (opsional)
+      setSelectedBin(null);
+      fetchPallets(selectedSub!.id);
     } else {
-        setSelectedBin(bin);
-        setSelectedPallets([]);
-        fetchPallets(selectedSub!.id, bin.id);
+      setSelectedBin(bin);
+      setSelectedPallets([]);
+      fetchPallets(selectedSub!.id, bin.id);
     }
   };
 
-  const togglePalletSelection = (pallet: SelectedPallet) => {
+  const togglePalletSelection = async (pallet: SelectedPallet) => {
     const isExist = selectedPallets.find(p => p.pallet_id === pallet.pallet_id);
     if (isExist) {
       setSelectedPallets(prev => prev.filter(p => p.pallet_id !== pallet.pallet_id));
     } else {
-      setSelectedPallets(prev => [...prev, pallet]);
+      // console.log('Adding pallet:', pallet.pallet_code);
+      // try {
+      //   const resss = await ScannerService.getPalletByCode(pallet.pallet_code);
+      //   console.log('ScannerService.getPalletByCode response:', resss);
+      //   if (Array.isArray(resss.data) && resss.data.some((item: any) => item?.memo_id)) {
+      //     Alert.alert('Informasi', 'Pallet masih memiliki memo');
+      //     return;
+      //   }
+      // } catch (err) {
+      //   console.error('Error in ScannerService.getPalletByCode:', err);
+      // }
+       setSelectedPallets(prev => [...prev, pallet]);
     }
   };
 
@@ -160,8 +172,8 @@ const MoveLocationCreate: React.FC = () => {
                 placeholder="Contoh: JT.."
                 value={searchSub}
                 onChangeText={(t) => {
-                    setSearchSub(t);
-                    setFilteredSubs(subWarehouses.filter(s => s.code.toLowerCase().includes(t.toLowerCase())));
+                  setSearchSub(t);
+                  setFilteredSubs(subWarehouses.filter(s => s.code.toLowerCase().includes(t.toLowerCase())));
                 }}
                 style={styles.input}
               />
@@ -180,9 +192,9 @@ const MoveLocationCreate: React.FC = () => {
                   <Text style={[styles.inputLabel, { marginTop: 15 }]}> Pilih Bin</Text>
                   <View style={styles.binContainer}>
                     {bins.length > 0 ? bins.map((bin) => (
-                      <TouchableOpacity 
-                        key={bin.id} 
-                        style={[styles.binChip, selectedBin?.id === bin.id && styles.binChipActive]} 
+                      <TouchableOpacity
+                        key={bin.id}
+                        style={[styles.binChip, selectedBin?.id === bin.id && styles.binChipActive]}
                         onPress={() => onSelectBin(bin)}
                       >
                         <Text style={[styles.binText, selectedBin?.id === bin.id && styles.binTextActive]}>{bin.code}</Text>
@@ -220,9 +232,9 @@ const MoveLocationCreate: React.FC = () => {
           <View style={styles.palletCard}>
             <View style={{ flex: 1 }}>
               <Text style={styles.palletCode}>{item.pallet_code}</Text>
-                {item.currentItems.filter(ci => ci.current_quantity > 0).map((ci, idx) => (
+              {item.currentItems.filter(ci => ci.current_quantity > 0).map((ci, idx) => (
                 <Text key={idx} style={styles.palletDetail}>• {ci.item_name} ({ci.current_quantity} {ci.uom})</Text>
-                ))}
+              ))}
             </View>
             <TouchableOpacity onPress={() => togglePalletSelection(item)}>
               <Text style={{ color: 'red', fontWeight: 'bold' }}>Hapus</Text>
@@ -255,21 +267,21 @@ const MoveLocationCreate: React.FC = () => {
             renderItem={({ item }) => {
               const isSelected = !!selectedPallets.find(p => p.pallet_id === item.pallet_id);
               return (
-                <TouchableOpacity 
-                  style={[styles.modalItem, isSelected && { borderColor: '#FF6A00', borderWidth: 2 }]} 
+                <TouchableOpacity
+                  style={[styles.modalItem, isSelected && { borderColor: '#FF6A00', borderWidth: 2 }]}
                   onPress={() => togglePalletSelection(item)}
                 >
-                  <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                  <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.pallet_code}</Text>
-                  {isSelected && <Text style={{color: '#FF6A00', fontWeight: 'bold'}}>✓ Terpilih</Text>}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.pallet_code}</Text>
+                    {isSelected && <Text style={{ color: '#FF6A00', fontWeight: 'bold' }}>✓ Terpilih</Text>}
                   </View>
                   {item.currentItems.filter(ci => ci.current_quantity > 0).map((ci, idx) => (
-                  <Text key={idx} style={{ fontSize: 13, color: '#555' }}>- {ci.item_name} (Qty: {ci.current_quantity})</Text>
+                    <Text key={idx} style={{ fontSize: 13, color: '#555' }}>- {ci.item_name} (Qty: {ci.current_quantity})</Text>
                   ))}
                 </TouchableOpacity>
               );
             }}
-            ListEmptyComponent={<Text style={{textAlign: 'center', marginTop: 30, color: '#999'}}>Tidak ada data pallet tersedia</Text>}
+            ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 30, color: '#999' }}>Tidak ada data pallet tersedia</Text>}
           />
         </SafeAreaView>
       </Modal>

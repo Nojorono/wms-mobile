@@ -8,6 +8,10 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 
 ## [Unreleased]
 
+---
+
+## [2.0.0] - 2026-09-10
+
 ### Added
 
 * Add text gate status
@@ -20,13 +24,31 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 * Add service for gateActivity
 * Assigned gate vehicle (initial)
 * Add home button on movement, outbound, and inbound
-* Handle approve after upload photos
-* Integration logic, data filtering, and new mapping for status integration
-* Add `vendor_po_number`
 * Goodreceive plan-inspection
 * Confirmation for integration
 * Preview on approval gate
 * Reject on Gate approval
+* Add `vendor_po_number`
+* Menu split and merge dibuka di helper
+* Subdist bisa make internal, vendor, & eksternal
+* Tambah label subwarehouse di movelocation
+* Add label subwarehouse on forklift
+* Labeling di picking
+* Filter rejecter
+* Helper sortir
+* Inspection Retur
+* Helper menu
+* Initial inbound retur
+* Add completed filter
+* Add % in text
+* Add filter inspection
+* Pallet is booking or not di create
+* Add capacity on create update inventory
+* Reject Inspection
+* Tambahin tampilan week
+* Scan di forklift
+* Vendor bisa integrasi juga dan subdist tidak integrasi
+* Changelog
 
 ### Changed
 
@@ -46,6 +68,21 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 * Update Assign dan Good receive
 * Scan move to bottom
 * Styling on scanner
+* Integration logic, data filtering, and new mapping for status integration
+* Handle approve after upload photos
+* Helper cannot open detail updateinventory
+* Inbound ga mandatory upload foto
+* Kalo belom completed gabisa add vehicle
+* Penjagaan pallet memo_id gabisa tapi ga jadi
+* Subdist === eksternal
+* Update Pallet Rejected
+* Hide retur
+* Update name screen retur
+* Harus sama week dan uom
+* Kalo statusnya pending gabisa dipencet di approval
+* Rename list in update inventory
+* Update item yang statusnya OPEN
+* Inspection hanya bisa update qty dan kunci plan by transaction_picking.quantity
 
 ### Fixed
 
@@ -75,6 +112,33 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 * Menyesuaikan payload
 * Menu scanner bottom
 * Get pallet info
+* Loading Dialog
+* Kuduus item uom disabled
+* KUDUS wording dan button inspecntion
+* Rejected pallet path
+* Pak aji nemu code === code
+* Handle deleted button features
+* Handle double click
+* Payload data fixing
+* Movelocation pallet button disabled
+* Add status_do
+* Filter move location approved
+* Handle cancel sj
+* Tambahin kondisi agar button tidak keluar
+* Disabled button tidak jadi
+* Item dan week harus sama kalo mau pallet pick = sumber (PREELOAD)
+* Handle 1 id uom week dan bin di updateInventoryCreate
+* Cari kalo ada salah satu yang ready bisa dipake
+* Handle double click on movement
+* Pallet sumber kalo sama picking gaperlu check capacity
+* Validate pallet yg memo_id is null
+* Data yang di cancelled tidak boleh ada
+* Add status unloading agar bisa di delete activitynya
+* Item bisa keluar yg statusnya != open
+* Delete button keluar saat integrasi ulang
+* Logic button on inspection
+* Message error by BE
+* If !Ready and current_quantity != 0 === true
 
 ### Removed
 
@@ -84,14 +148,20 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 
 ---
 
-## [1.0.0] - 2026-01-19
+## [1.0.6] - 2026-04-01
 
 ### Added
 
-* Initial release of the mobile application
-* User authentication
-* Basic navigation structure
-* Dashboard screen
+* Confirmation dialog on inspection inbound
+
+### Changed
+
+* Handle error dialog on camera scan by error field
+* Change style on button dialog 
+
+### Fixed
+
+* Menu gate forklift not showed up because status "PENDING" change into "COMPLETED"
 
 ---
 
@@ -106,17 +176,13 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 * Change api and fetch on NewMemoInspection
 * Make Pending on top view
 
-## [1.0.6] - 2026-04-01
+---
 
-### Changed
-
-* Handle error dialog on camera scan by error field
-* Change style on button dialog 
+## [1.0.0] - 2026-01-19
 
 ### Added
 
-* Confirmation dialog on inspection inbound
-
-### Fixed
-
-* Menu gate forklift not showed up because status "PENDING" change into "COMPLETED"
+* Initial release of the mobile application
+* User authentication
+* Basic navigation structure
+* Dashboard screen

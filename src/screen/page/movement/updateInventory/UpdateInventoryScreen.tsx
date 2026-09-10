@@ -6,6 +6,7 @@ import {
   View,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useAuthStore } from '../../../../store/useAuthStore.ts';
 import GlobalStyles from '../../../../util/GlobalStyles.ts';
@@ -38,6 +39,8 @@ function UpdateInventoryScreen() {
   const [selectedStatus, setSelectedStatus] = useState('');
 
   const styles = GlobalStyles();
+  const { user } = useAuthStore();
+  const userRole = user?.role?.name || '';
   const navigation = useNavigation<NavigationProp>();
   const { showLoadingDialog, hideLoadingDialog } = useLoadingDialogStore();
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -46,9 +49,9 @@ function UpdateInventoryScreen() {
     try {
       setRefreshing(true);
       showLoadingDialog('Loading List UpdateInventory');
-      const response = await MovementService.getUpdateInventoryList({ 
-        status: statusFilter, 
-        limit: 100 
+      const response = await MovementService.getUpdateInventoryList({
+        status: statusFilter,
+        limit: 100
       });
       const data = response.data || [];
       // Sort: PENDING_HELPER_ACTION di paling atas
@@ -99,7 +102,7 @@ function UpdateInventoryScreen() {
             ]}
           >
             <Text style={styles.activitiesHeaderText}>
-              List Update Inventory  
+              List Update Inventory
             </Text>
           </View>
 
@@ -152,15 +155,19 @@ function UpdateInventoryScreen() {
                   status={item.status}
                   statusColor={statusColor}
                   onClick={() => {
-                      
-                      // if (item.status === 'PENDING_HELPER_ACTION' && item.scans && item.scans.length > 0) {
-                      //   navigation.navigate('UpdateInventoryInspection', { item });
-                      // } else if (item.status !== 'PENDING_HELPER_ACTION') {
-                      //   showDialog('error', 'Hanya Pending Helper Action yang bisa diinspeksi');
-                      // } else {
-                      //   showDialog('error', 'Belum ada scan yang dilakukan oleh helper');
-                      // }
-                   navigation.navigate('UpdateInventoryInspection', { item });
+
+                    // if (item.status === 'PENDING_HELPER_ACTION' && item.scans && item.scans.length > 0) {
+                    //   navigation.navigate('UpdateInventoryInspection', { item });
+                    // } else if (item.status !== 'PENDING_HELPER_ACTION') {
+                    //   showDialog('error', 'Hanya Pending Helper Action yang bisa diinspeksi');
+                    // } else {
+                    //   showDialog('error', 'Belum ada scan yang dilakukan oleh helper');
+                    // }
+                    if (userRole === 'HELPER') {
+                      Alert.alert('Akses Ditolak', 'User helper tidak bisa membuka detail Ini');
+                      return;
+                    }
+                    navigation.navigate('UpdateInventoryInspection', { item });
                   }}
                 />
               );

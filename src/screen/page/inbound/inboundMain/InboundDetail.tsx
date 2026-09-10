@@ -155,26 +155,26 @@ export default function InboundDetail() {
     const [refreshing, setRefreshing] = useState(false);
 
     const requestCameraPermission = async () => {
-  if (Platform.OS !== "android") return true;
+        if (Platform.OS !== "android") return true;
 
-  const granted = await PermissionsAndroid.check(
-    PermissionsAndroid.PERMISSIONS.CAMERA
-  );
+        const granted = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.CAMERA
+        );
 
-  if (granted) return true;
+        if (granted) return true;
 
-  const result = await PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.CAMERA,
-    {
-      title: "Camera Permission",
-      message: "App needs camera access to take photos",
-      buttonPositive: "OK",
-      buttonNegative: "Cancel",
-    }
-  );
+        const result = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            {
+                title: "Camera Permission",
+                message: "App needs camera access to take photos",
+                buttonPositive: "OK",
+                buttonNegative: "Cancel",
+            }
+        );
 
-  return result === PermissionsAndroid.RESULTS.GRANTED;
-};
+        return result === PermissionsAndroid.RESULTS.GRANTED;
+    };
     type PhotoMeta = {
         url: string;
         bucket: string;
@@ -196,6 +196,33 @@ export default function InboundDetail() {
         barang: false,
         nopol: false
     });
+    const handleUpdatePhotos = async () => {
+        try {
+            showLoadingDialog("Updating photos...");
+            await InboundServices.updatePhotoToInbound(payload.item.id, {
+                photo_seal: photos.segel?.url || null,
+                photo_condition: photos.barang?.url || null,
+                photo_license_plate: photos.nopol?.url || null,
+            });
+
+            showDialog("success", "Photos updated successfully");
+
+            // Update state initialPhotos agar sinkron dengan data terbaru
+            setInitialPhotos({
+                segel: !!photos.segel,
+                barang: !!photos.barang,
+                nopol: !!photos.nopol,
+            });
+
+            // Reset dirty agar user bisa melakukan back tanpa trigger penghapusan
+            setDirty(false);
+        } catch (error) {
+            console.error('Error updating photos:', error);
+            showDialog('error', 'Failed to update photos');
+        } finally {
+            hideLoadingDialog();
+        }
+    };
 
     const [dirty, setDirty] = useState(false);
     // dirty = true = ada perubahan → button jadi EDIT
@@ -215,16 +242,16 @@ export default function InboundDetail() {
         confirm.show("accept", "Are you sure to approve this?", async () => {
             try {
                 showLoadingDialog("Approving inbound...");
-                 const res = await InboundServices.updatePhotoToInbound(payload.item.id, {
-                        photo_seal: photos.segel?.url,
-                        photo_condition: photos.barang?.url,
-                        photo_license_plate: photos.nopol?.url,
-                    });
-                
+                const res = await InboundServices.updatePhotoToInbound(payload.item.id, {
+                    photo_seal: photos.segel?.url,
+                    photo_condition: photos.barang?.url,
+                    photo_license_plate: photos.nopol?.url,
+                });
+
 
                 try {
                     showLoadingDialog("Submitting photos...");
-                   await InboundServices.updateStatusInbound(payload.item.id, { status: 'UNLOADING' });
+                    await InboundServices.updateStatusInbound(payload.item.id, { status: 'UNLOADING' });
                     showDialog("success", "Photos submitted successfully");
                     navigationInbound.navigate("CheckerScreen", { item: payload.item });
                 } catch (err) {
@@ -355,87 +382,87 @@ export default function InboundDetail() {
         );
     };
 
-   const handleUpload = async (type: "segel" | "barang" | "nopol") => {
-  try {
-    const hasPermission = await requestCameraPermission();
+    const handleUpload = async (type: "segel" | "barang" | "nopol") => {
+        try {
+            const hasPermission = await requestCameraPermission();
 
-    if (!hasPermission) {
-      Alert.alert(
-        "Permission ditolak",
-        "Camera permission diperlukan untuk mengambil foto"
-      );
-      return;
-    }
+            if (!hasPermission) {
+                Alert.alert(
+                    "Permission ditolak",
+                    "Camera permission diperlukan untuk mengambil foto"
+                );
+                return;
+            }
 
-    const result = await launchCamera({
-      mediaType: "photo",
-      quality: 0.4,
-      cameraType: "back",
-      saveToPhotos: false,
-    });
+            const result = await launchCamera({
+                mediaType: "photo",
+                quality: 0.4,
+                cameraType: "back",
+                saveToPhotos: false,
+            });
 
-    if (result.didCancel) return;
+            if (result.didCancel) return;
 
-    const file = result.assets?.[0];
-    if (!file) return;
+            const file = result.assets?.[0];
+            if (!file) return;
 
-    const uploadTask = async (attempt = 1) => {
-    try {
-      showLoadingDialog(`Uploading ${type}... (Attempt ${attempt})`);
-      const s3 = await InboundServices.postdPhotoToS3(file, type);
-      const data = s3.data;
-      setPhotos((prev) => ({
-      ...prev,
-      [type]: {
-        url: data.url,
-        bucket: data.bucket,
-        key: data.key,
-        size: data.size,
-      },
-    }));
-    } catch (error) {
-      if (attempt < 2) { // Auto-retry once
-        console.log("Retrying upload...");
-        return uploadTask(attempt + 1);
-      }
-      throw error;
-    }
-  };
+            const uploadTask = async (attempt = 1) => {
+                try {
+                    showLoadingDialog(`Uploading ${type}... (Attempt ${attempt})`);
+                    const s3 = await InboundServices.postdPhotoToS3(file, type);
+                    const data = s3.data;
+                    setPhotos((prev) => ({
+                        ...prev,
+                        [type]: {
+                            url: data.url,
+                            bucket: data.bucket,
+                            key: data.key,
+                            size: data.size,
+                        },
+                    }));
+                } catch (error) {
+                    if (attempt < 2) { // Auto-retry once
+                        console.log("Retrying upload...");
+                        return uploadTask(attempt + 1);
+                    }
+                    throw error;
+                }
+            };
 
-  try {
-    await uploadTask();
-    setDirty(true);
-    showDialog("success", `Photo ${type} uploaded`);
-  } catch (error) {
-    showDialog("error", "Upload failed after retry");
-  } finally {
-    hideLoadingDialog();
-  }
+            try {
+                await uploadTask();
+                setDirty(true);
+                showDialog("success", `Photo ${type} uploaded`);
+            } catch (error) {
+                showDialog("error", "Upload failed after retry");
+            } finally {
+                hideLoadingDialog();
+            }
 
-    // showLoadingDialog("Uploading photo...");
+            // showLoadingDialog("Uploading photo...");
 
-    // const s3 = await InboundServices.postdPhotoToS3(file, `${type}`);
-    // const data = s3.data;
+            // const s3 = await InboundServices.postdPhotoToS3(file, `${type}`);
+            // const data = s3.data;
 
-    // setPhotos((prev) => ({
-    //   ...prev,
-    //   [type]: {
-    //     url: data.url,
-    //     bucket: data.bucket,
-    //     key: data.key,
-    //     size: data.size,
-    //   },
-    // }));
+            // setPhotos((prev) => ({
+            //   ...prev,
+            //   [type]: {
+            //     url: data.url,
+            //     bucket: data.bucket,
+            //     key: data.key,
+            //     size: data.size,
+            //   },
+            // }));
 
-    // setDirty(true);
-    // showDialog("success", `Photo ${type} uploaded`);
-  } catch (error) {
-    console.error(error);
-    showDialog("error", "Upload failed");
-  } finally {
-    hideLoadingDialog();
-  }
-};
+            // setDirty(true);
+            // showDialog("success", `Photo ${type} uploaded`);
+        } catch (error) {
+            console.error(error);
+            showDialog("error", "Upload failed");
+        } finally {
+            hideLoadingDialog();
+        }
+    };
 
 
     const handleDelete = async (type: "segel" | "barang" | "nopol") => {
@@ -494,41 +521,51 @@ export default function InboundDetail() {
     const submitLabel = dirty ? "Upload" : "Upload";
 
  useEffect(() => {
-  const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {
+        const unsubscribe = navigationInbound.addListener("beforeRemove", (e) => {
+            // Jika state tidak kotor (tidak ada upload foto baru/perubahan), biarkan back
+            if (!dirty) return;
 
-      const initialEmpty =
-          !initialPhotos.segel &&
-          !initialPhotos.barang &&
-          !initialPhotos.nopol;
+            // Kita cari tahu: "Apakah ada setidaknya 1 foto di state 'photos' yang BUKAN merupakan 'initialPhotos'?"
+            const hasUnsavedNewPhotos = (["segel", "barang", "nopol"] as Array<keyof typeof photos>).some(
+                (key) => photos[key] && !initialPhotos[key]
+            );
 
-      const hasNewPhotos =
-          photos.segel || photos.barang || photos.nopol;
+            // Jika memang tidak ada foto baru yang menggantung, biarkan back
+            if (!hasUnsavedNewPhotos) return;
 
-      // tidak ada upload baru → boleh back
-      if (!initialEmpty || !hasNewPhotos || !dirty) return;
+            // Block back
+            e.preventDefault();
 
-      // block back
-      e.preventDefault();
+            confirm.show(
+                "decline",
+                "You uploaded photos but haven't saved them. Going back will delete the unsaved photos. Continue?",
+                async () => {
+                    showLoadingDialog("Cleaning up unsaved photos...");
+                    
+                    // Loop untuk menghapus HANYA foto yang baru di-upload (bukan foto lama)
+                    for (const key of ["segel", "barang", "nopol"] as Array<keyof typeof photos>) {
+                        const currentPhoto = photos[key];
+                        const isInitialPhoto = initialPhotos[key];
+                        
+                        // Hapus JIKA: ada objek foto di state SAAT INI, DAN foto itu BUKAN foto initial (bawaan dari DB)
+                        if (currentPhoto && !isInitialPhoto) {
+                            try {
+                                await InboundServices.deletePhotoFromS3(currentPhoto.bucket, currentPhoto.key);
+                            } catch (err) {
+                                console.error(`Failed to cleanup ${key}:`, err);
+                            }
+                        }
+                    }
+                    
+                    hideLoadingDialog();
+                    // Lanjutkan navigasi yang tertahan
+                    navigationInbound.dispatch(e.data.action);
+                }
+            );
+        });
 
-      confirm.show(
-          "decline",
-          "You uploaded photos but haven't submitted. Going back will delete them. Continue?",
-          async () => {
-              for (const key of ["segel", "barang", "nopol"] as Array<keyof typeof photos>) {
-                  const p = photos[key];
-                  if (p) {
-                      await InboundServices.deletePhotoFromS3(p.bucket, p.key);
-                  }
-              }
-
-              navigationInbound.dispatch(e.data.action);
-          }
-      );
-  });
-
-  return unsubscribe;
-}, [photos, initialPhotos, dirty]);
-
+        return unsubscribe;
+    }, [photos, initialPhotos, dirty]);
 
 
 
@@ -588,8 +625,8 @@ export default function InboundDetail() {
                                         resizeMode="cover"
                                     />
 
-                                    {/* Delete button - floating at top right */}
-                                    {status !== "UNLOADING" && (
+                                    {/* Tombol delete muncul jika status masih CREATED, ATAU jika foto tersebut baru saja diupload (bukan foto initial) */}
+                                    {(status === "CREATED" || !initialPhotos[key]) && (
                                         <TouchableOpacity
                                             onPress={() => handleDelete(key)}
                                             style={{
@@ -771,20 +808,32 @@ export default function InboundDetail() {
             </Modal>
 
 
-            {status === "CREATED" && (
-                <View style={styles.actions}>
-                    <TouchableOpacity style={styles.declineBtn} onPress={handleDecline}>
-                        <Text style={styles.declineText}>Decline</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={[styles.approveBtn, !allUploaded && styles.approveBtnDisabled]} 
-                        onPress={handleAccept}
-                        disabled={!allUploaded}
-                    >
-                        <Text style={styles.approveText}>Approve</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
+           {/* JIKA STATUS CREATED: Tampilkan Decline & Approve */}
+{status === "CREATED" ? (
+    <View style={styles.actions}>
+        <TouchableOpacity style={styles.declineBtn} onPress={handleDecline}>
+            <Text style={styles.declineText}>Decline</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+            style={styles.approveBtn} 
+            onPress={handleAccept}
+        >
+            <Text style={styles.approveText}>Approve</Text>
+        </TouchableOpacity>
+    </View>
+) : (
+    /* JIKA BUKAN CREATED (sudah jalan) DAN ADA FOTO BARU DIUPLOAD: Tampilkan tombol Update */
+    dirty && (
+        <View style={styles.actions}>
+            <TouchableOpacity 
+                style={styles.updateBtn} 
+                onPress={handleUpdatePhotos}
+            >
+                <Text style={styles.approveText}>Simpan Update Foto</Text>
+            </TouchableOpacity>
+        </View>
+    )
+)}
         </SafeAreaView>
     );
 }
@@ -859,4 +908,11 @@ const styles = StyleSheet.create({
     approveBtnDisabled: {
         backgroundColor: "#b2b2b2",
     },
+    updateBtn: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: "#2563EB", // Warna biru untuk tombol update
+    marginTop: 20,
+},
 });

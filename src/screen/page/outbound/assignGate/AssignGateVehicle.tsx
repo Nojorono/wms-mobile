@@ -316,7 +316,8 @@ export default function AssignGateVehicle() {
                 rules={{
                     required: `${label} wajib diisi`,
                     ...(name === "driver_phone" && {
-                        minLength: { value: 10, message: "Minimum 10 digit" },
+                        minLength: { value: 10, message: "Minimum 10 digits" },
+                        maxLength: { value: 13, message: "Maximum 13 digits" },
                         pattern: { value: /^\d+$/, message: "Only numbers are allowed" }
                     }),
                     ...(name === "qty_utilitas" && {

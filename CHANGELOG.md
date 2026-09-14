@@ -14,6 +14,30 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 
 ### Added
 
+* Helper cannot open detail updateinventory - (10 Sep 2026)
+* Inbound ga mandatory upload foto - (10 Sep 2026)
+* Menu split and merge dibuka di helper - (9 Sep 2026)
+* Subdist bisa make internal, vendor, & eksternal - (9 Sep 2026)
+* Tambah label subwarehouse di movelocation - (9 Sep 2026)
+* Add label subwarehouse on forklift - (9 Sep 2026)
+* Subdist === eksternal - (8 Sep 2026)
+* Labeling di picking - (1 Sep 2026)
+* Filter rejecter - (28 Aug 2026)
+* Hide retur - (21 Aug 2026)
+* Helper sortir - (11 Aug 2026)
+* Inspection Retur - (10 Aug 2026)
+* Helper menu - (10 Aug 2026)
+* Initial inbound retur - (7 Aug 2026)
+* Add completed filter - (6 Aug 2026)
+* Add % in text - (30 Jul 2026)
+* Add filter inspection - (30 Jul 2026)
+* Pallet is booking or not di create - (28 Jul 2026)
+* Add capacity on create update inventory - (27 Jul 2026)
+* Reject Inspection - (24 Jul 2026)
+* Tambahin tampilan week - (23 Jul 2026)
+* Scan di forklift - (23 Jul 2026)
+* Vendor bisa integrasi juga dan subdist tidak integrasi - (22 Jul 2026)
+* Changelog - (20 Jul 2026)
 * Add text gate status
 * Filter menu helper
 * Confirmation gate
@@ -29,29 +53,18 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 * Preview on approval gate
 * Reject on Gate approval
 * Add `vendor_po_number`
-* Menu split and merge dibuka di helper
-* Subdist bisa make internal, vendor, & eksternal
-* Tambah label subwarehouse di movelocation
-* Add label subwarehouse on forklift
-* Labeling di picking
-* Filter rejecter
-* Helper sortir
-* Inspection Retur
-* Helper menu
-* Initial inbound retur
-* Add completed filter
-* Add % in text
-* Add filter inspection
-* Pallet is booking or not di create
-* Add capacity on create update inventory
-* Reject Inspection
-* Tambahin tampilan week
-* Scan di forklift
-* Vendor bisa integrasi juga dan subdist tidak integrasi
-* Changelog
 
 ### Changed
 
+* Kalo belom completed gabisa add vehicle - (9 Sep 2026)
+* Penjagaan pallet memo_id gabisa tapi ga jadi - (9 Sep 2026)
+* Update Pallet Rejected - (26 Aug 2026)
+* Update name screen retur - (10 Aug 2026)
+* Harus sama week dan uom - (28 Jul 2026)
+* Kalo statusnya pending gabisa dipencet di approval - (24 Jul 2026)
+* Rename list in update inventory - (24 Jul 2026)
+* Update item yang statusnya OPEN - (22 Jul 2026)
+* Inspection hanya bisa update qty dan kunci plan by transaction_picking.quantity - (22 Jul 2026)
 * Change SELISIH to GOOD-RK-1
 * Rename project wmsnna
 * Update checking pallet picking outbound
@@ -70,22 +83,36 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 * Styling on scanner
 * Integration logic, data filtering, and new mapping for status integration
 * Handle approve after upload photos
-* Helper cannot open detail updateinventory
-* Inbound ga mandatory upload foto
-* Kalo belom completed gabisa add vehicle
-* Penjagaan pallet memo_id gabisa tapi ga jadi
-* Subdist === eksternal
-* Update Pallet Rejected
-* Hide retur
-* Update name screen retur
-* Harus sama week dan uom
-* Kalo statusnya pending gabisa dipencet di approval
-* Rename list in update inventory
-* Update item yang statusnya OPEN
-* Inspection hanya bisa update qty dan kunci plan by transaction_picking.quantity
 
 ### Fixed
 
+* Loading Dialog - (9 Sep 2026)
+* Kuduus item uom disabled - (28 Aug 2026)
+* KUDUS wording dan button inspecntion - (28 Aug 2026)
+* Rejected pallet path - (26 Aug 2026)
+* Pak aji nemu code === code - (20 Aug 2026)
+* Handle deleted button features - (20 Aug 2026)
+* Handle double Click - (20 Aug 2026)
+* Payload data fixing - (31 Jul 2026)
+* Movelocation pallet button disabled - (31 Jul 2026)
+* Add status_do - (30 Jul 2026)
+* Filter move location approved - (30 Jul 2026)
+* Handle cancel sj - (30 Jul 2026)
+* Tambahin kondisi agar button tidak keluar - (28 Jul 2026)
+* Disabled button tidak jadi - (28 Jul 2026)
+* Item dan week harus sama kalo mau pallet pick = sumber (PREELOAD) - (24 Jul 2026)
+* Handle 1 id uom week dan bin di updateInventoryCreate - (24 Jul 2026)
+* Cari kalo ada salah satu yang ready bisa dipake - (23 Jul 2026)
+* Handle double click on movement - (23 Jul 2026)
+* Pallet sumber kalo sama picking gaperlu check capacity - (23 Jul 2026)
+* Validate pallet yg memo_id is null - (22 Jul 2026)
+* Data yang di cancelled tidak boleh ada - (22 Jul 2026)
+* Add status unloading agar bisa di delete activitynya - (22 Jul 2026)
+* Item bisa keluar yg statusnya != open - (21 Jul 2026)
+* Delete button keluar saat integrasi ulang - (21 Jul 2026)
+* Logic button on inspection - (21 Jul 2026)
+* Message error by BE - (21 Jul 2026)
+* If !Ready and current_quantity != 0 === true - (20 Jul 2026)
 * `status_inventory === ready` baru bisa dipake
 * Validate Bug qtyping
 * Header helper movement
@@ -112,33 +139,6 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 * Menyesuaikan payload
 * Menu scanner bottom
 * Get pallet info
-* Loading Dialog
-* Kuduus item uom disabled
-* KUDUS wording dan button inspecntion
-* Rejected pallet path
-* Pak aji nemu code === code
-* Handle deleted button features
-* Handle double click
-* Payload data fixing
-* Movelocation pallet button disabled
-* Add status_do
-* Filter move location approved
-* Handle cancel sj
-* Tambahin kondisi agar button tidak keluar
-* Disabled button tidak jadi
-* Item dan week harus sama kalo mau pallet pick = sumber (PREELOAD)
-* Handle 1 id uom week dan bin di updateInventoryCreate
-* Cari kalo ada salah satu yang ready bisa dipake
-* Handle double click on movement
-* Pallet sumber kalo sama picking gaperlu check capacity
-* Validate pallet yg memo_id is null
-* Data yang di cancelled tidak boleh ada
-* Add status unloading agar bisa di delete activitynya
-* Item bisa keluar yg statusnya != open
-* Delete button keluar saat integrasi ulang
-* Logic button on inspection
-* Message error by BE
-* If !Ready and current_quantity != 0 === true
 
 ### Removed
 

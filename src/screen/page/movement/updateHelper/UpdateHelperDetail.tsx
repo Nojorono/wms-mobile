@@ -45,6 +45,31 @@ export const UpdateHelperDetail = () => {
     const [isTargetValid, setIsTargetValid] = useState(false);
     const [capacityTarget, setCapacityTarget] = useState<any>(null);
 
+    // =================================================================
+    // 1. AUTO HIT SOURCE PALLET KETIKA LENGTH === 12
+    // =================================================================
+    useEffect(() => {
+        // Pastikan belum valid dan tidak sedang loading agar tidak looping hit API
+        if (sourcePalletNo.length === 12 && !isSourceValid && !isLoadingSource) {
+            checkSourcePallet();
+        }
+    }, [sourcePalletNo]); 
+
+
+    // =================================================================
+    // 2. AUTO HIT TARGET PALLET KETIKA LENGTH === 12
+    // =================================================================
+    useEffect(() => {
+        if (targetPalletNo.length === 12 && !isTargetValid && !isLoadingTarget) {
+            // [OPSIONAL TAPI PENTING] 
+            // Cegah auto-check pallet tujuan jika tipe SPLIT tapi pallet sumber belum valid
+            if (!isMergeType && !isSourceValid) {
+                return;
+            }
+            checkTargetPallet();
+        }
+    }, [targetPalletNo, isSourceValid, isMergeType]);
+
 
 
     // Cek Izin Kamera

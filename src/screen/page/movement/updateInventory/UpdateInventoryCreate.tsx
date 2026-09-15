@@ -635,22 +635,27 @@ const CreateUpdateScreen = () => {
           <Text style={styles.label}>Select Update Type</Text>
           <View style={styles.pickerContainer}>
             <Picker
-              selectedValue={updateType}
-              onValueChange={(v) => {
-                setUpdateType(v);
-                setSelectedValue('');
-                setPalletData(null);
-                setMergePallets([]);
-              }}>
-              {userRole !== 'HELPER' && (
-                <>
-                  <Picker.Item label="Update Production Code" value="UPDATE_PROD_CODE" />
-                  <Picker.Item label="Update UOM" value="UPDATE_UOM" />
-                </>
-              )}
-              <Picker.Item label="Split Pallet" value="SPLIT_PALLET" />
-              <Picker.Item label="Merge Pallet" value="MERGE_PALLET" />
-            </Picker>
+  selectedValue={updateType}
+  onValueChange={(v) => {
+    // Tambahkan fallback string kosong jika v kebetulan undefined 
+    // meski seharusnya sudah aman setelah fix ini
+    setUpdateType(v || ''); 
+    setSelectedValue('');
+    setPalletData(null);
+    setMergePallets([]);
+  }}>
+  
+  {/* ✅ KODE YANG BENAR (Tanpa Fragment) */}
+  {userRole !== 'HELPER' && (
+    <Picker.Item label="Update Production Code" value="UPDATE_PROD_CODE" />
+  )}
+  {userRole !== 'HELPER' && (
+    <Picker.Item label="Update UOM" value="UPDATE_UOM" />
+  )}
+  
+  <Picker.Item label="Split Pallet" value="SPLIT_PALLET" />
+  <Picker.Item label="Merge Pallet" value="MERGE_PALLET" />
+</Picker>
           </View>
           {updateType === 'MERGE_PALLET' ? (
             /* --- FLOW MERGE PALLET BARU --- */

@@ -431,6 +431,28 @@ export default function PickingDetailActivity() {
   };
   const isSamePallet = palletSumber && palletPicking && palletSumber === palletPicking;
 
+// 1. Auto hit API untuk Pallet Sumber
+  useEffect(() => {
+    // Pastikan mode 'add', length 12, dan belum berstatus done (mencegah infinite loop)
+    if (mode !== 'edit' && palletSumber.trim().length === 12 && !doneSumber) {
+      handleCheckPalletSumber();
+    }
+  }, [palletSumber, doneSumber, mode]);
+
+  // 2. Auto hit API untuk Pallet Picking
+  useEffect(() => {
+    if (mode !== 'edit' && palletPicking.trim().length === 12 && !donePicking) {
+      handleCheckPalletPicking();
+    }
+  }, [palletPicking, donePicking, mode]);
+
+  // 3. Auto hit API untuk Switch Pallet (Opsional jika switching juga butuh auto-hit)
+  useEffect(() => {
+    if (mode !== 'edit' && switchPallet.trim().length === 12 && !doneSwitch) {
+      handleCheckPalletSwitching();
+    }
+  }, [switchPallet, doneSwitch, mode]);
+
   // validation adapts for edit: since fields are prefilled, checks still valid
   const isSubmitValid = (() => {
     // --- VALIDASI DASAR ---

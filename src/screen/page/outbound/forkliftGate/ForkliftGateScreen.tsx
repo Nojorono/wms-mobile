@@ -62,7 +62,7 @@ function ForkliftGateScreen() {
             const res = await OutboundService.getAssignedGateByUserId(userId);
             console.log('Fetched gate tasks:', userId, res.data);
             setData(res.data);
-        } catch (err:any) {
+        } catch (err: any) {
             showDialog('error', `Fetch error: ${err.data.message || ''}.`);
         } finally {
             setLoading(false);
@@ -97,42 +97,47 @@ function ForkliftGateScreen() {
             }
         >
             <Text style={styles.title}>Assigned Gate Tasks</Text>
+            {data.length === 0 ? (
+                <View style={styles.noDataContainer}>
+                    <Ionicons name="folder-open" size={40} color="#ccc" style={{ marginBottom: 10 }} />
+                    <Text style={styles.noDataText}>No data available</Text>
+                </View>
+            ) : (
+                data.map((item, index) => {
+                    const pallets = item.assigned_gate_pallets || [];
+                    const gateName = item.gate.name || "Unknown Gate";
 
-            {data.map((item, index) => {
-                const pallets = item.assigned_gate_pallets || [];
-                const gateName = item.gate.name || "Unknown Gate";
-
-                return (
-                    <View key={item.id} style={styles.card}>
-                        {/* GATE TUJUAN */}
-                        <View style={[styles.gateBanner, { flexDirection: "column" }]}>
-                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                                <Text style={styles.gateTitle}>{item.outbound_do.outbound_do_number} </Text>
-                                <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
-                                    <Ionicons name="chevron-right" size={24} color="#FFF" />
-                                </TouchableOpacity>
+                    return (
+                        <View key={item.id} style={styles.card}>
+                            {/* GATE TUJUAN */}
+                            <View style={[styles.gateBanner, { flexDirection: "column" }]}>
+                                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                                    <Text style={styles.gateTitle}>{item.outbound_do.outbound_do_number} </Text>
+                                    <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
+                                        <Ionicons name="chevron-right" size={24} color="#FFF" />
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                    <Text
+                                        style={{
+                                            color: "#FFF",
+                                            fontWeight: "600",
+                                            backgroundColor: item.status === "PENDING" ? "#ff9c07ff" : item.status === "DONE" ? "#4CAF50" : "#888",
+                                            borderRadius: 6,
+                                            paddingHorizontal: 10,
+                                            paddingVertical: 4,
+                                            overflow: "hidden",
+                                            fontSize: 13,
+                                        }}
+                                    >
+                                        GATE STATUS: {item.status}
+                                    </Text>
+                                </View>
                             </View>
-                            <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                <Text
-                                    style={{
-                                        color: "#FFF",
-                                        fontWeight: "600",
-                                        backgroundColor: item.status === "PENDING" ? "#ff9c07ff" : item.status === "DONE" ? "#4CAF50" : "#888",
-                                        borderRadius: 6,
-                                        paddingHorizontal: 10,
-                                        paddingVertical: 4,
-                                        overflow: "hidden",
-                                        fontSize: 13,
-                                    }}
-                                >
-                                    GATE STATUS: {item.status}
-                                </Text>
-                            </View>
-                        </View>
 
-                        {/* PALLET HIGHLIGHT */}
-                        <Text style={styles.palletHeader}>{gateName}</Text>
-                        {/* <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
+                            {/* PALLET HIGHLIGHT */}
+                            <Text style={styles.palletHeader}>{gateName}</Text>
+                            {/* <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
 
                         <View style={styles.palletWrapper}>
                             {pallets.length === 0 && (
@@ -145,9 +150,10 @@ function ForkliftGateScreen() {
                                 </View>
                             ))}
                         </View> */}
-                    </View>
-                );
-            })}
+                        </View>
+                    );
+                })
+            )}
         </ScrollView>
     );
 }
@@ -224,7 +230,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         marginTop: 10,
     },
-
+    noDataContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 60,
+    },
+    noDataText: {
+        fontSize: 16,
+        color: "#888",
+        fontWeight: "500",
+    },
     label: {
         fontSize: 12,
         color: "#777",

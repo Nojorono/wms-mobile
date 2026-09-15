@@ -451,7 +451,12 @@ const handleNext = async () => {
               style={styles.input}
               placeholder="Input manual jika QR gagal"
               value={manualInput}
-              onChangeText={setManualInput}
+              onChangeText={(text) => {
+                setManualInput(text);
+                if (text.length === 12 && !isProcessing) {
+                  handleAddPallet(text);
+                }
+              }}
             />
             <TouchableOpacity
               style={[

@@ -249,12 +249,16 @@ export const ForkliftGateDetail = () => {
                                                             <TouchableOpacity
                                                                 style={{ padding: 8 }}
                                                                 onPress={() => {
+                                                                    if (isMatch) {
+                                                                        Alert.alert("Informasi", "Anda sudah melakukan scan");
+                                                                        return;
+                                                                    }
+
                                                                     openModal(
                                                                         itemsInPallet[0].task,
                                                                         palletCode
-                                                                    )
-                                                                }
-                                                                }
+                                                                    );
+                                                                }}
                                                             >
                                                                 <Icon name="chevron-right" size={18} color="#888" />
                                                             </TouchableOpacity>

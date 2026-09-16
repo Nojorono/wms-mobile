@@ -17,6 +17,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useDialogStore } from "../../../../store/useGlobalDialog";
 
 type Pallet = {
+    status?: string;
     pallet: {
         pallet_code: string;
         // add other pallet properties if needed
@@ -28,6 +29,9 @@ type OutboundDO = {
     expedition?: string;
     driver_name?: string;
     driver_phone?: string;
+    outbound_memos?: {
+        transaction_pickings?: any[]; // Assuming transaction_pickings is an array, adjust type as needed
+    }[];
     // add other OutboundDO properties if needed
 };
 
@@ -69,6 +73,12 @@ function ForkliftGateScreen() {
             setRefreshing(false);
         }
     };
+    //     const completedPalletCodes = new Set(
+    //                                 dataItem?.assigned_gate_pallets
+    //                                     ?.filter((p: any) => p.status === "COMPLETED")
+    //                                     ?.map((p: any) => p.pallet?.pallet_code)
+    //                             );
+    // const isMatch = completedPalletCodes.has(palletCode);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -97,63 +107,68 @@ function ForkliftGateScreen() {
             }
         >
             <Text style={styles.title}>Assigned Gate Tasks</Text>
-            {data.length === 0 ? (
-                <View style={styles.noDataContainer}>
-                    <Ionicons name="folder-open" size={40} color="#ccc" style={{ marginBottom: 10 }} />
-                    <Text style={styles.noDataText}>No data available</Text>
+           {data.length === 0 ? (
+    <View style={styles.noDataContainer}>
+        <Ionicons name="folder-open" size={40} color="#ccc" style={{ marginBottom: 10 }} />
+        <Text style={styles.noDataText}>No data available</Text>
+    </View>
+) : (
+    data.map((item, index) => {
+        const pallets = item.assigned_gate_pallets || [];
+        const gateName = item.gate.name || "Unknown Gate";
+
+        // Hitung total dan pallet yang completed
+        const totalPallets = (item.outbound_do.outbound_memos || []).reduce(
+            (total, memo) => total + (memo.transaction_pickings || []).length,
+            0,
+        );
+        const completedPallets = pallets.filter((p) => p.status === "COMPLETED").length;
+
+        return (
+            <View key={item.id} style={styles.card}>
+                {/* GATE TUJUAN */}
+                <View style={[styles.gateBanner, { flexDirection: "column" }]}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <Text style={styles.gateTitle}>{item.outbound_do.outbound_do_number} </Text>
+                        <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
+                            <Ionicons name="chevron-right" size={24} color="#FFF" />
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Text
+                            style={{
+                                color: "#FFF",
+                                fontWeight: "600",
+                                backgroundColor: item.status === "PENDING" ? "#ff9c07ff" : item.status === "DONE" ? "#4CAF50" : "#888",
+                                borderRadius: 6,
+                                paddingHorizontal: 10,
+                                paddingVertical: 4,
+                                overflow: "hidden",
+                                fontSize: 13,
+                            }}
+                        >
+                            GATE STATUS: {item.status}
+                        </Text>
+                    </View>
                 </View>
-            ) : (
-                data.map((item, index) => {
-                    const pallets = item.assigned_gate_pallets || [];
-                    const gateName = item.gate.name || "Unknown Gate";
 
-                    return (
-                        <View key={item.id} style={styles.card}>
-                            {/* GATE TUJUAN */}
-                            <View style={[styles.gateBanner, { flexDirection: "column" }]}>
-                                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                                    <Text style={styles.gateTitle}>{item.outbound_do.outbound_do_number} </Text>
-                                    <TouchableOpacity onPress={() => navigation.navigate("ForkliftGateDetail", { item: item })} style={{ flexDirection: "row", alignItems: "center" }}>
-                                        <Ionicons name="chevron-right" size={24} color="#FFF" />
-                                    </TouchableOpacity>
-                                </View>
-                                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                    <Text
-                                        style={{
-                                            color: "#FFF",
-                                            fontWeight: "600",
-                                            backgroundColor: item.status === "PENDING" ? "#ff9c07ff" : item.status === "DONE" ? "#4CAF50" : "#888",
-                                            borderRadius: 6,
-                                            paddingHorizontal: 10,
-                                            paddingVertical: 4,
-                                            overflow: "hidden",
-                                            fontSize: 13,
-                                        }}
-                                    >
-                                        GATE STATUS: {item.status}
-                                    </Text>
-                                </View>
-                            </View>
+                {/* PALLET HIGHLIGHT & PROGRESS */}
+                <View style={styles.headerWithProgress}>
+                    <Text style={styles.palletHeader}>{gateName}</Text>
+                    
+                    {/* Badge Progress Minimalist */}
+                    <View style={styles.progressBadge}>
+                        <Text style={styles.progressText}>
+                            {completedPallets}/{totalPallets} Completed
+                        </Text>
+                    </View>
+                </View>
 
-                            {/* PALLET HIGHLIGHT */}
-                            <Text style={styles.palletHeader}>{gateName}</Text>
-                            {/* <Text style={styles.palletHeader}>Pallet yang telah di Gate</Text>
-
-                        <View style={styles.palletWrapper}>
-                            {pallets.length === 0 && (
-                                <Text style={{ color: "#777", fontSize: 14 }}>No pallet assigned</Text>
-                            )}
-
-                            {pallets.map((pallet, idx) => (
-                                <View key={idx} style={styles.palletBadge}>
-                                    <Text style={styles.palletText}>{pallet?.pallet?.pallet_code}</Text>
-                                </View>
-                            ))}
-                        </View> */}
-                        </View>
-                    );
-                })
-            )}
+                {/* Bagian palletWrapper yang kamu comment sebelumnya bisa di-uncomment jika ingin menampilkan list kodenya */}
+            </View>
+        );
+    })
+)}
         </ScrollView>
     );
 }
@@ -191,7 +206,25 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
-
+headerWithProgress: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingRight: 16,
+    },
+    progressBadge: {
+        backgroundColor: "#E0E0E0", // Modern minimalist greyscale
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 8,
+        marginTop: 18,
+        marginBottom: 8,
+    },
+    progressText: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "#555",
+    },
     gateBanner: {
         backgroundColor: "#1A73E8",
         paddingVertical: 10,

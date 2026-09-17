@@ -355,7 +355,7 @@ const CreateUpdateScreen = () => {
         canBeUsed = false;
         Alert.alert('Error', 'Terdapat multiple item yang aktif dalam satu pallet/lokasi.');
         return;
-      } 
+      }
 
       if (mockPalletRes.data && mockPalletRes.data[0].memo_id != null) {
         Alert.alert('Error', 'This pallet is already assigned to a memo.');
@@ -628,6 +628,15 @@ const CreateUpdateScreen = () => {
     }
   };
 
+  useEffect(() => {
+  if (
+    (updateType === 'UPDATE_PROD_CODE' || updateType === 'UPDATE_UOM') &&
+    palletNo.length === 12
+  ) {
+    handleCheckPallet();
+  }
+}, [palletNo, updateType]);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -635,27 +644,27 @@ const CreateUpdateScreen = () => {
           <Text style={styles.label}>Select Update Type</Text>
           <View style={styles.pickerContainer}>
             <Picker
-  selectedValue={updateType}
-  onValueChange={(v) => {
-    // Tambahkan fallback string kosong jika v kebetulan undefined 
-    // meski seharusnya sudah aman setelah fix ini
-    setUpdateType(v || ''); 
-    setSelectedValue('');
-    setPalletData(null);
-    setMergePallets([]);
-  }}>
-  
-  {/* ✅ KODE YANG BENAR (Tanpa Fragment) */}
-  {userRole !== 'HELPER' && (
-    <Picker.Item label="Update Production Code" value="UPDATE_PROD_CODE" />
-  )}
-  {userRole !== 'HELPER' && (
-    <Picker.Item label="Update UOM" value="UPDATE_UOM" />
-  )}
-  
-  <Picker.Item label="Split Pallet" value="SPLIT_PALLET" />
-  <Picker.Item label="Merge Pallet" value="MERGE_PALLET" />
-</Picker>
+              selectedValue={updateType}
+              onValueChange={(v) => {
+                // Tambahkan fallback string kosong jika v kebetulan undefined 
+                // meski seharusnya sudah aman setelah fix ini
+                setUpdateType(v || '');
+                setSelectedValue('');
+                setPalletData(null);
+                setMergePallets([]);
+              }}>
+
+              {/* ✅ KODE YANG BENAR (Tanpa Fragment) */}
+              {userRole !== 'HELPER' && (
+                <Picker.Item label="Update Production Code" value="UPDATE_PROD_CODE" />
+              )}
+              {userRole !== 'HELPER' && (
+                <Picker.Item label="Update UOM" value="UPDATE_UOM" />
+              )}
+
+              <Picker.Item label="Split Pallet" value="SPLIT_PALLET" />
+              <Picker.Item label="Merge Pallet" value="MERGE_PALLET" />
+            </Picker>
           </View>
           {updateType === 'MERGE_PALLET' ? (
             /* --- FLOW MERGE PALLET BARU --- */

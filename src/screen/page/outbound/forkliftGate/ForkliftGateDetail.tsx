@@ -117,7 +117,7 @@ export const ForkliftGateDetail = () => {
         tasks.forEach((task) => {
             const scans = task.transactionScanPicking || [];
 
-            scans.forEach((scan: any) => {
+            scans.forEach((scan: any, taskIndex: number) => {
                 const palletCode = scan?.palletUse?.pallet_code;
                 if (!palletCode) return;
 
@@ -128,6 +128,7 @@ export const ForkliftGateDetail = () => {
                 groups[palletCode].push({
                     sku: task.item?.sku,
                     taskId: task.id,
+                    taskNumber: taskIndex + 1, // <-- Simpan nomor urut task global
                     task,
                 });
             });
@@ -218,7 +219,7 @@ export const ForkliftGateDetail = () => {
                                         </Text>
 
                                         {
-                                            Object.keys(palletGroups).map((palletCode) => {
+                                            Object.keys(palletGroups).map((palletCode, palletIndex) => {
                                                 // const itemsInPallet = palletGroups[palletCode];
                                                 // console.log("Items in Pallet:", item?.assigned_gate_pallets);
 
@@ -232,6 +233,7 @@ export const ForkliftGateDetail = () => {
                                                 // const isMatch = palletTujuan === palletCode;
                                                 const itemsInPallet = palletGroups[palletCode];
                                                 const isMatch = completedPalletCodes.has(palletCode);
+                                                const taskGroupNumber = palletIndex + 1;
 
                                                 return (
                                                     <View key={palletCode} style={styles.taskBox}>
@@ -282,7 +284,8 @@ export const ForkliftGateDetail = () => {
                                                         <View style={{ marginTop: 6 }}>
                                                             {itemsInPallet.map((row: any, idx: number) => (
                                                                 <Text key={idx} style={{ color: "#666", marginVertical: 2 }}>
-                                                                    - SKU {row.sku} (Task Ke : {idx + 1} )
+                                                                    {/* 3. Panggil taskGroupNumber di sini */}
+                                                                    - SKU {row.sku} (Scan Ke : {taskGroupNumber})
                                                                 </Text>
                                                             ))}
                                                         </View>

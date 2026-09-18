@@ -119,7 +119,12 @@ function ForkliftGateScreen() {
 
         // Hitung total dan pallet yang completed
         const totalPallets = (item.outbound_do.outbound_memos || []).reduce(
-            (total, memo) => total + (memo.transaction_pickings || []).length,
+            (total, memo) =>
+                total +
+                (memo.transaction_pickings || []).reduce(
+                    (memoTotal, picking) => memoTotal + (picking.transactionScanPicking?.length || 0),
+                    0,
+                ),
             0,
         );
         const completedPallets = pallets.filter((p) => p.status === "COMPLETED").length;

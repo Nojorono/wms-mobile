@@ -34,6 +34,7 @@ type ApprovalGateItem = {
     gate: string;
     doNumber: string;
     doId: string;
+    createdAt?: string;
     memos: ApprovalGateMemo[];
 };
 
@@ -93,6 +94,7 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
             status: gateItem.status ?? "-",
             statusOutboundDo: statusOutboundDo,
             doId: doId,
+            createdAt: gateItem.createdAt ?? gateItem.outbound_do?.createdAt ?? "-", // 👈 TAMBAHKAN INI
             deliveryCategory: deliveryCategory,
             memos: Object.values(memoMap).map((memo: any) => ({
                 memoNo: memo.memoNo,
@@ -106,6 +108,18 @@ const mapApprovalGateToUI = (dataArr: any[]): ApprovalGateItem[] => {
                 ),
             })),
         };
+    });
+};
+
+const formatDateTime = (dateString: string) => {
+    if (!dateString || dateString === "-") return "";
+    const date = new Date(dateString);
+    return date.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
     });
 };
 
@@ -159,7 +173,7 @@ export default function ApprovalGateScreen() {
     const [approvalGate, setApprovalGate] = useState<ApprovalGateItem[]>([]);
     const listRef = useRef<FlatList>(null);
     const [refreshing, setRefreshing] = useState<boolean>(false);
-    const [collapsedDO, setCollapsedDO] = useState<Record<string, boolean>>({});
+    const [expandedDO, setExpandedDO] = useState<Record<string, boolean>>({});
     const user = useAuthStore((state) => state.user);
     const userOrg = user?.userDetail.organizationId;
 
@@ -169,7 +183,7 @@ export default function ApprovalGateScreen() {
     const confirm = useConfirmationStore();
     const [isProcessing, setIsProcessing] = useState(false);
     const toggleDO = (doNumber: string) => {
-        setCollapsedDO((prev) => ({
+        setExpandedDO((prev) => ({
             ...prev,
             [doNumber]: !prev[doNumber],
         }));
@@ -232,6 +246,11 @@ export default function ApprovalGateScreen() {
             );
 
             const data = [...approvedByOrg, ...pendingByOrg];
+            data.sort((a: any, b: any) => {
+                const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+                const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+                return dateB - dateA; // Urutan Descending
+            });
             const mapped = mapApprovalGateToUI(data);
             setApprovalGate(mapped);
             console.log("Mapped Approval Gate Data:", data); // Debug log untuk melihat data yang diterima
@@ -255,12 +274,12 @@ export default function ApprovalGateScreen() {
 
     const GateItem = ({
         gateItem,
-        collapsedDO,
+        expandedDO,
         toggleDO,
         getDOStatus,
     }: any) => {
         const { gate, doNumber, memos = [] } = gateItem;
-        const collapsed = collapsedDO[doNumber];
+        const isExpanded = expandedDO?.[doNumber] || false;
         const status = getDOStatus(memos);
 
 
@@ -274,7 +293,7 @@ export default function ApprovalGateScreen() {
                         onPress={() => toggleDO(doNumber)}
                         style={{ flex: 1, paddingRight: 8 }}
                     >
-                        <Text style={styles.label}>GATE LOADING | ({gateItem.deliveryCategory})</Text>
+                        <Text style={styles.label}>GATE LOADING | {gateItem.deliveryCategory} {gateItem.createdAt ? `| ${formatDateTime(gateItem.createdAt)}` : ""}</Text>
                         <Text style={styles.value}>{gate} </Text>
                         <Text style={styles.do}>{doNumber}</Text>
                     </TouchableOpacity>
@@ -317,12 +336,12 @@ export default function ApprovalGateScreen() {
                         style={{ padding: 10 }}
                     >
                         <Text style={{ fontSize: 16, color: "#6B7280" }}>
-                            {collapsed ? "▼" : "▲"}
+                            {isExpanded ? "▲" : "▼"}
                         </Text>
                     </TouchableOpacity>
                 </View>
 
-                {!collapsed &&
+                {isExpanded &&
                     memos.map((memo: any) => (
                         <View key={memo.memoNo}>
                             <View style={styles.card}>
@@ -470,11 +489,11 @@ export default function ApprovalGateScreen() {
                 <View>
                     <GateItem
                         gateItem={item}
-                        collapsedDO={collapsedDO}
+                        expandedDO={expandedDO}
                         toggleDO={toggleDO}
                         getDOStatus={getDOStatus}
                     />
-                    {!collapsedDO[item.doNumber] && (
+                    {expandedDO[item.doNumber] && (
                         <View style={{ flexDirection: "row", gap: 8, marginHorizontal: -12, paddingHorizontal: 12, marginBottom: 12 }}>
 
                             {(item.statusOutboundDo === "APPROVED_LOAD") ? (
@@ -484,7 +503,7 @@ export default function ApprovalGateScreen() {
                                 (
                                     item.memos?.length > 0 &&
                                     item.memos.some((memo: any) => memo.statusIntegrated !== "INTEGRATED")) ? (
-                                        console.log("Rendering status:", item.memos), // Debug log
+                                    console.log("Rendering status:", item.memos), // Debug log
                                     <TouchableOpacity
                                         style={{
                                             flex: 1,

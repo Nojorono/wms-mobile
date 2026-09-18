@@ -133,6 +133,9 @@ console.log('🚀 ~ file: PickingSkuScreen.tsx:90 ~ PickingSkuScreen ~ filteredL
                                     title={`${item.item.sku} - ${item.item.description}`}
                                     subTitle={`${item.sourceWarehouseSub?.code || '-'} → ${item.destinationWarehouseSub?.code|| '-'} ${item.destinationBin?.code}`}
                                     origin={`PLAN : ${item.quantity} ${item.uom}`}
+                                    role={item.transactionScanPicking?.length
+                                        ? `✅ ${item.transactionScanPicking.length} pallets`
+                                        : 'Belum ada scan'}
                                     status={item.status}
                                     statusColor={statusColor}
                                     onClick={() => navigation.navigate('PickingActivity', { item })}
